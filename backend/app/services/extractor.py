@@ -9,10 +9,19 @@ import os
 
 from anthropic import Anthropic
 
-client = Anthropic()  # reads ANTHROPIC_API_KEY from env
-
 MODEL_EASY = os.getenv("MODEL_EASY", "claude-haiku-4-5-20251001")
 MODEL_HARD = os.getenv("MODEL_HARD", "claude-sonnet-4-6")
+
+_client = None
+
+
+def _get_client() -> Anthropic:
+    """Build the Anthropic client lazily so the server (and its pages) can
+    start without a key. Only actual extraction requires ANTHROPIC_API_KEY."""
+    global _client
+    if _client is None:
+        _client = Anthropic()  # reads ANTHROPIC_API_KEY from env
+    return _client
 
 
 def _strip_code_fence(text: str) -> str:
@@ -43,7 +52,7 @@ def extract(image_bytes: bytes, media_type: str, target_schema: dict, hard: bool
         f"Fields:\n{field_list}"
     )
 
-    msg = client.messages.create(
+    msg = _get_client().messages.create(
         model=MODEL_HARD if hard else MODEL_EASY,
         max_tokens=2048,
         messages=[{
