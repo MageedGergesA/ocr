@@ -69,13 +69,17 @@ def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict
     """
     prompt = (
         "You are a document data-extraction system. Look at this document and:\n"
-        "1. Identify its type (e.g., passport, national ID, driver license, invoice, "
-        "receipt, contract, bank statement, prescription, business card).\n"
-        "2. Extract ALL meaningful fields that actually appear on THIS document. "
-        "Choose field names that fit the document type — do not invent fields that are not present.\n"
-        "The document may be in Arabic, English, or handwritten; keep each value in its original language.\n"
-        "Be thorough: read every handwritten entry carefully and give your best reading for each "
-        "field — do not skip or omit a field just because the handwriting is unclear.\n"
+        "1. Identify its type (e.g., passport, national ID, invoice, receipt, contract, "
+        "prescription, business card, OR a freeform letter / note / handwritten paragraph).\n"
+        "2. Choose the right output form:\n"
+        "   - If it is a STRUCTURED document (invoice, ID, form, receipt, card, etc.), "
+        "extract its individual named fields. Choose names that fit the document; "
+        "do not invent fields that are not present.\n"
+        "   - If it is FREEFORM TEXT (a letter, note, essay, or any narrative prose with no "
+        "structured fields), do NOT split it into invented fields. Instead return a single "
+        'field named "full_text" whose value is the COMPLETE transcription, preserving line breaks.\n'
+        "The document may be in Arabic, English, or handwritten; keep the original language. "
+        "Be thorough and give your best reading for everything — do not skip unclear parts.\n"
         "Return ONLY valid JSON, no other text, in exactly this shape:\n"
         '{"document_type": "<type>", "fields": {"<field name>": '
         '{"value": <value>, "confidence": <0-1>}, ...}}'

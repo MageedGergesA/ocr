@@ -145,7 +145,7 @@ details p { color: var(--muted); }
   padding: 11px 8px; border-bottom: 1px solid var(--line); font-size: 14px; }
 .row.head { font-weight: 800; color: var(--muted); font-size: 12px; border-bottom: 2px solid var(--line); }
 .row-field { font-weight: 700; }
-.row-value { word-break: break-word; }
+.row-value { word-break: break-word; white-space: pre-wrap; }
 .row-conf { display: flex; align-items: center; gap: 6px; }
 .conf { flex: 1; height: 7px; background: #eef2f7; border-radius: 999px; overflow: hidden; }
 .conf-bar { height: 100%; border-radius: 999px; }
