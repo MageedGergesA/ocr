@@ -17,6 +17,7 @@ load_dotenv()
 
 from app import auth, db, exports, jobs, models  # noqa: E402
 from app.services import extractor  # noqa: E402  (after load_dotenv so env is ready)
+from app.services_catalog import SERVICES  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -48,6 +49,25 @@ def demo_app(request: Request):
     finally:
         session.close()
     return templates.TemplateResponse(request, "app.html", _ctx(request))
+
+
+@app.get("/tools", response_class=HTMLResponse)
+def tools_hub(request: Request):
+    return templates.TemplateResponse(request, "tools.html", _ctx(request, services=SERVICES))
+
+
+@app.get("/tools/{slug}", response_class=HTMLResponse)
+def tool_page(request: Request, slug: str):
+    svc = SERVICES.get(slug)
+    if not svc:
+        return RedirectResponse("/tools", status_code=303)
+    session = db.SessionLocal()
+    try:
+        if not _current_user(session, request):
+            return RedirectResponse("/login", status_code=303)
+    finally:
+        session.close()
+    return templates.TemplateResponse(request, "tool.html", _ctx(request, slug=slug, svc=svc))
 
 
 # ---------- Web auth + dashboard ----------
@@ -234,6 +254,96 @@ def usage(request: Request, x_api_key: str = Header(None)):
                 "remaining": max(0, limit - used)}
     finally:
         session.close()
+
+
+@app.post("/v1/tool/{slug}")
+def run_tool(slug: str, request: Request, file: UploadFile = File(...), x_api_key: str = Header(None)):
+    """Run a catalog OCR service (text / fields / table / searchable PDF)."""
+    svc = SERVICES.get(slug)
+    if not svc:
+        raise HTTPException(404, "unknown service")
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        raise HTTPException(500, "ANTHROPIC_API_KEY not configured on server")
+
+    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
+    if file.content_type not in allowed:
+        raise HTTPException(415, "unsupported file type. Use PNG, JPG, WEBP, GIF, or PDF.")
+    data_bytes = file.file.read()
+    if len(data_bytes) > 20 * 1024 * 1024:
+        raise HTTPException(413, "file too large (max 20 MB)")
+
+    kind = svc["kind"]
+    if kind == "searchable_pdf" and file.content_type == "application/pdf":
+        raise HTTPException(400, "هذه الخدمة تعمل على الصور الممسوحة، وليس على ملفات PDF")
+
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        auth.enforce_limit(session, api_key)
+        ct, hard = file.content_type, svc.get("hard", True)
+        try:
+            if kind == "text":
+                out = {"kind": "text", "text": extractor.run_text(data_bytes, ct, svc["prompt"], hard)}
+            elif kind == "fields":
+                out = {"kind": "fields", "data": extractor.extract_schema(data_bytes, ct, svc["schema"], hard)}
+            elif kind == "table":
+                t = extractor.run_table(data_bytes, ct, hard)
+                out = {"kind": "table", "columns": t["columns"], "rows": t["rows"]}
+            elif kind == "searchable_pdf":
+                text = extractor.run_text(data_bytes, ct, SERVICES["arabic-ocr"]["prompt"], False)
+                pdf, media, fname = exports.image_to_searchable_pdf(data_bytes, text)
+                auth.increment_usage(session, api_key)
+                return Response(content=pdf, media_type=media,
+                                headers={"Content-Disposition": f'attachment; filename="{fname}"'})
+            else:
+                raise HTTPException(400, "unsupported service kind")
+        except HTTPException:
+            raise
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(502, f"service failed: {e}")
+
+        auth.increment_usage(session, api_key)
+        used, limit, _ = auth.get_usage(session, api_key)
+        out["usage"] = {"used": used, "limit": limit, "remaining": max(0, limit - used)}
+        return out
+    finally:
+        session.close()
+
+
+@app.post("/v1/export-table")
+def export_table(request: Request, payload: dict = Body(...), x_api_key: str = Header(None)):
+    session = db.SessionLocal()
+    try:
+        _resolve_caller(session, x_api_key, request)
+    finally:
+        session.close()
+    fmt, columns, rows = payload.get("format", "xlsx"), payload.get("columns", []), payload.get("rows", [])
+    if fmt == "xlsx":
+        data, media, fname = exports.table_to_xlsx(columns, rows)
+    elif fmt == "csv":
+        data, media, fname = exports.table_to_csv(columns, rows)
+    else:
+        raise HTTPException(400, "format must be xlsx or csv")
+    return Response(content=data, media_type=media,
+                    headers={"Content-Disposition": f'attachment; filename="{fname}"'})
+
+
+@app.post("/v1/export-text")
+def export_text(request: Request, payload: dict = Body(...), x_api_key: str = Header(None)):
+    session = db.SessionLocal()
+    try:
+        _resolve_caller(session, x_api_key, request)
+    finally:
+        session.close()
+    fmt, text = payload.get("format", "docx"), payload.get("text", "")
+    if fmt == "docx":
+        data, media, fname = exports.text_to_docx(text)
+    elif fmt == "pdf":
+        data, media, fname = exports.text_to_pdf(text)
+    else:
+        raise HTTPException(400, "format must be docx or pdf")
+    return Response(content=data, media_type=media,
+                    headers={"Content-Disposition": f'attachment; filename="{fname}"'})
 
 
 @app.post("/v1/export")

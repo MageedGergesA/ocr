@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ svc.title }} — مُستخلِص</title>
+  <meta name="description" content="{{ svc.desc }}">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  {% include "_nav.html" %}
+
+  <section class="app-wrap">
+    <div class="container">
+      <p style="text-align:center"><a href="/tools" class="back-link">← كل الأدوات</a></p>
+      <h1 class="app-title">{{ svc.icon }} {{ svc.title }}</h1>
+      <p class="app-sub">{{ svc.desc }}</p>
+
+      <div class="app-grid">
+        <div class="panel">
+          <label class="step">1 · المستند</label>
+          <div id="dropzone" class="dropzone">
+            <input type="file" id="fileInput" hidden
+              accept="{% if svc.kind == 'searchable_pdf' %}image/png,image/jpeg,image/webp,image/gif{% else %}image/png,image/jpeg,image/webp,image/gif,application/pdf{% endif %}">
+            <div id="dzEmpty" class="dz-empty">
+              <div class="dz-ico">{{ svc.icon }}</div>
+              <p>اسحب المستند هنا أو <span class="link">اختر ملفًا</span></p>
+              <small>{% if svc.kind == 'searchable_pdf' %}صورة ممسوحة (PNG · JPG){% else %}PNG · JPG · WEBP · PDF{% endif %}</small>
+            </div>
+            <img id="preview" class="preview" alt="معاينة" hidden>
+            <div id="pdfInfo" class="pdf-info" hidden></div>
+          </div>
+          <button id="runBtn" class="btn btn-primary btn-lg full" disabled>تشغيل</button>
+        </div>
+
+        <div class="panel">
+          <label class="step">2 · النتيجة</label>
+          <div id="result" class="results"><div class="results-empty">ستظهر النتيجة هنا.</div></div>
+          <div id="exportBar" class="export-bar" hidden></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const SLUG = "{{ slug }}", KIND = "{{ svc.kind }}";
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const dzEmpty = document.getElementById('dzEmpty');
+    const preview = document.getElementById('preview');
+    const pdfInfo = document.getElementById('pdfInfo');
+    const runBtn = document.getElementById('runBtn');
+    const result = document.getElementById('result');
+    const exportBar = document.getElementById('exportBar');
+    let currentFile = null, lastData = null;
+
+    function setFile(f) {
+      if (!f) return;
+      const isPdf = f.type === 'application/pdf';
+      if (!f.type.startsWith('image/') && !isPdf) return;
+      currentFile = f;
+      if (isPdf) { preview.hidden = true; pdfInfo.hidden = false; pdfInfo.textContent = '📄 ' + f.name; }
+      else { preview.src = URL.createObjectURL(f); preview.hidden = false; pdfInfo.hidden = true; }
+      dzEmpty.hidden = true; runBtn.disabled = false;
+    }
+    dropzone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => setFile(e.target.files[0]));
+    ['dragover', 'dragenter'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+    ['dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+    dropzone.addEventListener('drop', e => setFile(e.dataTransfer.files[0]));
+
+    function dl(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href); }
+    async function postJSON(url, body) {
+      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.status);
+      return r.blob();
+    }
+    function btn(label, fn) { const b = document.createElement('button'); b.className = 'btn btn-ghost'; b.textContent = label; b.onclick = fn; return b; }
+
+    function confColor(c) { return c >= .85 ? '#16a34a' : c >= .6 ? '#d97706' : '#dc2626'; }
+    function fieldsTable(data) {
+      const rows = Object.entries(data || {}).map(([f, info]) => {
+        let v = info, c = null; if (info && typeof info === 'object') { v = info.value; c = info.confidence; }
+        const pct = c != null ? Math.round(c * 100) : null;
+        const bar = pct != null ? `<div class="conf"><div class="conf-bar" style="width:${pct}%;background:${confColor(c)}"></div></div><span class="conf-pct">${pct}%</span>` : '';
+        return `<div class="row"><div class="row-field">${f}</div><div class="row-value">${v ?? '—'}</div><div class="row-conf">${bar}</div></div>`;
+      }).join('');
+      return `<div class="row head"><div>الحقل</div><div>القيمة</div><div>الثقة</div></div>${rows}`;
+    }
+    function htmlTable(cols, rows) {
+      const head = (cols || []).map(c => `<th>${c ?? ''}</th>`).join('');
+      const body = (rows || []).map(r => `<tr>${(r || []).map(c => `<td>${c ?? ''}</td>`).join('')}</tr>`).join('');
+      return `<table class="data-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function showExports(buttons) { exportBar.innerHTML = ''; buttons.forEach(b => exportBar.appendChild(b)); exportBar.hidden = buttons.length === 0; }
+
+    runBtn.addEventListener('click', async () => {
+      if (!currentFile) return;
+      runBtn.disabled = true; runBtn.textContent = 'جارٍ المعالجة…';
+      result.innerHTML = '<div class="results-empty">⏳ يتم المعالجة…</div>'; exportBar.hidden = true;
+      const fd = new FormData(); fd.append('file', currentFile);
+      try {
+        const res = await fetch('/v1/tool/' + SLUG, { method: 'POST', body: fd });
+        if (KIND === 'searchable_pdf') {
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.status);
+          dl(await res.blob(), 'searchable.pdf');
+          result.innerHTML = '<div class="results-empty">✅ تم إنشاء ملف PDF قابل للبحث وتنزيله.</div>';
+          return;
+        }
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.detail || res.status);
+
+        if (KIND === 'text') {
+          lastData = body.text;
+          result.innerHTML = `<pre class="text-out">${(body.text || '').replace(/</g, '&lt;')}</pre>`;
+          showExports([
+            btn('نسخ', () => navigator.clipboard.writeText(lastData)),
+            btn('Word', async () => dl(await postJSON('/v1/export-text', { format: 'docx', text: lastData }), 'document.docx')),
+            btn('PDF', async () => dl(await postJSON('/v1/export-text', { format: 'pdf', text: lastData }), 'document.pdf')),
+            btn('TXT', () => dl(new Blob([lastData], { type: 'text/plain' }), 'document.txt')),
+          ]);
+        } else if (KIND === 'fields') {
+          result.innerHTML = fieldsTable(body.data);
+          const rows = Object.entries(body.data || {}).map(([f, info]) =>
+            ({ page: 1, field: f, value: (info && typeof info === 'object') ? info.value : info, confidence: (info && typeof info === 'object') ? info.confidence : '' }));
+          showExports(['xlsx', 'docx', 'pdf', 'csv'].map(fmt =>
+            btn(fmt.toUpperCase(), async () => dl(await postJSON('/v1/export', { format: fmt, rows }), 'extraction.' + fmt))));
+        } else if (KIND === 'table') {
+          result.innerHTML = htmlTable(body.columns, body.rows);
+          showExports([
+            btn('Excel', async () => dl(await postJSON('/v1/export-table', { format: 'xlsx', columns: body.columns, rows: body.rows }), 'table.xlsx')),
+            btn('CSV', async () => dl(await postJSON('/v1/export-table', { format: 'csv', columns: body.columns, rows: body.rows }), 'table.csv')),
+          ]);
+        }
+      } catch (err) {
+        result.innerHTML = `<div class="results-error">⚠️ ${err.message}</div>`;
+      } finally {
+        runBtn.disabled = false; runBtn.textContent = 'تشغيل';
+      }
+    });
+  </script>
+</body>
+</html>

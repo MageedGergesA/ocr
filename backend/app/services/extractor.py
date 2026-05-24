@@ -37,10 +37,10 @@ def _strip_code_fence(text: str) -> str:
     return text.strip()
 
 
-def _run(file_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
+def _call_model(file_bytes: bytes, media_type: str, prompt: str, hard: bool):
+    """One vision call. Returns (text, message). PDFs go in a 'document' block
+    (all pages, cross-page context); images in an 'image' block."""
     b64 = base64.standard_b64encode(file_bytes).decode()
-    # PDFs go in a 'document' block (Claude reads all pages with cross-page context);
-    # images go in an 'image' block.
     if media_type == "application/pdf":
         source_block = {"type": "document",
                         "source": {"type": "base64", "media_type": "application/pdf", "data": b64}}
@@ -49,28 +49,48 @@ def _run(file_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
                         "source": {"type": "base64", "media_type": media_type, "data": b64}}
     params = {
         "model": MODEL_HARD if hard else MODEL_EASY,
-        # Generous output room: multi-page / many-line docs produce long JSON.
-        # Too small a cap truncates the response mid-string and breaks parsing.
-        # (You're billed for tokens actually generated, not the cap.)
+        # Generous output room so long docs don't truncate (billed on actual tokens).
         "max_tokens": 16000 if hard else 8192,
         "messages": [{"role": "user", "content": [source_block, {"type": "text", "text": prompt}]}],
     }
     if hard:
-        # Let the model deliberate over ambiguous handwriting before answering.
-        # Improves reading accuracy without suppressing outputs (billed as output tokens).
+        # Deliberate over ambiguous handwriting before answering.
         params["thinking"] = {"type": "enabled", "budget_tokens": 2048}
     msg = _get_client().messages.create(**params)
-    # With thinking on, content holds thinking block(s) + a text block — take the text.
     text = next((b.text for b in msg.content if getattr(b, "type", None) == "text"), "")
+    return text, msg
+
+
+def _run(file_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
+    """Call the model and parse a JSON object out of the reply."""
+    text, msg = _call_model(file_bytes, media_type, prompt, hard)
     try:
         return json.loads(_strip_code_fence(text))
     except json.JSONDecodeError:
         if getattr(msg, "stop_reason", None) == "max_tokens":
             raise ValueError(
                 "the response was truncated — this document is unusually large/complex. "
-                "Try splitting the PDF or using specific-fields mode to extract fewer fields."
+                "Try splitting the PDF or extracting fewer fields."
             )
         raise
+
+
+def run_text(file_bytes: bytes, media_type: str, prompt: str, hard: bool = False) -> str:
+    """Run a service whose output is plain text (OCR, translation, summary…)."""
+    text, _ = _call_model(file_bytes, media_type, prompt, hard)
+    return _strip_code_fence(text) if text.strip().startswith("```") else text.strip()
+
+
+def run_table(file_bytes: bytes, media_type: str, hard: bool = True) -> dict:
+    """Extract tabular data. Returns {"columns": [...], "rows": [[...], ...]}."""
+    prompt = (
+        "Extract the main table(s) from this document. Combine into ONE table. "
+        "Keep cell text in its original language (Arabic/English). "
+        'Return ONLY valid JSON in this shape: {"columns": ["..."], "rows": [["..."], ...]}. '
+        "If there are no clear columns, use the first row's cells as columns."
+    )
+    data = _run(file_bytes, media_type, prompt, hard)
+    return {"columns": data.get("columns", []), "rows": data.get("rows", [])}
 
 
 def split_pdf_pages(pdf_bytes: bytes) -> list[bytes]:

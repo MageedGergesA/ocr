@@ -1,14 +1,14 @@
 <header class="nav">
   <div class="container nav-inner">
     <a class="brand" href="/">مُستخلِص<span>.ai</span></a>
-    {% if nav_links %}
     <nav class="nav-links">
+      <a href="/tools">الأدوات</a>
+      {% if nav_links %}
       <a href="/#features">المميزات</a>
-      <a href="/#use-cases">حالات الاستخدام</a>
       <a href="/#pricing">الأسعار</a>
       <a href="/#faq">الأسئلة</a>
+      {% endif %}
     </nav>
-    {% endif %}
     <div class="nav-cta">
       {% if user %}
         <a class="btn btn-ghost" href="/app">جرّب الاستخراج</a>
