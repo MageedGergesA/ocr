@@ -160,5 +160,6 @@ details p { color: var(--muted); }
 
 .doctype { background: #e7efff; color: var(--brand-dark); font-size: 14px; font-weight: 600;
   padding: 10px 14px; border-radius: 10px; margin-bottom: 14px; }
+.quota-line { font-size: 13px; color: var(--muted); margin-bottom: 10px; min-height: 18px; }
 
 @media (max-width: 800px) { .app-grid { grid-template-columns: 1fr; } }

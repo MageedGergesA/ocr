@@ -70,6 +70,7 @@
         <!-- RIGHT: output -->
         <div class="panel">
           <label class="step">3 · النتائج</label>
+          <div id="quota" class="quota-line"></div>
           <div id="results" class="results">
             <div class="results-empty">ستظهر الحقول المستخرجة هنا.</div>
           </div>
@@ -170,6 +171,11 @@
         const body = await res.json();
         if (!res.ok) throw new Error(body.detail || ('HTTP ' + res.status));
         render(body.data, body.document_type);
+        if (body.usage) {
+          const u = body.usage;
+          document.getElementById('quota').textContent =
+            `تبقّى لك ${u.remaining} من ${u.limit} عملية هذا الشهر`;
+        }
       } catch (err) {
         results.innerHTML = `<div class="results-error">⚠️ ${err.message}</div>`;
       } finally {
