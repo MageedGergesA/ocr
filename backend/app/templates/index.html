@@ -11,21 +11,7 @@
 </head>
 <body>
 
-  <header class="nav">
-    <div class="container nav-inner">
-      <a class="brand" href="/">مُستخلِص<span>.ai</span></a>
-      <nav class="nav-links">
-        <a href="#features">المميزات</a>
-        <a href="#use-cases">حالات الاستخدام</a>
-        <a href="#pricing">الأسعار</a>
-        <a href="#faq">الأسئلة</a>
-      </nav>
-      <div class="nav-cta">
-        <a class="btn btn-ghost" href="/login">تسجيل الدخول</a>
-        <a class="btn btn-primary" href="/signup">ابدأ مجانًا</a>
-      </div>
-    </div>
-  </header>
+  {% include "_nav.html" %}
 
   <!-- HERO -->
   <section class="hero">
@@ -37,8 +23,13 @@
         واحصل على الحقول التي تريدها جاهزة. مباشرة داخل أودو، عبر الويب، أو من خلال الـ API.
       </p>
       <div class="hero-cta">
+        {% if user %}
+        <a class="btn btn-primary btn-lg" href="/app">ارفع مستندًا الآن</a>
+        <a class="btn btn-ghost btn-lg" href="/dashboard">لوحة التحكم</a>
+        {% else %}
         <a class="btn btn-primary btn-lg" href="/signup">ابدأ مجانًا — 50 مستند شهريًا</a>
         <a class="btn btn-ghost btn-lg" href="/login">تسجيل الدخول</a>
+        {% endif %}
       </div>
       <p class="hero-note">بدون بطاقة ائتمان · ابدأ في أقل من دقيقة</p>
     </div>

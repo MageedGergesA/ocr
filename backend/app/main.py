@@ -36,7 +36,7 @@ def health():
 
 @app.get("/", response_class=HTMLResponse)
 def landing(request: Request):
-    return templates.TemplateResponse(request, "index.html")
+    return templates.TemplateResponse(request, "index.html", _ctx(request, nav_links=True))
 
 
 @app.get("/app", response_class=HTMLResponse)
@@ -47,7 +47,7 @@ def demo_app(request: Request):
             return RedirectResponse("/login", status_code=303)
     finally:
         session.close()
-    return templates.TemplateResponse(request, "app.html")
+    return templates.TemplateResponse(request, "app.html", _ctx(request))
 
 
 # ---------- Web auth + dashboard ----------
@@ -57,6 +57,16 @@ COOKIE_KW = dict(httponly=True, samesite="lax", max_age=60 * 60 * 24 * 30)
 
 def _current_user(session, request: Request):
     return auth.user_from_session(session, request.cookies.get("sid"))
+
+
+def _ctx(request: Request, **extra):
+    """Template context with the logged-in user (for the shared nav)."""
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+    finally:
+        session.close()
+    return {"user": user, **extra}
 
 
 def _resolve_caller(session, x_api_key, request: Request):
@@ -74,7 +84,13 @@ def _resolve_caller(session, x_api_key, request: Request):
 
 @app.get("/signup", response_class=HTMLResponse)
 def signup_page(request: Request):
-    return templates.TemplateResponse(request, "signup.html", {"error": None})
+    session = db.SessionLocal()
+    try:
+        if _current_user(session, request):
+            return RedirectResponse("/dashboard", status_code=303)
+    finally:
+        session.close()
+    return templates.TemplateResponse(request, "signup.html", {"error": None, "user": None})
 
 
 @app.post("/signup")
@@ -84,10 +100,10 @@ def signup(request: Request, email: str = Form(...), password: str = Form(...)):
         email = email.strip().lower()
         if len(password) < 8:
             return templates.TemplateResponse(request, "signup.html",
-                {"error": "كلمة المرور يجب أن تكون 8 أحرف على الأقل"}, status_code=400)
+                {"error": "كلمة المرور يجب أن تكون 8 أحرف على الأقل", "user": None}, status_code=400)
         if session.query(models.User).filter_by(email=email).first():
             return templates.TemplateResponse(request, "signup.html",
-                {"error": "هذا البريد مسجّل بالفعل"}, status_code=400)
+                {"error": "هذا البريد مسجّل بالفعل", "user": None}, status_code=400)
         user = models.User(email=email, password_hash=auth.hash_password(password), plan="free")
         session.add(user)
         session.commit()
@@ -104,7 +120,13 @@ def signup(request: Request, email: str = Form(...), password: str = Form(...)):
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
-    return templates.TemplateResponse(request, "login.html", {"error": None})
+    session = db.SessionLocal()
+    try:
+        if _current_user(session, request):
+            return RedirectResponse("/dashboard", status_code=303)
+    finally:
+        session.close()
+    return templates.TemplateResponse(request, "login.html", {"error": None, "user": None})
 
 
 @app.post("/login")
@@ -114,7 +136,7 @@ def login(request: Request, email: str = Form(...), password: str = Form(...)):
         user = session.query(models.User).filter_by(email=email.strip().lower()).first()
         if not user or not user.password_hash or not auth.verify_password(password, user.password_hash):
             return templates.TemplateResponse(request, "login.html",
-                {"error": "بريد إلكتروني أو كلمة مرور غير صحيحة"}, status_code=401)
+                {"error": "بريد إلكتروني أو كلمة مرور غير صحيحة", "user": None}, status_code=401)
         token = auth.create_session(session, user)
         resp = RedirectResponse("/dashboard", status_code=303)
         resp.set_cookie("sid", token, **COOKIE_KW)
