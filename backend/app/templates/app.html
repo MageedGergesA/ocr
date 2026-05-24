@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مُستخلِص — جرّب الاستخراج</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="/">مُستخلِص<span>.ai</span></a>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="/">الرئيسية</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="app-wrap">
+    <div class="container">
+      <h1 class="app-title">جرّب الاستخراج الآن</h1>
+      <p class="app-sub">ارفع مستندًا، حدّد الحقول التي تريدها، واحصل على النتائج. مجانًا، بدون تسجيل.</p>
+
+      <div class="app-grid">
+
+        <!-- LEFT: input -->
+        <div class="panel">
+          <label class="step">1 · المستند</label>
+          <div id="dropzone" class="dropzone">
+            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+            <div id="dzEmpty" class="dz-empty">
+              <div class="dz-ico">📄</div>
+              <p>اسحب صورة المستند هنا أو <span class="link">اختر ملفًا</span></p>
+              <small>PNG · JPG · WEBP — صورة واحدة</small>
+            </div>
+            <img id="preview" class="preview" alt="معاينة" hidden>
+          </div>
+
+          <label class="step">2 · الحقول المطلوبة</label>
+          <p class="hint">سطر لكل حقل بالصيغة: <code>الاسم: وصف مختصر</code></p>
+          <textarea id="fields" class="fields" rows="6">رقم_الفاتورة: رقم الفاتورة أو المستند
+اسم_العميل: الاسم الكامل للعميل أو الشركة
+التاريخ: تاريخ المستند
+الإجمالي: المبلغ الإجمالي
+الرقم_الضريبي: الرقم الضريبي إن وجد</textarea>
+
+          <label class="toggle">
+            <input type="checkbox" id="hard" checked>
+            مستند صعب / مكتوب بخط اليد (دقة أعلى)
+          </label>
+
+          <button id="extractBtn" class="btn btn-primary btn-lg full" disabled>استخرج البيانات</button>
+        </div>
+
+        <!-- RIGHT: output -->
+        <div class="panel">
+          <label class="step">3 · النتائج</label>
+          <div id="results" class="results">
+            <div class="results-empty">ستظهر الحقول المستخرجة هنا.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropzone  = document.getElementById('dropzone');
+    const dzEmpty   = document.getElementById('dzEmpty');
+    const preview   = document.getElementById('preview');
+    const extractBtn= document.getElementById('extractBtn');
+    const results   = document.getElementById('results');
+    let currentFile = null;
+
+    function setFile(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      currentFile = file;
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      preview.hidden = false;
+      dzEmpty.hidden = true;
+      extractBtn.disabled = false;
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => setFile(e.target.files[0]));
+    ['dragover','dragenter'].forEach(ev => dropzone.addEventListener(ev, e => {
+      e.preventDefault(); dropzone.classList.add('drag');
+    }));
+    ['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => {
+      e.preventDefault(); dropzone.classList.remove('drag');
+    }));
+    dropzone.addEventListener('drop', e => setFile(e.dataTransfer.files[0]));
+
+    function parseFields() {
+      const schema = {};
+      document.getElementById('fields').value.split('\n').forEach(line => {
+        line = line.trim();
+        if (!line) return;
+        const i = line.indexOf(':');
+        if (i === -1) { schema[line] = line; return; }
+        const key = line.slice(0, i).trim();
+        const desc = line.slice(i + 1).trim();
+        if (key) schema[key] = desc || key;
+      });
+      return schema;
+    }
+
+    function confColor(c) {
+      if (c >= 0.85) return '#16a34a';
+      if (c >= 0.6)  return '#d97706';
+      return '#dc2626';
+    }
+
+    function render(data) {
+      const rows = Object.entries(data).map(([field, info]) => {
+        let value = info, conf = null;
+        if (info && typeof info === 'object') { value = info.value; conf = info.confidence; }
+        const confPct = conf != null ? Math.round(conf * 100) : null;
+        const bar = confPct != null
+          ? `<div class="conf"><div class="conf-bar" style="width:${confPct}%;background:${confColor(conf)}"></div></div><span class="conf-pct">${confPct}%</span>`
+          : '';
+        return `<div class="row">
+                  <div class="row-field">${field}</div>
+                  <div class="row-value">${value ?? '—'}</div>
+                  <div class="row-conf">${bar}</div>
+                </div>`;
+      }).join('');
+      results.innerHTML = `<div class="row head"><div>الحقل</div><div>القيمة</div><div>الثقة</div></div>${rows}`;
+    }
+
+    extractBtn.addEventListener('click', async () => {
+      if (!currentFile) return;
+      extractBtn.disabled = true;
+      extractBtn.textContent = 'جارٍ الاستخراج…';
+      results.innerHTML = '<div class="results-empty">⏳ يتم تحليل المستند…</div>';
+
+      const fd = new FormData();
+      fd.append('file', currentFile);
+      fd.append('target_schema', JSON.stringify(parseFields()));
+      fd.append('hard', document.getElementById('hard').checked);
+
+      try {
+        const res = await fetch('/v1/extract', { method: 'POST', body: fd });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.detail || ('HTTP ' + res.status));
+        render(body.data);
+      } catch (err) {
+        results.innerHTML = `<div class="results-error">⚠️ ${err.message}</div>`;
+      } finally {
+        extractBtn.disabled = false;
+        extractBtn.textContent = 'استخرج البيانات';
+      }
+    });
+  </script>
+
+</body>
+</html>

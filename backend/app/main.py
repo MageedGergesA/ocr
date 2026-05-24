@@ -34,6 +34,11 @@ def landing(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
+@app.get("/app", response_class=HTMLResponse)
+def demo_app(request: Request):
+    return templates.TemplateResponse(request, "app.html")
+
+
 @app.post("/v1/extract")
 async def extract_endpoint(
     file: UploadFile = File(...),
