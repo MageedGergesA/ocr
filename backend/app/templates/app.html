@@ -145,10 +145,8 @@
       return '#dc2626';
     }
 
-    function render(data, docType) {
-      const badge = docType
-        ? `<div class="doctype">نوع المستند المكتشف: <b>${docType}</b></div>` : '';
-      const rows = Object.entries(data).map(([field, info]) => {
+    function rowsHtml(data) {
+      const rows = Object.entries(data || {}).map(([field, info]) => {
         let value = info, conf = null;
         if (info && typeof info === 'object') { value = info.value; conf = info.confidence; }
         const confPct = conf != null ? Math.round(conf * 100) : null;
@@ -161,7 +159,62 @@
                   <div class="row-conf">${bar}</div>
                 </div>`;
       }).join('');
-      results.innerHTML = badge + `<div class="row head"><div>الحقل</div><div>القيمة</div><div>الثقة</div></div>${rows}`;
+      return `<div class="row head"><div>الحقل</div><div>القيمة</div><div>الثقة</div></div>${rows}`;
+    }
+
+    function render(data, docType) {
+      const badge = docType
+        ? `<div class="doctype">نوع المستند المكتشف: <b>${docType}</b></div>` : '';
+      results.innerHTML = badge + rowsHtml(data);
+    }
+
+    function renderPages(pages) {
+      return (pages || []).map(p => {
+        if (p.error) {
+          return `<div class="page-block"><div class="doctype">صفحة ${p.page}</div>
+                  <div class="results-error">⚠️ ${p.error}</div></div>`;
+        }
+        return `<div class="page-block">
+                  <div class="doctype">صفحة ${p.page}${p.document_type ? ' · ' + p.document_type : ''}</div>
+                  ${rowsHtml(p.data)}
+                </div>`;
+      }).join('');
+    }
+
+    function updateQuota(u) {
+      if (!u) return;
+      document.getElementById('quota').textContent =
+        `تبقّى لك ${u.remaining} من ${u.limit} عملية هذا الشهر`;
+    }
+
+    function resetButton() {
+      extractBtn.disabled = false;
+      extractBtn.textContent = 'استخرج البيانات';
+    }
+
+    // Poll a background batch job until it finishes, showing live progress.
+    function pollBatch(jobId, total) {
+      const tick = async () => {
+        let j;
+        try {
+          j = await (await fetch('/v1/jobs/' + jobId)).json();
+        } catch (e) { setTimeout(tick, 2500); return; }
+
+        if (j.status === 'processing') {
+          results.innerHTML =
+            `<div class="quota-line">⏳ تتم معالجة الصفحات… ${j.done_pages} من ${j.total_pages}</div>`
+            + renderPages(j.pages);
+          setTimeout(tick, 2500);
+        } else if (j.status === 'completed') {
+          results.innerHTML = renderPages(j.pages) || '<div class="results-empty">لا نتائج</div>';
+          fetch('/v1/usage').then(r => r.json()).then(updateQuota).catch(() => {});
+          resetButton();
+        } else {
+          results.innerHTML = `<div class="results-error">⚠️ ${j.error || 'فشلت المعالجة'}</div>`;
+          resetButton();
+        }
+      };
+      tick();
     }
 
     extractBtn.addEventListener('click', async () => {
@@ -176,21 +229,25 @@
       fd.append('target_schema', mode === 'custom' ? JSON.stringify(parseFields()) : '');
       fd.append('hard', document.getElementById('hard').checked);
 
+      let batching = false;
       try {
         const res = await fetch('/v1/extract', { method: 'POST', body: fd });
         const body = await res.json();
         if (!res.ok) throw new Error(body.detail || ('HTTP ' + res.status));
-        render(body.data, body.document_type);
-        if (body.usage) {
-          const u = body.usage;
-          document.getElementById('quota').textContent =
-            `تبقّى لك ${u.remaining} من ${u.limit} عملية هذا الشهر`;
+        if (body.mode === 'batch') {
+          batching = true;  // keep button disabled; pollBatch re-enables it when done
+          extractBtn.textContent = 'معالجة دفعة…';
+          results.innerHTML =
+            `<div class="quota-line">⏳ ملف من ${body.total_pages} صفحة — جارٍ المعالجة…</div>`;
+          pollBatch(body.job_id, body.total_pages);
+          return;
         }
+        render(body.data, body.document_type);
+        updateQuota(body.usage);
       } catch (err) {
         results.innerHTML = `<div class="results-error">⚠️ ${err.message}</div>`;
       } finally {
-        extractBtn.disabled = false;
-        extractBtn.textContent = 'استخرج البيانات';
+        if (!batching) resetButton();
       }
     });
   </script>

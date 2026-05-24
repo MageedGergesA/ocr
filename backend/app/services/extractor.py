@@ -73,6 +73,23 @@ def _run(file_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
         raise
 
 
+def split_pdf_pages(pdf_bytes: bytes) -> list[bytes]:
+    """Split a PDF into a list of single-page PDF byte blobs (for batch mode)."""
+    import io
+
+    from pypdf import PdfReader, PdfWriter
+
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    pages = []
+    for page in reader.pages:
+        writer = PdfWriter()
+        writer.add_page(page)
+        buf = io.BytesIO()
+        writer.write(buf)
+        pages.append(buf.getvalue())
+    return pages
+
+
 def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict:
     """Detect the document type and extract every meaningful field automatically.
 

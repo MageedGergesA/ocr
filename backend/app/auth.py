@@ -48,18 +48,18 @@ def get_usage(db: Session, api_key: models.ApiKey):
     return used, limit, row
 
 
-def enforce_limit(db: Session, api_key: models.ApiKey) -> None:
-    """Raise 429 if the key has hit its monthly quota."""
+def enforce_limit(db: Session, api_key: models.ApiKey, needed: int = 1) -> None:
+    """Raise 429 if this request (which costs `needed` units) would exceed quota."""
     used, limit, _ = get_usage(db, api_key)
-    if used >= limit:
+    if used + needed > limit:
         raise HTTPException(
             429,
-            f"monthly limit reached ({used}/{limit} for plan '{api_key.user.plan}'). "
-            "Upgrade your plan or wait until next month.",
+            f"monthly limit reached ({used}/{limit} for plan '{api_key.user.plan}'); "
+            f"this request needs {needed}. Upgrade your plan or wait until next month.",
         )
 
 
-def increment_usage(db: Session, api_key: models.ApiKey) -> None:
+def increment_usage(db: Session, api_key: models.ApiKey, count: int = 1) -> None:
     row = (
         db.query(models.Usage)
         .filter_by(api_key_id=api_key.id, period=current_period())
@@ -68,7 +68,7 @@ def increment_usage(db: Session, api_key: models.ApiKey) -> None:
     if row is None:
         row = models.Usage(api_key_id=api_key.id, period=current_period(), count=0)
         db.add(row)
-    row.count += 1
+    row.count += count
     db.commit()
 
 
