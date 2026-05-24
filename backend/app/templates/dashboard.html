@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم — مُستخلِص</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="/">مُستخلِص<span>.ai</span></a>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="/app">جرّب الاستخراج</a>
+        <a class="btn btn-ghost" href="/logout">خروج</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="dash-wrap">
+    <div class="container">
+      <h1 class="dash-title">لوحة التحكم</h1>
+      <p class="dash-sub">مرحبًا، {{ user.email }}</p>
+
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="dash-label">خطتك الحالية</div>
+          <div class="dash-big">{{ plan }}</div>
+          <div class="dash-meta">{{ limit }} عملية / الشهر لكل مفتاح</div>
+          <a class="btn btn-ghost" href="/#pricing">ترقية الخطة</a>
+        </div>
+        <div class="dash-card">
+          <div class="dash-label">الاستخدام هذا الشهر</div>
+          <div class="dash-big">{{ keys|sum(attribute='used') }}</div>
+          <div class="dash-meta">إجمالي العمليات عبر كل مفاتيحك</div>
+        </div>
+      </div>
+
+      <div class="dash-section">
+        <div class="dash-section-head">
+          <h2>مفاتيح الـ API</h2>
+          <form method="post" action="/dashboard/keys" style="margin:0">
+            <button class="btn btn-primary" type="submit">+ مفتاح جديد</button>
+          </form>
+        </div>
+        <p class="hint">استخدم المفتاح في ترويسة <code>x-api-key</code> عند استدعاء الـ API.</p>
+
+        <div class="keys">
+          <div class="krow khead"><div>المفتاح</div><div>الاستخدام</div><div>الحالة</div><div></div></div>
+          {% for k in keys %}
+          <div class="krow">
+            <div class="kkey"><code>{{ k.key }}</code>
+              <button class="copy-btn" onclick="navigator.clipboard.writeText('{{ k.key }}');this.textContent='✓'">نسخ</button>
+            </div>
+            <div>{{ k.used }} / {{ limit }}</div>
+            <div>{% if k.active %}<span class="badge-on">فعّال</span>{% else %}<span class="badge-off">ملغى</span>{% endif %}</div>
+            <div>
+              {% if k.active %}
+              <form method="post" action="/dashboard/keys/{{ k.id }}/revoke" style="margin:0">
+                <button class="link-btn" type="submit">إلغاء</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="dash-section">
+        <h2>استدعاء سريع (cURL)</h2>
+        <pre class="code-block">curl -X POST {{ request.base_url }}v1/extract \
+  -H "x-api-key: YOUR_KEY" \
+  -F "file=@invoice.pdf" \
+  -F "target_schema="</pre>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

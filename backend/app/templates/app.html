@@ -75,6 +75,10 @@
           <div id="results" class="results">
             <div class="results-empty">ستظهر الحقول المستخرجة هنا.</div>
           </div>
+          <div id="exportBar" class="export-bar" hidden>
+            <button class="btn btn-ghost" type="button" onclick="downloadCSV()">⬇ CSV</button>
+            <button class="btn btn-ghost" type="button" onclick="downloadJSON()">⬇ JSON</button>
+          </div>
         </div>
 
       </div>
@@ -162,10 +166,54 @@
       return `<div class="row head"><div>الحقل</div><div>القيمة</div><div>الثقة</div></div>${rows}`;
     }
 
+    // ---- export state + helpers ----
+    let lastJSON = null, lastRows = [];
+
+    function fieldVal(info) { return (info && typeof info === 'object') ? info.value : info; }
+    function fieldConf(info) { return (info && typeof info === 'object') ? info.confidence : ''; }
+
+    function setExport(jsonObj, rows) {
+      lastJSON = jsonObj; lastRows = rows;
+      document.getElementById('exportBar').hidden = rows.length === 0;
+    }
+
+    function flattenSingle(data) {
+      return Object.entries(data || {}).map(([field, info]) =>
+        ({ page: 1, field, value: fieldVal(info), confidence: fieldConf(info) }));
+    }
+    function flattenPages(pages) {
+      const rows = [];
+      (pages || []).forEach(p => {
+        if (p.error) return;
+        Object.entries(p.data || {}).forEach(([field, info]) =>
+          rows.push({ page: p.page, field, value: fieldVal(info), confidence: fieldConf(info) }));
+      });
+      return rows;
+    }
+
+    function downloadJSON() {
+      const blob = new Blob([JSON.stringify(lastJSON, null, 2)], { type: 'application/json' });
+      triggerDownload(blob, 'extraction.json');
+    }
+    function downloadCSV() {
+      const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const lines = ['page,field,value,confidence'];
+      lastRows.forEach(r => lines.push([r.page, esc(r.field), esc(r.value), r.confidence].join(',')));
+      // BOM so Excel reads Arabic correctly
+      const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+      triggerDownload(blob, 'extraction.csv');
+    }
+    function triggerDownload(blob, name) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = name; a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
     function render(data, docType) {
       const badge = docType
         ? `<div class="doctype">نوع المستند المكتشف: <b>${docType}</b></div>` : '';
       results.innerHTML = badge + rowsHtml(data);
+      setExport({ document_type: docType, data }, flattenSingle(data));
     }
 
     function renderPages(pages) {
@@ -207,6 +255,7 @@
           setTimeout(tick, 2500);
         } else if (j.status === 'completed') {
           results.innerHTML = renderPages(j.pages) || '<div class="results-empty">لا نتائج</div>';
+          setExport({ pages: j.pages }, flattenPages(j.pages));
           fetch('/v1/usage').then(r => r.json()).then(updateQuota).catch(() => {});
           resetButton();
         } else {
@@ -222,6 +271,7 @@
       extractBtn.disabled = true;
       extractBtn.textContent = 'جارٍ الاستخراج…';
       results.innerHTML = '<div class="results-empty">⏳ يتم تحليل المستند…</div>';
+      document.getElementById('exportBar').hidden = true;
 
       const mode = document.querySelector('input[name="mode"]:checked').value;
       const fd = new FormData();

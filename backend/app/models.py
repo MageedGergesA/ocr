@@ -19,10 +19,20 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     email = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=True)  # null for the seeded demo user
     plan = Column(String, default="free", nullable=False)  # free/starter/pro/business/demo
     created_at = Column(DateTime, default=datetime.utcnow)
 
     api_keys = relationship("ApiKey", back_populates="user")
+
+
+class Session(Base):
+    """Server-side web session — token lives in an httponly cookie."""
+    __tablename__ = "sessions"
+
+    token = Column(String, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 class ApiKey(Base):

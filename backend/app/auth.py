@@ -3,7 +3,9 @@
 Free tier is enforced here: each successful extraction increments a per-key,
 per-month counter; when it reaches the plan limit the caller gets a 429.
 """
+import hashlib
 import os
+import secrets
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -70,6 +72,48 @@ def increment_usage(db: Session, api_key: models.ApiKey, count: int = 1) -> None
         db.add(row)
     row.count += count
     db.commit()
+
+
+# ---- Passwords (stdlib pbkdf2, no extra deps) ----
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), bytes.fromhex(salt), 200_000)
+    return f"pbkdf2_sha256$200000${salt}${dk.hex()}"
+
+
+def verify_password(password: str, stored: str) -> bool:
+    try:
+        _algo, iters, salt, expected = stored.split("$")
+        dk = hashlib.pbkdf2_hmac("sha256", password.encode(), bytes.fromhex(salt), int(iters))
+        return secrets.compare_digest(dk.hex(), expected)
+    except Exception:  # noqa: BLE001
+        return False
+
+
+# ---- Web sessions (cookie token -> server-side row) ----
+
+def create_session(db: Session, user: models.User) -> str:
+    token = secrets.token_urlsafe(32)
+    db.add(models.Session(token=token, user_id=user.id))
+    db.commit()
+    return token
+
+
+def user_from_session(db: Session, token: str | None):
+    if not token:
+        return None
+    sess = db.get(models.Session, token)
+    return db.get(models.User, sess.user_id) if sess else None
+
+
+def delete_session(db: Session, token: str | None) -> None:
+    if not token:
+        return
+    sess = db.get(models.Session, token)
+    if sess:
+        db.delete(sess)
+        db.commit()
 
 
 def ensure_demo_user() -> None:

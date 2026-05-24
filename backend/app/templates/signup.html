@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إنشاء حساب — مُستخلِص</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="/">مُستخلِص<span>.ai</span></a>
+      <div class="nav-cta"><a class="btn btn-ghost" href="/login">تسجيل الدخول</a></div>
+    </div>
+  </header>
+
+  <section class="auth-wrap">
+    <div class="auth-card">
+      <h1>إنشاء حساب مجاني</h1>
+      <p class="auth-sub">50 عملية استخراج شهريًا — بدون بطاقة ائتمان</p>
+      {% if error %}<div class="auth-error">{{ error }}</div>{% endif %}
+      <form method="post" action="/signup">
+        <label>البريد الإلكتروني</label>
+        <input type="email" name="email" required autofocus>
+        <label>كلمة المرور (8 أحرف على الأقل)</label>
+        <input type="password" name="password" minlength="8" required>
+        <button class="btn btn-primary full" type="submit">ابدأ مجانًا</button>
+      </form>
+      <p class="auth-alt">لديك حساب بالفعل؟ <a href="/login">سجّل الدخول</a></p>
+    </div>
+  </section>
+</body>
+</html>
