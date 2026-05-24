@@ -131,6 +131,7 @@ details p { color: var(--muted); }
 .dz-empty .link { color: var(--brand); font-weight: 700; }
 .dz-empty small { color: var(--muted); display: block; margin-top: 6px; }
 .preview { max-width: 100%; max-height: 320px; border-radius: 10px; }
+.pdf-info { font-weight: 700; color: var(--brand-dark); padding: 28px 12px; font-size: 16px; }
 
 .fields { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
   font-family: 'Cairo', sans-serif; font-size: 14px; line-height: 1.7; resize: vertical; }

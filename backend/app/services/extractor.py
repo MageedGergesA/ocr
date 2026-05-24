@@ -37,20 +37,20 @@ def _strip_code_fence(text: str) -> str:
     return text.strip()
 
 
-def _run(image_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
-    image_b64 = base64.standard_b64encode(image_bytes).decode()
+def _run(file_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
+    b64 = base64.standard_b64encode(file_bytes).decode()
+    # PDFs go in a 'document' block (Claude reads all pages with cross-page context);
+    # images go in an 'image' block.
+    if media_type == "application/pdf":
+        source_block = {"type": "document",
+                        "source": {"type": "base64", "media_type": "application/pdf", "data": b64}}
+    else:
+        source_block = {"type": "image",
+                        "source": {"type": "base64", "media_type": media_type, "data": b64}}
     params = {
         "model": MODEL_HARD if hard else MODEL_EASY,
         "max_tokens": 4096 if hard else 2048,
-        "messages": [{
-            "role": "user",
-            "content": [
-                {"type": "image", "source": {
-                    "type": "base64", "media_type": media_type, "data": image_b64,
-                }},
-                {"type": "text", "text": prompt},
-            ],
-        }],
+        "messages": [{"role": "user", "content": [source_block, {"type": "text", "text": prompt}]}],
     }
     if hard:
         # Let the model deliberate over ambiguous handwriting before answering.

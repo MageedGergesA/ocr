@@ -74,7 +74,14 @@ async def extract_endpoint(
         except json.JSONDecodeError:
             raise HTTPException(400, "target_schema must be valid JSON: {field: description}")
 
+    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
+    if file.content_type not in allowed:
+        raise HTTPException(415, f"unsupported file type: {file.content_type}. "
+                                 "Use PNG, JPG, WEBP, GIF, or PDF.")
+
     image_bytes = await file.read()
+    if len(image_bytes) > 20 * 1024 * 1024:
+        raise HTTPException(413, "file too large (max 20 MB)")
 
     # Auth + free-tier enforcement. No key => the public demo account.
     session = db.SessionLocal()

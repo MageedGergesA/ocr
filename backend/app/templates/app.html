@@ -30,13 +30,14 @@
         <div class="panel">
           <label class="step">1 · المستند</label>
           <div id="dropzone" class="dropzone">
-            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" hidden>
             <div id="dzEmpty" class="dz-empty">
               <div class="dz-ico">📄</div>
-              <p>اسحب صورة المستند هنا أو <span class="link">اختر ملفًا</span></p>
-              <small>PNG · JPG · WEBP — صورة واحدة</small>
+              <p>اسحب المستند هنا أو <span class="link">اختر ملفًا</span></p>
+              <small>PNG · JPG · WEBP · PDF (متعدد الصفحات)</small>
             </div>
             <img id="preview" class="preview" alt="معاينة" hidden>
+            <div id="pdfInfo" class="pdf-info" hidden></div>
           </div>
 
           <label class="step">2 · طريقة الاستخراج</label>
@@ -85,16 +86,25 @@
     const dropzone  = document.getElementById('dropzone');
     const dzEmpty   = document.getElementById('dzEmpty');
     const preview   = document.getElementById('preview');
+    const pdfInfo   = document.getElementById('pdfInfo');
     const extractBtn= document.getElementById('extractBtn');
     const results   = document.getElementById('results');
     let currentFile = null;
 
     function setFile(file) {
-      if (!file || !file.type.startsWith('image/')) return;
+      if (!file) return;
+      const isPdf = file.type === 'application/pdf';
+      if (!file.type.startsWith('image/') && !isPdf) return;
       currentFile = file;
-      const url = URL.createObjectURL(file);
-      preview.src = url;
-      preview.hidden = false;
+      if (isPdf) {
+        preview.hidden = true;
+        pdfInfo.hidden = false;
+        pdfInfo.textContent = '📄 ' + file.name;
+      } else {
+        preview.src = URL.createObjectURL(file);
+        preview.hidden = false;
+        pdfInfo.hidden = true;
+      }
       dzEmpty.hidden = true;
       extractBtn.disabled = false;
     }
