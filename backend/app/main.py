@@ -8,14 +8,14 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import Body, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 load_dotenv()
 
-from app import auth, db, jobs, models  # noqa: E402
+from app import auth, db, exports, jobs, models  # noqa: E402
 from app.services import extractor  # noqa: E402  (after load_dotenv so env is ready)
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -41,6 +41,12 @@ def landing(request: Request):
 
 @app.get("/app", response_class=HTMLResponse)
 def demo_app(request: Request):
+    session = db.SessionLocal()
+    try:
+        if not _current_user(session, request):
+            return RedirectResponse("/login", status_code=303)
+    finally:
+        session.close()
     return templates.TemplateResponse(request, "app.html")
 
 
@@ -51,6 +57,19 @@ COOKIE_KW = dict(httponly=True, samesite="lax", max_age=60 * 60 * 24 * 30)
 
 def _current_user(session, request: Request):
     return auth.user_from_session(session, request.cookies.get("sid"))
+
+
+def _resolve_caller(session, x_api_key, request: Request):
+    """Identify the caller: API key (programmatic) or logged-in session (web).
+    No anonymous access — extraction always requires authentication."""
+    if x_api_key:
+        return auth.resolve_key(session, x_api_key)
+    user = _current_user(session, request)
+    if user:
+        key = session.query(models.ApiKey).filter_by(user_id=user.id, active=True).first()
+        if key:
+            return key
+    raise HTTPException(401, "login required, or provide a valid x-api-key")
 
 
 @app.get("/signup", response_class=HTMLResponse)
@@ -183,11 +202,11 @@ def job_status(job_id: str):
 
 
 @app.get("/v1/usage")
-def usage(x_api_key: str = Header(None)):
+def usage(request: Request, x_api_key: str = Header(None)):
     """Report the caller's current-month usage and quota."""
     session = db.SessionLocal()
     try:
-        api_key = auth.resolve_key(session, x_api_key or auth.DEMO_API_KEY)
+        api_key = _resolve_caller(session, x_api_key, request)
         used, limit, _ = auth.get_usage(session, api_key)
         return {"plan": api_key.user.plan, "used": used, "limit": limit,
                 "remaining": max(0, limit - used)}
@@ -195,9 +214,29 @@ def usage(x_api_key: str = Header(None)):
         session.close()
 
 
+@app.post("/v1/export")
+def export_data(request: Request, payload: dict = Body(...), x_api_key: str = Header(None)):
+    """Turn extracted rows into a downloadable file (csv/xlsx/docx/pdf)."""
+    session = db.SessionLocal()
+    try:
+        _resolve_caller(session, x_api_key, request)  # auth gate
+    finally:
+        session.close()
+    fmt = payload.get("format", "csv")
+    rows = payload.get("rows", [])
+    if fmt not in exports.EXPORTERS:
+        raise HTTPException(400, f"unsupported format '{fmt}'. Use: {', '.join(exports.EXPORTERS)}")
+    if not rows:
+        raise HTTPException(400, "no rows to export")
+    data, media_type, filename = exports.EXPORTERS[fmt](rows)
+    return Response(content=data, media_type=media_type,
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
 @app.post("/v1/extract")
 def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slow
                        # (synchronous) Claude call never blocks the event loop.
+    request: Request,
     file: UploadFile = File(...),
     target_schema: str = Form(""),  # optional — empty/omitted means auto-detect
     hard: bool = Form(True),
@@ -229,7 +268,7 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
     # Auth + free-tier enforcement. No key => the public demo account.
     session = db.SessionLocal()
     try:
-        api_key = auth.resolve_key(session, x_api_key or auth.DEMO_API_KEY)
+        api_key = _resolve_caller(session, x_api_key, request)
 
         # Large PDF → background batch job (one call per page; never truncates).
         if n_pages and n_pages > native_max:
