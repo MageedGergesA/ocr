@@ -39,13 +39,25 @@
             <img id="preview" class="preview" alt="معاينة" hidden>
           </div>
 
-          <label class="step">2 · الحقول المطلوبة</label>
-          <p class="hint">سطر لكل حقل بالصيغة: <code>الاسم: وصف مختصر</code></p>
-          <textarea id="fields" class="fields" rows="6">رقم_الفاتورة: رقم الفاتورة أو المستند
+          <label class="step">2 · طريقة الاستخراج</label>
+          <div class="mode-row">
+            <label class="mode-opt">
+              <input type="radio" name="mode" value="auto" checked>
+              <span><b>تعرّف تلقائي</b> — يكتشف نوع المستند ويستخرج حقوله تلقائيًا</span>
+            </label>
+            <label class="mode-opt">
+              <input type="radio" name="mode" value="custom">
+              <span><b>حقول محددة</b> — أنت تختار الحقول</span>
+            </label>
+          </div>
+          <div id="fieldsWrap" hidden>
+            <p class="hint">سطر لكل حقل بالصيغة: <code>الاسم: وصف مختصر</code></p>
+            <textarea id="fields" class="fields" rows="6">رقم_الفاتورة: رقم الفاتورة أو المستند
 اسم_العميل: الاسم الكامل للعميل أو الشركة
 التاريخ: تاريخ المستند
 الإجمالي: المبلغ الإجمالي
 الرقم_الضريبي: الرقم الضريبي إن وجد</textarea>
+          </div>
 
           <label class="toggle">
             <input type="checkbox" id="hard" checked>
@@ -96,6 +108,12 @@
     }));
     dropzone.addEventListener('drop', e => setFile(e.dataTransfer.files[0]));
 
+    // show the fields box only when "specific fields" mode is chosen
+    document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => {
+      const custom = document.querySelector('input[name="mode"]:checked').value === 'custom';
+      document.getElementById('fieldsWrap').hidden = !custom;
+    }));
+
     function parseFields() {
       const schema = {};
       document.getElementById('fields').value.split('\n').forEach(line => {
@@ -116,7 +134,9 @@
       return '#dc2626';
     }
 
-    function render(data) {
+    function render(data, docType) {
+      const badge = docType
+        ? `<div class="doctype">نوع المستند المكتشف: <b>${docType}</b></div>` : '';
       const rows = Object.entries(data).map(([field, info]) => {
         let value = info, conf = null;
         if (info && typeof info === 'object') { value = info.value; conf = info.confidence; }
@@ -130,7 +150,7 @@
                   <div class="row-conf">${bar}</div>
                 </div>`;
       }).join('');
-      results.innerHTML = `<div class="row head"><div>الحقل</div><div>القيمة</div><div>الثقة</div></div>${rows}`;
+      results.innerHTML = badge + `<div class="row head"><div>الحقل</div><div>القيمة</div><div>الثقة</div></div>${rows}`;
     }
 
     extractBtn.addEventListener('click', async () => {
@@ -139,16 +159,17 @@
       extractBtn.textContent = 'جارٍ الاستخراج…';
       results.innerHTML = '<div class="results-empty">⏳ يتم تحليل المستند…</div>';
 
+      const mode = document.querySelector('input[name="mode"]:checked').value;
       const fd = new FormData();
       fd.append('file', currentFile);
-      fd.append('target_schema', JSON.stringify(parseFields()));
+      fd.append('target_schema', mode === 'custom' ? JSON.stringify(parseFields()) : '');
       fd.append('hard', document.getElementById('hard').checked);
 
       try {
         const res = await fetch('/v1/extract', { method: 'POST', body: fd });
         const body = await res.json();
         if (!res.ok) throw new Error(body.detail || ('HTTP ' + res.status));
-        render(body.data);
+        render(body.data, body.document_type);
       } catch (err) {
         results.innerHTML = `<div class="results-error">⚠️ ${err.message}</div>`;
       } finally {

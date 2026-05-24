@@ -42,21 +42,32 @@ def demo_app(request: Request):
 @app.post("/v1/extract")
 async def extract_endpoint(
     file: UploadFile = File(...),
-    target_schema: str = Form(...),
+    target_schema: str = Form(""),  # optional — empty/omitted means auto-detect
     hard: bool = Form(True),
     x_api_key: str = Header(None),
 ):
     # TODO(#5): validate x_api_key against Postgres; TODO(#6): Redis usage + free-tier 429.
     if not os.getenv("ANTHROPIC_API_KEY"):
         raise HTTPException(500, "ANTHROPIC_API_KEY not configured on server")
-    try:
-        schema = json.loads(target_schema)
-    except json.JSONDecodeError:
-        raise HTTPException(400, "target_schema must be valid JSON: {field: description}")
+
+    schema = None
+    if target_schema and target_schema.strip() not in ("", "{}"):
+        try:
+            schema = json.loads(target_schema)
+        except json.JSONDecodeError:
+            raise HTTPException(400, "target_schema must be valid JSON: {field: description}")
 
     image_bytes = await file.read()
     try:
-        result = extractor.extract(image_bytes, file.content_type, schema, hard=hard)
+        if schema:
+            data = extractor.extract_schema(image_bytes, file.content_type, schema, hard=hard)
+            return {"mode": "schema", "document_type": None, "data": data}
+        result = extractor.extract_auto(image_bytes, file.content_type, hard=hard)
+        # auto mode returns {document_type, fields}; flatten to a stable response shape
+        return {
+            "mode": "auto",
+            "document_type": result.get("document_type"),
+            "data": result.get("fields", result),
+        }
     except Exception as e:  # noqa: BLE001 — surface model/parse errors to caller for now
         raise HTTPException(502, f"extraction failed: {e}")
-    return {"data": result}
