@@ -37,11 +37,25 @@ def _strip_code_fence(text: str) -> str:
     return text.strip()
 
 
+# Shared guidance that makes handwriting / Arabic extraction more accurate and
+# keeps the confidence score honest instead of optimistic.
+HANDWRITING_GUIDANCE = (
+    "This document may be handwritten and/or in Arabic. Read it slowly and carefully, "
+    "letter by letter — account for Arabic letter forms, ligatures, diacritics, and "
+    "commonly confused characters and digits. Transcribe exactly what is written; "
+    "never guess, autocomplete, or invent a value. If part of a value is unclear, "
+    "extract what you can read and lower its confidence. If a field is illegible or "
+    "absent, set its value to null. Calibrate confidence honestly: use 0.9+ only when "
+    "you are genuinely certain, and below 0.6 when the writing is hard to read."
+)
+
+
 def _run(image_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
     image_b64 = base64.standard_b64encode(image_bytes).decode()
     msg = _get_client().messages.create(
         model=MODEL_HARD if hard else MODEL_EASY,
         max_tokens=2048,
+        temperature=0,  # deterministic extraction — minimizes guessing/drift
         messages=[{
             "role": "user",
             "content": [
@@ -52,7 +66,8 @@ def _run(image_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
             ],
         }],
     )
-    return json.loads(_strip_code_fence(msg.content[0].text))
+    text = next((b.text for b in msg.content if getattr(b, "type", None) == "text"), "")
+    return json.loads(_strip_code_fence(text))
 
 
 def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict:
@@ -65,8 +80,9 @@ def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict
         "1. Identify its type (e.g., passport, national ID, driver license, invoice, "
         "receipt, contract, bank statement, prescription, business card).\n"
         "2. Extract ALL meaningful fields that actually appear on THIS document. "
-        "Choose field names that fit the document type — do not invent fields that are not present.\n"
-        "The document may be in Arabic, English, or handwritten; keep each value in its original language.\n"
+        "Choose field names that fit the document type — do not invent fields that are not present. "
+        "Keep each value in its original language.\n\n"
+        f"{HANDWRITING_GUIDANCE}\n\n"
         "Return ONLY valid JSON, no other text, in exactly this shape:\n"
         '{"document_type": "<type>", "fields": {"<field name>": '
         '{"value": <value>, "confidence": <0-1>}, ...}}'
@@ -82,8 +98,8 @@ def extract_schema(image_bytes: bytes, media_type: str, target_schema: dict, har
     """
     field_list = "\n".join(f"- {k}: {v}" for k, v in target_schema.items())
     prompt = (
-        "Extract the following fields from this document. "
-        "The document may be in Arabic, English, or handwritten. "
+        "Extract the following fields from this document.\n\n"
+        f"{HANDWRITING_GUIDANCE}\n\n"
         "Return ONLY valid JSON, no other text. "
         "For each field, return an object with 'value' and 'confidence' (0-1). "
         "If a field is not present, set its value to null.\n\n"
