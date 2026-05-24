@@ -58,7 +58,8 @@ def usage(x_api_key: str = Header(None)):
 
 
 @app.post("/v1/extract")
-async def extract_endpoint(
+def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slow
+                       # (synchronous) Claude call never blocks the event loop.
     file: UploadFile = File(...),
     target_schema: str = Form(""),  # optional — empty/omitted means auto-detect
     hard: bool = Form(True),
@@ -79,9 +80,23 @@ async def extract_endpoint(
         raise HTTPException(415, f"unsupported file type: {file.content_type}. "
                                  "Use PNG, JPG, WEBP, GIF, or PDF.")
 
-    image_bytes = await file.read()
+    image_bytes = file.file.read()
     if len(image_bytes) > 20 * 1024 * 1024:
         raise HTTPException(413, "file too large (max 20 MB)")
+
+    # Guard against giant PDFs (slow + costly). Typical invoices are 1-3 pages.
+    if file.content_type == "application/pdf":
+        max_pages = int(os.getenv("MAX_PDF_PAGES", "30"))
+        try:
+            import io
+            from pypdf import PdfReader
+            n_pages = len(PdfReader(io.BytesIO(image_bytes)).pages)
+        except Exception:  # noqa: BLE001 — if we can't count, let it through
+            n_pages = None
+        if n_pages and n_pages > max_pages:
+            raise HTTPException(
+                413, f"this PDF has {n_pages} pages; the limit is {max_pages} per extraction. "
+                     "Split it into smaller files and extract each.")
 
     # Auth + free-tier enforcement. No key => the public demo account.
     session = db.SessionLocal()

@@ -49,7 +49,10 @@ def _run(file_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
                         "source": {"type": "base64", "media_type": media_type, "data": b64}}
     params = {
         "model": MODEL_HARD if hard else MODEL_EASY,
-        "max_tokens": 4096 if hard else 2048,
+        # Generous output room: multi-page / many-line docs produce long JSON.
+        # Too small a cap truncates the response mid-string and breaks parsing.
+        # (You're billed for tokens actually generated, not the cap.)
+        "max_tokens": 16000 if hard else 8192,
         "messages": [{"role": "user", "content": [source_block, {"type": "text", "text": prompt}]}],
     }
     if hard:
@@ -59,7 +62,15 @@ def _run(file_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
     msg = _get_client().messages.create(**params)
     # With thinking on, content holds thinking block(s) + a text block — take the text.
     text = next((b.text for b in msg.content if getattr(b, "type", None) == "text"), "")
-    return json.loads(_strip_code_fence(text))
+    try:
+        return json.loads(_strip_code_fence(text))
+    except json.JSONDecodeError:
+        if getattr(msg, "stop_reason", None) == "max_tokens":
+            raise ValueError(
+                "the response was truncated — this document is unusually large/complex. "
+                "Try splitting the PDF or using specific-fields mode to extract fewer fields."
+            )
+        raise
 
 
 def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict:
