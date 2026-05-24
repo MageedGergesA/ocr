@@ -39,10 +39,10 @@ def _strip_code_fence(text: str) -> str:
 
 def _run(image_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
     image_b64 = base64.standard_b64encode(image_bytes).decode()
-    msg = _get_client().messages.create(
-        model=MODEL_HARD if hard else MODEL_EASY,
-        max_tokens=2048,
-        messages=[{
+    params = {
+        "model": MODEL_HARD if hard else MODEL_EASY,
+        "max_tokens": 4096 if hard else 2048,
+        "messages": [{
             "role": "user",
             "content": [
                 {"type": "image", "source": {
@@ -51,8 +51,15 @@ def _run(image_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
                 {"type": "text", "text": prompt},
             ],
         }],
-    )
-    return json.loads(_strip_code_fence(msg.content[0].text))
+    }
+    if hard:
+        # Let the model deliberate over ambiguous handwriting before answering.
+        # Improves reading accuracy without suppressing outputs (billed as output tokens).
+        params["thinking"] = {"type": "enabled", "budget_tokens": 2048}
+    msg = _get_client().messages.create(**params)
+    # With thinking on, content holds thinking block(s) + a text block — take the text.
+    text = next((b.text for b in msg.content if getattr(b, "type", None) == "text"), "")
+    return json.loads(_strip_code_fence(text))
 
 
 def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict:
@@ -67,6 +74,8 @@ def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict
         "2. Extract ALL meaningful fields that actually appear on THIS document. "
         "Choose field names that fit the document type — do not invent fields that are not present.\n"
         "The document may be in Arabic, English, or handwritten; keep each value in its original language.\n"
+        "Be thorough: read every handwritten entry carefully and give your best reading for each "
+        "field — do not skip or omit a field just because the handwriting is unclear.\n"
         "Return ONLY valid JSON, no other text, in exactly this shape:\n"
         '{"document_type": "<type>", "fields": {"<field name>": '
         '{"value": <value>, "confidence": <0-1>}, ...}}'
