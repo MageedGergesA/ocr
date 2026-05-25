@@ -113,7 +113,24 @@ def to_pdf(rows, title="extraction"):
     return buf.getvalue(), "application/pdf", f"{title}.pdf"
 
 
-EXPORTERS = {"csv": to_csv, "xlsx": to_xlsx, "docx": to_docx, "pdf": to_pdf}
+def to_xml(rows, title="extraction"):
+    from xml.sax.saxutils import escape
+    out = ['<?xml version="1.0" encoding="UTF-8"?>', "<extraction>"]
+    for r in rows:
+        val = "" if r.get("value") is None else str(r.get("value"))
+        out += [
+            "  <field>",
+            f"    <page>{r.get('page', '')}</page>",
+            f"    <name>{escape(str(r.get('field', '')))}</name>",
+            f"    <value>{escape(val)}</value>",
+            f"    <confidence>{r.get('confidence', '')}</confidence>",
+            "  </field>",
+        ]
+    out.append("</extraction>")
+    return "\n".join(out).encode("utf-8"), "application/xml; charset=utf-8", f"{title}.xml"
+
+
+EXPORTERS = {"csv": to_csv, "xlsx": to_xlsx, "docx": to_docx, "pdf": to_pdf, "xml": to_xml}
 
 
 # ---- Table exports (columns + rows) ----

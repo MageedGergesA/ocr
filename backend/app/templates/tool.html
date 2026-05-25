@@ -219,7 +219,7 @@
           enableAsk(fieldsToText(body.data));
           const rows = Object.entries(body.data || {}).map(([f, info]) =>
             ({ page: 1, field: f, value: (info && typeof info === 'object') ? info.value : info, confidence: (info && typeof info === 'object') ? info.confidence : '' }));
-          showExports(['xlsx', 'docx', 'pdf', 'csv'].map(fmt =>
+          showExports(['xlsx', 'docx', 'pdf', 'csv', 'xml'].map(fmt =>
             btn(fmt.toUpperCase(), async () => dl(await postJSON('/v1/export', { format: fmt, rows }), 'extraction.' + fmt))));
         } else if (KIND === 'table') {
           result.innerHTML = htmlTable(body.columns, body.rows);

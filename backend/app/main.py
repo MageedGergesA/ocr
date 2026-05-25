@@ -17,7 +17,7 @@ load_dotenv()
 
 from app import auth, db, exports, jobs, models  # noqa: E402
 from app.services import extractor  # noqa: E402  (after load_dotenv so env is ready)
-from app.services_catalog import SERVICES  # noqa: E402
+from app.services_catalog import CATEGORIES, SERVICES  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -118,7 +118,8 @@ def chat_answer(request: Request, payload: dict = Body(...), x_api_key: str = He
 
 @app.get("/tools", response_class=HTMLResponse)
 def tools_hub(request: Request):
-    return templates.TemplateResponse(request, "tools.html", _ctx(request, services=SERVICES))
+    return templates.TemplateResponse(request, "tools.html",
+                                      _ctx(request, services=SERVICES, categories=CATEGORIES))
 
 
 @app.get("/tools/{slug}", response_class=HTMLResponse)
