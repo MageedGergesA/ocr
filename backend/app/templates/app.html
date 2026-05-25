@@ -77,6 +77,15 @@
             <button class="btn btn-ghost" type="button" onclick="exportAs('pdf')">PDF</button>
             <button class="btn btn-ghost" type="button" onclick="exportAs('csv')">CSV</button>
           </div>
+
+          <div id="askWrap" class="ask-wrap" hidden>
+            <label class="step">💬 اسأل عن هذا المستند</label>
+            <div id="askBox" class="chat-box ask-box"></div>
+            <form id="askForm" class="chat-form">
+              <input id="askQ" type="text" placeholder="مثال: ما الإجمالي؟ لخّص لي المحتوى…" autocomplete="off">
+              <button class="btn btn-primary" type="submit">إرسال</button>
+            </form>
+          </div>
         </div>
 
       </div>
@@ -250,7 +259,40 @@
         ? `<div class="doctype">نوع المستند المكتشف: <b>${docType}</b></div>` : '';
       results.innerHTML = badge + rowsHtml(data);
       setExport({ document_type: docType, data }, flattenSingle(data));
+      enableAsk(flattenSingle(data).map(r => `${r.field}: ${r.value ?? ''}`).join('\n'));
     }
+
+    // ---- Ask-about-this-document ----
+    let chatContext = null, chatHistory = [];
+    function enableAsk(context) {
+      chatContext = context; chatHistory = [];
+      const box = document.getElementById('askBox');
+      box.innerHTML = '<div class="results-empty">اسأل أي سؤال عن هذا المستند.</div>';
+      document.getElementById('askWrap').hidden = false;
+    }
+    function askBubble(role, text) {
+      const box = document.getElementById('askBox');
+      const d = document.createElement('div'); d.className = 'bubble ' + role; d.textContent = text;
+      box.appendChild(d); box.scrollTop = box.scrollHeight; return d;
+    }
+    document.getElementById('askForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const inp = document.getElementById('askQ'), q = inp.value.trim();
+      if (!q || !chatContext) return;
+      const box = document.getElementById('askBox');
+      if (box.querySelector('.results-empty')) box.innerHTML = '';
+      askBubble('user', q); inp.value = '';
+      const t = askBubble('assistant', '…');
+      try {
+        const r = await fetch('/v1/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: chatContext, question: q, history: chatHistory }) });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.detail || r.status);
+        t.textContent = j.answer;
+        chatHistory.push({ role: 'user', content: q }, { role: 'assistant', content: j.answer });
+        updateQuota(j.usage);
+      } catch (err) { t.className = 'bubble assistant err'; t.textContent = '⚠️ ' + err.message; }
+    });
 
     function renderPages(pages) {
       return (pages || []).map(p => {
@@ -295,6 +337,7 @@
         } else if (j.status === 'completed') {
           results.innerHTML = renderPages(j.pages) || '<div class="results-empty">لا نتائج</div>';
           setExport({ pages: j.pages }, flattenPages(j.pages));
+          enableAsk(flattenPages(j.pages).map(r => `[ص${r.page}] ${r.field}: ${r.value ?? ''}`).join('\n'));
           fetch('/v1/usage').then(r => r.json()).then(updateQuota).catch(() => {});
           resetButton();
         } else {

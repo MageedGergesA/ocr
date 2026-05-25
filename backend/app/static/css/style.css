@@ -184,6 +184,8 @@ details p { color: var(--muted); }
 .chat-form input { flex: 1; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px;
   font-family: 'Cairo', sans-serif; font-size: 14px; }
 .chat-form input:focus { outline: none; border-color: var(--brand); }
+.ask-wrap { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 16px; }
+.ask-box { min-height: 80px; max-height: 300px; }
 .page-block { margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px solid var(--line); }
 .page-block:last-child { border-bottom: none; }
 

@@ -44,6 +44,15 @@
           <label class="step">2 · النتيجة</label>
           <div id="result" class="results"><div class="results-empty">ستظهر النتيجة هنا.</div></div>
           <div id="exportBar" class="export-bar" hidden></div>
+
+          <div id="askWrap" class="ask-wrap" hidden>
+            <label class="step">💬 اسأل عن هذا المستند</label>
+            <div id="askBox" class="chat-box ask-box"></div>
+            <form id="askForm" class="chat-form">
+              <input id="askQ" type="text" placeholder="مثال: ما الإجمالي؟ لخّص لي المحتوى…" autocomplete="off">
+              <button class="btn btn-primary" type="submit">إرسال</button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -135,6 +144,47 @@
 
     function showExports(buttons) { exportBar.innerHTML = ''; buttons.forEach(b => exportBar.appendChild(b)); exportBar.hidden = buttons.length === 0; }
 
+    // ---- Ask-about-this-document (chat against the extracted content) ----
+    let chatContext = null, chatHistory = [];
+    const askWrap = document.getElementById('askWrap');
+    const askBox = document.getElementById('askBox');
+    const askForm = document.getElementById('askForm');
+    const askQ = document.getElementById('askQ');
+
+    function fieldsToText(data) {
+      return Object.entries(data || {}).map(([k, info]) =>
+        `${k}: ${(info && typeof info === 'object') ? (info.value ?? '') : info}`).join('\n');
+    }
+    function tableToText(cols, rows) {
+      return [(cols || []).join(' | '), ...(rows || []).map(r => (r || []).join(' | '))].join('\n');
+    }
+    function enableAsk(context) {
+      chatContext = context; chatHistory = [];
+      askBox.innerHTML = '<div class="results-empty">اسأل أي سؤال عن هذا المستند.</div>';
+      askWrap.hidden = false;
+    }
+    function askBubble(role, text) {
+      const d = document.createElement('div'); d.className = 'bubble ' + role; d.textContent = text;
+      askBox.appendChild(d); askBox.scrollTop = askBox.scrollHeight; return d;
+    }
+    askForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const q = askQ.value.trim();
+      if (!q || !chatContext) return;
+      if (askBox.querySelector('.results-empty')) askBox.innerHTML = '';
+      askBubble('user', q); askQ.value = '';
+      const t = askBubble('assistant', '…');
+      try {
+        const r = await fetch('/v1/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: chatContext, question: q, history: chatHistory }) });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.detail || r.status);
+        t.textContent = j.answer;
+        chatHistory.push({ role: 'user', content: q }, { role: 'assistant', content: j.answer });
+        updateBal(j.usage);
+      } catch (err) { t.className = 'bubble assistant err'; t.textContent = '⚠️ ' + err.message; }
+    });
+
     runBtn.addEventListener('click', async () => {
       if (!currentFile) return;
       runBtn.disabled = true; runBtn.textContent = 'جارٍ المعالجة…';
@@ -157,6 +207,7 @@
         if (KIND === 'text') {
           lastData = body.text;
           result.innerHTML = `<pre class="text-out">${(body.text || '').replace(/</g, '&lt;')}</pre>`;
+          enableAsk(body.text);
           showExports([
             btn('نسخ', () => navigator.clipboard.writeText(lastData)),
             btn('Word', async () => dl(await postJSON('/v1/export-text', { format: 'docx', text: lastData }), 'document.docx')),
@@ -165,12 +216,14 @@
           ]);
         } else if (KIND === 'fields') {
           result.innerHTML = fieldsTable(body.data);
+          enableAsk(fieldsToText(body.data));
           const rows = Object.entries(body.data || {}).map(([f, info]) =>
             ({ page: 1, field: f, value: (info && typeof info === 'object') ? info.value : info, confidence: (info && typeof info === 'object') ? info.confidence : '' }));
           showExports(['xlsx', 'docx', 'pdf', 'csv'].map(fmt =>
             btn(fmt.toUpperCase(), async () => dl(await postJSON('/v1/export', { format: fmt, rows }), 'extraction.' + fmt))));
         } else if (KIND === 'table') {
           result.innerHTML = htmlTable(body.columns, body.rows);
+          enableAsk(tableToText(body.columns, body.rows));
           showExports([
             btn('Excel', async () => dl(await postJSON('/v1/export-table', { format: 'xlsx', columns: body.columns, rows: body.rows }), 'table.xlsx')),
             btn('CSV', async () => dl(await postJSON('/v1/export-table', { format: 'csv', columns: body.columns, rows: body.rows }), 'table.csv')),
