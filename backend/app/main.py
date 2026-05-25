@@ -243,6 +243,26 @@ def job_status(job_id: str):
     return {"job_id": job_id, **job}
 
 
+@app.post("/v1/estimate")
+def estimate(request: Request, file: UploadFile = File(...), x_api_key: str = Header(None)):
+    """Pre-run cost estimate: pages + credits (strong vs fast) + current balance.
+    No AI call — just counts pages."""
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        used, limit, _ = auth.get_usage(session, api_key)
+    finally:
+        session.close()
+    data = file.file.read()
+    pages = (_count_pdf_pages(data) if file.content_type == "application/pdf" else 1) or 1
+    return {
+        "pages": pages,
+        "cost_strong": pages * auth.credits_for(True),
+        "cost_fast": pages * auth.credits_for(False),
+        "used": used, "limit": limit, "remaining": max(0, limit - used),
+    }
+
+
 @app.get("/v1/usage")
 def usage(request: Request, x_api_key: str = Header(None)):
     """Report the caller's current-month usage and quota."""

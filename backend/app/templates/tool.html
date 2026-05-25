@@ -36,6 +36,7 @@
             <input type="checkbox" id="hard" checked>
             دقة أعلى (Sonnet + تفكير) — للعربي والخط اليدوي. ألغِ التحديد للمستندات المطبوعة البسيطة (أسرع وأرخص).
           </label>
+          <div id="credits" class="credits-box">💳 …</div>
           <button id="runBtn" class="btn btn-primary btn-lg full" disabled>تشغيل</button>
         </div>
 
@@ -59,6 +60,38 @@
     const result = document.getElementById('result');
     const exportBar = document.getElementById('exportBar');
     let currentFile = null, lastData = null;
+    let curPages = 0, curRemaining = 0, curLimit = 0;
+    const STRONG = 8, FAST = 1;
+
+    function renderCredits() {
+      const box = document.getElementById('credits');
+      const hard = document.getElementById('hard').checked;
+      let html = `💳 رصيدك: <b>${curRemaining}</b> من ${curLimit} نقطة`;
+      if (curPages > 0) {
+        const active = curPages * (hard ? STRONG : FAST), other = curPages * (hard ? FAST : STRONG);
+        const pg = curPages > 1 ? ` · ${curPages} صفحة` : '';
+        html += `<br>هذه العملية${pg}: <b>${active} نقطة</b> ${hard ? '(دقة عالية)' : '(سريع)'}`
+              + ` <span class="credits-alt">— بالوضع ${hard ? 'السريع' : 'الدقيق'}: ${other} نقطة</span>`;
+        if (active > curRemaining) {
+          html += `<br><span class="credits-warn">⚠️ رصيدك غير كافٍ</span>`;
+          runBtn.disabled = true;
+        } else if (currentFile) { runBtn.disabled = false; }
+      }
+      box.innerHTML = html;
+    }
+    function updateBal(u) { if (u) { curRemaining = u.remaining; curLimit = u.limit; renderCredits(); } }
+    async function estimateFile() {
+      if (!currentFile) { curPages = 0; renderCredits(); return; }
+      if (currentFile.type === 'application/pdf') {
+        try {
+          const fd = new FormData(); fd.append('file', currentFile);
+          const j = await (await fetch('/v1/estimate', { method: 'POST', body: fd })).json();
+          curPages = j.pages || 1;
+          if (j.remaining != null) { curRemaining = j.remaining; curLimit = j.limit; }
+        } catch { curPages = 1; }
+      } else { curPages = 1; }
+      renderCredits();
+    }
 
     function setFile(f) {
       if (!f) return;
@@ -68,6 +101,7 @@
       if (isPdf) { preview.hidden = true; pdfInfo.hidden = false; pdfInfo.textContent = '📄 ' + f.name; }
       else { preview.src = URL.createObjectURL(f); preview.hidden = false; pdfInfo.hidden = true; }
       dzEmpty.hidden = true; runBtn.disabled = false;
+      estimateFile();
     }
     dropzone.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', e => setFile(e.target.files[0]));
@@ -114,6 +148,7 @@
           if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.status);
           dl(await res.blob(), 'searchable.pdf');
           result.innerHTML = '<div class="results-empty">✅ تم إنشاء ملف PDF قابل للبحث وتنزيله.</div>';
+          fetch('/v1/usage').then(r => r.json()).then(updateBal).catch(() => {});
           return;
         }
         const body = await res.json();
@@ -141,12 +176,16 @@
             btn('CSV', async () => dl(await postJSON('/v1/export-table', { format: 'csv', columns: body.columns, rows: body.rows }), 'table.csv')),
           ]);
         }
+        updateBal(body.usage);
       } catch (err) {
         result.innerHTML = `<div class="results-error">⚠️ ${err.message}</div>`;
       } finally {
         runBtn.disabled = false; runBtn.textContent = 'تشغيل';
       }
     });
+
+    document.getElementById('hard').addEventListener('change', renderCredits);
+    fetch('/v1/usage').then(r => r.json()).then(updateBal).catch(() => {});
   </script>
 </body>
 </html>

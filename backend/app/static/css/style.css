@@ -165,6 +165,11 @@ details p { color: var(--muted); }
 .export-bar { display: flex; gap: 8px; margin-top: 16px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
 .export-bar .btn { padding: 7px 14px; font-size: 13px; }
 .export-label { font-size: 13px; color: var(--muted); margin-inline-end: auto; }
+.credits-box { background: #f5f9ff; border: 1px solid #dbe7ff; border-radius: 10px;
+  padding: 12px 14px; font-size: 14px; color: var(--ink); line-height: 1.7; margin: 14px 0; }
+.credits-box b { color: var(--brand-dark); }
+.credits-alt { color: var(--muted); font-size: 13px; }
+.credits-warn { color: #dc2626; font-weight: 700; }
 .page-block { margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px solid var(--line); }
 .page-block:last-child { border-bottom: none; }
 

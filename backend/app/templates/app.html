@@ -58,6 +58,8 @@
             مستند صعب / مكتوب بخط اليد (دقة أعلى)
           </label>
 
+          <div id="credits" class="credits-box">💳 …</div>
+
           <button id="extractBtn" class="btn btn-primary btn-lg full" disabled>استخرج البيانات</button>
         </div>
 
@@ -90,6 +92,41 @@
     const extractBtn= document.getElementById('extractBtn');
     const results   = document.getElementById('results');
     let currentFile = null;
+    let curPages = 0, curRemaining = 0, curLimit = 0;
+    const STRONG = 8, FAST = 1;
+
+    function renderCredits() {
+      const box = document.getElementById('credits');
+      const hard = document.getElementById('hard').checked;
+      let html = `💳 رصيدك: <b>${curRemaining}</b> من ${curLimit} نقطة`;
+      if (curPages > 0) {
+        const active = curPages * (hard ? STRONG : FAST);
+        const other = curPages * (hard ? FAST : STRONG);
+        const pg = curPages > 1 ? ` · ${curPages} صفحة` : '';
+        html += `<br>هذه العملية${pg}: <b>${active} نقطة</b> ${hard ? '(دقة عالية)' : '(سريع)'}`
+              + ` <span class="credits-alt">— بالوضع ${hard ? 'السريع' : 'الدقيق'}: ${other} نقطة</span>`;
+        if (active > curRemaining) {
+          html += `<br><span class="credits-warn">⚠️ رصيدك غير كافٍ — بدّل للوضع السريع أو رقّ خطتك</span>`;
+          extractBtn.disabled = true;
+        } else if (currentFile) {
+          extractBtn.disabled = false;
+        }
+      }
+      box.innerHTML = html;
+    }
+
+    async function estimateFile() {
+      if (!currentFile) { curPages = 0; renderCredits(); return; }
+      if (currentFile.type === 'application/pdf') {
+        try {
+          const fd = new FormData(); fd.append('file', currentFile);
+          const j = await (await fetch('/v1/estimate', { method: 'POST', body: fd })).json();
+          curPages = j.pages || 1;
+          if (j.remaining != null) { curRemaining = j.remaining; curLimit = j.limit; }
+        } catch { curPages = 1; }
+      } else { curPages = 1; }
+      renderCredits();
+    }
 
     function setFile(file) {
       if (!file) return;
@@ -107,6 +144,7 @@
       }
       dzEmpty.hidden = true;
       extractBtn.disabled = false;
+      estimateFile();
     }
 
     dropzone.addEventListener('click', () => fileInput.click());
@@ -229,9 +267,11 @@
 
     function updateQuota(u) {
       if (!u) return;
+      curRemaining = u.remaining; curLimit = u.limit;
       const charged = u.charged ? ` (استهلكت ${u.charged} نقطة)` : '';
       document.getElementById('quota').textContent =
         `تبقّى لك ${u.remaining} من ${u.limit} نقطة هذا الشهر${charged}`;
+      renderCredits();
     }
 
     function resetButton() {
@@ -299,6 +339,10 @@
         if (!batching) resetButton();
       }
     });
+
+    // live credit estimate: re-render when accuracy toggle flips; load balance on open
+    document.getElementById('hard').addEventListener('change', renderCredits);
+    fetch('/v1/usage').then(r => r.json()).then(updateQuota).catch(() => {});
   </script>
 
 </body>
