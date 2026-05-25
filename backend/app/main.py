@@ -257,7 +257,8 @@ def usage(request: Request, x_api_key: str = Header(None)):
 
 
 @app.post("/v1/tool/{slug}")
-def run_tool(slug: str, request: Request, file: UploadFile = File(...), x_api_key: str = Header(None)):
+def run_tool(slug: str, request: Request, file: UploadFile = File(...),
+             hard: bool = Form(True), x_api_key: str = Header(None)):
     """Run a catalog OCR service (text / fields / table / searchable PDF)."""
     svc = SERVICES.get(slug)
     if not svc:
@@ -280,7 +281,7 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...), x_api_ke
     try:
         api_key = _resolve_caller(session, x_api_key, request)
         auth.enforce_limit(session, api_key)
-        ct, hard = file.content_type, svc.get("hard", True)
+        ct = file.content_type  # `hard` (Sonnet + thinking) comes from the request, default True
         try:
             if kind == "text":
                 out = {"kind": "text", "text": extractor.run_text(data_bytes, ct, svc["prompt"], hard)}
@@ -290,7 +291,7 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...), x_api_ke
                 t = extractor.run_table(data_bytes, ct, hard)
                 out = {"kind": "table", "columns": t["columns"], "rows": t["rows"]}
             elif kind == "searchable_pdf":
-                text = extractor.run_text(data_bytes, ct, SERVICES["arabic-ocr"]["prompt"], False)
+                text = extractor.run_text(data_bytes, ct, SERVICES["arabic-ocr"]["prompt"], hard)
                 pdf, media, fname = exports.image_to_searchable_pdf(data_bytes, text)
                 auth.increment_usage(session, api_key)
                 return Response(content=pdf, media_type=media,

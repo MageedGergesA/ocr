@@ -32,6 +32,10 @@
             <img id="preview" class="preview" alt="معاينة" hidden>
             <div id="pdfInfo" class="pdf-info" hidden></div>
           </div>
+          <label class="toggle">
+            <input type="checkbox" id="hard" checked>
+            دقة أعلى (Sonnet + تفكير) — للعربي والخط اليدوي. ألغِ التحديد للمستندات المطبوعة البسيطة (أسرع وأرخص).
+          </label>
           <button id="runBtn" class="btn btn-primary btn-lg full" disabled>تشغيل</button>
         </div>
 
@@ -101,7 +105,9 @@
       if (!currentFile) return;
       runBtn.disabled = true; runBtn.textContent = 'جارٍ المعالجة…';
       result.innerHTML = '<div class="results-empty">⏳ يتم المعالجة…</div>'; exportBar.hidden = true;
-      const fd = new FormData(); fd.append('file', currentFile);
+      const fd = new FormData();
+      fd.append('file', currentFile);
+      fd.append('hard', document.getElementById('hard').checked);
       try {
         const res = await fetch('/v1/tool/' + SLUG, { method: 'POST', body: fd });
         if (KIND === 'searchable_pdf') {
