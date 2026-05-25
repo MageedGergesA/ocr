@@ -51,6 +51,71 @@ def demo_app(request: Request):
     return templates.TemplateResponse(request, "app.html", _ctx(request))
 
 
+@app.get("/chat", response_class=HTMLResponse)
+def chat_page(request: Request):
+    session = db.SessionLocal()
+    try:
+        if not _current_user(session, request):
+            return RedirectResponse("/login", status_code=303)
+    finally:
+        session.close()
+    return templates.TemplateResponse(request, "chat.html", _ctx(request))
+
+
+@app.post("/v1/chat-extract")
+def chat_extract(request: Request, file: UploadFile = File(...),
+                 hard: bool = Form(True), x_api_key: str = Header(None)):
+    """OCR a document to text so the user can then chat with it."""
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        raise HTTPException(500, "ANTHROPIC_API_KEY not configured on server")
+    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
+    if file.content_type not in allowed:
+        raise HTTPException(415, "unsupported file type")
+    data_bytes = file.file.read()
+    if len(data_bytes) > 20 * 1024 * 1024:
+        raise HTTPException(413, "file too large (max 20 MB)")
+    pages = (_count_pdf_pages(data_bytes) if file.content_type == "application/pdf" else 1) or 1
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        cost = pages * auth.credits_for(hard)
+        auth.enforce_limit(session, api_key, needed=cost)
+        try:
+            text = extractor.run_text(data_bytes, file.content_type,
+                                      SERVICES["arabic-ocr"]["prompt"], hard)
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(502, f"extraction failed: {e}")
+        auth.increment_usage(session, api_key, count=cost)
+        used, limit, _ = auth.get_usage(session, api_key)
+        return {"text": text, "usage": {"used": used, "limit": limit,
+                "remaining": max(0, limit - used), "charged": cost}}
+    finally:
+        session.close()
+
+
+@app.post("/v1/chat")
+def chat_answer(request: Request, payload: dict = Body(...), x_api_key: str = Header(None)):
+    """Answer a question against the extracted document text. Charges 1 credit."""
+    text, question = payload.get("text", ""), payload.get("question", "")
+    history = payload.get("history", [])
+    if not text or not question:
+        raise HTTPException(400, "text and question are required")
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        auth.enforce_limit(session, api_key, needed=1)
+        try:
+            answer = extractor.chat(text, question, history)
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(502, f"chat failed: {e}")
+        auth.increment_usage(session, api_key, count=1)
+        used, limit, _ = auth.get_usage(session, api_key)
+        return {"answer": answer, "usage": {"used": used, "limit": limit,
+                "remaining": max(0, limit - used), "charged": 1}}
+    finally:
+        session.close()
+
+
 @app.get("/tools", response_class=HTMLResponse)
 def tools_hub(request: Request):
     return templates.TemplateResponse(request, "tools.html", _ctx(request, services=SERVICES))

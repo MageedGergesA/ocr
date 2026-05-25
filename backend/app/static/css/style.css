@@ -170,6 +170,20 @@ details p { color: var(--muted); }
 .credits-box b { color: var(--brand-dark); }
 .credits-alt { color: var(--muted); font-size: 13px; }
 .credits-warn { color: #dc2626; font-weight: 700; }
+
+/* ===== Chat ===== */
+.chat-panel { display: flex; flex-direction: column; }
+.chat-box { flex: 1; min-height: 320px; max-height: 460px; overflow-y: auto; padding: 6px;
+  display: flex; flex-direction: column; gap: 10px; }
+.bubble { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.7;
+  white-space: pre-wrap; word-break: break-word; }
+.bubble.user { align-self: flex-start; background: var(--brand); color: #fff; border-bottom-right-radius: 4px; }
+.bubble.assistant { align-self: flex-end; background: var(--bg-alt); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.bubble.assistant.err { background: #fde8e8; color: #c0392b; border-color: #f5c6c6; }
+.chat-form { display: flex; gap: 8px; margin-top: 12px; }
+.chat-form input { flex: 1; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px;
+  font-family: 'Cairo', sans-serif; font-size: 14px; }
+.chat-form input:focus { outline: none; border-color: var(--brand); }
 .page-block { margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px solid var(--line); }
 .page-block:last-child { border-bottom: none; }
 

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المحادثة مع المستندات — مُستخلِص</title>
+  <meta name="description" content="ارفع مستندًا واسأل عنه: ما الإجمالي؟ لخّص العقد؟ من وقّع؟ مساعد ذكي يقرأ مستنداتك العربية.">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  {% include "_nav.html" %}
+
+  <section class="app-wrap">
+    <div class="container">
+      <h1 class="app-title">💬 المحادثة مع المستندات</h1>
+      <p class="app-sub">ارفع مستندًا، ثم اسأل عنه أي سؤال — "ما الإجمالي؟"، "لخّص العقد"، "من وقّع؟".</p>
+
+      <div class="app-grid">
+        <!-- LEFT: document -->
+        <div class="panel">
+          <label class="step">1 · المستند</label>
+          <div id="dropzone" class="dropzone">
+            <input type="file" id="fileInput" hidden
+              accept="image/png,image/jpeg,image/webp,image/gif,application/pdf">
+            <div id="dzEmpty" class="dz-empty">
+              <div class="dz-ico">📄</div>
+              <p>اسحب المستند هنا أو <span class="link">اختر ملفًا</span></p>
+              <small>PNG · JPG · WEBP · PDF</small>
+            </div>
+            <img id="preview" class="preview" alt="معاينة" hidden>
+            <div id="pdfInfo" class="pdf-info" hidden></div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="hard" checked> دقة أعلى (للعربي والخط اليدوي)</label>
+          <div id="credits" class="credits-box">💳 …</div>
+          <button id="analyzeBtn" class="btn btn-primary btn-lg full" disabled>حلّل المستند</button>
+        </div>
+
+        <!-- RIGHT: chat -->
+        <div class="panel chat-panel">
+          <label class="step">2 · اسأل عن المستند</label>
+          <div id="chatBox" class="chat-box">
+            <div class="results-empty">حلّل مستندًا أولًا، ثم ابدأ بطرح الأسئلة.</div>
+          </div>
+          <form id="chatForm" class="chat-form">
+            <input id="q" type="text" placeholder="اكتب سؤالك هنا…" autocomplete="off" disabled>
+            <button class="btn btn-primary" type="submit" disabled id="sendBtn">إرسال</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const dzEmpty = document.getElementById('dzEmpty');
+    const preview = document.getElementById('preview');
+    const pdfInfo = document.getElementById('pdfInfo');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const chatBox = document.getElementById('chatBox');
+    const chatForm = document.getElementById('chatForm');
+    const qInput = document.getElementById('q');
+    const sendBtn = document.getElementById('sendBtn');
+    let currentFile = null, docText = null, history = [];
+    let curPages = 0, curRemaining = 0, curLimit = 0;
+    const STRONG = 8, FAST = 1;
+
+    function renderCredits() {
+      const box = document.getElementById('credits');
+      const hard = document.getElementById('hard').checked;
+      let html = `💳 رصيدك: <b>${curRemaining}</b> من ${curLimit} نقطة`;
+      if (curPages > 0) {
+        const active = curPages * (hard ? STRONG : FAST), other = curPages * (hard ? FAST : STRONG);
+        const pg = curPages > 1 ? ` · ${curPages} صفحة` : '';
+        html += `<br>التحليل${pg}: <b>${active} نقطة</b> ${hard ? '(دقة عالية)' : '(سريع)'}`
+              + ` <span class="credits-alt">— كل سؤال = 1 نقطة</span>`;
+        if (active > curRemaining) { html += `<br><span class="credits-warn">⚠️ رصيدك غير كافٍ</span>`; analyzeBtn.disabled = true; }
+        else if (currentFile) analyzeBtn.disabled = false;
+      }
+      box.innerHTML = html;
+    }
+    function updateBal(u) { if (u) { curRemaining = u.remaining; curLimit = u.limit; renderCredits(); } }
+    async function estimateFile() {
+      if (!currentFile) { curPages = 0; renderCredits(); return; }
+      if (currentFile.type === 'application/pdf') {
+        try {
+          const fd = new FormData(); fd.append('file', currentFile);
+          const j = await (await fetch('/v1/estimate', { method: 'POST', body: fd })).json();
+          curPages = j.pages || 1; if (j.remaining != null) { curRemaining = j.remaining; curLimit = j.limit; }
+        } catch { curPages = 1; }
+      } else { curPages = 1; }
+      renderCredits();
+    }
+
+    function setFile(f) {
+      if (!f) return;
+      const isPdf = f.type === 'application/pdf';
+      if (!f.type.startsWith('image/') && !isPdf) return;
+      currentFile = f; docText = null; history = [];
+      chatBox.innerHTML = '<div class="results-empty">اضغط "حلّل المستند" ثم اسأل.</div>';
+      qInput.disabled = true; sendBtn.disabled = true;
+      if (isPdf) { preview.hidden = true; pdfInfo.hidden = false; pdfInfo.textContent = '📄 ' + f.name; }
+      else { preview.src = URL.createObjectURL(f); preview.hidden = false; pdfInfo.hidden = true; }
+      dzEmpty.hidden = true; analyzeBtn.disabled = false;
+      estimateFile();
+    }
+    dropzone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => setFile(e.target.files[0]));
+    ['dragover', 'dragenter'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+    ['dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+    dropzone.addEventListener('drop', e => setFile(e.dataTransfer.files[0]));
+    document.getElementById('hard').addEventListener('change', renderCredits);
+
+    function bubble(role, text) {
+      const d = document.createElement('div');
+      d.className = 'bubble ' + role;
+      d.textContent = text;
+      chatBox.appendChild(d);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return d;
+    }
+
+    analyzeBtn.addEventListener('click', async () => {
+      if (!currentFile) return;
+      analyzeBtn.disabled = true; analyzeBtn.textContent = 'جارٍ التحليل…';
+      try {
+        const fd = new FormData();
+        fd.append('file', currentFile);
+        fd.append('hard', document.getElementById('hard').checked);
+        const r = await fetch('/v1/chat-extract', { method: 'POST', body: fd });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.detail || r.status);
+        docText = j.text; history = [];
+        updateBal(j.usage);
+        chatBox.innerHTML = '<div class="results-empty">✅ تم تحليل المستند. اسأل أي سؤال عنه.</div>';
+        qInput.disabled = false; sendBtn.disabled = false; qInput.focus();
+      } catch (e) {
+        chatBox.innerHTML = `<div class="results-error">⚠️ ${e.message}</div>`;
+      } finally {
+        analyzeBtn.disabled = false; analyzeBtn.textContent = 'حلّل المستند';
+      }
+    });
+
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const q = qInput.value.trim();
+      if (!q || !docText) return;
+      if (chatBox.querySelector('.results-empty')) chatBox.innerHTML = '';
+      bubble('user', q);
+      qInput.value = ''; qInput.disabled = true; sendBtn.disabled = true;
+      const thinking = bubble('assistant', '…');
+      try {
+        const r = await fetch('/v1/chat', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: docText, question: q, history }),
+        });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.detail || r.status);
+        thinking.textContent = j.answer;
+        history.push({ role: 'user', content: q }, { role: 'assistant', content: j.answer });
+        updateBal(j.usage);
+      } catch (e) {
+        thinking.className = 'bubble assistant err'; thinking.textContent = '⚠️ ' + e.message;
+      } finally {
+        qInput.disabled = false; sendBtn.disabled = false; qInput.focus();
+      }
+    });
+
+    fetch('/v1/usage').then(r => r.json()).then(updateBal).catch(() => {});
+  </script>
+</body>
+</html>

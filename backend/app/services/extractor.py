@@ -81,6 +81,31 @@ def run_text(file_bytes: bytes, media_type: str, prompt: str, hard: bool = False
     return _strip_code_fence(text) if text.strip().startswith("```") else text.strip()
 
 
+def chat(document_text: str, question: str, history: list | None = None) -> str:
+    """Answer a question about a document, using its already-extracted text.
+    Text-only call (no re-OCR) so it's cheap and fast."""
+    system = (
+        "You are a helpful assistant answering questions about a document. "
+        "Use ONLY the document content below; if the answer isn't there, say so honestly. "
+        "Reply in the user's language (Arabic or English), concisely.\n\n"
+        f"=== DOCUMENT ===\n{document_text}"
+    )
+    messages = []
+    for turn in (history or [])[-8:]:  # keep last few turns for context
+        role = turn.get("role")
+        if role in ("user", "assistant") and turn.get("content"):
+            messages.append({"role": role, "content": str(turn["content"])})
+    messages.append({"role": "user", "content": question})
+
+    msg = _get_client().messages.create(
+        model=MODEL_HARD,  # Sonnet for solid Arabic comprehension
+        max_tokens=1024,
+        system=system,
+        messages=messages,
+    )
+    return next((b.text for b in msg.content if getattr(b, "type", None) == "text"), "")
+
+
 def run_table(file_bytes: bytes, media_type: str, hard: bool = True) -> dict:
     """Extract tabular data. Returns {"columns": [...], "rows": [[...], ...]}."""
     prompt = (
