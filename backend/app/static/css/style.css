@@ -186,6 +186,14 @@ details p { color: var(--muted); }
 .chat-form input:focus { outline: none; border-color: var(--brand); }
 .ask-wrap { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 16px; }
 .ask-box { min-height: 80px; max-height: 300px; }
+.tpl-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.tpl-row select { flex: 1; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px;
+  font-family: 'Cairo', sans-serif; font-size: 14px; background: #fff; }
+.tpl-row .btn { padding: 8px 14px; font-size: 13px; white-space: nowrap; }
+.file-pick { display: block; border: 1px dashed var(--line); border-radius: 10px; padding: 14px;
+  cursor: pointer; text-align: center; color: var(--muted); font-size: 14px; }
+.file-pick:hover { border-color: var(--brand); }
+.file-pick input { display: none; }
 .page-block { margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px solid var(--line); }
 .page-block:last-child { border-bottom: none; }
 

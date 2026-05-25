@@ -155,6 +155,16 @@ def _ctx(request: Request, **extra):
     return {"user": user, **extra}
 
 
+def _record_history(session, user, kind, document_type, data, charged):
+    """Best-effort log of a successful extraction for the dashboard."""
+    try:
+        session.add(models.History(user_id=user.id, kind=kind, document_type=document_type,
+                                   charged=charged, result_json=json.dumps(data, ensure_ascii=False)))
+        session.commit()
+    except Exception:  # noqa: BLE001
+        session.rollback()
+
+
 def _resolve_caller(session, x_api_key, request: Request):
     """Identify the caller: API key (programmatic) or logged-in session (web).
     No anonymous access — extraction always requires authentication."""
@@ -255,8 +265,18 @@ def dashboard(request: Request):
         for k in user.api_keys:
             used, _, _ = auth.get_usage(session, k)
             keys.append({"id": k.id, "key": k.key, "active": k.active, "used": used})
+        tpls = (session.query(models.Template).filter_by(user_id=user.id)
+                .order_by(models.Template.id.desc()).all())
+        templates_list = [{"id": t.id, "name": t.name,
+                          "fields": list(json.loads(t.schema_json).keys())} for t in tpls]
+        hist = (session.query(models.History).filter_by(user_id=user.id)
+                .order_by(models.History.id.desc()).limit(20).all())
+        history_list = [{"id": h.id, "kind": h.kind, "document_type": h.document_type,
+                        "charged": h.charged, "created_at": str(h.created_at)[:16]} for h in hist]
         return templates.TemplateResponse(request, "dashboard.html",
-            {"user": user, "plan": user.plan, "limit": limit, "keys": keys})
+            {"user": user, "plan": user.plan, "limit": limit, "keys": keys,
+             "templates": templates_list, "history": history_list,
+             "webhook_url": user.webhook_url or ""})
     finally:
         session.close()
 
@@ -391,6 +411,8 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
             raise HTTPException(502, f"service failed: {e}")
 
         auth.increment_usage(session, api_key, count=cost)
+        _record_history(session, api_key.user, slug, out.get("document_type"),
+                        out.get("data") or out.get("text") or out, cost)
         used, limit, _ = auth.get_usage(session, api_key)
         out["usage"] = {"used": used, "limit": limit, "remaining": max(0, limit - used), "charged": cost}
         return out
@@ -451,6 +473,126 @@ def export_data(request: Request, payload: dict = Body(...), x_api_key: str = He
     data, media_type, filename = exports.EXPORTERS[fmt](rows)
     return Response(content=data, media_type=media_type,
                     headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+
+# ---------- Saved templates ----------
+@app.get("/v1/templates")
+def list_templates(request: Request, x_api_key: str = Header(None)):
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        tpls = (session.query(models.Template).filter_by(user_id=api_key.user.id)
+                .order_by(models.Template.id.desc()).all())
+        return [{"id": t.id, "name": t.name, "schema": json.loads(t.schema_json)} for t in tpls]
+    finally:
+        session.close()
+
+
+@app.post("/v1/templates")
+def create_template(request: Request, payload: dict = Body(...), x_api_key: str = Header(None)):
+    name = (payload.get("name") or "").strip()
+    schema = payload.get("schema")
+    if not name or not isinstance(schema, dict) or not schema:
+        raise HTTPException(400, "name and a non-empty schema are required")
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        session.add(models.Template(user_id=api_key.user.id, name=name,
+                                    schema_json=json.dumps(schema, ensure_ascii=False)))
+        session.commit()
+        return {"ok": True}
+    finally:
+        session.close()
+
+
+@app.post("/dashboard/templates/{tid}/delete")
+def delete_template(tid: int, request: Request):
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login", status_code=303)
+        t = session.get(models.Template, tid)
+        if t and t.user_id == user.id:
+            session.delete(t)
+            session.commit()
+        return RedirectResponse("/dashboard", status_code=303)
+    finally:
+        session.close()
+
+
+# ---------- Webhook ----------
+@app.post("/dashboard/webhook")
+def set_webhook(request: Request, webhook_url: str = Form("")):
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login", status_code=303)
+        user.webhook_url = webhook_url.strip() or None
+        session.commit()
+        return RedirectResponse("/dashboard", status_code=303)
+    finally:
+        session.close()
+
+
+# ---------- History ----------
+@app.get("/v1/history/{hid}")
+def history_item(hid: int, request: Request):
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            raise HTTPException(401, "login required")
+        h = session.get(models.History, hid)
+        if not h or h.user_id != user.id:
+            raise HTTPException(404, "not found")
+        return {"kind": h.kind, "document_type": h.document_type, "charged": h.charged,
+                "created_at": str(h.created_at), "result": json.loads(h.result_json) if h.result_json else None}
+    finally:
+        session.close()
+
+
+# ---------- Document comparison ----------
+@app.get("/compare", response_class=HTMLResponse)
+def compare_page(request: Request):
+    session = db.SessionLocal()
+    try:
+        if not _current_user(session, request):
+            return RedirectResponse("/login", status_code=303)
+    finally:
+        session.close()
+    return templates.TemplateResponse(request, "compare.html", _ctx(request))
+
+
+@app.post("/v1/compare")
+def compare_docs(request: Request, file_a: UploadFile = File(...), file_b: UploadFile = File(...),
+                 hard: bool = Form(True), x_api_key: str = Header(None)):
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        raise HTTPException(500, "ANTHROPIC_API_KEY not configured on server")
+    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
+    if file_a.content_type not in allowed or file_b.content_type not in allowed:
+        raise HTTPException(415, "unsupported file type")
+    a, b = file_a.file.read(), file_b.file.read()
+    if len(a) > 20 * 1024 * 1024 or len(b) > 20 * 1024 * 1024:
+        raise HTTPException(413, "file too large (max 20 MB)")
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        cost = 2 * auth.credits_for(hard)
+        auth.enforce_limit(session, api_key, needed=cost)
+        try:
+            ta = extractor.run_text(a, file_a.content_type, SERVICES["arabic-ocr"]["prompt"], hard)
+            tb = extractor.run_text(b, file_b.content_type, SERVICES["arabic-ocr"]["prompt"], hard)
+            report = extractor.compare(ta, tb)
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(502, f"compare failed: {e}")
+        auth.increment_usage(session, api_key, count=cost)
+        used, limit, _ = auth.get_usage(session, api_key)
+        return {"report": report, "usage": {"used": used, "limit": limit,
+                "remaining": max(0, limit - used), "charged": cost}}
+    finally:
+        session.close()
 
 
 @app.post("/v1/extract")
@@ -514,6 +656,7 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
 
         # Only meter successful extractions.
         auth.increment_usage(session, api_key, count=cost)
+        _record_history(session, api_key.user, mode, document_type, data, cost)
         used, limit, _ = auth.get_usage(session, api_key)
         return {
             "mode": mode,

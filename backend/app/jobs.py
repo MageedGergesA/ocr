@@ -49,16 +49,32 @@ def _run(job_id: str, pdf_bytes: bytes, hard: bool, api_key_id: int) -> None:
                 success += 1
             _update(job_id, done_pages=i, pages=list(results))
 
-        # Charge usage once, for the pages that succeeded (credits per page).
-        if success:
-            db = SessionLocal()
-            try:
-                api_key = db.get(models.ApiKey, api_key_id)
-                if api_key:
+        # Charge usage, record history, and capture the webhook URL.
+        hook = None
+        db = SessionLocal()
+        try:
+            api_key = db.get(models.ApiKey, api_key_id)
+            if api_key:
+                if success:
                     auth.increment_usage(db, api_key, count=success * auth.credits_for(hard))
-            finally:
-                db.close()
+                user = api_key.user
+                hook = user.webhook_url
+                import json as _json
+                db.add(models.History(user_id=user.id, kind="batch", document_type=None,
+                                      charged=success * auth.credits_for(hard),
+                                      result_json=_json.dumps(results, ensure_ascii=False)))
+                db.commit()
+        finally:
+            db.close()
         _update(job_id, status="completed")
+
+        # Fire the webhook (async clients get notified when the job finishes).
+        if hook:
+            try:
+                import httpx
+                httpx.post(hook, json={"job_id": job_id, "status": "completed", "pages": results}, timeout=10)
+            except Exception:  # noqa: BLE001
+                pass
     except Exception as e:  # noqa: BLE001
         _update(job_id, status="failed", error=str(e))
 

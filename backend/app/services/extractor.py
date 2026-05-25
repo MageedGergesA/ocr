@@ -106,6 +106,18 @@ def chat(document_text: str, question: str, history: list | None = None) -> str:
     return next((b.text for b in msg.content if getattr(b, "type", None) == "text"), "")
 
 
+def compare(text_a: str, text_b: str) -> str:
+    """Compare two documents' text and report differences."""
+    system = ("You compare two documents. Report clearly: what CHANGED, what is MISSING in "
+              "either, and what MATCHES. Be specific and concise. Reply in the documents' language.")
+    msg = _get_client().messages.create(
+        model=MODEL_HARD, max_tokens=1500, system=system,
+        messages=[{"role": "user", "content":
+                   f"=== DOCUMENT A ===\n{text_a}\n\n=== DOCUMENT B ===\n{text_b}\n\nCompare A and B."}],
+    )
+    return next((b.text for b in msg.content if getattr(b, "type", None) == "text"), "")
+
+
 def run_table(file_bytes: bytes, media_type: str, hard: bool = True) -> dict:
     """Extract tabular data. Returns {"columns": [...], "rows": [[...], ...]}."""
     prompt = (

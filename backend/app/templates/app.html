@@ -45,6 +45,10 @@
             </label>
           </div>
           <div id="fieldsWrap" hidden>
+            <div class="tpl-row">
+              <select id="tplSelect"><option value="">— تحميل قالب محفوظ —</option></select>
+              <button type="button" class="btn btn-ghost" id="saveTplBtn">حفظ كقالب</button>
+            </div>
             <p class="hint">سطر لكل حقل بالصيغة: <code>الاسم: وصف مختصر</code></p>
             <textarea id="fields" class="fields" rows="6">رقم_الفاتورة: رقم الفاتورة أو المستند
 اسم_العميل: الاسم الكامل للعميل أو الشركة
@@ -171,7 +175,38 @@
     document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => {
       const custom = document.querySelector('input[name="mode"]:checked').value === 'custom';
       document.getElementById('fieldsWrap').hidden = !custom;
+      if (custom) loadTemplates();
     }));
+
+    // ---- saved templates ----
+    let savedTemplates = [];
+    async function loadTemplates() {
+      try {
+        savedTemplates = await (await fetch('/v1/templates')).json();
+        const sel = document.getElementById('tplSelect');
+        sel.innerHTML = '<option value="">— تحميل قالب محفوظ —</option>'
+          + savedTemplates.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
+      } catch {}
+    }
+    document.getElementById('tplSelect').addEventListener('change', (e) => {
+      const t = savedTemplates[e.target.value];
+      if (!t) return;
+      document.getElementById('fields').value =
+        Object.entries(t.schema).map(([k, v]) => `${k}: ${v}`).join('\n');
+    });
+    document.getElementById('saveTplBtn').addEventListener('click', async () => {
+      const name = prompt('اسم القالب؟');
+      if (!name) return;
+      const schema = parseFields();
+      if (!Object.keys(schema).length) { alert('أضف حقولًا أولًا'); return; }
+      try {
+        const r = await fetch('/v1/templates', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, schema }) });
+        if (!r.ok) throw new Error((await r.json()).detail || r.status);
+        await loadTemplates();
+        alert('تم حفظ القالب ✅');
+      } catch (e) { alert('تعذّر الحفظ: ' + e.message); }
+    });
 
     function parseFields() {
       const schema = {};

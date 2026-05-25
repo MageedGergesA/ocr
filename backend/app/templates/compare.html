@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مقارنة المستندات — مُستخلِص</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  {% include "_nav.html" %}
+
+  <section class="app-wrap">
+    <div class="container">
+      <h1 class="app-title">🔀 مقارنة المستندات</h1>
+      <p class="app-sub">ارفع مستندين واكتشف الفروقات بينهما — ما تغيّر، ما الناقص، وما المتطابق.</p>
+
+      <div class="app-grid">
+        <div class="panel">
+          <label class="step">المستند الأول</label>
+          <label class="file-pick"><input type="file" id="fa" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"><span id="fan">اختر ملفًا…</span></label>
+          <label class="step" style="margin-top:18px">المستند الثاني</label>
+          <label class="file-pick"><input type="file" id="fb" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"><span id="fbn">اختر ملفًا…</span></label>
+          <label class="toggle" style="margin-top:14px"><input type="checkbox" id="hard" checked> دقة أعلى</label>
+          <button id="cmpBtn" class="btn btn-primary btn-lg full" disabled>قارن</button>
+        </div>
+        <div class="panel">
+          <label class="step">النتيجة</label>
+          <div id="out" class="results"><div class="results-empty">اختر مستندين ثم اضغط "قارن".</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const fa = document.getElementById('fa'), fb = document.getElementById('fb');
+    const cmpBtn = document.getElementById('cmpBtn'), out = document.getElementById('out');
+    function check() { cmpBtn.disabled = !(fa.files[0] && fb.files[0]); }
+    fa.addEventListener('change', () => { document.getElementById('fan').textContent = fa.files[0]?.name || 'اختر ملفًا…'; check(); });
+    fb.addEventListener('change', () => { document.getElementById('fbn').textContent = fb.files[0]?.name || 'اختر ملفًا…'; check(); });
+    cmpBtn.addEventListener('click', async () => {
+      if (!fa.files[0] || !fb.files[0]) return;
+      cmpBtn.disabled = true; cmpBtn.textContent = 'جارٍ المقارنة…';
+      out.innerHTML = '<div class="results-empty">⏳ يتم تحليل المستندين…</div>';
+      const fd = new FormData();
+      fd.append('file_a', fa.files[0]); fd.append('file_b', fb.files[0]);
+      fd.append('hard', document.getElementById('hard').checked);
+      try {
+        const r = await fetch('/v1/compare', { method: 'POST', body: fd });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.detail || r.status);
+        out.innerHTML = `<pre class="text-out">${(j.report || '').replace(/</g, '&lt;')}</pre>`;
+      } catch (e) {
+        out.innerHTML = `<div class="results-error">⚠️ ${e.message}</div>`;
+      } finally { cmpBtn.disabled = false; cmpBtn.textContent = 'قارن'; }
+    });
+  </script>
+</body>
+</html>

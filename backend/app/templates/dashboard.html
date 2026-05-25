@@ -61,6 +61,51 @@
       </div>
 
       <div class="dash-section">
+        <h2>القوالب المحفوظة</h2>
+        <p class="hint">عرّف حقولك في صفحة الاستخراج واحفظها كقالب، ثم أعد استخدامه في أي وقت.</p>
+        {% if templates %}
+        <div class="keys">
+          {% for t in templates %}
+          <div class="krow">
+            <div><b>{{ t.name }}</b></div>
+            <div class="kkey">{{ t.fields | join('، ') }}</div>
+            <div></div>
+            <div><form method="post" action="/dashboard/templates/{{ t.id }}/delete" style="margin:0">
+              <button class="link-btn" type="submit">حذف</button></form></div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}<p class="hint">لا توجد قوالب محفوظة بعد.</p>{% endif %}
+      </div>
+
+      <div class="dash-section">
+        <h2>Webhook</h2>
+        <p class="hint">سنرسل نتائج المهام غير المتزامنة (معالجة الدفعات) إلى هذا الرابط عند اكتمالها.</p>
+        <form method="post" action="/dashboard/webhook" style="display:flex;gap:10px;flex-wrap:wrap">
+          <input type="url" name="webhook_url" value="{{ webhook_url }}" placeholder="https://example.com/webhook"
+                 style="flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit">
+          <button class="btn btn-primary" type="submit">حفظ</button>
+        </form>
+      </div>
+
+      <div class="dash-section">
+        <h2>سجل المعالجة</h2>
+        {% if history %}
+        <div class="keys">
+          <div class="krow khead"><div>التاريخ</div><div>النوع</div><div>النقاط</div><div></div></div>
+          {% for h in history %}
+          <div class="krow">
+            <div>{{ h.created_at }}</div>
+            <div>{{ h.kind }}{% if h.document_type %} · {{ h.document_type }}{% endif %}</div>
+            <div>{{ h.charged }}</div>
+            <div><a class="copy-btn" href="/v1/history/{{ h.id }}" target="_blank">عرض</a></div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}<p class="hint">لا يوجد سجل بعد.</p>{% endif %}
+      </div>
+
+      <div class="dash-section">
         <h2>استدعاء سريع (cURL)</h2>
         <pre class="code-block">curl -X POST {{ request.base_url }}v1/extract \
   -H "x-api-key: YOUR_KEY" \

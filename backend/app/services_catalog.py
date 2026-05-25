@@ -65,6 +65,15 @@ SERVICES = {
             "ملخص": "one-sentence summary of the document",
         },
     },
+    "validate": {
+        "title": "التحقق من البيانات", "category": "ocr", "icon": "✅",
+        "desc": "افحص المستند واكتشف التناقضات والأخطاء والتواريخ المنتهية والمبالغ غير المتطابقة.",
+        "kind": "text", "hard": True, "free": False,
+        "prompt": ("Carefully check this document for problems: inconsistent or wrong totals, "
+                   "expired or invalid dates, missing required fields, contradictory or suspicious "
+                   "values. Return a concise report listing any issues found, or confirm it looks "
+                   "consistent. Reply in the document's language."),
+    },
     "table-excel": {
         "title": "استخراج الجداول إلى Excel", "category": "ocr", "icon": "📊",
         "desc": "حوّل الجداول في الفواتير والكشوف إلى ملف Excel منظّم.",

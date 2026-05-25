@@ -16,6 +16,11 @@ Base = declarative_base()
 
 
 def init_db() -> None:
-    """Create tables if they don't exist."""
+    """Create tables if they don't exist; add new columns to existing tables."""
     from app import models  # noqa: F401 — register models on Base before create_all
     Base.metadata.create_all(bind=engine)
+    # Lightweight migration for columns added to existing tables.
+    with engine.begin() as conn:
+        cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(users)")]
+        if "webhook_url" not in cols:
+            conn.exec_driver_sql("ALTER TABLE users ADD COLUMN webhook_url VARCHAR")
