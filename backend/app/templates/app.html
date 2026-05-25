@@ -229,8 +229,9 @@
 
     function updateQuota(u) {
       if (!u) return;
+      const charged = u.charged ? ` (استهلكت ${u.charged} نقطة)` : '';
       document.getElementById('quota').textContent =
-        `تبقّى لك ${u.remaining} من ${u.limit} عملية هذا الشهر`;
+        `تبقّى لك ${u.remaining} من ${u.limit} نقطة هذا الشهر${charged}`;
     }
 
     function resetButton() {

@@ -280,7 +280,8 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
-        auth.enforce_limit(session, api_key)
+        cost = auth.credits_for(hard)
+        auth.enforce_limit(session, api_key, needed=cost)
         ct = file.content_type  # `hard` (Sonnet + thinking) comes from the request, default True
         try:
             if kind == "text":
@@ -293,7 +294,7 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
             elif kind == "searchable_pdf":
                 text = extractor.run_text(data_bytes, ct, SERVICES["arabic-ocr"]["prompt"], hard)
                 pdf, media, fname = exports.image_to_searchable_pdf(data_bytes, text)
-                auth.increment_usage(session, api_key)
+                auth.increment_usage(session, api_key, count=cost)
                 return Response(content=pdf, media_type=media,
                                 headers={"Content-Disposition": f'attachment; filename="{fname}"'})
             else:
@@ -303,9 +304,9 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
         except Exception as e:  # noqa: BLE001
             raise HTTPException(502, f"service failed: {e}")
 
-        auth.increment_usage(session, api_key)
+        auth.increment_usage(session, api_key, count=cost)
         used, limit, _ = auth.get_usage(session, api_key)
-        out["usage"] = {"used": used, "limit": limit, "remaining": max(0, limit - used)}
+        out["usage"] = {"used": used, "limit": limit, "remaining": max(0, limit - used), "charged": cost}
         return out
     finally:
         session.close()
@@ -408,12 +409,13 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
             if n_pages > hard_max:
                 raise HTTPException(413, f"this PDF has {n_pages} pages; the limit is {hard_max}. "
                                          "Split it into smaller files.")
-            auth.enforce_limit(session, api_key, needed=n_pages)  # one unit per page
+            auth.enforce_limit(session, api_key, needed=n_pages * auth.credits_for(hard))
             job_id = jobs.start_batch(image_bytes, hard, api_key.id, n_pages)
             return {"mode": "batch", "job_id": job_id, "total_pages": n_pages, "status": "processing"}
 
         # Single image or small PDF → one synchronous call.
-        auth.enforce_limit(session, api_key)
+        cost = auth.credits_for(hard)
+        auth.enforce_limit(session, api_key, needed=cost)
         try:
             if schema:
                 data = extractor.extract_schema(image_bytes, file.content_type, schema, hard=hard)
@@ -425,13 +427,13 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
             raise HTTPException(502, f"extraction failed: {e}")
 
         # Only meter successful extractions.
-        auth.increment_usage(session, api_key)
+        auth.increment_usage(session, api_key, count=cost)
         used, limit, _ = auth.get_usage(session, api_key)
         return {
             "mode": mode,
             "document_type": document_type,
             "data": data,
-            "usage": {"used": used, "limit": limit, "remaining": max(0, limit - used)},
+            "usage": {"used": used, "limit": limit, "remaining": max(0, limit - used), "charged": cost},
         }
     finally:
         session.close()

@@ -49,13 +49,13 @@ def _run(job_id: str, pdf_bytes: bytes, hard: bool, api_key_id: int) -> None:
                 success += 1
             _update(job_id, done_pages=i, pages=list(results))
 
-        # Charge usage once, for the pages that succeeded.
+        # Charge usage once, for the pages that succeeded (credits per page).
         if success:
             db = SessionLocal()
             try:
                 api_key = db.get(models.ApiKey, api_key_id)
                 if api_key:
-                    auth.increment_usage(db, api_key, count=success)
+                    auth.increment_usage(db, api_key, count=success * auth.credits_for(hard))
             finally:
                 db.close()
         _update(job_id, status="completed")

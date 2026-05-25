@@ -14,14 +14,24 @@ from sqlalchemy.orm import Session
 from app import models
 from app.db import SessionLocal
 
-# Monthly extraction quota per plan. Mirrors the pricing tiers.
-PLAN_LIMITS = {
-    "free": 50,
-    "starter": 500,
-    "pro": 2500,
-    "business": 10000,
-    "demo": int(os.getenv("DEMO_MONTHLY_LIMIT", "500")),  # public /app demo
+# Plans are metered in CREDITS. A page costs 1 credit on the fast model (Haiku)
+# or STRONG_UNITS credits on the high-accuracy model (Sonnet + thinking), since
+# the strong model costs ~8x more. Quota then tracks real cost, so the gross
+# margin (~70%) holds regardless of which model customers use.
+STRONG_UNITS = int(os.getenv("STRONG_UNITS", "8"))
+
+PLAN_LIMITS = {  # credits / month
+    "free": 300,
+    "starter": 1500,
+    "pro": 5000,
+    "business": 15000,
+    "demo": int(os.getenv("DEMO_MONTHLY_LIMIT", "2000")),  # public /app demo
 }
+
+
+def credits_for(hard: bool) -> int:
+    """Credits one page consumes: 8 on the strong path, 1 on the fast path."""
+    return STRONG_UNITS if hard else 1
 
 # Fixed key used by the public demo page when no x-api-key is supplied.
 DEMO_API_KEY = os.getenv("DEMO_API_KEY", "mk_demo_public")

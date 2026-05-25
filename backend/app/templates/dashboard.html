@@ -20,13 +20,13 @@
         <div class="dash-card">
           <div class="dash-label">خطتك الحالية</div>
           <div class="dash-big">{{ plan }}</div>
-          <div class="dash-meta">{{ limit }} عملية / الشهر لكل مفتاح</div>
+          <div class="dash-meta">{{ limit }} نقطة / الشهر لكل مفتاح</div>
           <a class="btn btn-ghost" href="/#pricing">ترقية الخطة</a>
         </div>
         <div class="dash-card">
-          <div class="dash-label">الاستخدام هذا الشهر</div>
+          <div class="dash-label">النقاط المستخدمة هذا الشهر</div>
           <div class="dash-big">{{ keys|sum(attribute='used') }}</div>
-          <div class="dash-meta">إجمالي العمليات عبر كل مفاتيحك</div>
+          <div class="dash-meta">الصفحة = نقطة واحدة (سريع) أو 8 نقاط (دقة عالية)</div>
         </div>
       </div>
 
