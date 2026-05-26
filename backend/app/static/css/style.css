@@ -237,9 +237,11 @@ details p { color: var(--muted); }
 
 /* Integrations band */
 .integ-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
-.integ-chip { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--line);
-  border-radius: 999px; padding: 10px 18px; font-size: 15px; font-weight: 600; box-shadow: var(--shadow-sm); }
-.integ-chip:hover { border-color: var(--brand); color: var(--brand); }
+.integ-chip { display: inline-flex; align-items: center; gap: 9px; background: #fff; border: 1px solid var(--line);
+  border-radius: 999px; padding: 11px 20px; font-size: 15px; font-weight: 600; box-shadow: var(--shadow-sm); }
+.integ-chip:hover { border-color: var(--brand); }
+.integ-chip img { width: 20px; height: 20px; object-fit: contain; }
+.integ-chip svg { width: 18px; height: 18px; stroke: var(--muted); stroke-width: 1.6; }
 
 /* Legal pages */
 .legal h1 { font-size: 32px; font-weight: 800; }
