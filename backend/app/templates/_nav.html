@@ -1,21 +1,50 @@
 <header class="nav">
   <div class="container nav-inner">
     <a class="brand" href="/">مُستخلِص<span>.ai</span></a>
-    <nav class="nav-links">
-      <a href="/tools">الأدوات</a>
-      <a href="/chat">المحادثة</a>
-      <a href="/compare">المقارنة</a>
-      {% if nav_links %}
-      <a href="/#features">المميزات</a>
-      <a href="/#security">الأمان</a>
-      <a href="/#pricing">الأسعار</a>
-      {% endif %}
+
+    <nav class="nav-menu">
+      <div class="nav-item has-menu">
+        <button class="nav-link" type="button">الأدوات <span class="caret">▾</span></button>
+        <div class="mega">
+          <a href="/tools/arabic-ocr">🔤 استخراج النص (OCR)</a>
+          <a href="/tools/handwriting">✍️ تحويل الخط اليدوي</a>
+          <a href="/tools/table-excel">📊 الجداول إلى Excel</a>
+          <a href="/tools/translate">🌐 الترجمة</a>
+          <a href="/chat">💬 المحادثة مع المستندات</a>
+          <a href="/compare">🔀 مقارنة المستندات</a>
+          <a href="/tools" class="mega-all">كل الأدوات (25) ←</a>
+        </div>
+      </div>
+
+      <div class="nav-item has-menu">
+        <button class="nav-link" type="button">الحلول <span class="caret">▾</span></button>
+        <div class="mega">
+          <a href="/tools/invoice">🧾 للمحاسبين — الفواتير</a>
+          <a href="/tools/sale-contract">🏠 لشركات العقارات — العقود</a>
+          <a href="/tools/prescription">💊 للعيادات — الروشتات</a>
+          <a href="/tools/egyptian-id">🪪 للموارد البشرية — الهويات</a>
+          <a href="/tools/shipping-label">📦 للشحن — البوالص</a>
+        </div>
+      </div>
+
+      <div class="nav-item has-menu">
+        <button class="nav-link" type="button">الموارد <span class="caret">▾</span></button>
+        <div class="mega">
+          <a href="/docs">⚙️ واجهة API للمطورين</a>
+          <a href="/#security">🔒 الأمان والخصوصية</a>
+          <a href="/#faq">❓ الأسئلة الشائعة</a>
+          <a href="/privacy">📄 سياسة الخصوصية</a>
+        </div>
+      </div>
+
+      <a class="nav-link" href="/#pricing">الأسعار</a>
     </nav>
+
     <div class="nav-cta">
       {% if user %}
-        <a class="btn btn-ghost" href="/app">جرّب الاستخراج</a>
-        <a class="btn btn-primary" href="/dashboard">لوحة التحكم</a>
-        <a class="btn btn-ghost" href="/logout">خروج</a>
+        <a class="btn btn-ghost" href="/dashboard">لوحة التحكم</a>
+        <a class="btn btn-primary" href="/app">ارفع مستندًا</a>
+        <a class="btn btn-ghost nav-logout" href="/logout">خروج</a>
       {% else %}
         <a class="btn btn-ghost" href="/login">تسجيل الدخول</a>
         <a class="btn btn-primary" href="/signup">ابدأ مجانًا</a>
