@@ -126,10 +126,14 @@ code { background: #eef2f7; padding: 2px 6px; border-radius: 6px; font-size: .9e
 .section-sub { text-align: center; color: var(--muted); font-size: 18px; margin: 12px auto 50px; max-width: 620px; }
 .eyebrow { display: block; text-align: center; color: var(--brand); font-weight: 800; font-size: 14px; margin-bottom: 12px; }
 
-/* Clean line icons (Lucide) */
-.ico svg { width: 26px; height: 26px; stroke: var(--brand); stroke-width: 1.7; }
+/* Clean line icons (Lucide) — thin 1.5 stroke, currentColor, like Nanonets */
+.ico svg { width: 26px; height: 26px; stroke: var(--brand); stroke-width: 1.5; }
 .sec-card .ico { display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center;
   background: var(--tint); border-radius: 13px; }
+.mi svg { width: 20px; height: 20px; stroke: var(--brand); stroke-width: 1.5; }
+.dz-ico svg { width: 34px; height: 34px; stroke: var(--brand); stroke-width: 1.5; }
+.app-title svg { width: 28px; height: 28px; stroke: var(--brand); stroke-width: 1.6; vertical-align: -5px; }
+.bigico svg { width: 30px; height: 30px; stroke: var(--brand); stroke-width: 1.5; vertical-align: -6px; }
 
 /* How it works */
 .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; counter-reset: step; }

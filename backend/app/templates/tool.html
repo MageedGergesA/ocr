@@ -15,7 +15,7 @@
   <section class="app-wrap">
     <div class="container">
       <p style="text-align:center"><a href="/tools" class="back-link">← كل الأدوات</a></p>
-      <h1 class="app-title">{{ svc.icon }} {{ svc.title }}</h1>
+      <h1 class="app-title"><i data-lucide="{{ svc.icon }}"></i> {{ svc.title }}</h1>
       <p class="app-sub">{{ svc.desc }}</p>
 
       <div class="app-grid">
@@ -25,7 +25,7 @@
             <input type="file" id="fileInput" hidden
               accept="{% if svc.kind == 'searchable_pdf' %}image/png,image/jpeg,image/webp,image/gif{% else %}image/png,image/jpeg,image/webp,image/gif,application/pdf{% endif %}">
             <div id="dzEmpty" class="dz-empty">
-              <div class="dz-ico">{{ svc.icon }}</div>
+              <div class="dz-ico"><i data-lucide="{{ svc.icon }}"></i></div>
               <p>اسحب المستند هنا أو <span class="link">اختر ملفًا</span></p>
               <small>{% if svc.kind == 'searchable_pdf' %}صورة ممسوحة (PNG · JPG){% else %}PNG · JPG · WEBP · PDF{% endif %}</small>
             </div>

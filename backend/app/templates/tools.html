@@ -19,7 +19,7 @@
 
       <div class="card tool-card" style="text-align:center;background:var(--tint);border-color:var(--line);margin-bottom:28px">
         <a href="/chat" style="text-decoration:none;color:inherit">
-          <div class="ico">💬</div>
+          <div class="ico"><i data-lucide="message-square"></i></div>
           <h3>المحادثة مع المستندات</h3>
           <p>ارفع مستندًا واسأله أي سؤال — مساعدك الذكي للمستندات.</p>
         </a>
@@ -30,7 +30,7 @@
       <div class="cards" style="grid-template-columns:repeat(3,1fr)">
         {% for slug, s in services.items() if s.category == cat %}
         <a class="card tool-card" href="/tools/{{ slug }}">
-          <div class="ico">{{ s.icon }}</div>
+          <div class="ico"><i data-lucide="{{ s.icon }}"></i></div>
           <h3>{{ s.title }}{% if s.free %}<span class="tool-free">مجاني</span>{% endif %}</h3>
           <p>{{ s.desc }}</p>
         </a>

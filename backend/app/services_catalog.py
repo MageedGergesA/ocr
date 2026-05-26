@@ -12,7 +12,7 @@ category groups services on the /tools hub: ocr | parsers | realestate
 SERVICES = {
     # ---------------- OCR & AI ----------------
     "arabic-ocr": {
-        "title": "استخراج النص (OCR عربي)", "category": "ocr", "icon": "🔤",
+        "title": "استخراج النص (OCR عربي)", "category": "ocr", "icon": "scan-text",
         "desc": "حوّل أي صورة أو PDF إلى نص قابل للنسخ — عربي أو إنجليزي.",
         "kind": "text", "hard": True, "free": True,
         "prompt": ("Transcribe ALL text in this document exactly as written, preserving line "
@@ -20,7 +20,7 @@ SERVICES = {
                    "Return ONLY the transcribed text, no commentary."),
     },
     "handwriting": {
-        "title": "تحويل الخط اليدوي إلى نص", "category": "ocr", "icon": "✍️",
+        "title": "تحويل الخط اليدوي إلى نص", "category": "ocr", "icon": "pen-line",
         "desc": "اقرأ المستندات المكتوبة بخط اليد بالعربية وحوّلها إلى نص رقمي.",
         "kind": "text", "hard": True, "free": True,
         "prompt": ("This document is handwritten. Read it carefully, letter by letter, and "
@@ -28,21 +28,21 @@ SERVICES = {
                    "Return ONLY the transcribed text, no commentary."),
     },
     "translate": {
-        "title": "ترجمة المستندات", "category": "ocr", "icon": "🌐",
+        "title": "ترجمة المستندات", "category": "ocr", "icon": "languages",
         "desc": "اقرأ مستندًا بالعربية واحصل على ترجمته الإنجليزية فورًا.",
         "kind": "text", "hard": True, "free": False,
         "prompt": ("Read all the text in this document and translate it into clear, natural "
                    "English, preserving structure. Return ONLY the English translation."),
     },
     "summarize": {
-        "title": "تلخيص المستندات", "category": "ocr", "icon": "📝",
+        "title": "تلخيص المستندات", "category": "ocr", "icon": "align-left",
         "desc": "احصل على ملخّص موجز لأهم نقاط أي مستند طويل.",
         "kind": "text", "hard": True, "free": False,
         "prompt": ("Read this document and write a concise bullet-point summary of its key "
                    "points, in the document's main language. Return ONLY the summary."),
     },
     "entity-detection": {
-        "title": "كشف الكيانات", "category": "ocr", "icon": "🔍",
+        "title": "كشف الكيانات", "category": "ocr", "icon": "scan-search",
         "desc": "استخرج الأسماء والبريد والهواتف والتواريخ والمبالغ من أي مستند دفعة واحدة.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -55,7 +55,7 @@ SERVICES = {
         },
     },
     "auto-classify": {
-        "title": "تصنيف ووسم المستند", "category": "ocr", "icon": "🏷️",
+        "title": "تصنيف ووسم المستند", "category": "ocr", "icon": "tags",
         "desc": "تعرّف على نوع المستند ولغته وأضف وسومًا وملخصًا تلقائيًا.",
         "kind": "fields", "hard": False, "free": False,
         "schema": {
@@ -66,7 +66,7 @@ SERVICES = {
         },
     },
     "validate": {
-        "title": "التحقق من البيانات", "category": "ocr", "icon": "✅",
+        "title": "التحقق من البيانات", "category": "ocr", "icon": "badge-check",
         "desc": "افحص المستند واكتشف التناقضات والأخطاء والتواريخ المنتهية والمبالغ غير المتطابقة.",
         "kind": "text", "hard": True, "free": False,
         "prompt": ("Carefully check this document for problems: inconsistent or wrong totals, "
@@ -75,19 +75,19 @@ SERVICES = {
                    "consistent. Reply in the document's language."),
     },
     "table-excel": {
-        "title": "استخراج الجداول إلى Excel", "category": "ocr", "icon": "📊",
+        "title": "استخراج الجداول إلى Excel", "category": "ocr", "icon": "table",
         "desc": "حوّل الجداول في الفواتير والكشوف إلى ملف Excel منظّم.",
         "kind": "table", "hard": True, "free": False,
     },
     "searchable-pdf": {
-        "title": "PDF قابل للبحث", "category": "ocr", "icon": "🔎",
+        "title": "PDF قابل للبحث", "category": "ocr", "icon": "file-search",
         "desc": "حوّل صورة ممسوحة إلى PDF يمكن البحث في نصّه ونسخه.",
         "kind": "searchable_pdf", "hard": True, "free": False,
     },
 
     # ---------------- Document parsers ----------------
     "invoice": {
-        "title": "قارئ الفواتير", "category": "parsers", "icon": "🧾",
+        "title": "قارئ الفواتير", "category": "parsers", "icon": "receipt-text",
         "desc": "استخرج بيانات الفاتورة: البائع، المشتري، الضريبة، الإجمالي.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -99,7 +99,7 @@ SERVICES = {
         },
     },
     "egyptian-id": {
-        "title": "قارئ بطاقة الرقم القومي", "category": "parsers", "icon": "🪪",
+        "title": "قارئ بطاقة الرقم القومي", "category": "parsers", "icon": "id-card",
         "desc": "استخرج بيانات بطاقة الرقم القومي المصرية تلقائيًا.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -110,7 +110,7 @@ SERVICES = {
         },
     },
     "passport": {
-        "title": "قارئ جواز السفر", "category": "parsers", "icon": "🛂",
+        "title": "قارئ جواز السفر", "category": "parsers", "icon": "book-user",
         "desc": "استخرج بيانات جواز السفر بما في ذلك خانة القراءة الآلية (MRZ).",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -121,7 +121,7 @@ SERVICES = {
         },
     },
     "commercial-register": {
-        "title": "قارئ السجل التجاري", "category": "parsers", "icon": "🏢",
+        "title": "قارئ السجل التجاري", "category": "parsers", "icon": "building-2",
         "desc": "استخرج بيانات السجل التجاري للشركات تلقائيًا.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -131,7 +131,7 @@ SERVICES = {
         },
     },
     "tax-card": {
-        "title": "قارئ البطاقة الضريبية", "category": "parsers", "icon": "💳",
+        "title": "قارئ البطاقة الضريبية", "category": "parsers", "icon": "badge-percent",
         "desc": "استخرج بيانات البطاقة الضريبية والرقم الضريبي.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -140,7 +140,7 @@ SERVICES = {
         },
     },
     "business-card": {
-        "title": "ماسح بطاقات العمل", "category": "parsers", "icon": "📇",
+        "title": "ماسح بطاقات العمل", "category": "parsers", "icon": "contact-round",
         "desc": "حوّل بطاقة العمل إلى جهة اتصال منظّمة.",
         "kind": "fields", "hard": False, "free": False,
         "schema": {
@@ -150,7 +150,7 @@ SERVICES = {
         },
     },
     "utility-bill": {
-        "title": "قارئ فواتير المرافق", "category": "parsers", "icon": "💡",
+        "title": "قارئ فواتير المرافق", "category": "parsers", "icon": "lightbulb",
         "desc": "استخرج بيانات فواتير الكهرباء والمياه والغاز.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -161,7 +161,7 @@ SERVICES = {
         },
     },
     "bank-statement": {
-        "title": "قارئ كشف الحساب البنكي", "category": "parsers", "icon": "🏦",
+        "title": "قارئ كشف الحساب البنكي", "category": "parsers", "icon": "landmark",
         "desc": "استخرج بيانات كشف الحساب البنكي وأرصدته.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -172,7 +172,7 @@ SERVICES = {
         },
     },
     "prescription": {
-        "title": "قارئ الروشتات الطبية", "category": "parsers", "icon": "💊",
+        "title": "قارئ الروشتات الطبية", "category": "parsers", "icon": "pill",
         "desc": "حوّل الروشتة الطبية (حتى المكتوبة بخط اليد) إلى بيانات منظّمة.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -182,7 +182,7 @@ SERVICES = {
         },
     },
     "shipping-label": {
-        "title": "قارئ بوالص الشحن", "category": "parsers", "icon": "📦",
+        "title": "قارئ بوالص الشحن", "category": "parsers", "icon": "package",
         "desc": "استخرج بيانات الشحنة من بوليصة الشحن.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -194,7 +194,7 @@ SERVICES = {
 
     # ---------------- Real estate ----------------
     "sale-contract": {
-        "title": "عقد بيع عقار", "category": "realestate", "icon": "🏠",
+        "title": "عقد بيع عقار", "category": "realestate", "icon": "home",
         "desc": "استخرج بيانات عقد بيع العقار: الأطراف، الوحدة، السعر، السداد.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -204,7 +204,7 @@ SERVICES = {
         },
     },
     "lease-contract": {
-        "title": "عقد إيجار", "category": "realestate", "icon": "📑",
+        "title": "عقد إيجار", "category": "realestate", "icon": "scroll-text",
         "desc": "استخرج بيانات عقد الإيجار: المؤجر، المستأجر، المدة، القيمة.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -215,7 +215,7 @@ SERVICES = {
         },
     },
     "ownership-doc": {
-        "title": "وثيقة ملكية", "category": "realestate", "icon": "📜",
+        "title": "وثيقة ملكية", "category": "realestate", "icon": "scroll",
         "desc": "استخرج بيانات وثيقة/سند ملكية العقار.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -225,7 +225,7 @@ SERVICES = {
         },
     },
     "tenant-data": {
-        "title": "بيانات المستأجر", "category": "realestate", "icon": "👤",
+        "title": "بيانات المستأجر", "category": "realestate", "icon": "user",
         "desc": "استخرج بيانات المستأجر لملء نظام إدارة العقارات.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -235,7 +235,7 @@ SERVICES = {
         },
     },
     "unit-data": {
-        "title": "بيانات الوحدة العقارية", "category": "realestate", "icon": "🏘️",
+        "title": "بيانات الوحدة العقارية", "category": "realestate", "icon": "building",
         "desc": "استخرج مواصفات الوحدة العقارية من كتيّب أو عرض.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
@@ -245,12 +245,12 @@ SERVICES = {
         },
     },
     "payment-schedule": {
-        "title": "جدول السداد", "category": "realestate", "icon": "🗓️",
+        "title": "جدول السداد", "category": "realestate", "icon": "calendar-clock",
         "desc": "استخرج جدول الأقساط والدفعات إلى Excel.",
         "kind": "table", "hard": True, "free": False,
     },
     "contract-clauses": {
-        "title": "تحليل بنود العقد", "category": "realestate", "icon": "⚖️",
+        "title": "تحليل بنود العقد", "category": "realestate", "icon": "scale",
         "desc": "اكتشف ولخّص بنود العقد: الأطراف، المدة، السداد، الغرامات، الإنهاء.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
