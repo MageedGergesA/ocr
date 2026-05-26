@@ -37,6 +37,17 @@
     </div>
   </section>
 
+  <!-- TRUST BAND -->
+  <section class="trustband">
+    <div class="container">
+      <span class="trust-item"><span class="ti">✓</span> مستنداتك لا تُخزَّن — تُعالَج وتُحذَف فورًا</span>
+      <span class="trust-item"><span class="ti">✓</span> اتصال مشفّر بالكامل</span>
+      <span class="trust-item"><span class="ti">✓</span> بدون بطاقة ائتمان للبدء</span>
+      <span class="trust-item"><span class="ti">✓</span> ألغِ في أي وقت</span>
+      <span class="trust-item"><span class="ti">✓</span> رصيد شفّاف بلا رسوم خفية</span>
+    </div>
+  </section>
+
   <!-- DIFFERENTIATOR STAT -->
   <section class="stats">
     <div class="container stats-grid">
@@ -90,8 +101,48 @@
     </div>
   </section>
 
+  <!-- SECURITY -->
+  <section id="security" class="section">
+    <div class="container">
+      <h2>أمان وخصوصية تستحق ثقتك</h2>
+      <p class="section-sub">نتعامل مع مستنداتك بمسؤولية — هذه ليست شعارات، بل سياساتنا الفعلية.</p>
+      <div class="security-grid">
+        <div class="sec-card">
+          <div class="ico">🔒</div>
+          <h3>لا نُخزّن مستنداتك</h3>
+          <p>تُعالَج المستندات في الذاكرة وتُحذَف فور انتهاء الاستخراج — لا أرشفة، لا احتفاظ.</p>
+        </div>
+        <div class="sec-card">
+          <div class="ico">🛡️</div>
+          <h3>اتصال مشفّر</h3>
+          <p>كل البيانات تُنقَل عبر اتصال مشفّر (HTTPS/TLS) من جهازك إلى الخادم.</p>
+        </div>
+        <div class="sec-card">
+          <div class="ico">🔑</div>
+          <h3>تحكّم كامل بالوصول</h3>
+          <p>حساب محمي بكلمة مرور، ومفاتيح API يمكنك إلغاؤها في أي لحظة من لوحة التحكم.</p>
+        </div>
+        <div class="sec-card">
+          <div class="ico">💳</div>
+          <h3>فوترة شفّافة</h3>
+          <p>نظام نقاط واضح — ترى تكلفة كل عملية قبل تنفيذها. بلا رسوم مفاجئة.</p>
+        </div>
+        <div class="sec-card">
+          <div class="ico">🇪🇬</div>
+          <h3>مبنيّ للمنطقة العربية</h3>
+          <p>متخصصون في مستندات مصر والخليج — الفواتير والعقود والهويات بالعربية والخط اليدوي.</p>
+        </div>
+        <div class="sec-card">
+          <div class="ico">⚡</div>
+          <h3>أنت تتحكّم بالتكلفة</h3>
+          <p>اختر الوضع السريع أو الدقيق لكل مستند، وراقب رصيدك لحظيًا.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- PRICING -->
-  <section id="pricing" class="section">
+  <section id="pricing" class="section section-alt">
     <div class="container">
       <h2>أسعار بسيطة وشفافة</h2>
       <p class="section-sub">النقاط مشتركة عبر أودو والويب والـ API. الصفحة = <b>نقطة واحدة</b> بالوضع السريع، أو <b>8 نقاط</b> بالدقة العالية (العربي والخط اليدوي).</p>
@@ -126,11 +177,17 @@
           <a class="btn btn-ghost full" href="/app">تواصل معنا</a>
         </div>
       </div>
+      <div class="assurance">
+        <span><b>✓</b> بدون بطاقة ائتمان للبدء</span>
+        <span><b>✓</b> ألغِ في أي وقت</span>
+        <span><b>✓</b> ترقية أو تخفيض فوري</span>
+        <span><b>✓</b> دفع آمن عبر Stripe</span>
+      </div>
     </div>
   </section>
 
   <!-- FAQ -->
-  <section id="faq" class="section section-alt">
+  <section id="faq" class="section">
     <div class="container narrow">
       <h2>الأسئلة الشائعة</h2>
       <details><summary>هل يدعم الخط اليدوي العربي فعلًا؟</summary><p>نعم. هذا هو سبب وجودنا — نستخدم نماذج رؤية متقدمة تقرأ الخط اليدوي العربي والإنجليزي معًا.</p></details>
@@ -151,9 +208,36 @@
   </section>
 
   <footer class="footer">
-    <div class="container footer-inner">
-      <span>© 2026 مُستخلِص · جميع الحقوق محفوظة</span>
-      <nav><a href="#pricing">الأسعار</a><a href="#faq">الأسئلة</a><a href="/docs">API</a></nav>
+    <div class="container">
+      <div class="footer-cols">
+        <div class="footer-col">
+          <a class="brand" href="/">مُستخلِص<span>.ai</span></a>
+          <p style="margin-top:10px;max-width:260px">منصة الذكاء الاصطناعي لفهم وأتمتة مستندات الأعمال العربية.</p>
+        </div>
+        <div class="footer-col">
+          <h4>المنتج</h4>
+          <a href="/tools">الأدوات</a>
+          <a href="/chat">المحادثة مع المستندات</a>
+          <a href="/compare">مقارنة المستندات</a>
+          <a href="/#pricing">الأسعار</a>
+        </div>
+        <div class="footer-col">
+          <h4>المطوّرون</h4>
+          <a href="/docs">واجهة API</a>
+          <a href="/#security">الأمان والخصوصية</a>
+          <a href="/#faq">الأسئلة الشائعة</a>
+        </div>
+        <div class="footer-col">
+          <h4>قانوني</h4>
+          <a href="/privacy">سياسة الخصوصية</a>
+          <a href="/terms">شروط الاستخدام</a>
+          <a href="mailto:support@mostakhles.ai">تواصل معنا</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 مُستخلِص — جميع الحقوق محفوظة</span>
+        <span>🔒 مستنداتك لا تُخزَّن · اتصال مشفّر</span>
+      </div>
     </div>
   </footer>
 
