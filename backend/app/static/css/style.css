@@ -120,10 +120,25 @@ code { background: #eef2f7; padding: 2px 6px; border-radius: 6px; font-size: .9e
 .stat .lbl { display: block; font-size: 14px; color: var(--muted); margin-top: 4px; }
 
 /* Sections */
-.section { padding: 80px 0; }
+.section { padding: 96px 0; }
 .section-alt { background: var(--bg-alt); }
-.section h2 { text-align: center; font-size: clamp(26px, 3.5vw, 38px); font-weight: 800; }
-.section-sub { text-align: center; color: var(--muted); font-size: 18px; margin-top: 12px; margin-bottom: 46px; }
+.section h2 { text-align: center; font-size: clamp(28px, 3.6vw, 40px); font-weight: 800; letter-spacing: -.3px; }
+.section-sub { text-align: center; color: var(--muted); font-size: 18px; margin: 12px auto 50px; max-width: 620px; }
+.eyebrow { display: block; text-align: center; color: var(--brand); font-weight: 800; font-size: 14px; margin-bottom: 12px; }
+
+/* Clean line icons (Lucide) */
+.ico svg { width: 26px; height: 26px; stroke: var(--brand); stroke-width: 1.7; }
+.sec-card .ico { display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center;
+  background: var(--tint); border-radius: 13px; }
+
+/* How it works */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; counter-reset: step; }
+.step-card { text-align: center; padding: 8px; position: relative; }
+.step-num { width: 46px; height: 46px; margin: 0 auto 16px; border-radius: 50%; background: var(--brand-grad);
+  color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 20px rgba(15,118,110,.28); }
+.step-card h3 { font-size: 18px; margin-bottom: 6px; }
+.step-card p { color: var(--muted); font-size: 15px; }
 
 /* Cards */
 .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
