@@ -1,34 +1,19 @@
-"""Document extraction via Claude Vision.
+"""Document extraction — provider-agnostic.
 
 Two modes:
   - auto   : model detects the document type and extracts whatever fields belong to it.
   - schema : caller supplies an exact field list (used by the Odoo module to map to model fields).
 
-Model routing keeps cost down — Haiku for easy docs, Sonnet for hard/handwritten.
+The actual model call lives in `llm` (Gemini or Anthropic, chosen by config), so cost/quality
+routing happens there. Easy docs -> cheap model, hard/handwritten -> stronger model.
 """
-import base64
 import json
-import os
 
-from anthropic import Anthropic
-
-MODEL_EASY = os.getenv("MODEL_EASY", "claude-haiku-4-5-20251001")
-MODEL_HARD = os.getenv("MODEL_HARD", "claude-sonnet-4-6")
-
-_client = None
-
-
-def _get_client() -> Anthropic:
-    """Build the Anthropic client lazily so the server (and its pages) can
-    start without a key. Only actual extraction requires ANTHROPIC_API_KEY."""
-    global _client
-    if _client is None:
-        _client = Anthropic()  # reads ANTHROPIC_API_KEY from env
-    return _client
+from . import llm
 
 
 def _strip_code_fence(text: str) -> str:
-    """Claude sometimes wraps JSON in ```json ... ``` fences. Peel them off."""
+    """Models sometimes wrap JSON in ```json ... ``` fences. Peel them off."""
     text = text.strip()
     if text.startswith("```"):
         text = text.split("```")[1]
@@ -38,36 +23,17 @@ def _strip_code_fence(text: str) -> str:
 
 
 def _call_model(file_bytes: bytes, media_type: str, prompt: str, hard: bool):
-    """One vision call. Returns (text, message). PDFs go in a 'document' block
-    (all pages, cross-page context); images in an 'image' block."""
-    b64 = base64.standard_b64encode(file_bytes).decode()
-    if media_type == "application/pdf":
-        source_block = {"type": "document",
-                        "source": {"type": "base64", "media_type": "application/pdf", "data": b64}}
-    else:
-        source_block = {"type": "image",
-                        "source": {"type": "base64", "media_type": media_type, "data": b64}}
-    params = {
-        "model": MODEL_HARD if hard else MODEL_EASY,
-        # Generous output room so long docs don't truncate (billed on actual tokens).
-        "max_tokens": 16000 if hard else 8192,
-        "messages": [{"role": "user", "content": [source_block, {"type": "text", "text": prompt}]}],
-    }
-    if hard:
-        # Deliberate over ambiguous handwriting before answering.
-        params["thinking"] = {"type": "enabled", "budget_tokens": 2048}
-    msg = _get_client().messages.create(**params)
-    text = next((b.text for b in msg.content if getattr(b, "type", None) == "text"), "")
-    return text, msg
+    """One vision call via the configured provider. Returns (text, truncated)."""
+    return llm.generate_from_document(file_bytes, media_type, prompt, hard)
 
 
 def _run(file_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
     """Call the model and parse a JSON object out of the reply."""
-    text, msg = _call_model(file_bytes, media_type, prompt, hard)
+    text, truncated = _call_model(file_bytes, media_type, prompt, hard)
     try:
         return json.loads(_strip_code_fence(text))
     except json.JSONDecodeError:
-        if getattr(msg, "stop_reason", None) == "max_tokens":
+        if truncated:
             raise ValueError(
                 "the response was truncated — this document is unusually large/complex. "
                 "Try splitting the PDF or extracting fewer fields."
@@ -90,32 +56,15 @@ def chat(document_text: str, question: str, history: list | None = None) -> str:
         "Reply in the user's language (Arabic or English), concisely.\n\n"
         f"=== DOCUMENT ===\n{document_text}"
     )
-    messages = []
-    for turn in (history or [])[-8:]:  # keep last few turns for context
-        role = turn.get("role")
-        if role in ("user", "assistant") and turn.get("content"):
-            messages.append({"role": role, "content": str(turn["content"])})
-    messages.append({"role": "user", "content": question})
-
-    msg = _get_client().messages.create(
-        model=MODEL_HARD,  # Sonnet for solid Arabic comprehension
-        max_tokens=1024,
-        system=system,
-        messages=messages,
-    )
-    return next((b.text for b in msg.content if getattr(b, "type", None) == "text"), "")
+    return llm.generate_text(system, question, hard=True, max_tokens=1024, history=history)
 
 
 def compare(text_a: str, text_b: str) -> str:
     """Compare two documents' text and report differences."""
     system = ("You compare two documents. Report clearly: what CHANGED, what is MISSING in "
               "either, and what MATCHES. Be specific and concise. Reply in the documents' language.")
-    msg = _get_client().messages.create(
-        model=MODEL_HARD, max_tokens=1500, system=system,
-        messages=[{"role": "user", "content":
-                   f"=== DOCUMENT A ===\n{text_a}\n\n=== DOCUMENT B ===\n{text_b}\n\nCompare A and B."}],
-    )
-    return next((b.text for b in msg.content if getattr(b, "type", None) == "text"), "")
+    user = (f"=== DOCUMENT A ===\n{text_a}\n\n=== DOCUMENT B ===\n{text_b}\n\nCompare A and B.")
+    return llm.generate_text(system, user, hard=True, max_tokens=1500)
 
 
 def run_table(file_bytes: bytes, media_type: str, hard: bool = True) -> dict:
