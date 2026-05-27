@@ -47,12 +47,14 @@
         <span class="fdot fd3"></span>
         <div class="hv-card hv-data">
           <div class="hv-head"><i data-lucide="sparkles"></i> البيانات المستخرجة</div>
-          <div class="hv-field"><span>اسم العميل</span><b>أحمد حسن</b><i class="dot ok"></i></div>
-          <div class="hv-field"><span>رقم الفاتورة</span><b>INV-2025-0042</b><i class="dot ok"></i></div>
-          <div class="hv-field"><span>التاريخ</span><b>2025-03-01</b><i class="dot ok"></i></div>
-          <div class="hv-field"><span>الإجمالي</span><b>1,530 ج.م</b><i class="dot ok"></i></div>
-          <div class="hv-field"><span>الرقم الضريبي</span><b>304-221-119</b><i class="dot mid"></i></div>
-          <div class="hv-foot"><span class="hv-doc-chip"><i data-lucide="file-text"></i> فاتورة عربية</span><span>دقة 99% · أقل من 5 ثوانٍ</span></div>
+          <div class="hv-body" id="hvBody">
+            <div class="hv-field"><span>اسم العميل</span><b>أحمد حسن</b><i class="dot ok"></i></div>
+            <div class="hv-field"><span>رقم الفاتورة</span><b>INV-2025-0042</b><i class="dot ok"></i></div>
+            <div class="hv-field"><span>التاريخ</span><b>2025-03-01</b><i class="dot ok"></i></div>
+            <div class="hv-field"><span>الإجمالي</span><b>1,530 ج.م</b><i class="dot ok"></i></div>
+            <div class="hv-field"><span>الرقم الضريبي</span><b>304-221-119</b><i class="dot mid"></i></div>
+            <div class="hv-foot"><span class="hv-doc-chip"><i data-lucide="file-text"></i> <span id="chipText">فاتورة عربية</span></span><span>دقة 99% · أقل من 5 ثوانٍ</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -301,18 +303,43 @@
 
   <script>
     (function () {
-      var words = ['الأعمال العربية', 'الفواتير والعقود', 'الهويات والجوازات', 'الخط اليدوي'];
-      var el = document.getElementById('rotate');
-      if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var data = [
+        { word: 'الأعمال العربية', chip: 'فاتورة عربية', f: [
+          ['اسم العميل', 'أحمد حسن', 'ok'], ['رقم الفاتورة', 'INV-2025-0042', 'ok'],
+          ['التاريخ', '2025-03-01', 'ok'], ['الإجمالي', '1,530 ج.م', 'ok'], ['الرقم الضريبي', '304-221-119', 'mid'] ] },
+        { word: 'الفواتير والعقود', chip: 'عقد إيجار', f: [
+          ['الطرف الأول', 'شركة النخبة', 'ok'], ['الطرف الثاني', 'محمد علي', 'ok'],
+          ['مدة العقد', '12 شهرًا', 'ok'], ['قيمة الإيجار', '4,000 ج.م/شهر', 'ok'], ['تاريخ البدء', '2025-01-01', 'mid'] ] },
+        { word: 'الهويات والجوازات', chip: 'بطاقة رقم قومي', f: [
+          ['الاسم', 'سارة إبراهيم', 'ok'], ['الرقم القومي', '29805011200123', 'ok'],
+          ['تاريخ الميلاد', '1998-05-01', 'ok'], ['محل الإقامة', 'القاهرة', 'ok'], ['تاريخ الانتهاء', '2030-12-31', 'mid'] ] },
+        { word: 'الخط اليدوي', chip: 'روشتة بخط اليد', f: [
+          ['اسم المريض', 'خالد يوسف', 'ok'], ['التشخيص', 'التهاب الحلق', 'mid'],
+          ['الدواء', 'أموكسيسيلين 500', 'ok'], ['الجرعة', '3 مرات يوميًا', 'ok'], ['المدة', '7 أيام', 'ok'] ] }
+      ];
+      var rotate = document.getElementById('rotate');
+      var chip = document.getElementById('chipText');
+      var body = document.getElementById('hvBody');
+      if (!rotate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var rows = body ? body.querySelectorAll('.hv-field') : [];
       var i = 0;
       setInterval(function () {
-        i = (i + 1) % words.length;
-        el.style.opacity = '0'; el.style.transform = 'translateY(7px)';
+        i = (i + 1) % data.length;
+        var d = data[i];
+        rotate.style.opacity = '0'; rotate.style.transform = 'translateY(7px)';
+        if (body) body.classList.add('swap');
         setTimeout(function () {
-          el.textContent = words[i];
-          el.style.opacity = '1'; el.style.transform = 'translateY(0)';
-        }, 280);
-      }, 2600);
+          rotate.textContent = d.word;
+          rotate.style.opacity = '1'; rotate.style.transform = 'translateY(0)';
+          if (chip) chip.textContent = d.chip;
+          for (var r = 0; r < rows.length && r < d.f.length; r++) {
+            rows[r].querySelector('span').textContent = d.f[r][0];
+            rows[r].querySelector('b').textContent = d.f[r][1];
+            rows[r].querySelector('.dot').className = 'dot ' + d.f[r][2];
+          }
+          if (body) body.classList.remove('swap');
+        }, 300);
+      }, 3200);
     })();
   </script>
 

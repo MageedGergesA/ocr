@@ -139,18 +139,20 @@ code { background: #eef2f7; padding: 2px 6px; border-radius: 6px; font-size: .9e
 .hv-card::before { content: ""; position: absolute; inset-inline: 0; height: 46px; pointer-events: none; z-index: 2;
   background: linear-gradient(180deg, rgba(20,144,134,.16), transparent); animation: scanSweep 3.8s ease-in-out infinite; }
 .hv-head svg { animation: softPulse 2.6s ease-in-out infinite; }
+.hv-body { transition: opacity .3s ease, transform .3s ease; }
+.hv-body.swap { opacity: 0; transform: translateY(8px); }
 .hv-field { opacity: 0; animation: heroFade .5s ease-out forwards; }
-.hv-field:nth-child(2) { animation-delay: .45s; }
-.hv-field:nth-child(3) { animation-delay: .60s; }
-.hv-field:nth-child(4) { animation-delay: .75s; }
-.hv-field:nth-child(5) { animation-delay: .90s; }
-.hv-field:nth-child(6) { animation-delay: 1.05s; }
+.hv-body .hv-field:nth-child(1) { animation-delay: .45s; }
+.hv-body .hv-field:nth-child(2) { animation-delay: .60s; }
+.hv-body .hv-field:nth-child(3) { animation-delay: .75s; }
+.hv-body .hv-field:nth-child(4) { animation-delay: .90s; }
+.hv-body .hv-field:nth-child(5) { animation-delay: 1.05s; }
 .hv-field .dot { animation: dotPop .5s ease-out both; }
-.hv-field:nth-child(2) .dot { animation-delay: .55s; }
-.hv-field:nth-child(3) .dot { animation-delay: .70s; }
-.hv-field:nth-child(4) .dot { animation-delay: .85s; }
-.hv-field:nth-child(5) .dot { animation-delay: 1.0s; }
-.hv-field:nth-child(6) .dot { animation-delay: 1.15s; }
+.hv-body .hv-field:nth-child(1) .dot { animation-delay: .55s; }
+.hv-body .hv-field:nth-child(2) .dot { animation-delay: .70s; }
+.hv-body .hv-field:nth-child(3) .dot { animation-delay: .85s; }
+.hv-body .hv-field:nth-child(4) .dot { animation-delay: 1.0s; }
+.hv-body .hv-field:nth-child(5) .dot { animation-delay: 1.15s; }
 
 @media (prefers-reduced-motion: reduce) {
   .fd1, .fd2, .fd3, .hero-text > *, .hero-visual, .hv-card::before, .hv-head svg, .hv-field, .hv-field .dot { animation: none; opacity: 1; }
