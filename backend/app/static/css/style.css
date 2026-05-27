@@ -1,5 +1,6 @@
 :root {
-  --bg: #fdfbf6;           /* warm white page */
+  --page: #ece3d3;         /* deeper warm field (behind the canvas, so the frame pops) */
+  --bg: #fdfbf6;           /* warm white canvas/cards */
   --bg-alt: #f4efe4;       /* ivory sections */
   --navy: #14201d;         /* deep warm teal-charcoal (dark blocks) */
   --ink: #1b1813;          /* warm near-black */
@@ -21,7 +22,7 @@ html { scroll-behavior: smooth; }
 body {
   font-family: 'Cairo', system-ui, sans-serif;
   color: var(--ink);
-  background: var(--bg);
+  background: var(--page);
   line-height: 1.65;
 }
 .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
