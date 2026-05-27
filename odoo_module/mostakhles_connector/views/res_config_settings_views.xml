@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_form_mostakhles" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.mostakhles</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Mostakhles" string="Mostakhles" name="mostakhles_connector"
+                     logo="/mostakhles_connector/static/description/icon.png">
+                    <block title="اتصال الـ API" name="mostakhles_api_block">
+                        <setting string="مفتاح الـ API"
+                                 help="انسخ المفتاح من لوحة تحكم مُستخلِص (mostakhles.ai).">
+                            <field name="mostakhles_api_key" password="True"/>
+                        </setting>
+                        <setting string="عنوان الخادم"
+                                 help="اتركه كما هو إلا إذا كنت تستضيف المنصة بنفسك.">
+                            <field name="mostakhles_base_url"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_mostakhles_config" model="ir.actions.act_window">
+        <field name="name">إعدادات مُستخلِص</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'mostakhles_connector'}</field>
+    </record>
+
+</odoo>

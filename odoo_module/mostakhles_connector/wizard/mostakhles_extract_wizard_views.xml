@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_mostakhles_extract_wizard_form" model="ir.ui.view">
+        <field name="name">mostakhles.extract.wizard.form</field>
+        <field name="model">mostakhles.extract.wizard</field>
+        <field name="arch" type="xml">
+            <form string="استخراج بيانات المستند">
+                <group>
+                    <field name="document" filename="filename" required="1"/>
+                    <field name="filename" invisible="1"/>
+                    <field name="hard"/>
+                    <field name="document_type" invisible="not document_type"/>
+                </group>
+                <separator string="الحقول المستخرجة" invisible="not line_ids"/>
+                <field name="line_ids" invisible="not line_ids">
+                    <list editable="bottom" create="false" delete="false">
+                        <field name="name"/>
+                        <field name="value"/>
+                        <field name="confidence" optional="show"
+                               decoration-danger="confidence &lt; 60"
+                               decoration-warning="confidence &gt;= 60 and confidence &lt; 80"
+                               decoration-success="confidence &gt;= 80"/>
+                    </list>
+                </field>
+                <separator string="النتيجة الكاملة" invisible="not result_json"/>
+                <field name="result_json" nolabel="1" invisible="not result_json" readonly="1"/>
+                <footer>
+                    <button name="action_extract" type="object" string="استخرج"
+                            class="btn-primary" data-hotkey="q"/>
+                    <button string="إغلاق" special="cancel" class="btn-secondary" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mostakhles_extract_wizard" model="ir.actions.act_window">
+        <field name="name">استخراج مستند</field>
+        <field name="res_model">mostakhles.extract.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>
