@@ -11,6 +11,28 @@ import json
 
 from . import llm
 
+# Convert Arabic-Indic and Persian digits to ASCII so numbers (phones, IDs, dates,
+# amounts) are usable downstream (Odoo fields, exports) instead of "٠١٢".
+_AR_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹", "01234567890123456789")
+
+# Reusable calibration rule — keeps the model from reporting high confidence on guesses.
+CALIBRATION = (
+    " Use REALISTIC confidence: only give 0.9+ for values you can read clearly and verbatim. "
+    "For anything you infer, interpret, or that is unclear/handwritten (names, dates, phone digits, "
+    "doses), give 0.4-0.7. NEVER report high confidence on a guess."
+)
+
+
+def _normalize_digits(obj):
+    """Recursively convert Arabic-Indic/Persian digits to ASCII in all string values."""
+    if isinstance(obj, str):
+        return obj.translate(_AR_DIGITS)
+    if isinstance(obj, list):
+        return [_normalize_digits(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _normalize_digits(v) for k, v in obj.items()}
+    return obj
+
 
 def _strip_code_fence(text: str) -> str:
     """Models sometimes wrap JSON in ```json ... ``` fences. Peel them off."""
@@ -31,7 +53,7 @@ def _run(file_bytes: bytes, media_type: str, prompt: str, hard: bool) -> dict:
     """Call the model and parse a JSON object out of the reply."""
     text, truncated = _call_model(file_bytes, media_type, prompt, hard)
     try:
-        return json.loads(_strip_code_fence(text))
+        return _normalize_digits(json.loads(_strip_code_fence(text)))
     except json.JSONDecodeError:
         if truncated:
             raise ValueError(
@@ -95,6 +117,7 @@ def extract_prescription(image_bytes: bytes, media_type: str, hard: bool = True)
         '"التشخيص": {"value": "", "confidence": 0}, "العمر": {"value": "", "confidence": 0}, '
         '"الوزن": {"value": "", "confidence": 0}, "الحرارة": {"value": "", "confidence": 0}}, '
         '"medications": [{"name": "", "drug_class": "", "form": "", "dosage": "", "confidence": 0}]}'
+        + CALIBRATION
     )
     return _run(image_bytes, media_type, prompt, hard)
 
@@ -151,6 +174,7 @@ def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict
         "Return ONLY valid JSON, no other text, in exactly this shape:\n"
         '{"document_type": "<type>", "fields": {"<field name>": '
         '{"value": <value>, "confidence": <0-1>}, ...}}'
+        + CALIBRATION
     )
     return _run(image_bytes, media_type, prompt, hard)
 
@@ -172,7 +196,8 @@ def extract_schema(image_bytes: bytes, media_type: str, target_schema: dict,
         "do NOT translate, transliterate, or add another language. "
         "Return ONLY valid JSON, no other text. "
         "For each field, return an object with 'value' and 'confidence' (0-1). "
-        "If a field is not present, set its value to null.\n\n"
+        "If a field is not present, set its value to null."
+        + CALIBRATION + "\n\n"
         f"Fields:\n{field_list}"
     )
     return _run(image_bytes, media_type, prompt, hard)
