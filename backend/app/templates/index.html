@@ -9,7 +9,7 @@
   <meta property="og:description" content="AI document automation for Arabic businesses — invoices, contracts, IDs, real-estate & legal docs, including handwriting.">
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Aref+Ruqaa:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -78,6 +78,73 @@
       <div class="stat"><span class="num">العربية</span><span class="lbl">والخط اليدوي مدعومان بالكامل</span></div>
       <div class="stat"><span class="num">أي حقل</span><span class="lbl">في أي نموذج أودو</span></div>
       <div class="stat"><span class="num">‹ 5 ث</span><span class="lbl">متوسط زمن الاستخراج</span></div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE DEMO -->
+  <section id="try-it" class="section">
+    <div class="container">
+      <span class="eyebrow">جرّبها الآن</span>
+      <h2>شاهدها تعمل <span class="muted">— في ثوانٍ</span></h2>
+      <p class="section-sub">اختر نوع مستند وشاهد مُستخلِص يقرأه ويستخرج حقوله أمامك.</p>
+
+      <div class="demo-tabs">
+        <button class="demo-tab active" data-s="0" type="button"><i data-lucide="receipt-text"></i> فاتورة</button>
+        <button class="demo-tab" data-s="1" type="button"><i data-lucide="id-card"></i> بطاقة هوية</button>
+        <button class="demo-tab" data-s="2" type="button"><i data-lucide="pen-line"></i> روشتة بخط اليد</button>
+      </div>
+
+      <div class="demo-stage">
+        <div class="demo-doc" id="demoDoc">
+          <div class="demo-scan"></div>
+          <div class="paper" data-doc="0">
+            <div class="p-title">شركة النخبة للتجارة</div>
+            <div class="p-sub">فاتورة ضريبية</div>
+            <div class="p-row">رقم الفاتورة: <b>INV-2025-0042</b></div>
+            <div class="p-row">التاريخ: <b>2025-03-01</b></div>
+            <div class="p-row">العميل: <b>أحمد حسن</b></div>
+            <div class="p-row">عدد الأصناف: ٣</div>
+            <div class="p-total">الإجمالي: 1,530 ج.م</div>
+            <div class="p-row" style="border:none">الرقم الضريبي: 304-221-119</div>
+          </div>
+          <div class="paper" data-doc="1" hidden>
+            <div class="p-idhead">جمهورية مصر العربية · بطاقة الرقم القومي</div>
+            <div class="p-photo"></div>
+            <div class="p-row">الاسم: <b>سارة إبراهيم</b></div>
+            <div class="p-row">الرقم القومي: <b>29805011200123</b></div>
+            <div class="p-row">تاريخ الميلاد: <b>1998-05-01</b></div>
+            <div class="p-row" style="border:none">محل الإقامة: القاهرة</div>
+          </div>
+          <div class="paper hand" data-doc="2" hidden>
+            <div class="p-title">عيادة د. منى السيد</div>
+            <div class="p-sub">روشتة طبية</div>
+            <div class="p-hrow">المريض: خالد يوسف</div>
+            <div class="p-hrow">التشخيص: التهاب الحلق</div>
+            <div class="p-hrow">أموكسيسيلين ٥٠٠ مجم</div>
+            <div class="p-hrow">٣ مرات يوميًا — لمدة ٧ أيام</div>
+          </div>
+        </div>
+
+        <div class="demo-result">
+          <div class="rcard">
+            <div class="hv-head"><i data-lucide="sparkles"></i> البيانات المستخرجة</div>
+            <div id="demoBody">
+              <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
+              <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
+              <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
+              <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
+              <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
+              <div class="hv-foot"><span class="hv-doc-chip"><i data-lucide="file-text"></i> <span id="demoChip">فاتورة عربية</span></span><span>دقة 99% · أقل من 5 ثوانٍ</span></div>
+            </div>
+          </div>
+          {% if user %}
+          <a class="btn btn-primary btn-lg full" href="/app">جرّب على مستندك الآن</a>
+          {% else %}
+          <a class="btn btn-primary btn-lg full" href="/signup">جرّب على مستندك الآن</a>
+          {% endif %}
+          <p class="demo-hint">عرض توضيحي على نماذج — مستنداتك الحقيقية تُعالَج بخصوصية تامة بعد تسجيلك.</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -309,6 +376,54 @@
           if (body) body.classList.remove('swap');
         }, 300);
       }, 3200);
+    })();
+
+    // Interactive demo: pick a sample → scan → reveal extracted fields.
+    (function () {
+      var demo = [
+        { chip: 'فاتورة عربية', f: [
+          ['اسم العميل', 'أحمد حسن', ''], ['رقم الفاتورة', 'INV-2025-0042', ''],
+          ['التاريخ', '2025-03-01', ''], ['الإجمالي', '1,530 ج.م', ''], ['الرقم الضريبي', '304-221-119', 'mid'] ] },
+        { chip: 'بطاقة رقم قومي', f: [
+          ['الاسم', 'سارة إبراهيم', ''], ['الرقم القومي', '29805011200123', ''],
+          ['تاريخ الميلاد', '1998-05-01', ''], ['محل الإقامة', 'القاهرة', ''], ['تاريخ الانتهاء', '2030-12-31', 'mid'] ] },
+        { chip: 'روشتة بخط اليد', f: [
+          ['اسم المريض', 'خالد يوسف', ''], ['التشخيص', 'التهاب الحلق', 'mid'],
+          ['الدواء', 'أموكسيسيلين 500', ''], ['الجرعة', '3 مرات يوميًا', ''], ['المدة', '7 أيام', ''] ] }
+      ];
+      var tabs = document.querySelectorAll('.demo-tab');
+      var papers = document.querySelectorAll('#demoDoc .paper');
+      var docEl = document.getElementById('demoDoc');
+      var bodyEl = document.getElementById('demoBody');
+      var chipEl = document.getElementById('demoChip');
+      if (!tabs.length || !bodyEl) return;
+      var rows = bodyEl.querySelectorAll('.rfield');
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function play(idx) {
+        var d = demo[idx];
+        papers.forEach(function (p, i) { p.hidden = (i !== idx); });
+        rows.forEach(function (r) { r.classList.remove('show'); });
+        if (!reduce) { docEl.classList.remove('scanning'); void docEl.offsetWidth; docEl.classList.add('scanning'); }
+        var base = reduce ? 0 : 720;
+        if (chipEl) setTimeout(function () { chipEl.textContent = d.chip; }, base);
+        rows.forEach(function (r, i) {
+          setTimeout(function () {
+            r.querySelector('.k').textContent = d.f[i][0];
+            r.querySelector('.vt').textContent = d.f[i][1];
+            r.querySelector('.rdot').className = 'rdot ' + (d.f[i][2] || '');
+            r.classList.add('show');
+          }, base + i * 130);
+        });
+      }
+      tabs.forEach(function (t) {
+        t.addEventListener('click', function () {
+          tabs.forEach(function (x) { x.classList.remove('active'); });
+          t.classList.add('active');
+          play(parseInt(t.dataset.s, 10));
+        });
+      });
+      play(0);
     })();
   </script>
 
