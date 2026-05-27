@@ -171,6 +171,12 @@ def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict
         "document's original language and script — do NOT translate, transliterate, or add another "
         "language in parentheses. Be thorough and give your best reading for everything — do not skip "
         "unclear parts.\n"
+        "DOMAIN HINTS — apply when they fit the detected type:\n"
+        "- Medical prescription (روشتة): prefer correct Egyptian drug spellings (Newclav, Augmentin, "
+        "Hibiotic, Curam, Amrizole, Flagyl, Rhinopro, Telfast, Zyrtec, Allergyl, Histop, Nasostop, "
+        "Otrivin, Ventolin, Farcolin, Brufen, Cetal, Abimol, Paramol, Zithromax, Klacid, Zisrocin). "
+        "'Temp' is body temperature in Celsius — a lone '7' almost certainly means 37. For each medicine, "
+        "give its name and interpret the handwritten dose into a clear Arabic instruction.\n"
         "Return ONLY valid JSON, no other text, in exactly this shape:\n"
         '{"document_type": "<type>", "fields": {"<field name>": '
         '{"value": <value>, "confidence": <0-1>}, ...}}'
