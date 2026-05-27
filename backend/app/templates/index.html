@@ -24,7 +24,7 @@
     <div class="container hero-inner">
       <div class="hero-text">
         <div class="badge">منصة متخصصة في المستندات العربية</div>
-        <h1>منصة الذكاء الاصطناعي لمستندات<br><span class="hl">الأعمال العربية</span></h1>
+        <h1>منصة الذكاء الاصطناعي لمستندات<br><span class="hl"><span id="rotate">الأعمال العربية</span></span></h1>
         <p class="sub">
           افهم، استخرج، وحلّل الفواتير والعقود والهويات والمستندات العقارية والقانونية —
           بالعربية والخط اليدوي. أتمتة كاملة عبر الويب، الـ API، وأودو.
@@ -275,6 +275,23 @@
   </section>
 
   </div><!-- /canvas -->
+
+  <script>
+    (function () {
+      var words = ['الأعمال العربية', 'الفواتير والعقود', 'الهويات والجوازات', 'الخط اليدوي'];
+      var el = document.getElementById('rotate');
+      if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var i = 0;
+      setInterval(function () {
+        i = (i + 1) % words.length;
+        el.style.opacity = '0'; el.style.transform = 'translateY(7px)';
+        setTimeout(function () {
+          el.textContent = words[i];
+          el.style.opacity = '1'; el.style.transform = 'translateY(0)';
+        }, 280);
+      }, 2600);
+    })();
+  </script>
 
   <!-- FINAL CTA -->
   <section id="demo" class="cta-final">
