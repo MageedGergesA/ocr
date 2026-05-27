@@ -1,6 +1,6 @@
 """Background batch jobs for large PDFs.
 
-A big PDF is split into single pages, each extracted in its own Claude call
+A big PDF is split into single pages, each extracted in its own model call
 (so nothing truncates or blows the context window). Runs in a daemon thread;
 progress + partial results are kept in an in-memory store the /v1/jobs route polls.
 

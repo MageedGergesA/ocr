@@ -16,7 +16,7 @@ from fastapi.templating import Jinja2Templates
 load_dotenv()
 
 from app import auth, db, exports, jobs, models  # noqa: E402
-from app.services import extractor  # noqa: E402  (after load_dotenv so env is ready)
+from app.services import extractor, llm  # noqa: E402  (after load_dotenv so env is ready)
 from app.services_catalog import CATEGORIES, SERVICES  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -68,8 +68,8 @@ def chat_page(request: Request):
 def chat_extract(request: Request, file: UploadFile = File(...),
                  hard: bool = Form(True), x_api_key: str = Header(None)):
     """OCR a document to text so the user can then chat with it."""
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        raise HTTPException(500, "ANTHROPIC_API_KEY not configured on server")
+    if not llm.is_configured():
+        raise HTTPException(500, "GEMINI_API_KEY not configured on server")
     allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
     if file.content_type not in allowed:
         raise HTTPException(415, "unsupported file type")
@@ -419,8 +419,8 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
     svc = SERVICES.get(slug)
     if not svc:
         raise HTTPException(404, "unknown service")
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        raise HTTPException(500, "ANTHROPIC_API_KEY not configured on server")
+    if not llm.is_configured():
+        raise HTTPException(500, "GEMINI_API_KEY not configured on server")
 
     allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
     if file.content_type not in allowed:
@@ -619,8 +619,8 @@ def compare_page(request: Request):
 @app.post("/v1/compare")
 def compare_docs(request: Request, file_a: UploadFile = File(...), file_b: UploadFile = File(...),
                  hard: bool = Form(True), x_api_key: str = Header(None)):
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        raise HTTPException(500, "ANTHROPIC_API_KEY not configured on server")
+    if not llm.is_configured():
+        raise HTTPException(500, "GEMINI_API_KEY not configured on server")
     allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
     if file_a.content_type not in allowed or file_b.content_type not in allowed:
         raise HTTPException(415, "unsupported file type")
@@ -648,15 +648,15 @@ def compare_docs(request: Request, file_a: UploadFile = File(...), file_b: Uploa
 
 @app.post("/v1/extract")
 def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slow
-                       # (synchronous) Claude call never blocks the event loop.
+                       # (synchronous) model call never blocks the event loop.
     request: Request,
     file: UploadFile = File(...),
     target_schema: str = Form(""),  # optional — empty/omitted means auto-detect
     hard: bool = Form(True),
     x_api_key: str = Header(None),
 ):
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        raise HTTPException(500, "ANTHROPIC_API_KEY not configured on server")
+    if not llm.is_configured():
+        raise HTTPException(500, "GEMINI_API_KEY not configured on server")
 
     schema = None
     if target_schema and target_schema.strip() not in ("", "{}"):

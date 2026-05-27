@@ -4,8 +4,8 @@ Two modes:
   - auto   : model detects the document type and extracts whatever fields belong to it.
   - schema : caller supplies an exact field list (used by the Odoo module to map to model fields).
 
-The actual model call lives in `llm` (Gemini or Anthropic, chosen by config), so cost/quality
-routing happens there. Easy docs -> cheap model, hard/handwritten -> stronger model.
+The actual model call lives in `llm` (Gemini), so cost/quality routing happens there.
+Easy docs -> cheap model (Flash-Lite), hard/handwritten -> stronger model (Flash).
 """
 import json
 
