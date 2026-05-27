@@ -609,3 +609,11 @@ details p { color: var(--muted); }
   font-weight: 700; font-size: 13px; padding: 6px 14px; border-radius: 999px; white-space: nowrap; }
 .ea-badge svg { width: 15px; height: 15px; stroke: var(--brand); }
 @media (max-width: 560px) { .founder-card { flex-direction: column; align-items: center; text-align: center; } }
+
+/* ============ LANGUAGES ============ */
+.lang-wrap { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 860px; margin: 34px auto 0; }
+.lang-chip { padding: 8px 16px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg);
+  font-size: 14px; font-weight: 600; color: var(--ink); transition: border-color .15s, transform .15s; }
+.lang-chip:hover { border-color: var(--brand); transform: translateY(-2px); }
+.lang-chip.star { background: var(--brand); color: #fff; border-color: var(--brand); }
+.lang-note { color: var(--muted); font-size: 13px; margin-top: 22px; }
