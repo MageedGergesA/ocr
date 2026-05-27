@@ -156,6 +156,18 @@ code { background: #eef2f7; padding: 2px 6px; border-radius: 6px; font-size: .9e
   .fd1, .fd2, .fd3, .hero-text > *, .hero-visual, .hv-card::before, .hv-head svg, .hv-field, .hv-field .dot { animation: none; opacity: 1; }
 }
 
+/* Capabilities grid — "does more than you asked" */
+.cap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 34px; }
+.cap { display: flex; gap: 13px; align-items: flex-start; padding: 18px 16px; border: 1px solid var(--line);
+  border-radius: 14px; background: var(--bg); transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
+.cap:hover { border-color: var(--brand); transform: translateY(-3px); box-shadow: var(--shadow-sm); }
+.cap .ci { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; background: var(--tint); }
+.cap .ci svg { width: 21px; height: 21px; stroke: var(--brand); stroke-width: 1.6; }
+.cap h4 { margin: 1px 0 4px; font-size: 15px; color: var(--ink); }
+.cap p { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+@media (max-width: 980px) { .cap-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .cap-grid { grid-template-columns: 1fr; } }
+
 /* Hero product visual — single 'extracted data' card */
 .hv-card { background: #fff; border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow-lg);
   padding: 24px; text-align: start; }
