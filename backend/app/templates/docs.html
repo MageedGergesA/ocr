@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>واجهة API — مُستخلِص</title>
+  <meta name="description" content="مرجع واجهة برمجة التطبيقات (API) لمنصة مُستخلِص: استخراج المستندات العربية، المحادثة، المقارنة، والمعالجة بالدفعات عبر REST.">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  {% include "_nav.html" %}
+
+  <!-- DOCS HERO -->
+  <section class="docs-hero">
+    <div class="container">
+      <span class="eyebrow" style="text-align:right">واجهة برمجة التطبيقات</span>
+      <h1>API مُستخلِص</h1>
+      <p>محرّك واحد لاستخراج المستندات العربية — مطبوعة أو بخط اليد — عبر REST بسيط. ادمجه في أي نظام بمفتاح واحد.</p>
+      <div class="docs-hero-meta">
+        <span><i data-lucide="server"></i> REST · JSON</span>
+        <span><i data-lucide="key-round"></i> مصادقة بمفتاح API</span>
+        <span><i data-lucide="languages"></i> عربي وإنجليزي وخط يدوي</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section docs-section">
+    <div class="container docs-layout">
+
+      <!-- TOC -->
+      <aside class="docs-toc">
+        <nav>
+          <span class="toc-label">المحتوى</span>
+          <a href="#start">البدء السريع</a>
+          <a href="#auth">المصادقة</a>
+          <a href="#credits">النقاط والتكلفة</a>
+          <span class="toc-label">نقاط النهاية</span>
+          <a href="#extract">استخراج مستند</a>
+          <a href="#jobs">حالة الدفعة</a>
+          <a href="#chat">المحادثة</a>
+          <a href="#compare">المقارنة</a>
+          <a href="#estimate">تقدير التكلفة</a>
+          <a href="#usage">الاستخدام</a>
+          <span class="toc-label">مرجع</span>
+          <a href="#errors">رموز الأخطاء</a>
+        </nav>
+      </aside>
+
+      <!-- CONTENT -->
+      <div class="docs-content">
+
+        <h2 id="start">البدء السريع</h2>
+        <p>كل الطلبات تُرسَل إلى عنوان القاعدة التالي عبر HTTPS. أثناء التجربة المحلية استبدله بـ <code>http://localhost:8000</code>.</p>
+        <pre class="code" dir="ltr">https://api.mostakhles.ai</pre>
+        <p>أرسل أول مستند خلال ثوانٍ — مفتاحك في <a href="/dashboard">لوحة التحكم</a>:</p>
+        <pre class="code" dir="ltr"><span class="c-c"># استخراج تلقائي — نتعرّف على نوع المستند ونعيد حقوله</span>
+curl https://api.mostakhles.ai/v1/extract \
+  -H <span class="c-s">"x-api-key: YOUR_API_KEY"</span> \
+  -F <span class="c-s">"file=@invoice.pdf"</span> \
+  -F <span class="c-s">"hard=true"</span></pre>
+
+        <h2 id="auth">المصادقة</h2>
+        <p>تتطلب كل نقاط النهاية مفتاح API يُرسَل في الترويسة <code>x-api-key</code>. أنشئ مفاتيحك وألغِها في أي وقت من <a href="/dashboard">لوحة التحكم</a>.</p>
+        <pre class="code" dir="ltr">x-api-key: YOUR_API_KEY</pre>
+        <div class="callout"><i data-lucide="shield-check"></i><div><b>مستنداتك لا تُخزَّن.</b> تُعالَج في الذاكرة وتُحذَف فور انتهاء الطلب — ولا تُستخدم لتدريب النماذج.</div></div>
+
+        <h2 id="credits">النقاط والتكلفة</h2>
+        <p>تُحتسب كل صفحة بالنقاط حسب الوضع. النقاط مشتركة عبر الويب والـ API وأودو.</p>
+        <table class="params">
+          <thead><tr><th>الوضع</th><th>المعامل</th><th>التكلفة / صفحة</th><th>الأنسب لـ</th></tr></thead>
+          <tbody>
+            <tr><td>سريع</td><td><code>hard=false</code></td><td><b>1 نقطة</b></td><td>المستندات المطبوعة الواضحة</td></tr>
+            <tr><td>دقيق</td><td><code>hard=true</code> (الافتراضي)</td><td><b>8 نقاط</b></td><td>العربي والخط اليدوي والمستندات المعقّدة</td></tr>
+          </tbody>
+        </table>
+        <p class="docs-note">المقارنة تكلّف ضعف ذلك (مستندان). لا تُحتسب الطلبات الفاشلة، ولا نقطة نهاية <code>/v1/estimate</code>.</p>
+
+        <!-- EXTRACT -->
+        <div class="ep" id="extract">
+          <div class="ep-head"><span class="method post">POST</span><code class="ep-path">/v1/extract</code></div>
+          <p>استخرج بيانات منظّمة من صورة أو PDF. بدون <code>target_schema</code> نتعرّف تلقائيًا على نوع المستند ونعيد حقوله؛ ومعه نعيد الحقول التي حدّدتها بدقة.</p>
+          <h4>المعاملات (multipart/form-data)</h4>
+          <table class="params">
+            <thead><tr><th>الحقل</th><th>النوع</th><th>الوصف</th></tr></thead>
+            <tbody>
+              <tr><td><code>file</code></td><td>ملف <span class="req">مطلوب</span></td><td>PNG · JPG · WEBP · GIF · PDF (حتى 20MB)</td></tr>
+              <tr><td><code>hard</code></td><td>boolean</td><td>الوضع الدقيق (الافتراضي <code>true</code>)</td></tr>
+              <tr><td><code>target_schema</code></td><td>JSON</td><td>اختياري: <code>{"اسم_الحقل": "وصفه"}</code> — يُفعّل وضع المخطط المخصص</td></tr>
+            </tbody>
+          </table>
+          <h4>مثال — مخطط مخصص</h4>
+          <pre class="code" dir="ltr">curl https://api.mostakhles.ai/v1/extract \
+  -H <span class="c-s">"x-api-key: YOUR_API_KEY"</span> \
+  -F <span class="c-s">"file=@invoice.pdf"</span> \
+  -F <span class="c-s">'target_schema={"invoice_no":"رقم الفاتورة","total":"الإجمالي"}'</span></pre>
+          <h4>الاستجابة <span class="status ok">200</span></h4>
+          <pre class="code" dir="ltr">{
+  <span class="c-k">"mode"</span>: <span class="c-s">"auto"</span>,
+  <span class="c-k">"document_type"</span>: <span class="c-s">"invoice"</span>,
+  <span class="c-k">"data"</span>: {
+    <span class="c-k">"invoice_no"</span>: <span class="c-s">"INV-2025-0042"</span>,
+    <span class="c-k">"total"</span>: <span class="c-s">"1,530"</span>
+  },
+  <span class="c-k">"usage"</span>: { <span class="c-k">"used"</span>: 48, <span class="c-k">"limit"</span>: 1500, <span class="c-k">"remaining"</span>: 1452, <span class="c-k">"charged"</span>: 8 }
+}</pre>
+          <div class="callout alt"><i data-lucide="layers"></i><div><b>الملفات الكبيرة تتحوّل إلى دفعة.</b> أي PDF بأكثر من 5 صفحات يُعالَج في الخلفية صفحةً صفحةً، فتعيد الاستجابة <code>{"mode":"batch","job_id":"…","total_pages":N}</code> — تابع تقدّمها عبر <a href="#jobs"><code>/v1/jobs/{id}</code></a>.</div></div>
+        </div>
+
+        <!-- JOBS -->
+        <div class="ep" id="jobs">
+          <div class="ep-head"><span class="method get">GET</span><code class="ep-path">/v1/jobs/{job_id}</code></div>
+          <p>تابع تقدّم دفعة ونتائجها الجزئية.</p>
+          <pre class="code" dir="ltr">curl https://api.mostakhles.ai/v1/jobs/JOB_ID \
+  -H <span class="c-s">"x-api-key: YOUR_API_KEY"</span></pre>
+          <pre class="code" dir="ltr">{ <span class="c-k">"job_id"</span>: <span class="c-s">"…"</span>, <span class="c-k">"status"</span>: <span class="c-s">"processing"</span>, <span class="c-k">"done"</span>: 12, <span class="c-k">"total_pages"</span>: 30, <span class="c-k">"results"</span>: [ … ] }</pre>
+        </div>
+
+        <!-- CHAT -->
+        <div class="ep" id="chat">
+          <div class="ep-head"><span class="method post">POST</span><code class="ep-path">/v1/chat</code> <span class="cost">1 نقطة</span></div>
+          <p>اطرح سؤالًا على نص مستند مستخرَج: «ما الإجمالي؟»، «من وقّع؟»، «لخّص العقد».</p>
+          <pre class="code" dir="ltr">curl https://api.mostakhles.ai/v1/chat \
+  -H <span class="c-s">"x-api-key: YOUR_API_KEY"</span> \
+  -H <span class="c-s">"Content-Type: application/json"</span> \
+  -d <span class="c-s">'{"text":"نص المستند…","question":"ما إجمالي الفاتورة؟","history":[]}'</span></pre>
+          <pre class="code" dir="ltr">{ <span class="c-k">"answer"</span>: <span class="c-s">"إجمالي الفاتورة 1,530 ج.م."</span>, <span class="c-k">"usage"</span>: { <span class="c-k">"charged"</span>: 1, … } }</pre>
+        </div>
+
+        <!-- COMPARE -->
+        <div class="ep" id="compare">
+          <div class="ep-head"><span class="method post">POST</span><code class="ep-path">/v1/compare</code> <span class="cost">مستندان</span></div>
+          <p>قارن مستندين واكتشف ما تغيّر وما الناقص وما المتطابق.</p>
+          <pre class="code" dir="ltr">curl https://api.mostakhles.ai/v1/compare \
+  -H <span class="c-s">"x-api-key: YOUR_API_KEY"</span> \
+  -F <span class="c-s">"file_a=@v1.pdf"</span> -F <span class="c-s">"file_b=@v2.pdf"</span> -F <span class="c-s">"hard=true"</span></pre>
+          <pre class="code" dir="ltr">{ <span class="c-k">"report"</span>: <span class="c-s">"الفروقات: تغيّرت قيمة العقد من … إلى …"</span>, <span class="c-k">"usage"</span>: { … } }</pre>
+        </div>
+
+        <!-- ESTIMATE -->
+        <div class="ep" id="estimate">
+          <div class="ep-head"><span class="method post">POST</span><code class="ep-path">/v1/estimate</code> <span class="cost free">مجاني</span></div>
+          <p>قدّر التكلفة قبل التنفيذ: عدد الصفحات والنقاط في الوضعين ورصيدك الحالي. لا يستهلك نقاطًا.</p>
+          <pre class="code" dir="ltr">curl https://api.mostakhles.ai/v1/estimate \
+  -H <span class="c-s">"x-api-key: YOUR_API_KEY"</span> -F <span class="c-s">"file=@doc.pdf"</span></pre>
+          <pre class="code" dir="ltr">{ <span class="c-k">"pages"</span>: 3, <span class="c-k">"cost_strong"</span>: 24, <span class="c-k">"cost_fast"</span>: 3, <span class="c-k">"remaining"</span>: 1452, <span class="c-k">"limit"</span>: 1500 }</pre>
+        </div>
+
+        <!-- USAGE -->
+        <div class="ep" id="usage">
+          <div class="ep-head"><span class="method get">GET</span><code class="ep-path">/v1/usage</code> <span class="cost free">مجاني</span></div>
+          <p>اعرض خطتك واستهلاكك الشهري ورصيدك المتبقّي.</p>
+          <pre class="code" dir="ltr">curl https://api.mostakhles.ai/v1/usage -H <span class="c-s">"x-api-key: YOUR_API_KEY"</span></pre>
+          <pre class="code" dir="ltr">{ <span class="c-k">"plan"</span>: <span class="c-s">"starter"</span>, <span class="c-k">"used"</span>: 48, <span class="c-k">"limit"</span>: 1500, <span class="c-k">"remaining"</span>: 1452 }</pre>
+        </div>
+
+        <!-- ERRORS -->
+        <h2 id="errors">رموز الأخطاء</h2>
+        <p>تعيد الواجهة رموز HTTP قياسية مع رسالة في الحقل <code>detail</code>.</p>
+        <table class="params">
+          <thead><tr><th>الرمز</th><th>المعنى</th></tr></thead>
+          <tbody>
+            <tr><td><span class="status err">400</span></td><td>طلب غير صالح — مثل <code>target_schema</code> ليس JSON صحيحًا، أو حقول ناقصة</td></tr>
+            <tr><td><span class="status err">401</span></td><td>مفتاح API مفقود أو غير صالح أو مُلغى</td></tr>
+            <tr><td><span class="status err">413</span></td><td>الملف أكبر من 20MB، أو عدد صفحات الـ PDF يتجاوز الحد</td></tr>
+            <tr><td><span class="status err">415</span></td><td>نوع ملف غير مدعوم — استخدم PNG/JPG/WEBP/GIF/PDF</td></tr>
+            <tr><td><span class="status err">429</span></td><td>تجاوزت حصتك الشهرية — رقِّ خطتك أو انتظر الشهر التالي</td></tr>
+            <tr><td><span class="status err">502</span></td><td>فشل الاستخراج من النموذج (لا تُحتسب نقاط)</td></tr>
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-final">
+    <div class="container">
+      <h2>جاهز للتكامل؟</h2>
+      <p>أنشئ مفتاح API الأول مجانًا وابدأ خلال دقيقة.</p>
+      {% if user %}
+      <a class="btn btn-primary btn-lg" href="/dashboard">احصل على مفتاحك</a>
+      {% else %}
+      <a class="btn btn-primary btn-lg" href="/signup">ابدأ مجانًا</a>
+      {% endif %}
+    </div>
+  </section>
+
+</body>
+</html>

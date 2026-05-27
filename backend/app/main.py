@@ -21,7 +21,9 @@ from app.services_catalog import CATEGORIES, SERVICES  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent
 
-app = FastAPI(title="Mostakhles API", version="0.1.0")
+# docs_url/redoc_url disabled: /docs is our own human-facing API reference page,
+# and we don't expose the internal Swagger UI on a customer-facing product.
+app = FastAPI(title="Mostakhles API", version="0.1.0", docs_url=None, redoc_url=None)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
@@ -157,6 +159,11 @@ def privacy_page(request: Request):
 def terms_page(request: Request):
     return templates.TemplateResponse(request, "legal.html",
                                       _ctx(request, title="شروط الاستخدام", body=_TERMS_HTML))
+
+
+@app.get("/docs", response_class=HTMLResponse)
+def api_docs(request: Request):
+    return templates.TemplateResponse(request, "docs.html", _ctx(request))
 
 
 @app.get("/tools", response_class=HTMLResponse)
