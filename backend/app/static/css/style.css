@@ -617,3 +617,7 @@ details p { color: var(--muted); }
 .lang-chip:hover { border-color: var(--brand); transform: translateY(-2px); }
 .lang-chip.star { background: var(--brand); color: #fff; border-color: var(--brand); }
 .lang-note { color: var(--muted); font-size: 13px; margin-top: 22px; }
+
+/* prescription tool: stacked patient fields + interpreted medications table */
+.rx-block { margin-bottom: 20px; }
+.rx-label { font-weight: 800; font-size: 14px; color: var(--ink); margin: 4px 0 10px; }

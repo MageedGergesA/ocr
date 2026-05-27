@@ -67,6 +67,38 @@ def compare(text_a: str, text_b: str) -> str:
     return llm.generate_text(system, user, hard=True, max_tokens=1500)
 
 
+def extract_prescription(image_bytes: bytes, media_type: str, hard: bool = True) -> dict:
+    """Rich, interpreted reading of a handwritten medical prescription.
+
+    Returns {"patient": {field: {value, confidence}}, "medications": [{name, drug_class, form,
+    dosage, confidence}]}. The model decides how many medications there are and interprets each
+    dose into a plain-Arabic instruction — like a pharmacist reading the script.
+    """
+    prompt = (
+        "This is a HANDWRITTEN Egyptian medical prescription (روشتة). Read it like an experienced "
+        "Egyptian pharmacist and produce a RICH, INTERPRETED result.\n"
+        "Known Egyptian drugs — prefer the correct spelling if a handwritten name is close: Newclav, "
+        "Augmentin, Hibiotic, Curam, Amrizole, Flagyl, Rhinopro, Telfast, Zyrtec, Allergyl, Histop, "
+        "Nasostop, Otrivin, Sinucare, Ventolin, Farcolin, Brufen, Cetal, Abimol, Paramol, Zithromax, "
+        "Klacid, Zisrocin.\n"
+        "For EACH medication identify: its name; its drug class / active ingredient if recognizable "
+        "(e.g. Newclav → أموكسيسيلين/كلافولانيك، Amrizole → ميترونيدازول); its formulation (معلّق/شراب/"
+        "نقط/أقراص…); and INTERPRET the handwritten dose into a clear Arabic instruction "
+        "(e.g. '4 مل كل 12 ساعة'، 'مرتين يوميًا لمدة 5 أيام'). If a dose is illegible write 'غير واضح'.\n"
+        "'Temp' is body temperature in Celsius (a lone '7' almost certainly means 37). 'Age' is in years, "
+        "'Wt' is weight in kg.\n"
+        "Keep all names and values in their ORIGINAL language; do NOT translate Arabic into English. "
+        "Give a calibrated 0-1 confidence per item; never inflate confidence on unclear handwriting.\n"
+        "Return ONLY valid JSON in EXACTLY this shape:\n"
+        '{"patient": {"الطبيب": {"value": "", "confidence": 0}, "التخصص": {"value": "", "confidence": 0}, '
+        '"المريض": {"value": "", "confidence": 0}, "التاريخ": {"value": "", "confidence": 0}, '
+        '"التشخيص": {"value": "", "confidence": 0}, "العمر": {"value": "", "confidence": 0}, '
+        '"الوزن": {"value": "", "confidence": 0}, "الحرارة": {"value": "", "confidence": 0}}, '
+        '"medications": [{"name": "", "drug_class": "", "form": "", "dosage": "", "confidence": 0}]}'
+    )
+    return _run(image_bytes, media_type, prompt, hard)
+
+
 def run_table(file_bytes: bytes, media_type: str, hard: bool = True) -> dict:
     """Extract tabular data. Returns {"columns": [...], "rows": [[...], ...]}."""
     prompt = (

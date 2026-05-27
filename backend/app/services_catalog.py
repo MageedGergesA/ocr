@@ -173,8 +173,8 @@ SERVICES = {
     },
     "prescription": {
         "title": "قارئ الروشتات الطبية", "category": "parsers", "icon": "pill",
-        "desc": "حوّل الروشتة الطبية (حتى المكتوبة بخط اليد) إلى بيانات منظّمة.",
-        "kind": "fields", "hard": True, "free": False,
+        "desc": "حوّل الروشتة الطبية (حتى المكتوبة بخط اليد) إلى بيانات منظّمة وأدوية مُفسّرة.",
+        "kind": "prescription", "hard": True, "free": False,
         "hint": (
             "This is a handwritten Egyptian medical prescription (روشتة). "
             "If a handwritten drug name is close to a known Egyptian drug, prefer its correct spelling: "

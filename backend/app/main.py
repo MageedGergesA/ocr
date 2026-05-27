@@ -445,6 +445,22 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
             elif kind == "fields":
                 out = {"kind": "fields", "data": extractor.extract_schema(
                     data_bytes, ct, svc["schema"], hard, hint=svc.get("hint", ""))}
+            elif kind == "prescription":
+                rx = extractor.extract_prescription(data_bytes, ct, hard)
+                meds = rx.get("medications") or []
+                rows = []
+                for m in meds:
+                    name = (m.get("name") or "").strip()
+                    cls = (m.get("drug_class") or "").strip()
+                    conf = m.get("confidence")
+                    rows.append([
+                        f"{name} ({cls})" if cls else name,
+                        m.get("form") or "",
+                        m.get("dosage") or "",
+                        f"{round(conf * 100)}%" if isinstance(conf, (int, float)) else "",
+                    ])
+                out = {"kind": "prescription", "patient": rx.get("patient") or {},
+                       "columns": ["الدواء", "الشكل الدوائي", "الجرعة والتعليمات", "الثقة"], "rows": rows}
             elif kind == "table":
                 t = extractor.run_table(data_bytes, ct, hard)
                 out = {"kind": "table", "columns": t["columns"], "rows": t["rows"]}

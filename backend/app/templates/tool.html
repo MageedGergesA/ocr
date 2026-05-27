@@ -34,7 +34,7 @@
           </div>
           <label class="toggle">
             <input type="checkbox" id="hard" checked>
-            دقة أعلى (Sonnet + تفكير) — للعربي والخط اليدوي. ألغِ التحديد للمستندات المطبوعة البسيطة (أسرع وأرخص).
+            دقة أعلى — للعربي والخط اليدوي. ألغِ التحديد للمستندات المطبوعة البسيطة (أسرع وأرخص).
           </label>
           <div id="credits" class="credits-box">💳 …</div>
           <button id="runBtn" class="btn btn-primary btn-lg full" disabled>تشغيل</button>
@@ -227,6 +227,18 @@
           showExports([
             btn('Excel', async () => dl(await postJSON('/v1/export-table', { format: 'xlsx', columns: body.columns, rows: body.rows }), 'table.xlsx')),
             btn('CSV', async () => dl(await postJSON('/v1/export-table', { format: 'csv', columns: body.columns, rows: body.rows }), 'table.csv')),
+          ]);
+        } else if (KIND === 'prescription') {
+          result.innerHTML =
+            `<div class="rx-block"><div class="rx-label">بيانات المريض والتشخيص</div>${fieldsTable(body.patient)}</div>`
+            + `<div class="rx-block"><div class="rx-label">الأدوية المُفسّرة</div>${htmlTable(body.columns, body.rows)}</div>`;
+          enableAsk(fieldsToText(body.patient) + '\n' + tableToText(body.columns, body.rows));
+          const prows = Object.entries(body.patient || {}).map(([f, info]) =>
+            ({ page: 1, field: f, value: (info && typeof info === 'object') ? info.value : info, confidence: (info && typeof info === 'object') ? info.confidence : '' }));
+          showExports([
+            btn('Excel (الأدوية)', async () => dl(await postJSON('/v1/export-table', { format: 'xlsx', columns: body.columns, rows: body.rows }), 'medications.xlsx')),
+            btn('CSV (الأدوية)', async () => dl(await postJSON('/v1/export-table', { format: 'csv', columns: body.columns, rows: body.rows }), 'medications.csv')),
+            btn('Word (المريض)', async () => dl(await postJSON('/v1/export', { format: 'docx', rows: prows }), 'patient.docx')),
           ]);
         }
         updateBal(body.usage);
