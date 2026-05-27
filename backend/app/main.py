@@ -443,7 +443,8 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
             if kind == "text":
                 out = {"kind": "text", "text": extractor.run_text(data_bytes, ct, svc["prompt"], hard)}
             elif kind == "fields":
-                out = {"kind": "fields", "data": extractor.extract_schema(data_bytes, ct, svc["schema"], hard)}
+                out = {"kind": "fields", "data": extractor.extract_schema(
+                    data_bytes, ct, svc["schema"], hard, hint=svc.get("hint", ""))}
             elif kind == "table":
                 t = extractor.run_table(data_bytes, ct, hard)
                 out = {"kind": "table", "columns": t["columns"], "rows": t["rows"]}

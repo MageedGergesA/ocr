@@ -175,6 +175,16 @@ SERVICES = {
         "title": "قارئ الروشتات الطبية", "category": "parsers", "icon": "pill",
         "desc": "حوّل الروشتة الطبية (حتى المكتوبة بخط اليد) إلى بيانات منظّمة.",
         "kind": "fields", "hard": True, "free": False,
+        "hint": (
+            "This is a handwritten Egyptian medical prescription (روشتة). "
+            "If a handwritten drug name is close to a known Egyptian drug, prefer its correct spelling: "
+            "Newclav, Augmentin, Hibiotic, Curam, Amrizole, Flagyl, Rhinopro, Telfast, Zyrtec, Allergyl, "
+            "Histop, Nasostop, Otrivin, Sinucare, Ventolin, Farcolin, Brufen, Cetal, Abimol, Paramol, "
+            "Zithromax, Klacid, Zisrocin. "
+            "'Temp' is body temperature in Celsius (normally 36-41); a lone '7' almost certainly means 37. "
+            "'Age' is in years, 'Wt' is weight in kg, 'D.G' is the diagnosis, and 'R/' begins the medicines. "
+            "Never inflate confidence on unclear handwriting."
+        ),
         "schema": {
             "اسم_المريض": "patient name", "اسم_الطبيب": "doctor name", "التاريخ": "date",
             "الأدوية": "list of medicines", "الجرعات": "dosages",

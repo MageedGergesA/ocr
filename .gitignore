@@ -6,3 +6,6 @@ __pycache__/
 .DS_Store
 test_docs/*
 !test_docs/.gitkeep
+
+# local eval/experiments — may contain real document data, never commit
+experiments/

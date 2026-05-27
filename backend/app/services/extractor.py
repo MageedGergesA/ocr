@@ -163,8 +163,10 @@ def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict
         "   - If it is FREEFORM TEXT (a letter, note, essay, or any narrative prose with no "
         "structured fields), do NOT split it into invented fields. Instead return a single "
         'field named "full_text" whose value is the COMPLETE transcription, preserving line breaks.\n'
-        "The document may be in Arabic, English, or handwritten; keep the original language. "
-        "Be thorough and give your best reading for everything — do not skip unclear parts.\n"
+        "The document may be in Arabic, English, or handwritten. Keep every value EXACTLY in the "
+        "document's original language and script — do NOT translate, transliterate, or add another "
+        "language in parentheses. Be thorough and give your best reading for everything — do not skip "
+        "unclear parts.\n"
         "Return ONLY valid JSON, no other text, in exactly this shape:\n"
         '{"document_type": "<type>", "fields": {"<field name>": '
         '{"value": <value>, "confidence": <0-1>}, ...}}'
@@ -172,16 +174,21 @@ def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict
     return _run(image_bytes, media_type, prompt, hard)
 
 
-def extract_schema(image_bytes: bytes, media_type: str, target_schema: dict, hard: bool = True) -> dict:
+def extract_schema(image_bytes: bytes, media_type: str, target_schema: dict,
+                   hard: bool = True, hint: str = "") -> dict:
     """Extract a caller-defined set of fields.
 
     target_schema: {field_name: human description}
+    hint: optional domain context prepended to the prompt (e.g. a prescription drug list).
     Returns: {field_name: {"value": ..., "confidence": 0-1}, ...}
     """
     field_list = "\n".join(f"- {k}: {v}" for k, v in target_schema.items())
     prompt = (
-        "Extract the following fields from this document. "
+        (hint.strip() + "\n\n" if hint else "")
+        + "Extract the following fields from this document. "
         "The document may be in Arabic, English, or handwritten. "
+        "Keep every value EXACTLY in the document's original language and script — "
+        "do NOT translate, transliterate, or add another language. "
         "Return ONLY valid JSON, no other text. "
         "For each field, return an object with 'value' and 'confidence' (0-1). "
         "If a field is not present, set its value to null.\n\n"
