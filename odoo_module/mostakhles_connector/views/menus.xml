@@ -7,6 +7,9 @@
     <menuitem id="menu_mostakhles_extract" name="استخراج مستند"
               parent="menu_mostakhles_root" action="action_mostakhles_extract_wizard" sequence="10"/>
 
+    <menuitem id="menu_mostakhles_mapping" name="تعيينات الحقول" groups="base.group_system"
+              parent="menu_mostakhles_root" action="action_mostakhles_mapping" sequence="20"/>
+
     <menuitem id="menu_mostakhles_config" name="الإعدادات" groups="base.group_system"
               parent="menu_mostakhles_root" action="action_mostakhles_config" sequence="90"/>
 

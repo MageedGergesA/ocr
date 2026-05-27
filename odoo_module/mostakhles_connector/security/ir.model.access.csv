@@ -1,3 +1,9 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_mostakhles_extract_wizard,mostakhles.extract.wizard,model_mostakhles_extract_wizard,base.group_user,1,1,1,1
 access_mostakhles_extract_line,mostakhles.extract.line,model_mostakhles_extract_line,base.group_user,1,1,1,1
+access_mostakhles_fill_wizard,mostakhles.fill.wizard,model_mostakhles_fill_wizard,base.group_user,1,1,1,1
+access_mostakhles_fill_line,mostakhles.fill.line,model_mostakhles_fill_line,base.group_user,1,1,1,1
+access_mostakhles_mapping_user,mostakhles.mapping.user,model_mostakhles_mapping,base.group_user,1,0,0,0
+access_mostakhles_mapping_admin,mostakhles.mapping.admin,model_mostakhles_mapping,base.group_system,1,1,1,1
+access_mostakhles_mapping_line_user,mostakhles.mapping.line.user,model_mostakhles_mapping_line,base.group_user,1,0,0,0
+access_mostakhles_mapping_line_admin,mostakhles.mapping.line.admin,model_mostakhles_mapping_line,base.group_system,1,1,1,1

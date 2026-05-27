@@ -19,6 +19,8 @@ with a confidence score per field, and shows them inside Odoo.
     "data": [
         "security/ir.model.access.csv",
         "wizard/mostakhles_extract_wizard_views.xml",
+        "wizard/mostakhles_fill_wizard_views.xml",
+        "views/mostakhles_mapping_views.xml",
         "views/res_config_settings_views.xml",
         "views/menus.xml",
     ],
