@@ -663,6 +663,120 @@ def delete_template(tid: int, request: Request):
 
 
 # ---------- Webhook ----------
+@app.get("/account", response_class=HTMLResponse)
+def account_page(request: Request):
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login", status_code=303)
+        return templates.TemplateResponse(request, "account.html",
+            {"user": user, "msg": None, "err": None})
+    finally:
+        session.close()
+
+
+@app.post("/account/password")
+def account_change_password(request: Request,
+                            current_password: str = Form(...),
+                            new_password: str = Form(...),
+                            confirm_password: str = Form(...)):
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login", status_code=303)
+        ctx = {"user": user, "msg": None, "err": None}
+        if not user.password_hash or not auth.verify_password(current_password, user.password_hash):
+            ctx["err"] = "كلمة المرور الحالية غير صحيحة."
+        elif len(new_password) < 8:
+            ctx["err"] = "كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل."
+        elif new_password != confirm_password:
+            ctx["err"] = "كلمتا المرور الجديدتان غير متطابقتين."
+        else:
+            user.password_hash = auth.hash_password(new_password)
+            session.commit()
+            ctx["msg"] = "تم تغيير كلمة المرور بنجاح."
+        return templates.TemplateResponse(request, "account.html", ctx)
+    finally:
+        session.close()
+
+
+@app.post("/account/email")
+def account_change_email(request: Request,
+                         new_email: str = Form(...),
+                         current_password: str = Form(...)):
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login", status_code=303)
+        ctx = {"user": user, "msg": None, "err": None}
+        new_email = new_email.strip().lower()
+        if not user.password_hash or not auth.verify_password(current_password, user.password_hash):
+            ctx["err"] = "كلمة المرور غير صحيحة."
+        elif "@" not in new_email or "." not in new_email.split("@")[-1]:
+            ctx["err"] = "صيغة البريد غير صحيحة."
+        elif auth.is_disposable_email(new_email):
+            ctx["err"] = "لا نقبل عناوين البريد المؤقّتة."
+        elif new_email == user.email:
+            ctx["err"] = "هذا هو بريدك الحالي بالفعل."
+        elif session.query(models.User).filter_by(email=new_email).first():
+            ctx["err"] = "هذا البريد مستخدم في حساب آخر."
+        else:
+            # Update email + require re-verification. Send link to the NEW address.
+            user.email = new_email
+            user.email_verified = False
+            user.verification_token = secrets.token_urlsafe(32)
+            session.commit()
+            verify_url = str(request.base_url).rstrip("/") + f"/verify/{user.verification_token}"
+            try:
+                emailer.send_verification_email(new_email, verify_url)
+            except Exception:  # noqa: BLE001
+                pass
+            ctx["msg"] = (f"تم تغيير البريد إلى {new_email}. "
+                          "أرسلنا رابط تأكيد إلى البريد الجديد — اضغطه لإعادة تفعيل حسابك.")
+        return templates.TemplateResponse(request, "account.html", ctx)
+    finally:
+        session.close()
+
+
+@app.post("/account/delete")
+def account_delete(request: Request, current_password: str = Form(...),
+                   confirm: str = Form("")):
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login", status_code=303)
+        if not user.password_hash or not auth.verify_password(current_password, user.password_hash):
+            return templates.TemplateResponse(request, "account.html",
+                {"user": user, "msg": None, "err": "كلمة المرور غير صحيحة — لم نحذف حسابك."})
+        if confirm.strip().upper() != "DELETE":
+            return templates.TemplateResponse(request, "account.html",
+                {"user": user, "msg": None,
+                 "err": "للتأكيد اكتب الكلمة DELETE (بالأحرف الإنجليزية الكبيرة) في خانة التأكيد."})
+        # Cascade-clean the user's data
+        user_id = user.id
+        session.query(models.ApiKey).filter_by(user_id=user_id).delete()
+        session.query(models.Session).filter_by(user_id=user_id).delete()
+        try:
+            session.query(models.Template).filter_by(user_id=user_id).delete()
+            session.query(models.History).filter_by(user_id=user_id).delete()
+            session.query(models.Usage).filter(
+                models.Usage.api_key_id.in_(
+                    session.query(models.ApiKey.id).filter_by(user_id=user_id))).delete(synchronize_session=False)
+        except Exception:  # noqa: BLE001 — best-effort if some tables differ
+            pass
+        session.delete(user)
+        session.commit()
+        resp = RedirectResponse("/", status_code=303)
+        resp.delete_cookie("sid")
+        return resp
+    finally:
+        session.close()
+
+
 @app.post("/dashboard/webhook")
 def set_webhook(request: Request, webhook_url: str = Form("")):
     session = db.SessionLocal()
