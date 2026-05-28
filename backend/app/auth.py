@@ -67,9 +67,10 @@ STRONG_UNITS = int(os.getenv("STRONG_UNITS", "8"))
 
 PLAN_LIMITS = {  # credits / month
     "free": 300,
-    "starter": 1500,
-    "pro": 5000,
-    "business": 15000,
+    "lite": 1200,
+    "starter": 3500,
+    "pro": 8500,
+    "business": 28000,
     "demo": int(os.getenv("DEMO_MONTHLY_LIMIT", "2000")),  # public /app demo
 }
 
