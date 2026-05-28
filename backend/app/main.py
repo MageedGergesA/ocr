@@ -80,11 +80,12 @@ def chat_extract(request: Request, file: UploadFile = File(...),
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
+        paid = auth.is_paid_plan(api_key.user.plan)
         cost = pages * auth.credits_for(hard)
         auth.enforce_limit(session, api_key, needed=cost)
         try:
             text = extractor.run_text(data_bytes, file.content_type,
-                                      SERVICES["arabic-ocr"]["prompt"], hard)
+                                      SERVICES["arabic-ocr"]["prompt"], hard, paid=paid)
         except Exception as e:  # noqa: BLE001
             raise HTTPException(502, f"extraction failed: {e}")
         auth.increment_usage(session, api_key, count=cost)
@@ -105,9 +106,10 @@ def chat_answer(request: Request, payload: dict = Body(...), x_api_key: str = He
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
+        paid = auth.is_paid_plan(api_key.user.plan)
         auth.enforce_limit(session, api_key, needed=1)
         try:
-            answer = extractor.chat(text, question, history)
+            answer = extractor.chat(text, question, history, paid=paid)
         except Exception as e:  # noqa: BLE001
             raise HTTPException(502, f"chat failed: {e}")
         auth.increment_usage(session, api_key, count=1)
@@ -436,17 +438,18 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
+        paid = auth.is_paid_plan(api_key.user.plan)
         cost = auth.credits_for(hard)
         auth.enforce_limit(session, api_key, needed=cost)
-        ct = file.content_type  # `hard` (Sonnet + thinking) comes from the request, default True
+        ct = file.content_type  # `hard` comes from the request, default True
         try:
             if kind == "text":
-                out = {"kind": "text", "text": extractor.run_text(data_bytes, ct, svc["prompt"], hard)}
+                out = {"kind": "text", "text": extractor.run_text(data_bytes, ct, svc["prompt"], hard, paid=paid)}
             elif kind == "fields":
                 out = {"kind": "fields", "data": extractor.extract_schema(
-                    data_bytes, ct, svc["schema"], hard, hint=svc.get("hint", ""))}
+                    data_bytes, ct, svc["schema"], hard, hint=svc.get("hint", ""), paid=paid)}
             elif kind == "prescription":
-                rx = extractor.extract_prescription(data_bytes, ct, hard)
+                rx = extractor.extract_prescription(data_bytes, ct, hard, paid=paid)
                 meds = rx.get("medications") or []
                 rows = []
                 for m in meds:
@@ -462,10 +465,10 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
                 out = {"kind": "prescription", "patient": rx.get("patient") or {},
                        "columns": ["الدواء", "الشكل الدوائي", "الجرعة والتعليمات", "الثقة"], "rows": rows}
             elif kind == "table":
-                t = extractor.run_table(data_bytes, ct, hard)
+                t = extractor.run_table(data_bytes, ct, hard, paid=paid)
                 out = {"kind": "table", "columns": t["columns"], "rows": t["rows"]}
             elif kind == "searchable_pdf":
-                text = extractor.run_text(data_bytes, ct, SERVICES["arabic-ocr"]["prompt"], hard)
+                text = extractor.run_text(data_bytes, ct, SERVICES["arabic-ocr"]["prompt"], hard, paid=paid)
                 pdf, media, fname = exports.image_to_searchable_pdf(data_bytes, text)
                 auth.increment_usage(session, api_key, count=cost)
                 return Response(content=pdf, media_type=media,
@@ -646,12 +649,13 @@ def compare_docs(request: Request, file_a: UploadFile = File(...), file_b: Uploa
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
+        paid = auth.is_paid_plan(api_key.user.plan)
         cost = 2 * auth.credits_for(hard)
         auth.enforce_limit(session, api_key, needed=cost)
         try:
-            ta = extractor.run_text(a, file_a.content_type, SERVICES["arabic-ocr"]["prompt"], hard)
-            tb = extractor.run_text(b, file_b.content_type, SERVICES["arabic-ocr"]["prompt"], hard)
-            report = extractor.compare(ta, tb)
+            ta = extractor.run_text(a, file_a.content_type, SERVICES["arabic-ocr"]["prompt"], hard, paid=paid)
+            tb = extractor.run_text(b, file_b.content_type, SERVICES["arabic-ocr"]["prompt"], hard, paid=paid)
+            report = extractor.compare(ta, tb, paid=paid)
         except Exception as e:  # noqa: BLE001
             raise HTTPException(502, f"compare failed: {e}")
         auth.increment_usage(session, api_key, count=cost)
@@ -698,6 +702,7 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
+        paid = auth.is_paid_plan(api_key.user.plan)
 
         # Large PDF → background batch job (one call per page; never truncates).
         if n_pages and n_pages > native_max:
@@ -705,7 +710,7 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
                 raise HTTPException(413, f"this PDF has {n_pages} pages; the limit is {hard_max}. "
                                          "Split it into smaller files.")
             auth.enforce_limit(session, api_key, needed=n_pages * auth.credits_for(hard))
-            job_id = jobs.start_batch(image_bytes, hard, api_key.id, n_pages)
+            job_id = jobs.start_batch(image_bytes, hard, api_key.id, n_pages, paid=paid)
             return {"mode": "batch", "job_id": job_id, "total_pages": n_pages, "status": "processing"}
 
         # Single image or small PDF → one synchronous call.
@@ -713,10 +718,10 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
         auth.enforce_limit(session, api_key, needed=cost)
         try:
             if schema:
-                data = extractor.extract_schema(image_bytes, file.content_type, schema, hard=hard)
+                data = extractor.extract_schema(image_bytes, file.content_type, schema, hard=hard, paid=paid)
                 document_type, mode = None, "schema"
             else:
-                result = extractor.extract_auto(image_bytes, file.content_type, hard=hard)
+                result = extractor.extract_auto(image_bytes, file.content_type, hard=hard, paid=paid)
                 data, document_type, mode = result.get("fields", result), result.get("document_type"), "auto"
         except Exception as e:  # noqa: BLE001 — surface model/parse errors; don't bill failures
             raise HTTPException(502, f"extraction failed: {e}")

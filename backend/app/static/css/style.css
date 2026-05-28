@@ -621,3 +621,7 @@ details p { color: var(--muted); }
 /* prescription tool: stacked patient fields + interpreted medications table */
 .rx-block { margin-bottom: 20px; }
 .rx-label { font-weight: 800; font-size: 14px; color: var(--ink); margin: 4px 0 10px; }
+
+/* free-tier privacy disclosure on signup */
+.auth-note { font-size: 12.5px; color: var(--muted); line-height: 1.65; background: var(--bg-alt);
+  border: 1px dashed var(--line); border-radius: 10px; padding: 12px 14px; margin: 14px 0 4px; }
