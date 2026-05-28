@@ -379,28 +379,105 @@ def logout(request: Request):
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
+    from collections import Counter
+    from datetime import date, datetime as dt, timedelta
+    from calendar import monthrange
+
     session = db.SessionLocal()
     try:
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
         limit = auth.PLAN_LIMITS.get(user.plan, 50)
+
         keys = []
         for k in user.api_keys:
             used, _, _ = auth.get_usage(session, k)
             keys.append({"id": k.id, "key": k.key, "active": k.active, "used": used})
+
         tpls = (session.query(models.Template).filter_by(user_id=user.id)
                 .order_by(models.Template.id.desc()).all())
         templates_list = [{"id": t.id, "name": t.name,
                           "fields": list(json.loads(t.schema_json).keys())} for t in tpls]
-        hist = (session.query(models.History).filter_by(user_id=user.id)
-                .order_by(models.History.id.desc()).limit(20).all())
+
+        # ---- analytics from History ----
+        now = dt.utcnow()
+        today = now.date()
+        month_start = today.replace(day=1)
+        thirty_days_ago = now - timedelta(days=30)
+
+        all_hist = (session.query(models.History)
+                    .filter(models.History.user_id == user.id)
+                    .order_by(models.History.id.desc()).all())
+
+        total_extractions = len(all_hist)
+        total_credits_ever = sum(h.charged or 0 for h in all_hist)
+        month_extractions = sum(1 for h in all_hist if h.created_at and h.created_at.date() >= month_start)
+        month_credits = sum(h.charged or 0 for h in all_hist if h.created_at and h.created_at.date() >= month_start)
+        today_extractions = sum(1 for h in all_hist if h.created_at and h.created_at.date() == today)
+        today_credits = sum(h.charged or 0 for h in all_hist if h.created_at and h.created_at.date() == today)
+        last_activity = all_hist[0].created_at if all_hist else None
+
+        # Days until quota renewal (1st of next month)
+        last_day = monthrange(today.year, today.month)[1]
+        days_to_renewal = (last_day - today.day) + 1
+
+        # Cost projection: if you keep this month's pace
+        days_elapsed = max(1, today.day)
+        projected_month = round(month_credits / days_elapsed * last_day)
+        will_exceed = projected_month > limit
+
+        # 30-day daily series
+        daily = {(thirty_days_ago + timedelta(days=i)).date(): 0 for i in range(31)}
+        for h in all_hist:
+            if h.created_at and h.created_at >= thirty_days_ago:
+                d = h.created_at.date()
+                if d in daily:
+                    daily[d] += (h.charged or 0)
+        chart_days = [{"d": d.strftime("%m-%d"), "v": v} for d, v in sorted(daily.items())]
+        chart_max = max((d["v"] for d in chart_days), default=1) or 1
+
+        # Tool / document-type breakdown (this month)
+        tool_counts: Counter = Counter()
+        doctype_counts: Counter = Counter()
+        for h in all_hist:
+            if h.created_at and h.created_at.date() >= month_start:
+                tool_counts[(h.kind or "other")] += (h.charged or 0)
+                if h.document_type:
+                    doctype_counts[h.document_type] += 1
+
+        top_tools = tool_counts.most_common(8)
+        top_tools_max = max((c for _, c in top_tools), default=1) or 1
+        top_doctypes = doctype_counts.most_common(6)
+
+        # Mode breakdown (this month): 1 credit = fast, 8 = hard, anything else = "other"
+        mode_fast = sum(1 for h in all_hist if h.created_at and h.created_at.date() >= month_start and h.charged == 1)
+        mode_hard = sum(1 for h in all_hist if h.created_at and h.created_at.date() >= month_start and h.charged == 8)
+        mode_other = max(0, month_extractions - mode_fast - mode_hard)
+
+        # Recent history table (last 20, kept for the activity feed)
         history_list = [{"id": h.id, "kind": h.kind, "document_type": h.document_type,
-                        "charged": h.charged, "created_at": str(h.created_at)[:16]} for h in hist]
-        return templates.TemplateResponse(request, "dashboard.html",
-            {"user": user, "plan": user.plan, "limit": limit, "keys": keys,
-             "templates": templates_list, "history": history_list,
-             "webhook_url": user.webhook_url or ""})
+                        "charged": h.charged, "created_at": str(h.created_at)[:16]}
+                        for h in all_hist[:20]]
+
+        return templates.TemplateResponse(request, "dashboard.html", {
+            "user": user, "plan": user.plan, "limit": limit, "keys": keys,
+            "templates": templates_list, "history": history_list,
+            "webhook_url": user.webhook_url or "",
+            # analytics
+            "month_credits": month_credits, "month_extractions": month_extractions,
+            "today_credits": today_credits, "today_extractions": today_extractions,
+            "total_extractions": total_extractions, "total_credits_ever": total_credits_ever,
+            "last_activity": str(last_activity)[:16] if last_activity else None,
+            "days_to_renewal": days_to_renewal,
+            "projected_month": projected_month, "will_exceed": will_exceed,
+            "remaining": max(0, limit - month_credits),
+            "usage_pct": min(100, round(month_credits / limit * 100)) if limit else 0,
+            "chart_days": chart_days, "chart_max": chart_max,
+            "top_tools": [{"name": n, "credits": c, "pct": round(c / top_tools_max * 100)} for n, c in top_tools],
+            "top_doctypes": [{"name": n, "count": c} for n, c in top_doctypes],
+            "mode_fast": mode_fast, "mode_hard": mode_hard, "mode_other": mode_other,
+        })
     finally:
         session.close()
 

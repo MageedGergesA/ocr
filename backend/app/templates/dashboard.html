@@ -11,43 +11,144 @@
 <body>
   {% include "_nav.html" %}
 
-  <section class="dash-wrap">
-    <div class="container">
-      <h1 class="dash-title">لوحة التحكم</h1>
-      <p class="dash-sub">مرحبًا، {{ user.email }}</p>
+  <section class="account-wrap">
+    <div class="account-page" style="max-width:1080px">
+      <header class="account-head">
+        <h1>لوحة التحكم</h1>
+        <p>مرحبًا، <b>{{ user.email }}</b> — الخطة الحالية: <b style="color:var(--brand-dark);text-transform:capitalize">{{ plan }}</b></p>
+      </header>
 
-      <div class="dash-grid">
-        <div class="dash-card">
-          <div class="dash-label">خطتك الحالية</div>
-          <div class="dash-big">{{ plan }}</div>
-          <div class="dash-meta">{{ limit }} نقطة / الشهر لكل مفتاح</div>
-          <a class="btn btn-ghost" href="/#pricing">ترقية الخطة</a>
+      <!-- KPI strip -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">هذا الشهر</div>
+          <div class="kpi-big">{{ month_credits }}<span>/ {{ limit }}</span></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill {% if will_exceed %}warn{% endif %}" style="width:{{ usage_pct }}%"></div></div>
+          <div class="kpi-meta">{{ month_extractions }} عملية · يتبقى {{ remaining }} نقطة</div>
         </div>
-        <div class="dash-card">
-          <div class="dash-label">النقاط المستخدمة هذا الشهر</div>
-          <div class="dash-big">{{ keys|sum(attribute='used') }}</div>
-          <div class="dash-meta">الصفحة = نقطة واحدة (سريع) أو 8 نقاط (دقة عالية)</div>
+        <div class="kpi-card">
+          <div class="kpi-label">اليوم</div>
+          <div class="kpi-big">{{ today_credits }}<span> نقطة</span></div>
+          <div class="kpi-meta">{{ today_extractions }} عملية</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">إجمالي الاستخراجات</div>
+          <div class="kpi-big">{{ total_extractions }}<span> عملية</span></div>
+          <div class="kpi-meta">{{ total_credits_ever }} نقطة منذ التسجيل</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">تجديد الحصة</div>
+          <div class="kpi-big">{{ days_to_renewal }}<span> يوم</span></div>
+          <div class="kpi-meta">
+            {% if will_exceed %}
+              <span style="color:#b4472f">⚠ بهذا المعدل ستتجاوز: {{ projected_month }} نقطة</span>
+            {% else %}
+              التوقّع للشهر: {{ projected_month }} نقطة
+            {% endif %}
+          </div>
         </div>
       </div>
 
-      <div class="dash-section">
-        <div class="dash-section-head">
-          <h2>مفاتيح الـ API</h2>
-          <form method="post" action="/dashboard/keys" style="margin:0">
+      <!-- 30-day usage chart -->
+      <div class="acc-card">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="activity"></i></span>
+          <div>
+            <h2>الاستخدام خلال آخر 30 يومًا</h2>
+            <p>النقاط المُستهلَكة يوميًا. آخر نشاط: <b>{{ last_activity or "—" }}</b></p>
+          </div>
+        </div>
+        <div class="chart">
+          {% for d in chart_days %}
+          <div class="chart-bar" style="--h:{{ (d.v / chart_max * 100) if chart_max else 0 }}%" title="{{ d.d }} — {{ d.v }} نقطة">
+            <span class="chart-bar-fill"></span>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="chart-axis">
+          <span>{{ chart_days[0].d }}</span>
+          <span>{{ chart_days[15].d }}</span>
+          <span>{{ chart_days[-1].d }}</span>
+        </div>
+      </div>
+
+      <!-- Tool + Mode breakdown -->
+      <div class="dash-twocol">
+        <div class="acc-card">
+          <div class="acc-card-head">
+            <span class="acc-icon"><i data-lucide="bar-chart-3"></i></span>
+            <div>
+              <h2>الأدوات الأكثر استخدامًا</h2>
+              <p>هذا الشهر — حسب النقاط المُستهلَكة.</p>
+            </div>
+          </div>
+          {% if top_tools %}
+          <div class="tool-list">
+            {% for t in top_tools %}
+            <div class="tool-row">
+              <div class="tool-name">{{ t.name }}</div>
+              <div class="tool-bar"><div class="tool-bar-fill" style="width:{{ t.pct }}%"></div></div>
+              <div class="tool-val">{{ t.credits }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}<p class="hint">لا توجد بيانات بعد لهذا الشهر.</p>{% endif %}
+        </div>
+
+        <div class="acc-card">
+          <div class="acc-card-head">
+            <span class="acc-icon"><i data-lucide="pie-chart"></i></span>
+            <div>
+              <h2>وضع المعالجة</h2>
+              <p>هذا الشهر — توزيع العمليات.</p>
+            </div>
+          </div>
+          {% set total_ops = mode_fast + mode_hard + mode_other %}
+          {% if total_ops %}
+          <div class="mode-stack">
+            {% if mode_hard %}<div class="mode-seg mode-hard" style="width:{{ (mode_hard / total_ops * 100) }}%" title="دقة عالية: {{ mode_hard }}"></div>{% endif %}
+            {% if mode_fast %}<div class="mode-seg mode-fast" style="width:{{ (mode_fast / total_ops * 100) }}%" title="سريع: {{ mode_fast }}"></div>{% endif %}
+            {% if mode_other %}<div class="mode-seg mode-other" style="width:{{ (mode_other / total_ops * 100) }}%" title="أخرى: {{ mode_other }}"></div>{% endif %}
+          </div>
+          <div class="mode-legend">
+            <span><i class="dot mode-hard"></i> دقة عالية <b>{{ mode_hard }}</b></span>
+            <span><i class="dot mode-fast"></i> سريع <b>{{ mode_fast }}</b></span>
+            {% if mode_other %}<span><i class="dot mode-other"></i> أخرى <b>{{ mode_other }}</b></span>{% endif %}
+          </div>
+          {% else %}<p class="hint">لا توجد عمليات هذا الشهر.</p>{% endif %}
+
+          {% if top_doctypes %}
+          <h3 style="font-size:13.5px;margin-top:22px;color:var(--muted);font-weight:700">أكثر أنواع المستندات</h3>
+          <div class="doctype-list">
+            {% for d in top_doctypes %}
+            <span class="chip chip-muted">{{ d.name }} · <b>{{ d.count }}</b></span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Per-key usage -->
+      <div class="acc-card">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="key-round"></i></span>
+          <div>
+            <h2>مفاتيح الـ API</h2>
+            <p>استخدم المفتاح في ترويسة <code>x-api-key</code> عند استدعاء الـ API.</p>
+          </div>
+          <form method="post" action="/dashboard/keys" style="margin-inline-start:auto">
             <button class="btn btn-primary" type="submit">+ مفتاح جديد</button>
           </form>
         </div>
-        <p class="hint">استخدم المفتاح في ترويسة <code>x-api-key</code> عند استدعاء الـ API.</p>
-
         <div class="keys">
-          <div class="krow khead"><div>المفتاح</div><div>الاستخدام</div><div>الحالة</div><div></div></div>
+          <div class="krow khead"><div>المفتاح</div><div>الاستخدام (الشهر)</div><div>الحالة</div><div></div></div>
           {% for k in keys %}
           <div class="krow">
             <div class="kkey"><code>{{ k.key }}</code>
               <button class="copy-btn" onclick="navigator.clipboard.writeText('{{ k.key }}');this.textContent='✓'">نسخ</button>
             </div>
             <div>{{ k.used }} / {{ limit }}</div>
-            <div>{% if k.active %}<span class="badge-on">فعّال</span>{% else %}<span class="badge-off">ملغى</span>{% endif %}</div>
+            <div>{% if k.active %}<span class="chip chip-ok">فعّال</span>{% else %}<span class="chip chip-warn">ملغى</span>{% endif %}</div>
             <div>
               {% if k.active %}
               <form method="post" action="/dashboard/keys/{{ k.id }}/revoke" style="margin:0">
@@ -60,9 +161,39 @@
         </div>
       </div>
 
-      <div class="dash-section">
-        <h2>القوالب المحفوظة</h2>
-        <p class="hint">عرّف حقولك في صفحة الاستخراج واحفظها كقالب، ثم أعد استخدامه في أي وقت.</p>
+      <!-- Recent activity -->
+      <div class="acc-card">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="history"></i></span>
+          <div>
+            <h2>آخر الاستخراجات</h2>
+            <p>آخر 20 عملية — اضغط «عرض» لرؤية نتيجة الاستخراج الكاملة.</p>
+          </div>
+        </div>
+        {% if history %}
+        <div class="keys">
+          <div class="krow khead"><div>التاريخ</div><div>النوع</div><div>النقاط</div><div></div></div>
+          {% for h in history %}
+          <div class="krow">
+            <div>{{ h.created_at }}</div>
+            <div>{{ h.kind }}{% if h.document_type %} · <span style="color:var(--muted)">{{ h.document_type }}</span>{% endif %}</div>
+            <div>{{ h.charged }}</div>
+            <div><a class="copy-btn" href="/v1/history/{{ h.id }}" target="_blank">عرض</a></div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}<p class="hint">لا يوجد سجل بعد. ابدأ من <a href="/app">صفحة الرفع</a>.</p>{% endif %}
+      </div>
+
+      <!-- Templates -->
+      <div class="acc-card">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="bookmark"></i></span>
+          <div>
+            <h2>القوالب المحفوظة</h2>
+            <p>عرّف حقولك في صفحة الاستخراج واحفظها كقالب لاستخدامها لاحقًا.</p>
+          </div>
+        </div>
         {% if templates %}
         <div class="keys">
           {% for t in templates %}
@@ -78,39 +209,37 @@
         {% else %}<p class="hint">لا توجد قوالب محفوظة بعد.</p>{% endif %}
       </div>
 
-      <div class="dash-section">
-        <h2>Webhook</h2>
-        <p class="hint">سنرسل نتائج المهام غير المتزامنة (معالجة الدفعات) إلى هذا الرابط عند اكتمالها.</p>
-        <form method="post" action="/dashboard/webhook" style="display:flex;gap:10px;flex-wrap:wrap">
-          <input type="url" name="webhook_url" value="{{ webhook_url }}" placeholder="https://example.com/webhook"
-                 style="flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit">
-          <button class="btn btn-primary" type="submit">حفظ</button>
-        </form>
-      </div>
-
-      <div class="dash-section">
-        <h2>سجل المعالجة</h2>
-        {% if history %}
-        <div class="keys">
-          <div class="krow khead"><div>التاريخ</div><div>النوع</div><div>النقاط</div><div></div></div>
-          {% for h in history %}
-          <div class="krow">
-            <div>{{ h.created_at }}</div>
-            <div>{{ h.kind }}{% if h.document_type %} · {{ h.document_type }}{% endif %}</div>
-            <div>{{ h.charged }}</div>
-            <div><a class="copy-btn" href="/v1/history/{{ h.id }}" target="_blank">عرض</a></div>
+      <!-- Webhook + API snippet (collapsed bottom) -->
+      <div class="dash-twocol">
+        <div class="acc-card">
+          <div class="acc-card-head">
+            <span class="acc-icon"><i data-lucide="webhook"></i></span>
+            <div>
+              <h2>Webhook</h2>
+              <p>سنرسل نتائج مهام معالجة الدفعات إلى هذا الرابط عند اكتمالها.</p>
+            </div>
           </div>
-          {% endfor %}
+          <form method="post" action="/dashboard/webhook" class="acc-form">
+            <div class="field">
+              <label>عنوان Webhook</label>
+              <input type="url" name="webhook_url" value="{{ webhook_url }}" placeholder="https://example.com/webhook">
+            </div>
+            <div class="acc-actions"><button class="btn btn-primary" type="submit"><i data-lucide="save"></i> حفظ</button></div>
+          </form>
         </div>
-        {% else %}<p class="hint">لا يوجد سجل بعد.</p>{% endif %}
-      </div>
-
-      <div class="dash-section">
-        <h2>استدعاء سريع (cURL)</h2>
-        <pre class="code-block">curl -X POST {{ request.base_url }}v1/extract \
+        <div class="acc-card">
+          <div class="acc-card-head">
+            <span class="acc-icon"><i data-lucide="terminal"></i></span>
+            <div>
+              <h2>استدعاء سريع (cURL)</h2>
+              <p>ابدأ في ثوانٍ من سطر الأوامر — استبدل <code>YOUR_KEY</code> بمفتاحك من الأعلى.</p>
+            </div>
+          </div>
+          <pre class="code">curl -X POST {{ request.base_url }}v1/extract \
   -H "x-api-key: YOUR_KEY" \
   -F "file=@invoice.pdf" \
-  -F "target_schema="</pre>
+  -F "hard=true"</pre>
+        </div>
       </div>
     </div>
   </section>

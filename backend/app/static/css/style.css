@@ -759,3 +759,69 @@ details p { color: var(--muted); }
 .user-link.user-logout svg { stroke: #c0392b; }
 .user-link.user-logout:hover { background: #fbe4de; }
 .user-sep { border: none; border-top: 1px solid var(--line); margin: 4px 6px; }
+
+/* ============ DASHBOARD ANALYTICS ============ */
+/* KPI strip */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.kpi-card { background: var(--bg); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px 18px 16px; box-shadow: var(--shadow-sm); }
+.kpi-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.kpi-big { font-size: 30px; font-weight: 800; color: var(--ink); margin: 6px 0 8px; letter-spacing: -.5px; }
+.kpi-big span { font-size: 14px; font-weight: 600; color: var(--muted); margin-inline-start: 4px; }
+.kpi-bar { height: 6px; background: var(--bg-alt); border-radius: 999px; overflow: hidden; margin-bottom: 8px; }
+.kpi-bar-fill { height: 100%; background: var(--brand-grad); border-radius: 999px; transition: width .4s; }
+.kpi-bar-fill.warn { background: linear-gradient(90deg, var(--amber), var(--coral)); }
+.kpi-meta { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+
+/* 30-day bar chart */
+.chart { display: flex; align-items: flex-end; gap: 4px; height: 140px; padding: 6px 2px 0;
+  border-bottom: 1px solid var(--line); }
+.chart-bar { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.chart-bar-fill { width: 100%; height: var(--h, 2%); background: var(--brand-grad); border-radius: 4px 4px 0 0;
+  min-height: 2px; transition: height .3s; }
+.chart-bar:hover .chart-bar-fill { background: var(--amber); }
+.chart-axis { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted);
+  padding: 8px 2px 0; font-variant-numeric: tabular-nums; }
+
+/* Two-column dash row */
+.dash-twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-bottom: 0; }
+.dash-twocol > .acc-card { margin-bottom: 22px; }
+
+/* Tool usage list */
+.tool-list { display: flex; flex-direction: column; gap: 12px; }
+.tool-row { display: grid; grid-template-columns: 140px 1fr 60px; gap: 12px; align-items: center; font-size: 13.5px; }
+.tool-name { font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tool-bar { height: 8px; background: var(--bg-alt); border-radius: 999px; overflow: hidden; }
+.tool-bar-fill { height: 100%; background: var(--brand-grad); border-radius: 999px; }
+.tool-val { text-align: end; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Mode stack */
+.mode-stack { display: flex; height: 14px; border-radius: 999px; overflow: hidden;
+  background: var(--bg-alt); margin: 6px 0 14px; }
+.mode-seg { transition: width .4s; }
+.mode-seg.mode-hard { background: var(--brand); }
+.mode-seg.mode-fast { background: #8fd0c6; }
+.mode-seg.mode-other { background: var(--amber); }
+.mode-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--muted); }
+.mode-legend b { color: var(--ink); margin-inline-start: 4px; }
+.mode-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  margin-inline-end: 6px; vertical-align: middle; }
+.mode-legend .dot.mode-hard { background: var(--brand); }
+.mode-legend .dot.mode-fast { background: #8fd0c6; }
+.mode-legend .dot.mode-other { background: var(--amber); }
+.doctype-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+/* Code block in dashboard */
+.acc-card pre.code { direction: ltr; text-align: left; background: #0c211d; color: #dbe7e2;
+  border: 1px solid #173029; border-radius: 12px; padding: 14px 16px; overflow-x: auto;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 13px; line-height: 1.7;
+  white-space: pre; margin: 0; }
+
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-twocol { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .tool-row { grid-template-columns: 100px 1fr 50px; }
+}
