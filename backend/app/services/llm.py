@@ -13,8 +13,8 @@ touching the rest of the app — but only Gemini is wired today.
 """
 import os
 
-GEMINI_EASY = os.getenv("GEMINI_MODEL_EASY", "gemini-2.5-flash-lite")
-GEMINI_HARD = os.getenv("GEMINI_MODEL_HARD", "gemini-2.5-flash")
+GEMINI_EASY = os.getenv("GEMINI_MODEL_EASY", "gemini-3.1-flash-lite")
+GEMINI_HARD = os.getenv("GEMINI_MODEL_HARD", "gemini-3.5-flash")
 
 _client = None
 
