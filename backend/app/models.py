@@ -30,6 +30,12 @@ class User(Base):
 
     api_keys = relationship("ApiKey", back_populates="user")
 
+    @property
+    def is_admin(self) -> bool:
+        """True if this user's email is in the ADMIN_EMAILS env var (or default)."""
+        from app import auth  # local import to avoid circular
+        return auth.is_admin(self)
+
 
 class Session(Base):
     """Server-side web session — token lives in an httponly cookie."""

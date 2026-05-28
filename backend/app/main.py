@@ -597,6 +597,149 @@ def dashboard(request: Request, q: str = ""):
         session.close()
 
 
+@app.get("/admin", response_class=HTMLResponse)
+def admin_dashboard(request: Request):
+    """Owner/admin overview — cross-account metrics. Gated by ADMIN_EMAILS env var.
+    Returns 404 (not 403) to non-admins so the URL doesn't leak."""
+    from collections import Counter
+    from datetime import datetime as dt, timedelta
+
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login", status_code=303)
+        if not auth.is_admin(user):
+            raise HTTPException(404, "not found")
+
+        now = dt.utcnow()
+        today = now.date()
+        month_start = today.replace(day=1)
+        thirty_days_ago = now - timedelta(days=30)
+
+        # ----- Users -----
+        users = session.query(models.User).all()
+        total_users = len(users)
+        verified = sum(1 for u in users if u.email_verified)
+        unverified = total_users - verified
+        active_keys = session.query(models.ApiKey).filter_by(active=True).count()
+        plan_counts: Counter = Counter(u.plan for u in users)
+        signups_today = sum(1 for u in users if u.created_at and u.created_at.date() == today)
+        signups_7d = sum(1 for u in users if u.created_at and (now - u.created_at) <= timedelta(days=7))
+        signups_30d = sum(1 for u in users if u.created_at and u.created_at >= thirty_days_ago)
+
+        # 30-day signups chart
+        signup_daily = {(thirty_days_ago + timedelta(days=i)).date(): 0 for i in range(31)}
+        for u in users:
+            if u.created_at and u.created_at >= thirty_days_ago:
+                d = u.created_at.date()
+                if d in signup_daily:
+                    signup_daily[d] += 1
+        signups_chart = [{"d": d.strftime("%m-%d"), "v": v} for d, v in sorted(signup_daily.items())]
+        signups_chart_max = max((d["v"] for d in signups_chart), default=1) or 1
+
+        # ----- Extractions / credits across all users -----
+        all_hist = session.query(models.History).all()
+        total_extractions = len(all_hist)
+        total_credits = sum(h.charged or 0 for h in all_hist)
+        month_credits = sum(h.charged or 0 for h in all_hist if h.created_at and h.created_at.date() >= month_start)
+        month_extractions = sum(1 for h in all_hist if h.created_at and h.created_at.date() >= month_start)
+        today_extractions = sum(1 for h in all_hist if h.created_at and h.created_at.date() == today)
+
+        # Estimated Gemini spend this month (hard=8cr/$0.015, fast=1cr/$0.0025)
+        # We log charged credits, not raw mode — back into approximate cost per credit.
+        hard_ops = sum(1 for h in all_hist if h.created_at and h.created_at.date() >= month_start and h.charged == 8)
+        fast_ops = sum(1 for h in all_hist if h.created_at and h.created_at.date() >= month_start and h.charged == 1)
+        est_cost_month = round(hard_ops * 0.015 + fast_ops * 0.0025, 2)
+
+        # 30-day usage chart (sum credits per day across all users)
+        usage_daily = {(thirty_days_ago + timedelta(days=i)).date(): 0 for i in range(31)}
+        for h in all_hist:
+            if h.created_at and h.created_at >= thirty_days_ago:
+                d = h.created_at.date()
+                if d in usage_daily:
+                    usage_daily[d] += (h.charged or 0)
+        usage_chart = [{"d": d.strftime("%m-%d"), "v": v} for d, v in sorted(usage_daily.items())]
+        usage_chart_max = max((d["v"] for d in usage_chart), default=1) or 1
+
+        # ----- Top users this month (by credits) -----
+        user_credit: Counter = Counter()
+        user_ops: Counter = Counter()
+        for h in all_hist:
+            if h.created_at and h.created_at.date() >= month_start:
+                user_credit[h.user_id] += (h.charged or 0)
+                user_ops[h.user_id] += 1
+        user_by_id = {u.id: u for u in users}
+        top_users = []
+        for uid, credits in user_credit.most_common(10):
+            u = user_by_id.get(uid)
+            if u:
+                top_users.append({"email": u.email, "plan": u.plan, "credits": credits,
+                                  "ops": user_ops[uid]})
+
+        # ----- Top tools / document types this month -----
+        tool_counts: Counter = Counter()
+        doctype_counts: Counter = Counter()
+        for h in all_hist:
+            if h.created_at and h.created_at.date() >= month_start:
+                tool_counts[h.kind or "other"] += (h.charged or 0)
+                if h.document_type:
+                    doctype_counts[h.document_type] += 1
+        top_tools = [{"name": n, "credits": c} for n, c in tool_counts.most_common(10)]
+        top_doctypes = [{"name": n, "count": c} for n, c in doctype_counts.most_common(8)]
+
+        # ----- Recent signups -----
+        recent_signups = sorted(users, key=lambda u: u.created_at or dt.min, reverse=True)[:10]
+        recent_signups_list = [{"email": u.email, "plan": u.plan, "verified": u.email_verified,
+                                "created_at": str(u.created_at)[:16]} for u in recent_signups]
+
+        # ----- Recent activity (last 15 across all users) -----
+        recent = (session.query(models.History).order_by(models.History.id.desc()).limit(15).all())
+        recent_activity = []
+        for h in recent:
+            u = user_by_id.get(h.user_id)
+            recent_activity.append({
+                "email": u.email if u else "?", "kind": h.kind,
+                "document_type": h.document_type, "charged": h.charged,
+                "created_at": str(h.created_at)[:16],
+            })
+
+        # ----- Active sessions (rough proxy for current users) -----
+        active_sessions = session.query(models.Session).count()
+
+        # ----- DB size (sqlite only) -----
+        db_size_mb = None
+        try:
+            db_path = db.DATABASE_URL.replace("sqlite:///", "")
+            db_size_mb = round(os.path.getsize(db_path) / (1024 * 1024), 2)
+        except Exception:  # noqa: BLE001
+            pass
+
+        return templates.TemplateResponse(request, "admin.html", {
+            "user": user, "csrf_token": "",
+            # users
+            "total_users": total_users, "verified": verified, "unverified": unverified,
+            "active_keys": active_keys, "plan_counts": dict(plan_counts),
+            "signups_today": signups_today, "signups_7d": signups_7d, "signups_30d": signups_30d,
+            "signups_chart": signups_chart, "signups_chart_max": signups_chart_max,
+            # usage
+            "total_extractions": total_extractions, "total_credits": total_credits,
+            "month_credits": month_credits, "month_extractions": month_extractions,
+            "today_extractions": today_extractions,
+            "hard_ops": hard_ops, "fast_ops": fast_ops, "est_cost_month": est_cost_month,
+            "usage_chart": usage_chart, "usage_chart_max": usage_chart_max,
+            # leaderboards
+            "top_users": top_users, "top_tools": top_tools, "top_doctypes": top_doctypes,
+            # recent
+            "recent_signups": recent_signups_list, "recent_activity": recent_activity,
+            # system
+            "active_sessions": active_sessions, "db_size_mb": db_size_mb,
+            "llm_models": llm.active_models(),
+        })
+    finally:
+        session.close()
+
+
 @app.get("/dashboard/history.csv")
 def history_csv(request: Request):
     import csv

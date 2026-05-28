@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة — مُستخلِص</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  {% include "_nav.html" %}
+
+  <section class="account-wrap">
+    <div class="account-page" style="max-width:1180px">
+      <header class="account-head">
+        <h1>لوحة الإدارة <span class="chip chip-warn" style="font-size:11px;vertical-align:middle">ADMIN</span></h1>
+        <p>نظرة عامة على كل الحسابات والاستخدام والنمو.</p>
+      </header>
+
+      <!-- USERS KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">المستخدمون</div>
+          <div class="kpi-big">{{ total_users }}<span> حساب</span></div>
+          <div class="kpi-meta">{{ verified }} مؤكَّد · {{ unverified }} غير مؤكَّد</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">اشتراكات هذا الأسبوع</div>
+          <div class="kpi-big">{{ signups_7d }}<span> جديد</span></div>
+          <div class="kpi-meta">اليوم: {{ signups_today }} · 30 يومًا: {{ signups_30d }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">الاستخراجات هذا الشهر</div>
+          <div class="kpi-big">{{ month_extractions }}<span> عملية</span></div>
+          <div class="kpi-meta">{{ month_credits }} نقطة · اليوم {{ today_extractions }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">تكلفة Gemini التقديرية (الشهر)</div>
+          <div class="kpi-big">${{ est_cost_month }}<span></span></div>
+          <div class="kpi-meta">{{ hard_ops }} دقة عالية · {{ fast_ops }} سريع</div>
+        </div>
+      </div>
+
+      <!-- CHARTS row -->
+      <div class="dash-twocol">
+        <div class="acc-card">
+          <div class="acc-card-head">
+            <span class="acc-icon"><i data-lucide="user-plus"></i></span>
+            <div><h2>الاشتراكات — آخر 30 يومًا</h2><p>عدد الحسابات الجديدة يوميًا.</p></div>
+          </div>
+          <div class="chart">
+            {% for d in signups_chart %}
+            <div class="chart-bar" style="--h:{{ (d.v / signups_chart_max * 100) }}%" title="{{ d.d }} — {{ d.v }}">
+              <span class="chart-bar-fill"></span>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="chart-axis">
+            <span>{{ signups_chart[0].d }}</span>
+            <span>{{ signups_chart[15].d }}</span>
+            <span>{{ signups_chart[-1].d }}</span>
+          </div>
+        </div>
+        <div class="acc-card">
+          <div class="acc-card-head">
+            <span class="acc-icon"><i data-lucide="activity"></i></span>
+            <div><h2>الاستخدام — آخر 30 يومًا</h2><p>إجمالي النقاط المستهلَكة عبر كل الحسابات.</p></div>
+          </div>
+          <div class="chart">
+            {% for d in usage_chart %}
+            <div class="chart-bar" style="--h:{{ (d.v / usage_chart_max * 100) }}%" title="{{ d.d }} — {{ d.v }}">
+              <span class="chart-bar-fill"></span>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="chart-axis">
+            <span>{{ usage_chart[0].d }}</span>
+            <span>{{ usage_chart[15].d }}</span>
+            <span>{{ usage_chart[-1].d }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plan distribution -->
+      <div class="acc-card">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="layers"></i></span>
+          <div><h2>توزيع الخطط</h2><p>المستخدمون حسب الخطة.</p></div>
+        </div>
+        <div class="plan-strip">
+          {% for plan, count in plan_counts.items() %}
+          <div class="plan-chip">
+            <span class="plan-chip-name">{{ plan }}</span>
+            <span class="plan-chip-count">{{ count }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Top users + Top tools -->
+      <div class="dash-twocol">
+        <div class="acc-card">
+          <div class="acc-card-head">
+            <span class="acc-icon"><i data-lucide="trophy"></i></span>
+            <div><h2>أكثر المستخدمين هذا الشهر</h2><p>حسب النقاط المستهلَكة.</p></div>
+          </div>
+          {% if top_users %}
+          <div class="keys">
+            <div class="krow khead"><div>المستخدم</div><div>الخطة</div><div>النقاط</div><div>العمليات</div></div>
+            {% for u in top_users %}
+            <div class="krow">
+              <div style="word-break:break-all">{{ u.email }}</div>
+              <div><span class="chip chip-plan">{{ u.plan }}</span></div>
+              <div><b>{{ u.credits }}</b></div>
+              <div>{{ u.ops }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}<p class="hint">لا توجد عمليات هذا الشهر.</p>{% endif %}
+        </div>
+        <div class="acc-card">
+          <div class="acc-card-head">
+            <span class="acc-icon"><i data-lucide="bar-chart-3"></i></span>
+            <div><h2>الأدوات الأكثر طلبًا</h2><p>هذا الشهر — حسب النقاط.</p></div>
+          </div>
+          {% if top_tools %}
+          <div class="tool-list">
+            {% set tmax = top_tools[0].credits if top_tools else 1 %}
+            {% for t in top_tools %}
+            <div class="tool-row">
+              <div class="tool-name">{{ t.name }}</div>
+              <div class="tool-bar"><div class="tool-bar-fill" style="width:{{ (t.credits / tmax * 100) }}%"></div></div>
+              <div class="tool-val">{{ t.credits }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}<p class="hint">لا توجد بيانات بعد.</p>{% endif %}
+          {% if top_doctypes %}
+          <h3 style="font-size:13.5px;margin-top:22px;color:var(--muted);font-weight:700">أنواع المستندات</h3>
+          <div class="doctype-list">
+            {% for d in top_doctypes %}
+            <span class="chip chip-muted">{{ d.name }} · <b>{{ d.count }}</b></span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Recent signups + Recent activity -->
+      <div class="dash-twocol">
+        <div class="acc-card">
+          <div class="acc-card-head">
+            <span class="acc-icon"><i data-lucide="user-check"></i></span>
+            <div><h2>أحدث التسجيلات</h2><p>آخر 10 حسابات.</p></div>
+          </div>
+          {% if recent_signups %}
+          <div class="keys">
+            <div class="krow khead"><div>التاريخ</div><div>البريد</div><div>الخطة</div><div>التأكيد</div></div>
+            {% for s in recent_signups %}
+            <div class="krow">
+              <div>{{ s.created_at }}</div>
+              <div style="word-break:break-all">{{ s.email }}</div>
+              <div><span class="chip chip-plan">{{ s.plan }}</span></div>
+              <div>{% if s.verified %}<span class="chip chip-ok">✓</span>{% else %}<span class="chip chip-warn">—</span>{% endif %}</div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}<p class="hint">لا توجد تسجيلات بعد.</p>{% endif %}
+        </div>
+        <div class="acc-card">
+          <div class="acc-card-head">
+            <span class="acc-icon"><i data-lucide="history"></i></span>
+            <div><h2>آخر النشاط</h2><p>آخر 15 عملية عبر كل الحسابات.</p></div>
+          </div>
+          {% if recent_activity %}
+          <div class="keys">
+            <div class="krow khead"><div>الوقت</div><div>المستخدم</div><div>النوع</div><div>النقاط</div></div>
+            {% for h in recent_activity %}
+            <div class="krow">
+              <div>{{ h.created_at }}</div>
+              <div style="word-break:break-all">{{ h.email }}</div>
+              <div>{{ h.kind }}{% if h.document_type %} · <span style="color:var(--muted)">{{ h.document_type }}</span>{% endif %}</div>
+              <div>{{ h.charged }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}<p class="hint">لا يوجد نشاط بعد.</p>{% endif %}
+        </div>
+      </div>
+
+      <!-- System info -->
+      <div class="acc-card">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="server"></i></span>
+          <div><h2>حالة النظام</h2><p>معلومات تقنية مختصرة.</p></div>
+        </div>
+        <div class="acc-profile">
+          <div class="acc-row"><span>Gemini fast model</span><b>{{ llm_models.easy }}</b></div>
+          <div class="acc-row"><span>Gemini hard model</span><b>{{ llm_models.hard }}</b></div>
+          <div class="acc-row"><span>Active sessions</span><b>{{ active_sessions }}</b></div>
+          <div class="acc-row"><span>Active API keys</span><b>{{ active_keys }}</b></div>
+          {% if db_size_mb %}<div class="acc-row"><span>DB size</span><b>{{ db_size_mb }} MB</b></div>{% endif %}
+          <div class="acc-row"><span>Total extractions ever</span><b>{{ total_extractions }}</b></div>
+          <div class="acc-row"><span>Total credits ever</span><b>{{ total_credits }}</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

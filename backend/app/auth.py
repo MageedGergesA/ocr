@@ -75,6 +75,18 @@ PLAN_LIMITS = {  # credits / month
 }
 
 
+# Admin/owner emails — comma-separated env var; defaults to your founder email.
+ADMIN_EMAILS = frozenset(
+    e.strip().lower()
+    for e in os.getenv("ADMIN_EMAILS", "mageed.gerges28@gmail.com").split(",")
+    if e.strip()
+)
+
+
+def is_admin(user) -> bool:
+    return bool(user and (user.email or "").lower() in ADMIN_EMAILS)
+
+
 def credits_for(hard: bool) -> int:
     """Credits one page consumes: 8 on the strong path, 1 on the fast path."""
     return STRONG_UNITS if hard else 1

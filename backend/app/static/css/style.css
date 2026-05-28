@@ -847,3 +847,10 @@ details p { color: var(--muted); }
 @media (max-width: 480px) {
   .pricing-5 { grid-template-columns: 1fr; }
 }
+
+/* admin plan distribution strip */
+.plan-strip { display: flex; flex-wrap: wrap; gap: 10px; }
+.plan-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
+  background: var(--bg-alt); border: 1px solid var(--line); border-radius: 10px; font-size: 13.5px; }
+.plan-chip-name { color: var(--muted); text-transform: capitalize; font-weight: 600; }
+.plan-chip-count { color: var(--ink); font-weight: 800; font-size: 16px; }

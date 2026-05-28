@@ -57,6 +57,9 @@
             </div>
             <a class="user-link" href="/dashboard"><i data-lucide="layout-dashboard"></i> لوحة التحكم</a>
             <a class="user-link" href="/account"><i data-lucide="user"></i> الحساب</a>
+            {% if user.is_admin %}
+            <a class="user-link" href="/admin"><i data-lucide="shield"></i> لوحة الإدارة</a>
+            {% endif %}
             <hr class="user-sep">
             <a class="user-link user-logout" href="/logout"><i data-lucide="log-out"></i> خروج</a>
           </div>
