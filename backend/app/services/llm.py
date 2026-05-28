@@ -1,64 +1,85 @@
-"""LLM layer — Gemini.
+"""LLM layer — Gemini (single key, paid tier).
 
 The rest of the app talks to two functions only:
-  - generate_from_document(file_bytes, media_type, prompt, hard, paid) -> (text, truncated)
-  - generate_text(system, user, hard, max_tokens, history, paid)        -> text
+  - generate_from_document(file_bytes, media_type, prompt, hard) -> (text, truncated)
+  - generate_text(system, user, hard, max_tokens, history)       -> text
 
-Two-tier privacy routing:
-  paid=False (default) -> GEMINI_API_KEY  (free Mostakhles plan; Google's free tier; data MAY be reviewed)
-  paid=True            -> GEMINI_API_KEY_PAID  (paid plan; Google's paid tier; full privacy, no training)
+One API key for everyone (free + paid Mostakhles users). The free Gemini tier is too
+restricted (e.g. 20 requests/day on gemini-3.5-flash) to support a SaaS at any scale,
+so we run on Google's paid tier — same models, billing enabled, full data privacy.
 
-If GEMINI_API_KEY_PAID is not set, paid users transparently fall back to GEMINI_API_KEY so nothing
-breaks during pre-launch — but the privacy promise to paid users only becomes truthful once you
-enable billing on a separate key and set GEMINI_API_KEY_PAID.
-
-Config:
-  GEMINI_API_KEY                          (required — free tier, default routing)
-  GEMINI_API_KEY_PAID                     (optional — paid tier, billing enabled)
+Config (.env):
+  GEMINI_API_KEY                          (required)
   GEMINI_MODEL_EASY / GEMINI_MODEL_HARD   (defaults below)
 """
 import os
 
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
+
 GEMINI_EASY = os.getenv("GEMINI_MODEL_EASY", "gemini-3.1-flash-lite")
 GEMINI_HARD = os.getenv("GEMINI_MODEL_HARD", "gemini-3.5-flash")
 
-_clients: dict = {}  # cache: api_key -> genai.Client
+_client = None
+
+
+class GeminiDailyQuotaExhausted(Exception):
+    """Daily free-tier quota is gone — retrying won't help; surface a clean message."""
+
+
+def _is_daily_quota(err: Exception) -> bool:
+    s = str(err)
+    return "PerDay" in s or "free_tier_requests" in s or "GenerateRequestsPerDay" in s
+
+
+def _is_transient(err: Exception) -> bool:
+    s = str(err)
+    if _is_daily_quota(err):
+        return False
+    return any(tok in s for tok in ("RESOURCE_EXHAUSTED", "429", "503", "UNAVAILABLE", "DEADLINE_EXCEEDED"))
 
 
 def is_configured() -> bool:
     return bool(os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
 
 
-def has_paid_tier() -> bool:
-    return bool(os.getenv("GEMINI_API_KEY_PAID"))
-
-
 def active_models() -> dict:
-    return {"provider": "gemini", "easy": GEMINI_EASY, "hard": GEMINI_HARD,
-            "paid_tier_configured": has_paid_tier()}
+    return {"provider": "gemini", "easy": GEMINI_EASY, "hard": GEMINI_HARD}
 
 
-def _client_(paid: bool = False):
-    """Pick the Gemini client by privacy tier. Paid falls back to free if no paid key is set."""
-    if paid:
-        key = os.getenv("GEMINI_API_KEY_PAID") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    else:
-        key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    if not key:
-        raise RuntimeError("Gemini API key not configured")
-    if key not in _clients:
+def _client_():
+    global _client
+    if _client is None:
         from google import genai
-        _clients[key] = genai.Client(api_key=key)
-    return _clients[key]
+        _client = genai.Client(api_key=os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
+    return _client
 
 
-def generate_from_document(file_bytes, media_type, prompt, hard, paid: bool = False):
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=15),
+    retry=retry_if_exception(_is_transient),
+    reraise=True,
+)
+def _generate(**kwargs):
+    """Single Gemini call with smart retry on transient errors only."""
+    try:
+        return _client_().models.generate_content(**kwargs)
+    except Exception as e:
+        if _is_daily_quota(e):
+            raise GeminiDailyQuotaExhausted(
+                "انتهت الحصة اليومية المجانية للنموذج. فعِّل الفوترة على مفتاح Gemini "
+                "(Google AI Studio → Billing) لإزالة الحدّ، أو انتظر حتى تجديد الحصة غدًا."
+            ) from e
+        raise
+
+
+def generate_from_document(file_bytes, media_type, prompt, hard):
     """Multimodal call (image/PDF + prompt). Returns (text, truncated)."""
     from google.genai import types
     model = GEMINI_HARD if hard else GEMINI_EASY
     part = types.Part.from_bytes(data=file_bytes, mime_type=media_type)
     config = types.GenerateContentConfig(max_output_tokens=16000 if hard else 8192)
-    resp = _client_(paid).models.generate_content(model=model, contents=[part, prompt], config=config)
+    resp = _generate(model=model, contents=[part, prompt], config=config)
     text = resp.text or ""
     truncated = False
     try:
@@ -69,7 +90,7 @@ def generate_from_document(file_bytes, media_type, prompt, hard, paid: bool = Fa
     return text, truncated
 
 
-def generate_text(system, user, hard=True, max_tokens=1024, history=None, paid: bool = False):
+def generate_text(system, user, hard=True, max_tokens=1024, history=None):
     """Text-only call. Returns text."""
     from google.genai import types
     model = GEMINI_HARD if hard else GEMINI_EASY
@@ -82,5 +103,5 @@ def generate_text(system, user, hard=True, max_tokens=1024, history=None, paid: 
                 parts=[types.Part.from_text(text=str(turn["content"]))]))
     contents.append(types.Content(role="user", parts=[types.Part.from_text(text=user)]))
     config = types.GenerateContentConfig(max_output_tokens=max_tokens, system_instruction=system)
-    resp = _client_(paid).models.generate_content(model=model, contents=contents, config=config)
+    resp = _generate(model=model, contents=contents, config=config)
     return resp.text or ""

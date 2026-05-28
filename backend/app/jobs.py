@@ -30,20 +30,20 @@ def get_job(job_id: str):
         return dict(job) if job else None
 
 
-def _extract_page(page_bytes: bytes, index: int, hard: bool, paid: bool = False) -> dict:
+def _extract_page(page_bytes: bytes, index: int, hard: bool) -> dict:
     try:
-        r = extractor.extract_auto(page_bytes, "application/pdf", hard=hard, paid=paid)
+        r = extractor.extract_auto(page_bytes, "application/pdf", hard=hard)
         return {"page": index, "document_type": r.get("document_type"), "data": r.get("fields", r)}
     except Exception as e:  # noqa: BLE001 — record the per-page error, keep going
         return {"page": index, "error": str(e)}
 
 
-def _run(job_id: str, pdf_bytes: bytes, hard: bool, api_key_id: int, paid: bool = False) -> None:
+def _run(job_id: str, pdf_bytes: bytes, hard: bool, api_key_id: int) -> None:
     try:
         pages = extractor.split_pdf_pages(pdf_bytes)
         results, success = [], 0
         for i, page_bytes in enumerate(pages, start=1):
-            res = _extract_page(page_bytes, i, hard, paid=paid)
+            res = _extract_page(page_bytes, i, hard)
             results.append(res)
             if "error" not in res:
                 success += 1
@@ -79,12 +79,12 @@ def _run(job_id: str, pdf_bytes: bytes, hard: bool, api_key_id: int, paid: bool 
         _update(job_id, status="failed", error=str(e))
 
 
-def start_batch(pdf_bytes: bytes, hard: bool, api_key_id: int, total_pages: int, paid: bool = False) -> str:
+def start_batch(pdf_bytes: bytes, hard: bool, api_key_id: int, total_pages: int) -> str:
     job_id = uuid.uuid4().hex
     with _LOCK:
         _JOBS[job_id] = {"status": "processing", "total_pages": total_pages,
                          "done_pages": 0, "pages": [], "error": None}
     threading.Thread(
-        target=_run, args=(job_id, pdf_bytes, hard, api_key_id, paid), daemon=True,
+        target=_run, args=(job_id, pdf_bytes, hard, api_key_id), daemon=True,
     ).start()
     return job_id

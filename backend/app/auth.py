@@ -28,15 +28,6 @@ PLAN_LIMITS = {  # credits / month
     "demo": int(os.getenv("DEMO_MONTHLY_LIMIT", "2000")),  # public /app demo
 }
 
-# Two-tier privacy routing: paid plans -> Google's paid Gemini tier (full privacy),
-# free/demo -> Google's free Gemini tier (data may be reviewed; disclosed at signup).
-PAID_PLANS = frozenset({"lite", "starter", "pro", "business", "enterprise"})
-
-
-def is_paid_plan(plan: str | None) -> bool:
-    """Return True if the caller's plan should route to the paid Gemini key."""
-    return (plan or "").lower() in PAID_PLANS
-
 
 def credits_for(hard: bool) -> int:
     """Credits one page consumes: 8 on the strong path, 1 on the fast path."""

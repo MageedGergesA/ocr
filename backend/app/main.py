@@ -80,14 +80,13 @@ def chat_extract(request: Request, file: UploadFile = File(...),
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
-        paid = auth.is_paid_plan(api_key.user.plan)
         cost = pages * auth.credits_for(hard)
         auth.enforce_limit(session, api_key, needed=cost)
         try:
             text = extractor.run_text(data_bytes, file.content_type,
-                                      SERVICES["arabic-ocr"]["prompt"], hard, paid=paid)
+                                      SERVICES["arabic-ocr"]["prompt"], hard)
         except Exception as e:  # noqa: BLE001
-            raise HTTPException(502, f"extraction failed: {e}")
+            raise _http_error_for(e, "extraction failed")
         auth.increment_usage(session, api_key, count=cost)
         used, limit, _ = auth.get_usage(session, api_key)
         return {"text": text, "usage": {"used": used, "limit": limit,
@@ -106,12 +105,11 @@ def chat_answer(request: Request, payload: dict = Body(...), x_api_key: str = He
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
-        paid = auth.is_paid_plan(api_key.user.plan)
         auth.enforce_limit(session, api_key, needed=1)
         try:
-            answer = extractor.chat(text, question, history, paid=paid)
+            answer = extractor.chat(text, question, history)
         except Exception as e:  # noqa: BLE001
-            raise HTTPException(502, f"chat failed: {e}")
+            raise _http_error_for(e, "chat failed")
         auth.increment_usage(session, api_key, count=1)
         used, limit, _ = auth.get_usage(session, api_key)
         return {"answer": answer, "usage": {"used": used, "limit": limit,
@@ -215,6 +213,13 @@ def _record_history(session, user, kind, document_type, data, charged):
         session.commit()
     except Exception:  # noqa: BLE001
         session.rollback()
+
+
+def _http_error_for(e: Exception, prefix: str) -> HTTPException:
+    """Surface a clean 429 for known quota errors, generic 502 for the rest."""
+    if isinstance(e, llm.GeminiDailyQuotaExhausted):
+        return HTTPException(429, str(e))
+    return HTTPException(502, f"{prefix}: {e}")
 
 
 def _resolve_caller(session, x_api_key, request: Request):
@@ -438,18 +443,17 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
-        paid = auth.is_paid_plan(api_key.user.plan)
         cost = auth.credits_for(hard)
         auth.enforce_limit(session, api_key, needed=cost)
         ct = file.content_type  # `hard` comes from the request, default True
         try:
             if kind == "text":
-                out = {"kind": "text", "text": extractor.run_text(data_bytes, ct, svc["prompt"], hard, paid=paid)}
+                out = {"kind": "text", "text": extractor.run_text(data_bytes, ct, svc["prompt"], hard)}
             elif kind == "fields":
                 out = {"kind": "fields", "data": extractor.extract_schema(
-                    data_bytes, ct, svc["schema"], hard, hint=svc.get("hint", ""), paid=paid)}
+                    data_bytes, ct, svc["schema"], hard, hint=svc.get("hint", ""))}
             elif kind == "prescription":
-                rx = extractor.extract_prescription(data_bytes, ct, hard, paid=paid)
+                rx = extractor.extract_prescription(data_bytes, ct, hard)
                 meds = rx.get("medications") or []
                 rows = []
                 for m in meds:
@@ -465,10 +469,10 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
                 out = {"kind": "prescription", "patient": rx.get("patient") or {},
                        "columns": ["الدواء", "الشكل الدوائي", "الجرعة والتعليمات", "الثقة"], "rows": rows}
             elif kind == "table":
-                t = extractor.run_table(data_bytes, ct, hard, paid=paid)
+                t = extractor.run_table(data_bytes, ct, hard)
                 out = {"kind": "table", "columns": t["columns"], "rows": t["rows"]}
             elif kind == "searchable_pdf":
-                text = extractor.run_text(data_bytes, ct, SERVICES["arabic-ocr"]["prompt"], hard, paid=paid)
+                text = extractor.run_text(data_bytes, ct, SERVICES["arabic-ocr"]["prompt"], hard)
                 pdf, media, fname = exports.image_to_searchable_pdf(data_bytes, text)
                 auth.increment_usage(session, api_key, count=cost)
                 return Response(content=pdf, media_type=media,
@@ -478,7 +482,7 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
         except HTTPException:
             raise
         except Exception as e:  # noqa: BLE001
-            raise HTTPException(502, f"service failed: {e}")
+            raise _http_error_for(e, "service failed")
 
         auth.increment_usage(session, api_key, count=cost)
         _record_history(session, api_key.user, slug, out.get("document_type"),
@@ -649,15 +653,14 @@ def compare_docs(request: Request, file_a: UploadFile = File(...), file_b: Uploa
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
-        paid = auth.is_paid_plan(api_key.user.plan)
         cost = 2 * auth.credits_for(hard)
         auth.enforce_limit(session, api_key, needed=cost)
         try:
-            ta = extractor.run_text(a, file_a.content_type, SERVICES["arabic-ocr"]["prompt"], hard, paid=paid)
-            tb = extractor.run_text(b, file_b.content_type, SERVICES["arabic-ocr"]["prompt"], hard, paid=paid)
-            report = extractor.compare(ta, tb, paid=paid)
+            ta = extractor.run_text(a, file_a.content_type, SERVICES["arabic-ocr"]["prompt"], hard)
+            tb = extractor.run_text(b, file_b.content_type, SERVICES["arabic-ocr"]["prompt"], hard)
+            report = extractor.compare(ta, tb)
         except Exception as e:  # noqa: BLE001
-            raise HTTPException(502, f"compare failed: {e}")
+            raise _http_error_for(e, "compare failed")
         auth.increment_usage(session, api_key, count=cost)
         used, limit, _ = auth.get_usage(session, api_key)
         return {"report": report, "usage": {"used": used, "limit": limit,
@@ -702,7 +705,6 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
-        paid = auth.is_paid_plan(api_key.user.plan)
 
         # Large PDF → background batch job (one call per page; never truncates).
         if n_pages and n_pages > native_max:
@@ -710,7 +712,7 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
                 raise HTTPException(413, f"this PDF has {n_pages} pages; the limit is {hard_max}. "
                                          "Split it into smaller files.")
             auth.enforce_limit(session, api_key, needed=n_pages * auth.credits_for(hard))
-            job_id = jobs.start_batch(image_bytes, hard, api_key.id, n_pages, paid=paid)
+            job_id = jobs.start_batch(image_bytes, hard, api_key.id, n_pages)
             return {"mode": "batch", "job_id": job_id, "total_pages": n_pages, "status": "processing"}
 
         # Single image or small PDF → one synchronous call.
@@ -718,13 +720,13 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
         auth.enforce_limit(session, api_key, needed=cost)
         try:
             if schema:
-                data = extractor.extract_schema(image_bytes, file.content_type, schema, hard=hard, paid=paid)
+                data = extractor.extract_schema(image_bytes, file.content_type, schema, hard=hard)
                 document_type, mode = None, "schema"
             else:
-                result = extractor.extract_auto(image_bytes, file.content_type, hard=hard, paid=paid)
+                result = extractor.extract_auto(image_bytes, file.content_type, hard=hard)
                 data, document_type, mode = result.get("fields", result), result.get("document_type"), "auto"
         except Exception as e:  # noqa: BLE001 — surface model/parse errors; don't bill failures
-            raise HTTPException(502, f"extraction failed: {e}")
+            raise _http_error_for(e, "extraction failed")
 
         # Only meter successful extractions.
         auth.increment_usage(session, api_key, count=cost)
