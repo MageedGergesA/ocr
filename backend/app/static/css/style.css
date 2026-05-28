@@ -733,3 +733,29 @@ details p { color: var(--muted); }
   .profile-hero { flex-direction: column; text-align: center; }
   .profile-badges, .profile-links { justify-content: center; }
 }
+
+/* ============ NAV USER MENU (avatar dropdown) ============ */
+.user-menu { position: relative; }
+.user-menu::after { content: ""; position: absolute; top: 100%; inset-inline: -8px; height: 14px; }
+.user-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--brand-grad);
+  color: #fff; font-weight: 800; font-size: 15px; border: none; cursor: pointer;
+  display: grid; place-items: center; transition: transform .15s, box-shadow .15s;
+  box-shadow: 0 4px 12px rgba(15,118,110,.25); font-family: inherit; }
+.user-avatar:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(15,118,110,.35); }
+.user-dropdown { position: absolute; top: calc(100% + 12px); inset-inline-end: 0; min-width: 240px;
+  background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-lg);
+  padding: 6px; opacity: 0; visibility: hidden; transform: translateY(8px); transition: .16s; z-index: 60; }
+.user-menu:hover .user-dropdown,
+.user-menu:focus-within .user-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+.user-info { padding: 12px 14px 14px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+.user-info .user-email { font-size: 13px; font-weight: 700; color: var(--ink); word-break: break-all; line-height: 1.4; }
+.user-info .user-plan { font-size: 11.5px; color: var(--muted); text-transform: capitalize; margin-top: 3px; font-weight: 600; }
+.user-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 9px;
+  font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; transition: background .12s; }
+.user-link:hover { background: var(--tint); }
+.user-link svg { width: 16px; height: 16px; stroke: var(--muted); stroke-width: 1.8; flex: 0 0 auto; }
+.user-link:hover svg { stroke: var(--brand); }
+.user-link.user-logout { color: #c0392b; }
+.user-link.user-logout svg { stroke: #c0392b; }
+.user-link.user-logout:hover { background: #fbe4de; }
+.user-sep { border: none; border-top: 1px solid var(--line); margin: 4px 6px; }

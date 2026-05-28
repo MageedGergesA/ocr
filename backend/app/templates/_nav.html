@@ -47,10 +47,20 @@
 
     <div class="nav-cta">
       {% if user %}
-        <a class="btn btn-ghost" href="/dashboard">لوحة التحكم</a>
-        <a class="btn btn-ghost" href="/account">الحساب</a>
         <a class="btn btn-primary" href="/app">ارفع مستندًا</a>
-        <a class="btn btn-ghost nav-logout" href="/logout">خروج</a>
+        <div class="user-menu">
+          <button class="user-avatar" type="button" aria-label="حسابي">{{ user.email[0]|upper }}</button>
+          <div class="user-dropdown">
+            <div class="user-info">
+              <div class="user-email">{{ user.email }}</div>
+              <div class="user-plan">{{ user.plan }}</div>
+            </div>
+            <a class="user-link" href="/dashboard"><i data-lucide="layout-dashboard"></i> لوحة التحكم</a>
+            <a class="user-link" href="/account"><i data-lucide="user"></i> الحساب</a>
+            <hr class="user-sep">
+            <a class="user-link user-logout" href="/logout"><i data-lucide="log-out"></i> خروج</a>
+          </div>
+        </div>
       {% else %}
         <a class="btn btn-ghost" href="/login">تسجيل الدخول</a>
         <a class="btn btn-primary" href="/signup">ابدأ مجانًا</a>
