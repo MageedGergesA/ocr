@@ -11,71 +11,121 @@
 <body>
   {% include "_nav.html" %}
 
-  <section class="dash-wrap">
-    <div class="container">
-      <h1 class="dash-title">الحساب والإعدادات</h1>
-      <p class="dash-sub">إدارة بياناتك وكلمة المرور وحسابك.</p>
+  <section class="account-wrap">
+    <div class="account-page">
+      <header class="account-head">
+        <h1>الحساب والإعدادات</h1>
+        <p>إدارة بياناتك وكلمة المرور وحسابك.</p>
+      </header>
 
-      {% if msg %}<div class="acc-flash ok">✓ {{ msg }}</div>{% endif %}
-      {% if err %}<div class="acc-flash err">⚠ {{ err }}</div>{% endif %}
+      {% if msg %}<div class="acc-flash ok"><i data-lucide="check-circle"></i><span>{{ msg }}</span></div>{% endif %}
+      {% if err %}<div class="acc-flash err"><i data-lucide="alert-circle"></i><span>{{ err }}</span></div>{% endif %}
 
-      <!-- Profile -->
-      <div class="dash-section">
-        <h2>الملف الشخصي</h2>
-        <div class="acc-profile">
-          <div class="acc-row"><span>البريد الإلكتروني</span><b>{{ user.email }}</b></div>
-          <div class="acc-row"><span>الخطة الحالية</span><b>{{ user.plan }}</b></div>
-          <div class="acc-row"><span>حالة التأكيد</span>
-            <b>{% if user.email_verified %}<span class="badge-on">مؤكَّد ✓</span>
-               {% else %}<span class="badge-off">غير مؤكَّد</span>{% endif %}</b>
+      <!-- Profile hero card -->
+      <div class="acc-card profile-card">
+        <div class="profile-hero">
+          <div class="profile-avatar">{{ user.email[0]|upper }}</div>
+          <div class="profile-meta">
+            <div class="profile-email">{{ user.email }}</div>
+            <div class="profile-badges">
+              <span class="chip chip-plan">{{ user.plan }}</span>
+              {% if user.email_verified %}
+                <span class="chip chip-ok"><i data-lucide="badge-check"></i> مؤكَّد</span>
+              {% else %}
+                <span class="chip chip-warn"><i data-lucide="alert-triangle"></i> غير مؤكَّد</span>
+              {% endif %}
+              <span class="chip chip-muted"><i data-lucide="calendar"></i> منذ {{ user.created_at.strftime('%Y-%m-%d') }}</span>
+            </div>
           </div>
-          <div class="acc-row"><span>تاريخ الإنشاء</span><b>{{ user.created_at.strftime('%Y-%m-%d') }}</b></div>
         </div>
-        <p class="hint" style="margin-top:14px">
-          تريد ترقية خطتك؟ <a href="/#pricing">شاهد خيارات الترقية</a>.
-          تريد إدارة مفاتيح الـ API والاستخدام؟ <a href="/dashboard">لوحة التحكم</a>.
-        </p>
+        <div class="profile-links">
+          <a class="acc-link" href="/dashboard"><i data-lucide="layout-dashboard"></i> لوحة التحكم</a>
+          <a class="acc-link" href="/#pricing"><i data-lucide="trending-up"></i> ترقية الخطة</a>
+          <a class="acc-link" href="/docs"><i data-lucide="terminal"></i> واجهة API</a>
+        </div>
       </div>
 
       <!-- Change password -->
-      <div class="dash-section">
-        <h2>تغيير كلمة المرور</h2>
+      <div class="acc-card">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="key-round"></i></span>
+          <div>
+            <h2>تغيير كلمة المرور</h2>
+            <p>استخدم كلمة مرور قوية لا تستخدمها في مكان آخر.</p>
+          </div>
+        </div>
         <form method="post" action="/account/password" class="acc-form">
-          <label>كلمة المرور الحالية
-            <input type="password" name="current_password" required autocomplete="current-password"></label>
-          <label>كلمة المرور الجديدة (8 أحرف على الأقل)
-            <input type="password" name="new_password" minlength="8" required autocomplete="new-password"></label>
-          <label>تأكيد كلمة المرور الجديدة
-            <input type="password" name="confirm_password" minlength="8" required autocomplete="new-password"></label>
-          <button class="btn btn-primary" type="submit">تحديث كلمة المرور</button>
+          <div class="field">
+            <label>كلمة المرور الحالية</label>
+            <input type="password" name="current_password" required autocomplete="current-password">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>كلمة المرور الجديدة</label>
+              <input type="password" name="new_password" minlength="8" required autocomplete="new-password" placeholder="8 أحرف على الأقل">
+            </div>
+            <div class="field">
+              <label>التأكيد</label>
+              <input type="password" name="confirm_password" minlength="8" required autocomplete="new-password" placeholder="أعد كتابتها">
+            </div>
+          </div>
+          <div class="acc-actions">
+            <button class="btn btn-primary" type="submit"><i data-lucide="check"></i> تحديث كلمة المرور</button>
+          </div>
         </form>
       </div>
 
       <!-- Change email -->
-      <div class="dash-section">
-        <h2>تغيير البريد الإلكتروني</h2>
-        <p class="hint">سنرسل رابط تأكيد إلى البريد الجديد — حسابك سيكون غير مفعّل حتى تضغط الرابط.</p>
+      <div class="acc-card">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="mail"></i></span>
+          <div>
+            <h2>تغيير البريد الإلكتروني</h2>
+            <p>سنرسل رابط تأكيد إلى البريد الجديد — حسابك سيكون غير مفعَّل حتى تضغط الرابط.</p>
+          </div>
+        </div>
         <form method="post" action="/account/email" class="acc-form">
-          <label>البريد الجديد
-            <input type="email" name="new_email" required></label>
-          <label>كلمة المرور الحالية (للتأكيد)
-            <input type="password" name="current_password" required autocomplete="current-password"></label>
-          <button class="btn btn-primary" type="submit">تغيير البريد</button>
+          <div class="field-row">
+            <div class="field">
+              <label>البريد الجديد</label>
+              <input type="email" name="new_email" required placeholder="you@example.com">
+            </div>
+            <div class="field">
+              <label>كلمة المرور الحالية</label>
+              <input type="password" name="current_password" required autocomplete="current-password" placeholder="••••••••">
+            </div>
+          </div>
+          <div class="acc-actions">
+            <button class="btn btn-primary" type="submit"><i data-lucide="send"></i> تغيير البريد</button>
+          </div>
         </form>
       </div>
 
       <!-- Danger zone -->
-      <div class="dash-section danger-zone">
-        <h2>منطقة الخطر</h2>
-        <p class="hint">حذف الحساب يزيل بياناتك نهائيًا: المفاتيح، القوالب، سجل المعالجة، الجلسات. لا يمكن التراجع.</p>
+      <div class="acc-card danger">
+        <div class="acc-card-head">
+          <span class="acc-icon danger-icon"><i data-lucide="trash-2"></i></span>
+          <div>
+            <h2>منطقة الخطر</h2>
+            <p>حذف الحساب يزيل بياناتك نهائيًا: المفاتيح، القوالب، سجل المعالجة، الجلسات. لا يمكن التراجع.</p>
+          </div>
+        </div>
         <form method="post" action="/account/delete" class="acc-form"
               onsubmit="return confirm('هل أنت متأكد؟ هذا الإجراء لا يمكن التراجع عنه.')">
-          <label>كلمة المرور للتأكيد
-            <input type="password" name="current_password" required autocomplete="current-password"></label>
-          <label>اكتب الكلمة <code>DELETE</code> للتأكيد
-            <input type="text" name="confirm" required pattern="DELETE"
-                   placeholder="اكتب DELETE بالأحرف الإنجليزية الكبيرة"></label>
-          <button class="btn btn-danger" type="submit">حذف الحساب نهائيًا</button>
+          <div class="field-row">
+            <div class="field">
+              <label>كلمة المرور للتأكيد</label>
+              <input type="password" name="current_password" required autocomplete="current-password" placeholder="••••••••">
+            </div>
+            <div class="field">
+              <label>اكتب <code>DELETE</code> للتأكيد</label>
+              <input type="text" name="confirm" required pattern="DELETE"
+                     placeholder="DELETE" autocomplete="off">
+            </div>
+          </div>
+          <div class="acc-actions">
+            <button class="btn btn-danger" type="submit"><i data-lucide="trash-2"></i> حذف الحساب نهائيًا</button>
+          </div>
         </form>
       </div>
     </div>
