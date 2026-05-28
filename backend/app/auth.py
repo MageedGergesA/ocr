@@ -147,19 +147,54 @@ def verify_password(password: str, stored: str) -> bool:
 
 
 # ---- Web sessions (cookie token -> server-side row) ----
+from datetime import datetime, timedelta  # noqa: E402
+
+SESSION_TTL_DAYS = int(os.getenv("SESSION_TTL_DAYS", "30"))
+
 
 def create_session(db: Session, user: models.User) -> str:
     token = secrets.token_urlsafe(32)
-    db.add(models.Session(token=token, user_id=user.id))
+    csrf = secrets.token_urlsafe(24)
+    expires = datetime.utcnow() + timedelta(days=SESSION_TTL_DAYS)
+    db.add(models.Session(token=token, user_id=user.id, csrf_token=csrf, expires_at=expires))
     db.commit()
     return token
 
 
-def user_from_session(db: Session, token: str | None):
+def get_session(db: Session, token: str | None):
+    """Return the Session row if valid (not expired). Deletes expired rows lazily."""
     if not token:
         return None
     sess = db.get(models.Session, token)
-    return db.get(models.User, sess.user_id) if sess else None
+    if not sess:
+        return None
+    if sess.expires_at and sess.expires_at < datetime.utcnow():
+        try:
+            db.delete(sess); db.commit()
+        except Exception:  # noqa: BLE001
+            db.rollback()
+        return None
+    return sess
+
+
+def user_from_session(db: Session, token: str | None):
+    sess = get_session(db, token)
+    if not sess:
+        return None
+    return db.get(models.User, sess.user_id)
+
+
+def session_csrf_token(db: Session, token: str | None) -> str | None:
+    sess = get_session(db, token)
+    return sess.csrf_token if sess else None
+
+
+def verify_csrf(db: Session, session_token: str | None, submitted_token: str | None) -> bool:
+    """Constant-time compare the form-submitted CSRF token against the session's."""
+    real = session_csrf_token(db, session_token)
+    if not real or not submitted_token:
+        return False
+    return secrets.compare_digest(real, submitted_token)
 
 
 def delete_session(db: Session, token: str | None) -> None:
@@ -169,6 +204,51 @@ def delete_session(db: Session, token: str | None) -> None:
     if sess:
         db.delete(sess)
         db.commit()
+
+
+# ---- Login rate-limit (in-memory; production: front with Cloudflare / Redis) ----
+_LOGIN_ATTEMPTS: dict[str, list[float]] = {}
+_LOGIN_WINDOW_SEC = 900   # 15 min
+_LOGIN_MAX = 5            # attempts per IP per window
+
+
+def login_rate_limit_check(ip: str | None) -> bool:
+    """Return True if this IP is allowed to attempt login now."""
+    import time
+    if not ip:
+        return True
+    now = time.time()
+    attempts = [t for t in _LOGIN_ATTEMPTS.get(ip, []) if now - t < _LOGIN_WINDOW_SEC]
+    _LOGIN_ATTEMPTS[ip] = attempts
+    return len(attempts) < _LOGIN_MAX
+
+
+def login_rate_limit_record(ip: str | None) -> None:
+    import time
+    if not ip:
+        return
+    _LOGIN_ATTEMPTS.setdefault(ip, []).append(time.time())
+
+
+# ---- Password reset tokens (1-hour TTL) ----
+
+def make_password_reset(db: Session, user: models.User) -> str:
+    token = secrets.token_urlsafe(32)
+    user.password_reset_token = token
+    user.password_reset_expires = datetime.utcnow() + timedelta(hours=1)
+    db.commit()
+    return token
+
+
+def consume_password_reset(db: Session, token: str) -> "models.User | None":
+    if not token:
+        return None
+    user = db.query(models.User).filter_by(password_reset_token=token).first()
+    if not user or not user.password_reset_expires:
+        return None
+    if user.password_reset_expires < datetime.utcnow():
+        return None
+    return user
 
 
 def ensure_demo_user() -> None:

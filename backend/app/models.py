@@ -24,6 +24,8 @@ class User(Base):
     webhook_url = Column(String, nullable=True)  # POST results here when async jobs finish
     email_verified = Column(Boolean, default=False, nullable=False)
     verification_token = Column(String, nullable=True, index=True)
+    password_reset_token = Column(String, nullable=True, index=True)
+    password_reset_expires = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     api_keys = relationship("ApiKey", back_populates="user")
@@ -35,6 +37,8 @@ class Session(Base):
 
     token = Column(String, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    expires_at = Column(DateTime, nullable=True)  # cleaned up on read after expiry
+    csrf_token = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

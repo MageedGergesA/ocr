@@ -4,6 +4,7 @@ One backend, thin clients (Odoo module, web app, public API).
 This file wires routes only; real work lives in services/.
 """
 import json
+import logging
 import os
 import secrets
 from pathlib import Path
@@ -15,6 +16,27 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 load_dotenv()
+
+# Structured logging: timestamps + level + module + message; one line per event.
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+log = logging.getLogger("mostakhles")
+
+# Sentry — only initialised when SENTRY_DSN is set; harmless in local dev otherwise.
+if os.getenv("SENTRY_DSN"):
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=os.getenv("SENTRY_DSN"),
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_RATE", "0.05")),
+        environment=os.getenv("SENTRY_ENV", "local"),
+        send_default_pii=False,  # don't capture user emails by default
+    )
+    log.info("Sentry enabled (env=%s)", os.getenv("SENTRY_ENV", "local"))
+else:
+    log.info("Sentry not configured (SENTRY_DSN unset) — errors only logged locally")
 
 from app import auth, db, emailer, exports, jobs, models  # noqa: E402
 from app.services import extractor, llm  # noqa: E402  (after load_dotenv so env is ready)
@@ -196,16 +218,6 @@ def _current_user(session, request: Request):
     return auth.user_from_session(session, request.cookies.get("sid"))
 
 
-def _ctx(request: Request, **extra):
-    """Template context with the logged-in user (for the shared nav)."""
-    session = db.SessionLocal()
-    try:
-        user = _current_user(session, request)
-    finally:
-        session.close()
-    return {"user": user, **extra}
-
-
 def _record_history(session, user, kind, document_type, data, charged):
     """Best-effort log of a successful extraction for the dashboard."""
     try:
@@ -221,6 +233,28 @@ def _http_error_for(e: Exception, prefix: str) -> HTTPException:
     if isinstance(e, llm.GeminiDailyQuotaExhausted):
         return HTTPException(429, str(e))
     return HTTPException(502, f"{prefix}: {e}")
+
+
+def _require_csrf(request: Request, submitted: str) -> None:
+    """Raise 403 if the submitted CSRF token doesn't match the session's."""
+    session = db.SessionLocal()
+    try:
+        sid = request.cookies.get("sid")
+        if not auth.verify_csrf(session, sid, submitted):
+            raise HTTPException(403, "CSRF token mismatch — refresh the page and try again.")
+    finally:
+        session.close()
+
+
+def _ctx(request: Request, **extra):
+    """Template context with the logged-in user (for the shared nav)."""
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        csrf = auth.session_csrf_token(session, request.cookies.get("sid")) or ""
+    finally:
+        session.close()
+    return {"user": user, "csrf_token": csrf, **extra}
 
 
 def _resolve_caller(session, x_api_key, request: Request):
@@ -351,10 +385,15 @@ def login_page(request: Request):
 
 @app.post("/login")
 def login(request: Request, email: str = Form(...), password: str = Form(...)):
+    ip = request.client.host if request.client else None
+    if not auth.login_rate_limit_check(ip):
+        return templates.TemplateResponse(request, "login.html",
+            {"error": "محاولات كثيرة. حاول مجددًا بعد 15 دقيقة.", "user": None}, status_code=429)
     session = db.SessionLocal()
     try:
         user = session.query(models.User).filter_by(email=email.strip().lower()).first()
         if not user or not user.password_hash or not auth.verify_password(password, user.password_hash):
+            auth.login_rate_limit_record(ip)
             return templates.TemplateResponse(request, "login.html",
                 {"error": "بريد إلكتروني أو كلمة مرور غير صحيحة", "user": None}, status_code=401)
         token = auth.create_session(session, user)
@@ -377,8 +416,76 @@ def logout(request: Request):
     return resp
 
 
+# ---- Forgot / reset password ----
+@app.get("/forgot-password", response_class=HTMLResponse)
+def forgot_password_page(request: Request):
+    return templates.TemplateResponse(request, "forgot_password.html",
+        {"user": None, "sent": False, "error": None})
+
+
+@app.post("/forgot-password")
+def forgot_password(request: Request, email: str = Form(...)):
+    session = db.SessionLocal()
+    try:
+        user = session.query(models.User).filter_by(email=email.strip().lower()).first()
+        # Always show the same confirmation — never reveal whether the email exists.
+        if user and user.password_hash:
+            token = auth.make_password_reset(session, user)
+            reset_url = str(request.base_url).rstrip("/") + f"/reset-password/{token}"
+            try:
+                emailer.send_password_reset_email(user.email, reset_url)
+            except Exception:  # noqa: BLE001
+                pass
+        return templates.TemplateResponse(request, "forgot_password.html",
+            {"user": None, "sent": True, "error": None})
+    finally:
+        session.close()
+
+
+@app.get("/reset-password/{token}", response_class=HTMLResponse)
+def reset_password_page(request: Request, token: str):
+    session = db.SessionLocal()
+    try:
+        user = auth.consume_password_reset(session, token)
+        ok = user is not None
+        return templates.TemplateResponse(request, "reset_password.html",
+            {"user": None, "token": token, "ok": ok, "error": None, "done": False})
+    finally:
+        session.close()
+
+
+@app.post("/reset-password/{token}")
+def reset_password(request: Request, token: str,
+                   new_password: str = Form(...),
+                   confirm_password: str = Form(...)):
+    session = db.SessionLocal()
+    try:
+        user = auth.consume_password_reset(session, token)
+        ctx = {"user": None, "token": token, "ok": user is not None, "done": False}
+        if not user:
+            ctx["error"] = "الرابط غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا."
+            return templates.TemplateResponse(request, "reset_password.html", ctx, status_code=400)
+        if len(new_password) < 8:
+            ctx["error"] = "كلمة المرور يجب أن تكون 8 أحرف على الأقل."
+            return templates.TemplateResponse(request, "reset_password.html", ctx, status_code=400)
+        if new_password != confirm_password:
+            ctx["error"] = "كلمتا المرور غير متطابقتين."
+            return templates.TemplateResponse(request, "reset_password.html", ctx, status_code=400)
+        user.password_hash = auth.hash_password(new_password)
+        user.password_reset_token = None
+        user.password_reset_expires = None
+        # Invalidate all existing sessions so a thief loses their cookie when the owner resets.
+        session.query(models.Session).filter_by(user_id=user.id).delete()
+        session.commit()
+        ctx["done"] = True
+        ctx["error"] = None
+        return templates.TemplateResponse(request, "reset_password.html", ctx)
+    finally:
+        session.close()
+
+
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request):
+def dashboard(request: Request, q: str = ""):
     from collections import Counter
     from datetime import date, datetime as dt, timedelta
     from calendar import monthrange
@@ -455,15 +562,22 @@ def dashboard(request: Request):
         mode_hard = sum(1 for h in all_hist if h.created_at and h.created_at.date() >= month_start and h.charged == 8)
         mode_other = max(0, month_extractions - mode_fast - mode_hard)
 
-        # Recent history table (last 20, kept for the activity feed)
+        # Recent history table (last 20, kept for the activity feed) — filtered by q if present
+        if q:
+            ql = q.lower()
+            filtered = [h for h in all_hist
+                        if ql in (h.kind or "").lower() or ql in (h.document_type or "").lower()]
+        else:
+            filtered = all_hist
         history_list = [{"id": h.id, "kind": h.kind, "document_type": h.document_type,
                         "charged": h.charged, "created_at": str(h.created_at)[:16]}
-                        for h in all_hist[:20]]
+                        for h in filtered[:20]]
 
+        csrf = auth.session_csrf_token(session, request.cookies.get("sid")) or ""
         return templates.TemplateResponse(request, "dashboard.html", {
             "user": user, "plan": user.plan, "limit": limit, "keys": keys,
             "templates": templates_list, "history": history_list,
-            "webhook_url": user.webhook_url or "",
+            "webhook_url": user.webhook_url or "", "csrf_token": csrf,
             # analytics
             "month_credits": month_credits, "month_extractions": month_extractions,
             "today_credits": today_credits, "today_extractions": today_extractions,
@@ -477,13 +591,39 @@ def dashboard(request: Request):
             "top_tools": [{"name": n, "credits": c, "pct": round(c / top_tools_max * 100)} for n, c in top_tools],
             "top_doctypes": [{"name": n, "count": c} for n, c in top_doctypes],
             "mode_fast": mode_fast, "mode_hard": mode_hard, "mode_other": mode_other,
+            "q": q,
         })
     finally:
         session.close()
 
 
+@app.get("/dashboard/history.csv")
+def history_csv(request: Request):
+    import csv
+    import io as _io
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login", status_code=303)
+        rows = (session.query(models.History).filter_by(user_id=user.id)
+                .order_by(models.History.id.desc()).all())
+        buf = _io.StringIO()
+        w = csv.writer(buf)
+        w.writerow(["id", "created_at", "kind", "document_type", "charged"])
+        for h in rows:
+            w.writerow([h.id, h.created_at.isoformat() if h.created_at else "",
+                        h.kind or "", h.document_type or "", h.charged or 0])
+        csv_bytes = ("﻿" + buf.getvalue()).encode("utf-8")  # BOM so Excel shows Arabic
+        return Response(content=csv_bytes, media_type="text/csv; charset=utf-8",
+                        headers={"Content-Disposition": 'attachment; filename="history.csv"'})
+    finally:
+        session.close()
+
+
 @app.post("/dashboard/keys")
-def create_key(request: Request):
+def create_key(request: Request, csrf_token: str = Form("")):
+    _require_csrf(request, csrf_token)
     session = db.SessionLocal()
     try:
         user = _current_user(session, request)
@@ -497,7 +637,8 @@ def create_key(request: Request):
 
 
 @app.post("/dashboard/keys/{key_id}/revoke")
-def revoke_key(key_id: int, request: Request):
+def revoke_key(key_id: int, request: Request, csrf_token: str = Form("")):
+    _require_csrf(request, csrf_token)
     session = db.SessionLocal()
     try:
         user = _current_user(session, request)
@@ -724,7 +865,8 @@ def create_template(request: Request, payload: dict = Body(...), x_api_key: str 
 
 
 @app.post("/dashboard/templates/{tid}/delete")
-def delete_template(tid: int, request: Request):
+def delete_template(tid: int, request: Request, csrf_token: str = Form("")):
+    _require_csrf(request, csrf_token)
     session = db.SessionLocal()
     try:
         user = _current_user(session, request)
@@ -747,8 +889,9 @@ def account_page(request: Request):
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
+        csrf = auth.session_csrf_token(session, request.cookies.get("sid")) or ""
         return templates.TemplateResponse(request, "account.html",
-            {"user": user, "msg": None, "err": None})
+            {"user": user, "msg": None, "err": None, "csrf_token": csrf})
     finally:
         session.close()
 
@@ -757,13 +900,16 @@ def account_page(request: Request):
 def account_change_password(request: Request,
                             current_password: str = Form(...),
                             new_password: str = Form(...),
-                            confirm_password: str = Form(...)):
+                            confirm_password: str = Form(...),
+                            csrf_token: str = Form("")):
+    _require_csrf(request, csrf_token)
     session = db.SessionLocal()
     try:
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
-        ctx = {"user": user, "msg": None, "err": None}
+        ctx = {"user": user, "msg": None, "err": None,
+               "csrf_token": auth.session_csrf_token(session, request.cookies.get("sid")) or ""}
         if not user.password_hash or not auth.verify_password(current_password, user.password_hash):
             ctx["err"] = "كلمة المرور الحالية غير صحيحة."
         elif len(new_password) < 8:
@@ -782,13 +928,16 @@ def account_change_password(request: Request,
 @app.post("/account/email")
 def account_change_email(request: Request,
                          new_email: str = Form(...),
-                         current_password: str = Form(...)):
+                         current_password: str = Form(...),
+                         csrf_token: str = Form("")):
+    _require_csrf(request, csrf_token)
     session = db.SessionLocal()
     try:
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
-        ctx = {"user": user, "msg": None, "err": None}
+        ctx = {"user": user, "msg": None, "err": None,
+               "csrf_token": auth.session_csrf_token(session, request.cookies.get("sid")) or ""}
         new_email = new_email.strip().lower()
         if not user.password_hash or not auth.verify_password(current_password, user.password_hash):
             ctx["err"] = "كلمة المرور غير صحيحة."
@@ -820,18 +969,21 @@ def account_change_email(request: Request,
 
 @app.post("/account/delete")
 def account_delete(request: Request, current_password: str = Form(...),
-                   confirm: str = Form("")):
+                   confirm: str = Form(""), csrf_token: str = Form("")):
+    _require_csrf(request, csrf_token)
     session = db.SessionLocal()
     try:
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
+        csrf = auth.session_csrf_token(session, request.cookies.get("sid")) or ""
         if not user.password_hash or not auth.verify_password(current_password, user.password_hash):
             return templates.TemplateResponse(request, "account.html",
-                {"user": user, "msg": None, "err": "كلمة المرور غير صحيحة — لم نحذف حسابك."})
+                {"user": user, "msg": None, "csrf_token": csrf,
+                 "err": "كلمة المرور غير صحيحة — لم نحذف حسابك."})
         if confirm.strip().upper() != "DELETE":
             return templates.TemplateResponse(request, "account.html",
-                {"user": user, "msg": None,
+                {"user": user, "msg": None, "csrf_token": csrf,
                  "err": "للتأكيد اكتب الكلمة DELETE (بالأحرف الإنجليزية الكبيرة) في خانة التأكيد."})
         # Cascade-clean the user's data
         user_id = user.id
@@ -855,7 +1007,8 @@ def account_delete(request: Request, current_password: str = Form(...),
 
 
 @app.post("/dashboard/webhook")
-def set_webhook(request: Request, webhook_url: str = Form("")):
+def set_webhook(request: Request, webhook_url: str = Form(""), csrf_token: str = Form("")):
+    _require_csrf(request, csrf_token)
     session = db.SessionLocal()
     try:
         user = _current_user(session, request)

@@ -137,6 +137,7 @@
             <p>استخدم المفتاح في ترويسة <code>x-api-key</code> عند استدعاء الـ API.</p>
           </div>
           <form method="post" action="/dashboard/keys" style="margin-inline-start:auto">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button class="btn btn-primary" type="submit">+ مفتاح جديد</button>
           </form>
         </div>
@@ -152,6 +153,7 @@
             <div>
               {% if k.active %}
               <form method="post" action="/dashboard/keys/{{ k.id }}/revoke" style="margin:0">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <button class="link-btn" type="submit">إلغاء</button>
               </form>
               {% endif %}
@@ -165,11 +167,20 @@
       <div class="acc-card">
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="history"></i></span>
-          <div>
+          <div style="flex:1">
             <h2>آخر الاستخراجات</h2>
             <p>آخر 20 عملية — اضغط «عرض» لرؤية نتيجة الاستخراج الكاملة.</p>
           </div>
+          <a class="btn btn-ghost" href="/dashboard/history.csv" style="white-space:nowrap">
+            <i data-lucide="download"></i> CSV
+          </a>
         </div>
+        <form method="get" action="/dashboard" style="display:flex;gap:8px;margin-bottom:14px">
+          <input type="search" name="q" value="{{ q or '' }}" placeholder="بحث في النوع أو نوع المستند…"
+                 style="flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px">
+          <button class="btn btn-ghost" type="submit">بحث</button>
+          {% if q %}<a class="btn btn-ghost" href="/dashboard">مسح</a>{% endif %}
+        </form>
         {% if history %}
         <div class="keys">
           <div class="krow khead"><div>التاريخ</div><div>النوع</div><div>النقاط</div><div></div></div>
@@ -202,6 +213,7 @@
             <div class="kkey">{{ t.fields | join('، ') }}</div>
             <div></div>
             <div><form method="post" action="/dashboard/templates/{{ t.id }}/delete" style="margin:0">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
               <button class="link-btn" type="submit">حذف</button></form></div>
           </div>
           {% endfor %}
@@ -220,6 +232,7 @@
             </div>
           </div>
           <form method="post" action="/dashboard/webhook" class="acc-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <div class="field">
               <label>عنوان Webhook</label>
               <input type="url" name="webhook_url" value="{{ webhook_url }}" placeholder="https://example.com/webhook">

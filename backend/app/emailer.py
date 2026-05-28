@@ -39,6 +39,28 @@ def send_email(to: str, subject: str, body_text: str, body_html: str | None = No
         s.send_message(msg)
 
 
+def send_password_reset_email(to: str, reset_url: str) -> None:
+    subject = "إعادة تعيين كلمة المرور — مُستخلِص"
+    text = (
+        f"تلقّينا طلب إعادة تعيين كلمة مرور حسابك في مُستخلِص.\n\n"
+        f"اضغط الرابط التالي لتعيين كلمة مرور جديدة (صالح لمدة ساعة واحدة فقط):\n\n"
+        f"{reset_url}\n\n"
+        f"إن لم تطلب هذا، يمكنك تجاهل هذه الرسالة — لن يتغيّر شيء.\n"
+    )
+    html = (
+        f"<div style='font-family:Cairo,system-ui,sans-serif;direction:rtl;text-align:right;"
+        f"max-width:520px;margin:auto;line-height:1.8;color:#1b1813'>"
+        f"<h2 style='color:#0a564f'>إعادة تعيين كلمة المرور</h2>"
+        f"<p>تلقّينا طلب إعادة تعيين كلمة مرور حسابك. اضغط الزر لاختيار كلمة مرور جديدة:</p>"
+        f"<p><a href='{reset_url}' style='display:inline-block;background:#0f766e;color:#fff;"
+        f"padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700'>تعيين كلمة مرور جديدة</a></p>"
+        f"<p style='color:#7a7165;font-size:13px'>الرابط صالح لمدة ساعة واحدة فقط.</p>"
+        f"<p style='color:#7a7165;font-size:13px'>إن لم تطلب إعادة التعيين، تجاهل هذه الرسالة.</p>"
+        f"</div>"
+    )
+    send_email(to, subject, text, html)
+
+
 def send_verification_email(to: str, verify_url: str) -> None:
     subject = "تأكيد بريدك الإلكتروني — مُستخلِص"
     text = (

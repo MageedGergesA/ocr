@@ -30,3 +30,12 @@ def init_db() -> None:
             conn.exec_driver_sql("UPDATE users SET email_verified = 1")
         if "verification_token" not in cols:
             conn.exec_driver_sql("ALTER TABLE users ADD COLUMN verification_token VARCHAR")
+        if "password_reset_token" not in cols:
+            conn.exec_driver_sql("ALTER TABLE users ADD COLUMN password_reset_token VARCHAR")
+        if "password_reset_expires" not in cols:
+            conn.exec_driver_sql("ALTER TABLE users ADD COLUMN password_reset_expires DATETIME")
+        scols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(sessions)")]
+        if "expires_at" not in scols:
+            conn.exec_driver_sql("ALTER TABLE sessions ADD COLUMN expires_at DATETIME")
+        if "csrf_token" not in scols:
+            conn.exec_driver_sql("ALTER TABLE sessions ADD COLUMN csrf_token VARCHAR")

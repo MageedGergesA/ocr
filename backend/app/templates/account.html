@@ -55,6 +55,7 @@
           </div>
         </div>
         <form method="post" action="/account/password" class="acc-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <div class="field">
             <label>كلمة المرور الحالية</label>
             <input type="password" name="current_password" required autocomplete="current-password">
@@ -85,6 +86,7 @@
           </div>
         </div>
         <form method="post" action="/account/email" class="acc-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <div class="field-row">
             <div class="field">
               <label>البريد الجديد</label>
@@ -112,6 +114,7 @@
         </div>
         <form method="post" action="/account/delete" class="acc-form"
               onsubmit="return confirm('هل أنت متأكد؟ هذا الإجراء لا يمكن التراجع عنه.')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <div class="field-row">
             <div class="field">
               <label>كلمة المرور للتأكيد</label>
