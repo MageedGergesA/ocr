@@ -21,8 +21,14 @@
         <input type="email" name="email" required autofocus>
         <label>كلمة المرور (8 أحرف على الأقل)</label>
         <input type="password" name="password" minlength="8" required>
+        {% if turnstile_sitekey %}
+        <div class="cf-turnstile" data-sitekey="{{ turnstile_sitekey }}" style="margin: 12px 0"></div>
+        {% endif %}
         <button class="btn btn-primary full" type="submit">ابدأ مجانًا</button>
       </form>
+      {% if turnstile_sitekey %}
+      <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+      {% endif %}
       <p class="auth-alt">لديك حساب بالفعل؟ <a href="/login">سجّل الدخول</a></p>
     </div>
   </section>

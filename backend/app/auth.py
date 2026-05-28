@@ -8,11 +8,56 @@ import os
 import secrets
 from datetime import datetime
 
+import requests
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app import models
 from app.db import SessionLocal
+
+# Common disposable-email domains. Not exhaustive — Turnstile catches most bots — but blocks
+# the obvious ones with zero infrastructure.
+DISPOSABLE_DOMAINS = frozenset({
+    "mailinator.com", "tempmail.com", "tempmail.net", "10minutemail.com", "10minutemail.net",
+    "guerrillamail.com", "guerrillamail.net", "guerrillamail.org", "guerrillamail.biz",
+    "sharklasers.com", "trashmail.com", "trashmail.net", "throwaway.email", "yopmail.com",
+    "yopmail.net", "yopmail.fr", "getnada.com", "nada.email", "spam4.me", "fakeinbox.com",
+    "mintemail.com", "dispostable.com", "maildrop.cc", "mailcatch.com", "tmail.ws",
+    "mvrht.com", "moakt.com", "binkmail.com", "tempr.email", "tempmailo.com", "emailondeck.com",
+    "mailnesia.com", "harakirimail.com", "discard.email", "20minutemail.com", "33mail.com",
+    "mailcatch.org", "spambox.us", "spamgourmet.com", "anonbox.net", "deadaddress.com",
+    "burnermail.io", "tempinbox.com", "owlymail.com", "linshiyou.com", "byom.de",
+    "boximail.com", "letthemeatspam.com", "instant-mail.de", "fakemail.net", "tempemail.net",
+    "tempemail.co", "tempemail.us", "tempm.com", "1secmail.com", "1secmail.net", "1secmail.org",
+})
+
+
+def is_disposable_email(email: str) -> bool:
+    domain = (email.rsplit("@", 1)[-1] if "@" in email else "").strip().lower()
+    return domain in DISPOSABLE_DOMAINS
+
+
+def verify_turnstile(token: str | None, remote_ip: str | None = None) -> bool:
+    """Validate a Cloudflare Turnstile token. Skipped (returns True) when not configured."""
+    secret = os.getenv("CF_TURNSTILE_SECRET")
+    if not secret:
+        return True  # not configured — don't break local dev
+    if not token:
+        return False
+    try:
+        r = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data={"secret": secret, "response": token, "remoteip": remote_ip or ""},
+            timeout=8,
+        )
+        return bool(r.ok and r.json().get("success"))
+    except requests.RequestException:
+        return False
+
+
+def turnstile_sitekey() -> str:
+    """Public sitekey for the frontend widget; empty string means widget is hidden."""
+    return os.getenv("CF_TURNSTILE_SITEKEY", "")
 
 # Plans are metered in CREDITS. A page costs 1 credit on the fast model (Haiku)
 # or STRONG_UNITS credits on the high-accuracy model (Sonnet + thinking), since

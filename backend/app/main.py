@@ -5,6 +5,7 @@ This file wires routes only; real work lives in services/.
 """
 import json
 import os
+import secrets
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -15,7 +16,7 @@ from fastapi.templating import Jinja2Templates
 
 load_dotenv()
 
-from app import auth, db, exports, jobs, models  # noqa: E402
+from app import auth, db, emailer, exports, jobs, models  # noqa: E402
 from app.services import extractor, llm  # noqa: E402  (after load_dotenv so env is ready)
 from app.services_catalog import CATEGORIES, SERVICES  # noqa: E402
 
@@ -224,15 +225,21 @@ def _http_error_for(e: Exception, prefix: str) -> HTTPException:
 
 def _resolve_caller(session, x_api_key, request: Request):
     """Identify the caller: API key (programmatic) or logged-in session (web).
-    No anonymous access — extraction always requires authentication."""
+    Also gates: account must have a verified email before any extraction is allowed
+    (kills bot signups since bots won't open the verification email)."""
     if x_api_key:
-        return auth.resolve_key(session, x_api_key)
-    user = _current_user(session, request)
-    if user:
+        key = auth.resolve_key(session, x_api_key)
+    else:
+        user = _current_user(session, request)
+        if not user:
+            raise HTTPException(401, "login required, or provide a valid x-api-key")
         key = session.query(models.ApiKey).filter_by(user_id=user.id, active=True).first()
-        if key:
-            return key
-    raise HTTPException(401, "login required, or provide a valid x-api-key")
+        if not key:
+            raise HTTPException(401, "login required, or provide a valid x-api-key")
+    # Email-verification gate (skipped for the seeded demo account)
+    if key.user.plan != "demo" and not getattr(key.user, "email_verified", True):
+        raise HTTPException(403, "verify your email first — check your inbox for the activation link")
+    return key
 
 
 @app.get("/signup", response_class=HTMLResponse)
@@ -243,30 +250,90 @@ def signup_page(request: Request):
             return RedirectResponse("/dashboard", status_code=303)
     finally:
         session.close()
-    return templates.TemplateResponse(request, "signup.html", {"error": None, "user": None})
+    return templates.TemplateResponse(request, "signup.html",
+        {"error": None, "user": None, "turnstile_sitekey": auth.turnstile_sitekey()})
 
 
 @app.post("/signup")
-def signup(request: Request, email: str = Form(...), password: str = Form(...)):
+def signup(request: Request, email: str = Form(...), password: str = Form(...),
+           cf_turnstile_response: str = Form("", alias="cf-turnstile-response")):
+    def render_error(msg, code=400):
+        return templates.TemplateResponse(request, "signup.html",
+            {"error": msg, "user": None, "turnstile_sitekey": auth.turnstile_sitekey()},
+            status_code=code)
+
     session = db.SessionLocal()
     try:
         email = email.strip().lower()
         if len(password) < 8:
-            return templates.TemplateResponse(request, "signup.html",
-                {"error": "كلمة المرور يجب أن تكون 8 أحرف على الأقل", "user": None}, status_code=400)
+            return render_error("كلمة المرور يجب أن تكون 8 أحرف على الأقل")
+        if "@" not in email or "." not in email.split("@")[-1]:
+            return render_error("صيغة البريد غير صحيحة")
+        if auth.is_disposable_email(email):
+            return render_error("لا نقبل عناوين البريد المؤقّتة. الرجاء استخدام بريد دائم.")
+        client_ip = request.client.host if request.client else None
+        if not auth.verify_turnstile(cf_turnstile_response, client_ip):
+            return render_error("فشل التحقق من أنك لست روبوتًا. حاول مرة أخرى.")
         if session.query(models.User).filter_by(email=email).first():
-            return templates.TemplateResponse(request, "signup.html",
-                {"error": "هذا البريد مسجّل بالفعل", "user": None}, status_code=400)
-        user = models.User(email=email, password_hash=auth.hash_password(password), plan="free")
+            return render_error("هذا البريد مسجّل بالفعل")
+
+        user = models.User(email=email, password_hash=auth.hash_password(password), plan="free",
+                           email_verified=False, verification_token=secrets.token_urlsafe(32))
         session.add(user)
         session.commit()
         session.refresh(user)
         session.add(models.ApiKey(user_id=user.id))  # give them a first key
         session.commit()
-        token = auth.create_session(session, user)
+
+        # Send verification email (console fallback if SMTP not configured locally)
+        verify_url = str(request.base_url).rstrip("/") + f"/verify/{user.verification_token}"
+        try:
+            emailer.send_verification_email(user.email, verify_url)
+        except Exception:  # noqa: BLE001 — don't block signup on email failure; user can resend
+            pass
+        return templates.TemplateResponse(request, "verify_sent.html",
+            {"email": user.email, "user": None})
+    finally:
+        session.close()
+
+
+@app.get("/verify/{token}", response_class=HTMLResponse)
+def verify_email(request: Request, token: str):
+    session = db.SessionLocal()
+    try:
+        user = session.query(models.User).filter_by(verification_token=token).first()
+        if not user:
+            return templates.TemplateResponse(request, "verify_sent.html",
+                {"email": None, "user": None,
+                 "error": "رابط التأكيد غير صالح أو منتهٍ."}, status_code=400)
+        user.email_verified = True
+        user.verification_token = None
+        session.commit()
+        # log them in directly so they land in the app
+        tok = auth.create_session(session, user)
         resp = RedirectResponse("/dashboard", status_code=303)
-        resp.set_cookie("sid", token, **COOKIE_KW)
+        resp.set_cookie("sid", tok, **COOKIE_KW)
         return resp
+    finally:
+        session.close()
+
+
+@app.post("/verify/resend")
+def verify_resend(request: Request, email: str = Form(...)):
+    session = db.SessionLocal()
+    try:
+        user = session.query(models.User).filter_by(email=email.strip().lower()).first()
+        if user and not user.email_verified:
+            if not user.verification_token:
+                user.verification_token = secrets.token_urlsafe(32)
+                session.commit()
+            verify_url = str(request.base_url).rstrip("/") + f"/verify/{user.verification_token}"
+            try:
+                emailer.send_verification_email(user.email, verify_url)
+            except Exception:  # noqa: BLE001
+                pass
+        return templates.TemplateResponse(request, "verify_sent.html",
+            {"email": email, "user": None})
     finally:
         session.close()
 

@@ -24,3 +24,9 @@ def init_db() -> None:
         cols = [r[1] for r in conn.exec_driver_sql("PRAGMA table_info(users)")]
         if "webhook_url" not in cols:
             conn.exec_driver_sql("ALTER TABLE users ADD COLUMN webhook_url VARCHAR")
+        if "email_verified" not in cols:
+            conn.exec_driver_sql("ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT 0")
+            # mark existing accounts as verified so we don't break their login
+            conn.exec_driver_sql("UPDATE users SET email_verified = 1")
+        if "verification_token" not in cols:
+            conn.exec_driver_sql("ALTER TABLE users ADD COLUMN verification_token VARCHAR")

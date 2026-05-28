@@ -22,6 +22,8 @@ class User(Base):
     password_hash = Column(String, nullable=True)  # null for the seeded demo user
     plan = Column(String, default="free", nullable=False)  # free/starter/pro/business/demo
     webhook_url = Column(String, nullable=True)  # POST results here when async jobs finish
+    email_verified = Column(Boolean, default=False, nullable=False)
+    verification_token = Column(String, nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     api_keys = relationship("ApiKey", back_populates="user")

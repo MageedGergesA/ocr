@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تأكيد البريد — مُستخلِص</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  {% include "_nav.html" %}
+
+  <section class="section">
+    <div class="container narrow">
+      <div class="auth-box" style="text-align:center">
+        <h1 style="margin-bottom:8px">📬 تحقّق من بريدك</h1>
+        {% if error %}
+          <p class="results-error">{{ error }}</p>
+        {% else %}
+          <p style="color:var(--muted);line-height:1.9;margin:14px 0 22px">
+            أرسلنا رابط تأكيد إلى
+            {% if email %}<b style="color:var(--ink)">{{ email }}</b>{% else %}بريدك{% endif %}.<br>
+            اضغط الرابط في الرسالة لتفعيل حسابك والبدء.
+          </p>
+          <p class="auth-note">
+            لم تجد الرسالة؟ تأكّد من مجلد الـ Spam/Junk، أو اطلب إعادة الإرسال:
+          </p>
+          <form method="post" action="/verify/resend" style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <input type="email" name="email" placeholder="بريدك الإلكتروني" required value="{{ email or '' }}"
+                   style="padding:10px 14px;border:1px solid var(--line);border-radius:8px;min-width:240px">
+            <button class="btn btn-ghost" type="submit">إعادة إرسال</button>
+          </form>
+          <p style="margin-top:22px"><a href="/login" class="auth-alt">عد إلى تسجيل الدخول</a></p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+</body>
+</html>

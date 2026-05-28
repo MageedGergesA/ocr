@@ -8,3 +8,4 @@ pillow
 pypdf
 google-genai>=1.0
 tenacity>=8.0
+requests
