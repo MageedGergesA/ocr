@@ -911,3 +911,53 @@ details p { color: var(--muted); }
 /* Narrative-layout block */
 .narrative-block { white-space: pre-wrap; line-height: 1.85; padding: 14px 18px;
   background: var(--bg-alt); border-radius: 10px; border: 1px solid var(--border); }
+
+/* ---- Wave 10b: rich extraction layouts (prescription / invoice / contract) ---- */
+.sec-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 0 0 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.sec-card-mini { padding: 10px 14px; }
+.sec-title {
+  font-size: 13px; font-weight: 700; color: var(--brand);
+  margin-bottom: 10px; letter-spacing: 0.02em;
+  padding-bottom: 8px; border-bottom: 1px dashed var(--border);
+}
+.sec-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 18px;
+}
+.sec-row { display: flex; flex-direction: column; gap: 2px; padding: 4px 0; }
+.sec-label { font-size: 11px; color: var(--muted); font-weight: 600;
+  display: flex; align-items: center; gap: 6px; }
+.sec-val { font-size: 15px; color: var(--ink); font-weight: 500; }
+
+.med-table {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+}
+.med-table th {
+  text-align: start; padding: 8px 10px; background: var(--bg-alt);
+  font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.02em;
+  border-bottom: 2px solid var(--border);
+}
+.med-table td {
+  padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top;
+}
+.med-table tr.cd-low { background: rgba(220, 38, 38, 0.04); }
+.med-table tr.cd-med { background: rgba(217, 119, 6, 0.03); }
+.med-table tr:hover { background: rgba(0, 0, 0, 0.02); }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-block; padding: 4px 10px; background: var(--bg-alt);
+  border: 1px solid var(--border); border-radius: 999px;
+  font-size: 13px; font-weight: 500; color: var(--ink);
+}
+
+.clause { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.clause:last-child { border-bottom: none; }
+.clause-title { font-size: 13px; font-weight: 700; color: var(--brand); margin-bottom: 4px; }
+.clause-text { font-size: 14px; line-height: 1.7; color: var(--ink); }

@@ -1715,9 +1715,16 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
             else:
                 result = extractor.extract_auto(image_bytes, file.content_type, hard=hard,
                                                 output_lang=output_lang)
-                data = result.get("fields", result)
                 document_type = result.get("document_type")
                 layout = result.get("layout")
+                # For rich shapes (prescription/invoice/contract with header+lines/etc.)
+                # there's no "fields" key — pass the WHOLE result through as data so the
+                # client can render patient + medications, header + line_items, etc.
+                if any(k in result for k in ("patient", "medications", "header",
+                                              "line_items", "clauses", "totals", "table")):
+                    data = result
+                else:
+                    data = result.get("fields", result)
                 mode = "auto"
         except Exception as e:  # noqa: BLE001 — surface model/parse errors; don't bill failures
             raise _http_error_for(e, "extraction failed")

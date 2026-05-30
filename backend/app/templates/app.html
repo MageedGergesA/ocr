@@ -323,20 +323,142 @@
       return `<div class="row head"><div>${I18N.field}</div><div>${I18N.value}</div></div>${rows}`;
     }
 
-    // Layout-specific renderers — switch based on the LLM-detected layout.
+    // ---- Layout-specific renderers ----
+
     function narrativeHtml(data) {
-      // 'full_text' or 'النص_الكامل' single-field narrative
       const ft = (data && (data.full_text || data['النص_الكامل']));
       const text = ft && (typeof ft === 'object' ? ft.value : ft);
       if (text == null) return rowsHtml(data);
       return `<div class="narrative-block">${esc(text).replace(/\n/g, '<br>')}</div>`;
     }
-    function prescriptionHtml(data) {
-      // Prescription: patient block + medications list. The /v1/tool/prescription endpoint
-      // returns this richer shape; for the /app auto flow we render whatever fields came back.
-      return rowsHtml(data);
+
+    // Pull "value" out of a {value, confidence} dict OR return primitives as-is.
+    function _v(x) { return (x && typeof x === 'object' && 'value' in x) ? x.value : x; }
+    function _c(x) { return (x && typeof x === 'object' && 'confidence' in x) ? x.confidence : null; }
+
+    function sectionCard(titleKey, titleFallback, fieldsDict) {
+      if (!fieldsDict || !Object.keys(fieldsDict).length) return '';
+      const title = (I18N.lang === 'ar' && titleKey)
+        ? ({'patient': 'بيانات المريض', 'header': 'الرأس', 'totals': 'الإجمالي'}[titleKey] || titleFallback)
+        : titleFallback;
+      const rows = Object.entries(fieldsDict).map(([k, info]) => {
+        const val = _v(info), conf = _c(info);
+        const dot = conf != null ? `<span class="cdot ${confClass(conf)}" title="${confTitle(conf)} (${Math.round(conf*100)}%)"></span>` : '';
+        return `<div class="sec-row">
+                  <div class="sec-label">${dot}${esc(k)}</div>
+                  <div class="sec-val"><span class="ed-val" data-field="${esc(k)}">${esc(val ?? '—')}</span></div>
+                </div>`;
+      }).join('');
+      return `<div class="sec-card">
+                <div class="sec-title">${esc(title)}</div>
+                <div class="sec-grid">${rows}</div>
+              </div>`;
     }
+
+    function medicationsTable(meds) {
+      if (!Array.isArray(meds) || !meds.length) return '';
+      const header = I18N.lang === 'ar'
+        ? ['#', 'الدواء', 'التركيب الفعّال', 'الشكل الدوائي', 'الجرعة', 'المدة', 'الثقة']
+        : ['#', 'Medication', 'Active ingredient', 'Form', 'Dosage', 'Duration', 'Conf.'];
+      const rows = meds.map((m, i) => {
+        const conf = m.confidence;
+        const dot = conf != null ? `<span class="cdot ${confClass(conf)}"></span>` : '';
+        return `<tr class="${confClass(conf)}">
+                  <td>${i+1}</td>
+                  <td><b>${esc(m.name || '—')}</b></td>
+                  <td>${esc(m.drug_class || '—')}</td>
+                  <td>${esc(m.form || '—')}</td>
+                  <td>${esc(m.dosage || '—')}</td>
+                  <td>${esc(m.duration || '—')}</td>
+                  <td>${dot}${conf != null ? Math.round(conf*100) + '%' : '—'}</td>
+                </tr>`;
+      }).join('');
+      const title = I18N.lang === 'ar' ? 'الأدوية' : 'Medications';
+      return `<div class="sec-card">
+                <div class="sec-title">${title}</div>
+                <table class="med-table">
+                  <thead><tr>${header.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              </div>`;
+    }
+
+    function chipsList(titleAr, titleEn, items) {
+      if (!Array.isArray(items) || !items.length) return '';
+      const title = I18N.lang === 'ar' ? titleAr : titleEn;
+      const chips = items.map(x => {
+        const name = (typeof x === 'object') ? (x.name || JSON.stringify(x)) : x;
+        return `<span class="chip">${esc(name)}</span>`;
+      }).join('');
+      return `<div class="sec-card sec-card-mini">
+                <div class="sec-title">${title}</div>
+                <div class="chip-row">${chips}</div>
+              </div>`;
+    }
+
+    function tableShape(tbl) {
+      if (!tbl || !Array.isArray(tbl.columns) || !Array.isArray(tbl.rows)) return '';
+      const cols = tbl.columns.map(c => `<th>${esc(c)}</th>`).join('');
+      const rows = tbl.rows.map(r => {
+        const cells = (Array.isArray(r) ? r : []).map(c => `<td>${esc(c ?? '')}</td>`).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+      return `<table class="med-table"><thead><tr>${cols}</tr></thead><tbody>${rows}</tbody></table>`;
+    }
+
+    function prescriptionHtml(data) {
+      // Rich shape: patient + medications + as_needed + phone_numbers
+      const patient = data.patient || {};
+      const meds = data.medications || [];
+      const asNeeded = data.as_needed || [];
+      const phones = data.phone_numbers || [];
+      const notes = data.notes || [];
+      return [
+        sectionCard('patient', I18N.lang === 'ar' ? 'بيانات المريض' : 'Patient', patient),
+        medicationsTable(meds),
+        chipsList('أدوية عند اللزوم', 'As needed', asNeeded),
+        chipsList('أرقام الهاتف', 'Phone numbers', phones),
+        chipsList('ملاحظات', 'Notes', notes),
+      ].filter(Boolean).join('');
+    }
+
+    function invoiceHtml(data) {
+      // Rich shape: header + line_items table + totals
+      const header = data.header || {};
+      const lineItems = data.line_items || null;
+      const totals = data.totals || {};
+      const itemsTitle = I18N.lang === 'ar' ? 'الأصناف' : 'Line items';
+      return [
+        sectionCard('header', I18N.lang === 'ar' ? 'بيانات الفاتورة' : 'Header', header),
+        lineItems ? `<div class="sec-card"><div class="sec-title">${itemsTitle}</div>${tableShape(lineItems)}</div>` : '',
+        sectionCard('totals', I18N.lang === 'ar' ? 'الإجمالي' : 'Totals', totals),
+      ].filter(Boolean).join('');
+    }
+
+    function contractHtml(data) {
+      const header = data.header || {};
+      const clauses = data.clauses || [];
+      const totals = data.totals || {};
+      const clausesTitle = I18N.lang === 'ar' ? 'البنود' : 'Clauses';
+      const clausesHtml = clauses.length
+        ? clauses.map((c, i) => `<div class="clause">
+              <div class="clause-title">${i+1}. ${esc(c.title || (I18N.lang === 'ar' ? 'بند' : 'Clause'))}</div>
+              <div class="clause-text">${esc(c.text || '—').replace(/\n/g, '<br>')}</div>
+            </div>`).join('')
+        : '';
+      return [
+        sectionCard('header', I18N.lang === 'ar' ? 'بيانات العقد' : 'Header', header),
+        clauses.length ? `<div class="sec-card"><div class="sec-title">${clausesTitle}</div>${clausesHtml}</div>` : '',
+        sectionCard('totals', I18N.lang === 'ar' ? 'الإجمالي' : 'Totals', totals),
+      ].filter(Boolean).join('');
+    }
+
     function renderByLayout(data, layout) {
+      // Detect rich shapes first by their characteristic keys, regardless of layout label.
+      if (data && (data.patient || data.medications)) return prescriptionHtml(data);
+      if (data && (data.header && (data.line_items || data.totals))) return invoiceHtml(data);
+      if (data && (data.header && Array.isArray(data.clauses))) return contractHtml(data);
+      if (data && data.table) return tableShape(data.table);
       switch (layout) {
         case 'narrative': return narrativeHtml(data);
         case 'prescription': return prescriptionHtml(data);

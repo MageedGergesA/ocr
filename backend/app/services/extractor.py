@@ -263,41 +263,89 @@ def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True,
     """Detect the document type, infer a layout shape, and extract fields.
 
     output_lang: 'preserve' (default — same as doc), 'ar', or 'en'.
-    Returns: {
-        "document_type": str,
-        "layout": "form" | "table" | "narrative" | "mixed" | "prescription",
-        "fields": {name: {"value": ..., "confidence": 0-1}}
-    }
+
+    Output shapes are layout-specific so the UI can render rich, native-looking
+    results instead of a generic field/value/confidence list:
+      - prescription: {document_type, layout, patient: {...}, medications: [{name,
+        drug_class, form, dosage, duration?, confidence}], as_needed?: [...],
+        phone_numbers?: [...], notes?: [...]}
+      - invoice/receipt with line items: {document_type, layout, header: {...},
+        line_items: {columns, rows}, totals: {...}}
+      - generic form/ID/card: {document_type, layout, fields: {name: {value, confidence}}}
+      - narrative: {document_type, layout: "narrative", fields: {full_text: {value, confidence}}}
+      - table: {document_type, layout: "table", table: {columns, rows}}
     """
     lang_instr = _LANG_INSTRUCTION.get(output_lang, _LANG_INSTRUCTION["preserve"])
     prompt = (
-        "You are a document data-extraction system. Look at this document and:\n"
-        "1. Identify its document_type (e.g., passport, national ID, invoice, receipt, "
-        "contract, prescription, business card, bank statement, OR a freeform letter / "
-        "note / handwritten paragraph).\n"
-        "2. Identify its visual layout. Choose ONE label:\n"
-        "   - 'form'        — labeled fields in rows (invoices, IDs, passports, forms, cards)\n"
-        "   - 'table'       — primarily a table/spreadsheet of homogeneous rows\n"
-        "   - 'narrative'   — running prose with no fields (letters, notes, paragraphs)\n"
-        "   - 'mixed'       — combination (receipt with header + line-items, contract with "
-        "header + clauses, prescription with patient + medications)\n"
-        "   - 'prescription' — specifically a medical prescription (روشتة)\n"
-        "3. Choose the right output form:\n"
-        "   - STRUCTURED document → extract its individual named fields. Choose names that "
-        "fit the document; do not invent fields that are not present.\n"
-        "   - FREEFORM TEXT → return a single field named 'full_text' (or 'النص_الكامل' "
-        "if Arabic) whose value is the COMPLETE transcription, preserving line breaks.\n\n"
+        "You are a document data-extraction system. Read this document like an "
+        "expert (pharmacist for prescriptions, accountant for invoices, legal "
+        "reviewer for contracts) and produce a RICH, INTERPRETED structured result.\n\n"
+        "STEP 1 — identify the document_type (passport, national_id, invoice, "
+        "receipt, contract, prescription, business_card, bank_statement, letter, etc.).\n"
+        "STEP 2 — pick a layout label: 'form' (labeled fields), 'table' (homogeneous "
+        "rows only), 'narrative' (prose), 'mixed' (header + line items / sections), "
+        "or 'prescription' (specifically a medical prescription).\n"
+        "STEP 3 — emit the OUTPUT SHAPE that matches the layout:\n\n"
+        "── If PRESCRIPTION (روشتة) ──\n"
+        "Return this richer shape — DO NOT flatten the medications into numbered fields:\n"
+        '{\n'
+        '  "document_type": "prescription",\n'
+        '  "layout": "prescription",\n'
+        '  "patient": {\n'
+        '    "doctor": {"value": "...", "confidence": 0-1},\n'
+        '    "specialty": {"value": "...", "confidence": 0-1},\n'
+        '    "patient_name": {"value": "...", "confidence": 0-1},\n'
+        '    "date": {"value": "...", "confidence": 0-1},\n'
+        '    "diagnosis": {"value": "...", "confidence": 0-1},\n'
+        '    "age": {"value": "...", "confidence": 0-1},\n'
+        '    "weight": {"value": "...", "confidence": 0-1},\n'
+        '    "temperature": {"value": "...", "confidence": 0-1}\n'
+        '  },\n'
+        '  "medications": [\n'
+        '    {"name": "Newclav 457", "drug_class": "أموكسيسيلين/كلافولانيك", '
+        '"form": "معلّق", "dosage": "4 مل كل 12 ساعة", "duration": "5 أيام", "confidence": 0.9}\n'
+        '  ],\n'
+        '  "as_needed": [{"name": "Cetal", "confidence": 0.8}],\n'
+        '  "phone_numbers": ["01..."],\n'
+        '  "notes": ["..."]\n'
+        '}\n'
+        "Drug enrichment: identify the active ingredient/class for each medication "
+        "(e.g. Newclav→أموكسيسيلين/كلافولانيك, Amrizole→ميترونيدازول, Rhinopro→مضاد هيستامين). "
+        "Recognize formulation (معلّق/شراب/نقط/أقراص/كبسولات). Interpret the handwritten "
+        "dose into a clear instruction. 'Temp' is body temperature in Celsius — a lone '7' "
+        "almost certainly means 37. Known Egyptian drugs to prefer if handwriting is close: "
+        "Newclav, Augmentin, Hibiotic, Curam, Amrizole, Flagyl, Rhinopro, Telfast, Zyrtec, "
+        "Allergyl, Histop, Nasostop, Otrivin, Ventolin, Farcolin, Brufen, Cetal, Abimol, "
+        "Paramol, Zithromax, Klacid, Zisrocin.\n\n"
+        "── If INVOICE/RECEIPT with line items ──\n"
+        '{\n'
+        '  "document_type": "invoice",\n'
+        '  "layout": "mixed",\n'
+        '  "header": {"seller": {"value": "", "confidence": 0}, "buyer": {...}, '
+        '"invoice_number": {...}, "date": {...}},\n'
+        '  "line_items": {"columns": ["الصنف", "الكمية", "السعر", "الإجمالي"], '
+        '"rows": [["...", "...", "...", "..."], ...]},\n'
+        '  "totals": {"subtotal": {...}, "tax": {...}, "total": {...}}\n'
+        '}\n\n'
+        "── If CONTRACT with clauses ──\n"
+        '{\n'
+        '  "document_type": "contract",\n'
+        '  "layout": "mixed",\n'
+        '  "header": {"parties": {...}, "subject": {...}, "date": {...}},\n'
+        '  "clauses": [{"title": "...", "text": "...", "confidence": 0-1}],\n'
+        '  "totals": {"contract_value": {...}, "duration": {...}}\n'
+        '}\n\n'
+        "── If TABLE document ──\n"
+        '{"document_type": "table", "layout": "table", '
+        '"table": {"columns": [...], "rows": [[...], ...]}}\n\n'
+        "── If FREEFORM NARRATIVE (letter, note, paragraph) ──\n"
+        '{"document_type": "letter", "layout": "narrative", '
+        '"fields": {"full_text": {"value": "complete transcription", "confidence": 0-1}}}\n\n'
+        "── Else (passport, national_id, business_card, simple form) ──\n"
+        '{"document_type": "<type>", "layout": "form", '
+        '"fields": {"<field name>": {"value": <value>, "confidence": <0-1>}, ...}}\n\n'
         f"LANGUAGE: {lang_instr}\n\n"
-        "DOMAIN HINTS — apply when they fit the detected type:\n"
-        "- Medical prescription (روشتة): prefer correct Egyptian drug spellings (Newclav, "
-        "Augmentin, Hibiotic, Curam, Amrizole, Flagyl, Rhinopro, Telfast, Zyrtec, Allergyl, "
-        "Histop, Nasostop, Otrivin, Ventolin, Farcolin, Brufen, Cetal, Abimol, Paramol, "
-        "Zithromax, Klacid, Zisrocin). 'Temp' is body temperature in Celsius — a lone '7' "
-        "almost certainly means 37. For each medicine, give its name and interpret the "
-        "handwritten dose into a clear Arabic instruction.\n"
-        "Return ONLY valid JSON, no other text, in exactly this shape:\n"
-        '{"document_type": "<type>", "layout": "<form|table|narrative|mixed|prescription>", '
-        '"fields": {"<field name>": {"value": <value>, "confidence": <0-1>}, ...}}'
+        "Return ONLY valid JSON, no other text, no markdown fences."
         + CALIBRATION
     )
     result = _run(image_bytes, media_type, prompt, hard)
