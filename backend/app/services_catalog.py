@@ -44,7 +44,8 @@ SERVICES = {
     "entity-detection": {
         "title": "كشف الكيانات", "category": "ocr", "icon": "scan-search",
         "desc": "استخرج الأسماء والبريد والهواتف والتواريخ والمبالغ من أي مستند دفعة واحدة.",
-        "kind": "fields", "hard": True, "free": False,
+        # Standard entity extraction — easy tier handles it; 8x cheaper.
+        "kind": "fields", "hard": False, "free": False,
         "schema": {
             "الأسماء": "all person and company names found, comma-separated",
             "البريد_الإلكتروني": "all email addresses, comma-separated",
@@ -101,7 +102,8 @@ SERVICES = {
     "egyptian-id": {
         "title": "قارئ بطاقة الرقم القومي", "category": "parsers", "icon": "id-card",
         "desc": "استخرج بيانات بطاقة الرقم القومي المصرية تلقائيًا.",
-        "kind": "fields", "hard": True, "free": False,
+        # Fixed-layout ID — easy tier matches accuracy at 8x lower cost.
+        "kind": "fields", "hard": False, "free": False,
         "schema": {
             "الاسم": "full name", "الرقم_القومي": "14-digit national ID number",
             "العنوان": "address", "تاريخ_الميلاد": "date of birth",
@@ -112,7 +114,8 @@ SERVICES = {
     "passport": {
         "title": "قارئ جواز السفر", "category": "parsers", "icon": "book-user",
         "desc": "استخرج بيانات جواز السفر بما في ذلك خانة القراءة الآلية (MRZ).",
-        "kind": "fields", "hard": True, "free": False,
+        # MRZ is OCR-trivial; easy tier handles it perfectly.
+        "kind": "fields", "hard": False, "free": False,
         "schema": {
             "full_name": "full name", "passport_number": "passport number",
             "nationality": "nationality", "date_of_birth": "date of birth",
@@ -133,7 +136,8 @@ SERVICES = {
     "tax-card": {
         "title": "قارئ البطاقة الضريبية", "category": "parsers", "icon": "badge-percent",
         "desc": "استخرج بيانات البطاقة الضريبية والرقم الضريبي.",
-        "kind": "fields", "hard": True, "free": False,
+        # Fixed-form document — easy tier handles it.
+        "kind": "fields", "hard": False, "free": False,
         "schema": {
             "الاسم": "taxpayer name", "رقم_التسجيل_الضريبي": "tax registration number",
             "النشاط": "activity", "العنوان": "address", "المأمورية": "tax office",
@@ -152,7 +156,8 @@ SERVICES = {
     "utility-bill": {
         "title": "قارئ فواتير المرافق", "category": "parsers", "icon": "lightbulb",
         "desc": "استخرج بيانات فواتير الكهرباء والمياه والغاز.",
-        "kind": "fields", "hard": True, "free": False,
+        # Standard utility bill layouts — easy tier suffices.
+        "kind": "fields", "hard": False, "free": False,
         "schema": {
             "اسم_المشترك": "subscriber name", "رقم_الحساب": "account number",
             "رقم_العداد": "meter number", "نوع_الخدمة": "service type (electricity/water/gas)",
@@ -237,7 +242,8 @@ SERVICES = {
     "tenant-data": {
         "title": "بيانات المستأجر", "category": "realestate", "icon": "user",
         "desc": "استخرج بيانات المستأجر لملء نظام إدارة العقارات.",
-        "kind": "fields", "hard": True, "free": False,
+        # Simple field extraction — easy tier matches at 8x lower cost.
+        "kind": "fields", "hard": False, "free": False,
         "schema": {
             "اسم_المستأجر": "tenant name", "رقم_الهوية": "ID number", "الهاتف": "phone",
             "رقم_الوحدة": "unit number", "قيمة_الإيجار": "rent",
