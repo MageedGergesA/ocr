@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {% if lang == 'en' %}
+  <title>Mostakhles — Arabic AI Document Intelligence Platform</title>
+  <meta name="description" content="AI document intelligence purpose-built for Arabic business documents: invoices, contracts, IDs, real-estate and legal docs — including handwriting. Web, API, and Odoo.">
+  {% else %}
   <title>مُستخلِص — منصة الذكاء الاصطناعي لمستندات الأعمال العربية</title>
   <meta name="description" content="منصة ذكاء اصطناعي متخصصة في فهم وأتمتة مستندات الأعمال العربية: الفواتير، العقود، الهويات، المستندات العقارية والقانونية — حتى المكتوبة بخط اليد. عبر الويب، الـ API، وأودو.">
-  <meta property="og:title" content="مُستخلِص — Arabic AI Document Intelligence Platform">
+  {% endif %}
+  <meta property="og:title" content="مُستخلِص · Mostakhles — Arabic AI Document Intelligence Platform">
   <meta property="og:description" content="AI document automation for Arabic businesses — invoices, contracts, IDs, real-estate & legal docs, including handwriting.">
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,6 +28,24 @@
   <section class="hero">
     <div class="container hero-inner">
       <div class="hero-text">
+        {% if lang == 'en' %}
+        <div class="badge">Arabic Document Intelligence — production-ready</div>
+        <h1>AI document intelligence for<br><span class="hl"><span id="rotate">Arabic businesses</span></span></h1>
+        <p class="sub">
+          Turn any Arabic document — typed or handwritten — into structured data, ready to use in seconds.
+          Invoices, contracts, IDs, real-estate and legal docs. One engine across web, API, and Odoo.
+        </p>
+        <div class="hero-cta">
+          {% if user %}
+          <a class="btn btn-primary btn-lg" href="/app">Upload a document</a>
+          <a class="btn btn-ghost btn-lg" href="/dashboard">Dashboard</a>
+          {% else %}
+          <a class="btn btn-primary btn-lg" href="/signup">Start free</a>
+          <a class="btn btn-ghost btn-lg" href="/login">Log in</a>
+          {% endif %}
+        </div>
+        <p class="hero-note">No credit card · 25+ tools · Batch processing · API & Odoo module</p>
+        {% else %}
         <div class="badge">ذكاء المستندات العربية — جاهز للإنتاج</div>
         <h1>منصة الذكاء الاصطناعي لمستندات<br><span class="hl"><span id="rotate">الأعمال العربية</span></span></h1>
         <p class="sub">
@@ -39,6 +62,7 @@
           {% endif %}
         </div>
         <p class="hero-note">بدون بطاقة ائتمان · +25 أداة · معالجة دفعات · API ووحدة أودو</p>
+        {% endif %}
       </div>
 
       <div class="hero-visual">
@@ -46,14 +70,25 @@
         <span class="fdot fd2"></span>
         <span class="fdot fd3"></span>
         <div class="hv-card hv-data">
-          <div class="hv-head"><i data-lucide="sparkles"></i> البيانات المستخرجة</div>
+          <div class="hv-head"><i data-lucide="sparkles"></i>
+            {% if lang == 'en' %}Extracted data{% else %}البيانات المستخرجة{% endif %}
+          </div>
           <div class="hv-body" id="hvBody">
+            {% if lang == 'en' %}
+            <div class="hv-field"><span>Customer Name</span><b>Ahmed Hassan</b><i class="dot ok"></i></div>
+            <div class="hv-field"><span>Invoice Number</span><b>INV-2025-0042</b><i class="dot ok"></i></div>
+            <div class="hv-field"><span>Date</span><b>2025-03-01</b><i class="dot ok"></i></div>
+            <div class="hv-field"><span>Total</span><b>1,530 EGP</b><i class="dot ok"></i></div>
+            <div class="hv-field"><span>Tax ID</span><b>304-221-119</b><i class="dot mid"></i></div>
+            <div class="hv-foot"><span class="hv-doc-chip"><i data-lucide="file-text"></i> <span id="chipText">Arabic invoice</span></span><span>99% accuracy · &lt; 5 seconds</span></div>
+            {% else %}
             <div class="hv-field"><span>اسم العميل</span><b>أحمد حسن</b><i class="dot ok"></i></div>
             <div class="hv-field"><span>رقم الفاتورة</span><b>INV-2025-0042</b><i class="dot ok"></i></div>
             <div class="hv-field"><span>التاريخ</span><b>2025-03-01</b><i class="dot ok"></i></div>
             <div class="hv-field"><span>الإجمالي</span><b>1,530 ج.م</b><i class="dot ok"></i></div>
             <div class="hv-field"><span>الرقم الضريبي</span><b>304-221-119</b><i class="dot mid"></i></div>
             <div class="hv-foot"><span class="hv-doc-chip"><i data-lucide="file-text"></i> <span id="chipText">فاتورة عربية</span></span><span>دقة 99% · أقل من 5 ثوانٍ</span></div>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -63,21 +98,36 @@
   <!-- TRUST BAND -->
   <section class="trustband">
     <div class="container">
+      {% if lang == 'en' %}
+      <span class="trust-item"><span class="ti">✓</span> Your documents are never stored — processed and deleted instantly</span>
+      <span class="trust-item"><span class="ti">✓</span> Fully encrypted in transit</span>
+      <span class="trust-item"><span class="ti">✓</span> No credit card to start</span>
+      <span class="trust-item"><span class="ti">✓</span> Cancel anytime</span>
+      <span class="trust-item"><span class="ti">✓</span> Transparent credits, no hidden fees</span>
+      {% else %}
       <span class="trust-item"><span class="ti">✓</span> مستنداتك لا تُخزَّن — تُعالَج وتُحذَف فورًا</span>
       <span class="trust-item"><span class="ti">✓</span> اتصال مشفّر بالكامل</span>
       <span class="trust-item"><span class="ti">✓</span> بدون بطاقة ائتمان للبدء</span>
       <span class="trust-item"><span class="ti">✓</span> ألغِ في أي وقت</span>
       <span class="trust-item"><span class="ti">✓</span> رصيد شفّاف بلا رسوم خفية</span>
+      {% endif %}
     </div>
   </section>
 
   <!-- DIFFERENTIATOR STAT -->
   <section class="stats">
     <div class="container stats-grid">
+      {% if lang == 'en' %}
+      <div class="stat"><span class="num">99%+</span><span class="lbl">accuracy on typed documents</span></div>
+      <div class="stat"><span class="num">Arabic</span><span class="lbl">and handwriting fully supported</span></div>
+      <div class="stat"><span class="num">Any field</span><span class="lbl">in any Odoo model</span></div>
+      <div class="stat"><span class="num">&lt; 5s</span><span class="lbl">average extraction time</span></div>
+      {% else %}
       <div class="stat"><span class="num">+99%</span><span class="lbl">دقة على المستندات المطبوعة</span></div>
       <div class="stat"><span class="num">العربية</span><span class="lbl">والخط اليدوي مدعومان بالكامل</span></div>
       <div class="stat"><span class="num">أي حقل</span><span class="lbl">في أي نموذج أودو</span></div>
       <div class="stat"><span class="num">‹ 5 ث</span><span class="lbl">متوسط زمن الاستخراج</span></div>
+      {% endif %}
     </div>
   </section>
 

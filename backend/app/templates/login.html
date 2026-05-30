@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تسجيل الدخول — مُستخلِص</title>
+  <title>{{ 'Log in' if lang == 'en' else 'تسجيل الدخول' }} — Mostakhles</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -13,17 +13,21 @@
 
   <section class="auth-wrap">
     <div class="auth-card">
-      <h1>تسجيل الدخول</h1>
+      <h1>{{ 'Log in' if lang == 'en' else 'تسجيل الدخول' }}</h1>
+      {% if notice %}<div class="auth-notice">{{ notice }}</div>{% endif %}
       {% if error %}<div class="auth-error">{{ error }}</div>{% endif %}
       <form method="post" action="/login">
-        <label>البريد الإلكتروني</label>
+        <label>{{ 'Email' if lang == 'en' else 'البريد الإلكتروني' }}</label>
         <input type="email" name="email" required autofocus>
-        <label>كلمة المرور</label>
+        <label>{{ 'Password' if lang == 'en' else 'كلمة المرور' }}</label>
         <input type="password" name="password" required>
-        <button class="btn btn-primary full" type="submit">دخول</button>
+        <button class="btn btn-primary full" type="submit">{{ 'Log in' if lang == 'en' else 'دخول' }}</button>
       </form>
-      <p class="auth-alt"><a href="/forgot-password">نسيت كلمة المرور؟</a></p>
-      <p class="auth-alt">ليس لديك حساب؟ <a href="/signup">أنشئ حسابًا مجانًا</a></p>
+      <p class="auth-alt"><a href="/forgot-password">{{ 'Forgot password?' if lang == 'en' else 'نسيت كلمة المرور؟' }}</a></p>
+      <p class="auth-alt">
+        {% if lang == 'en' %}No account? <a href="/signup">Create a free account</a>
+        {% else %}ليس لديك حساب؟ <a href="/signup">أنشئ حسابًا مجانًا</a>{% endif %}
+      </p>
     </div>
   </section>
 </body>

@@ -515,7 +515,7 @@ def signup_page(request: Request):
     finally:
         session.close()
     return templates.TemplateResponse(request, "signup.html",
-        {"error": None, "user": None, "turnstile_sitekey": auth.turnstile_sitekey()})
+        _ctx(request, error=None, turnstile_sitekey=auth.turnstile_sitekey()))
 
 
 @app.post("/signup")
@@ -523,7 +523,7 @@ def signup(request: Request, email: str = Form(...), password: str = Form(...),
            cf_turnstile_response: str = Form("", alias="cf-turnstile-response")):
     def render_error(msg, code=400):
         return templates.TemplateResponse(request, "signup.html",
-            {"error": msg, "user": None, "turnstile_sitekey": auth.turnstile_sitekey()},
+            _ctx(request, error=msg, turnstile_sitekey=auth.turnstile_sitekey()),
             status_code=code)
 
     # Rate-limit by IP: 10 signups / hour. Stops mass-signup attacks burning Turnstile
@@ -563,7 +563,7 @@ def signup(request: Request, email: str = Form(...), password: str = Form(...),
         except Exception:  # noqa: BLE001 — don't block signup on email failure; user can resend
             pass
         return templates.TemplateResponse(request, "verify_sent.html",
-            {"email": user.email, "user": None})
+            _ctx(request, email=user.email))
     finally:
         session.close()
 
@@ -575,8 +575,9 @@ def verify_email(request: Request, token: str):
         user = session.query(models.User).filter_by(verification_token=token).first()
         if not user:
             return templates.TemplateResponse(request, "verify_sent.html",
-                {"email": None, "user": None,
-                 "error": "رابط التأكيد غير صالح أو منتهٍ."}, status_code=400)
+                _ctx(request, email=None,
+                     error="رابط التأكيد غير صالح أو منتهٍ."),
+                status_code=400)
         user.email_verified = True
         user.verification_token = None
         session.commit()
@@ -594,7 +595,7 @@ def verify_resend(request: Request, email: str = Form(...)):
     client_ip = request.client.host if request.client else None
     if not auth.rate_limit_check(f"resend:{client_ip}", max_attempts=5, window_sec=3600):
         return templates.TemplateResponse(request, "verify_sent.html",
-            {"email": email, "user": None})
+            _ctx(request, email=email))
     auth.rate_limit_record(f"resend:{client_ip}")
     session = db.SessionLocal()
     try:
@@ -609,7 +610,7 @@ def verify_resend(request: Request, email: str = Form(...)):
             except Exception:  # noqa: BLE001
                 pass
         return templates.TemplateResponse(request, "verify_sent.html",
-            {"email": email, "user": None})
+            _ctx(request, email=email))
     finally:
         session.close()
 
@@ -622,24 +623,35 @@ def login_page(request: Request, verified: int = 0):
             return RedirectResponse("/dashboard", status_code=303)
     finally:
         session.close()
-    notice = "تم تأكيد بريدك بنجاح. يمكنك الآن تسجيل الدخول." if verified else None
+    lang = i18n.resolve_lang(request, None)
+    if verified:
+        notice = ("Your email has been verified. You can now log in."
+                  if lang == "en"
+                  else "تم تأكيد بريدك بنجاح. يمكنك الآن تسجيل الدخول.")
+    else:
+        notice = None
     return templates.TemplateResponse(request, "login.html",
-        {"error": None, "user": None, "notice": notice})
+        _ctx(request, error=None, notice=notice))
 
 
 @app.post("/login")
 def login(request: Request, email: str = Form(...), password: str = Form(...)):
     ip = request.client.host if request.client else None
+    lang = i18n.resolve_lang(request, None)
     if not auth.login_rate_limit_check(ip):
+        msg = ("Too many attempts. Try again in 15 minutes."
+               if lang == "en" else "محاولات كثيرة. حاول مجددًا بعد 15 دقيقة.")
         return templates.TemplateResponse(request, "login.html",
-            {"error": "محاولات كثيرة. حاول مجددًا بعد 15 دقيقة.", "user": None}, status_code=429)
+            _ctx(request, error=msg), status_code=429)
     session = db.SessionLocal()
     try:
         user = session.query(models.User).filter_by(email=email.strip().lower()).first()
         if not user or not user.password_hash or not auth.verify_password(password, user.password_hash):
             auth.login_rate_limit_record(ip)
+            msg = ("Incorrect email or password" if lang == "en"
+                   else "بريد إلكتروني أو كلمة مرور غير صحيحة")
             return templates.TemplateResponse(request, "login.html",
-                {"error": "بريد إلكتروني أو كلمة مرور غير صحيحة", "user": None}, status_code=401)
+                _ctx(request, error=msg), status_code=401)
         token = auth.create_session(session, user)
         resp = RedirectResponse("/dashboard", status_code=303)
         resp.set_cookie("sid", token, **COOKIE_KW)
@@ -664,7 +676,7 @@ def logout(request: Request):
 @app.get("/forgot-password", response_class=HTMLResponse)
 def forgot_password_page(request: Request):
     return templates.TemplateResponse(request, "forgot_password.html",
-        {"user": None, "sent": False, "error": None})
+        _ctx(request, sent=False, error=None))
 
 
 @app.post("/forgot-password")
@@ -674,7 +686,7 @@ def forgot_password(request: Request, email: str = Form(...)):
     client_ip = request.client.host if request.client else None
     if not auth.rate_limit_check(f"forgot:{client_ip}", max_attempts=5, window_sec=3600):
         return templates.TemplateResponse(request, "forgot_password.html",
-            {"user": None, "sent": True, "error": None})  # silent so we don't leak the rate-limit
+            _ctx(request, sent=True, error=None))  # silent so we don't leak the rate-limit
     auth.rate_limit_record(f"forgot:{client_ip}")
 
     session = db.SessionLocal()
@@ -689,7 +701,7 @@ def forgot_password(request: Request, email: str = Form(...)):
             except Exception:  # noqa: BLE001
                 pass
         return templates.TemplateResponse(request, "forgot_password.html",
-            {"user": None, "sent": True, "error": None})
+            _ctx(request, sent=True, error=None))
     finally:
         session.close()
 
@@ -701,7 +713,7 @@ def reset_password_page(request: Request, token: str):
         user = auth.consume_password_reset(session, token)
         ok = user is not None
         return templates.TemplateResponse(request, "reset_password.html",
-            {"user": None, "token": token, "ok": ok, "error": None, "done": False})
+            _ctx(request, token=token, ok=ok, error=None, done=False))
     finally:
         session.close()
 
@@ -713,25 +725,34 @@ def reset_password(request: Request, token: str,
     session = db.SessionLocal()
     try:
         user = auth.consume_password_reset(session, token)
-        ctx = {"user": None, "token": token, "ok": user is not None, "done": False}
+        lang = i18n.resolve_lang(request, None)
+        ctx_extra = {"token": token, "ok": user is not None, "done": False, "error": None}
         if not user:
-            ctx["error"] = "الرابط غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا."
-            return templates.TemplateResponse(request, "reset_password.html", ctx, status_code=400)
+            ctx_extra["error"] = ("Link is invalid or expired. Request a new one."
+                                  if lang == "en"
+                                  else "الرابط غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.")
+            return templates.TemplateResponse(request, "reset_password.html",
+                _ctx(request, **ctx_extra), status_code=400)
         if len(new_password) < 8:
-            ctx["error"] = "كلمة المرور يجب أن تكون 8 أحرف على الأقل."
-            return templates.TemplateResponse(request, "reset_password.html", ctx, status_code=400)
+            ctx_extra["error"] = ("Password must be at least 8 characters."
+                                  if lang == "en"
+                                  else "كلمة المرور يجب أن تكون 8 أحرف على الأقل.")
+            return templates.TemplateResponse(request, "reset_password.html",
+                _ctx(request, **ctx_extra), status_code=400)
         if new_password != confirm_password:
-            ctx["error"] = "كلمتا المرور غير متطابقتين."
-            return templates.TemplateResponse(request, "reset_password.html", ctx, status_code=400)
+            ctx_extra["error"] = ("Passwords do not match." if lang == "en"
+                                  else "كلمتا المرور غير متطابقتين.")
+            return templates.TemplateResponse(request, "reset_password.html",
+                _ctx(request, **ctx_extra), status_code=400)
         user.password_hash = auth.hash_password(new_password)
         user.password_reset_token = None
         user.password_reset_expires = None
         # Invalidate all existing sessions so a thief loses their cookie when the owner resets.
         session.query(models.Session).filter_by(user_id=user.id).delete()
         session.commit()
-        ctx["done"] = True
-        ctx["error"] = None
-        return templates.TemplateResponse(request, "reset_password.html", ctx)
+        ctx_extra["done"] = True
+        return templates.TemplateResponse(request, "reset_password.html",
+            _ctx(request, **ctx_extra))
     finally:
         session.close()
 

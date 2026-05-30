@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إنشاء حساب — مُستخلِص</title>
+  <title>{{ 'Create account' if lang == 'en' else 'إنشاء حساب' }} — Mostakhles</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -13,23 +13,31 @@
 
   <section class="auth-wrap">
     <div class="auth-card">
+      {% if lang == 'en' %}
+      <h1>Create your free account</h1>
+      <p class="auth-sub">300 extractions per month — no credit card</p>
+      {% else %}
       <h1>إنشاء حساب مجاني</h1>
-      <p class="auth-sub">50 عملية استخراج شهريًا — بدون بطاقة ائتمان</p>
+      <p class="auth-sub">300 عملية استخراج شهريًا — بدون بطاقة ائتمان</p>
+      {% endif %}
       {% if error %}<div class="auth-error">{{ error }}</div>{% endif %}
       <form method="post" action="/signup">
-        <label>البريد الإلكتروني</label>
+        <label>{{ 'Email' if lang == 'en' else 'البريد الإلكتروني' }}</label>
         <input type="email" name="email" required autofocus>
-        <label>كلمة المرور (8 أحرف على الأقل)</label>
+        <label>{{ 'Password (at least 8 characters)' if lang == 'en' else 'كلمة المرور (8 أحرف على الأقل)' }}</label>
         <input type="password" name="password" minlength="8" required>
         {% if turnstile_sitekey %}
         <div class="cf-turnstile" data-sitekey="{{ turnstile_sitekey }}" style="margin: 12px 0"></div>
         {% endif %}
-        <button class="btn btn-primary full" type="submit">ابدأ مجانًا</button>
+        <button class="btn btn-primary full" type="submit">{{ 'Start free' if lang == 'en' else 'ابدأ مجانًا' }}</button>
       </form>
       {% if turnstile_sitekey %}
       <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
       {% endif %}
-      <p class="auth-alt">لديك حساب بالفعل؟ <a href="/login">سجّل الدخول</a></p>
+      <p class="auth-alt">
+        {% if lang == 'en' %}Already have an account? <a href="/login">Log in</a>
+        {% else %}لديك حساب بالفعل؟ <a href="/login">سجّل الدخول</a>{% endif %}
+      </p>
     </div>
   </section>
 </body>

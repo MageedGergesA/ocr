@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>الأدوات — مُستخلِص</title>
+  <title>{{ 'Tools' if lang == 'en' else 'الأدوات' }} — Mostakhles</title>
+  {% if lang == 'en' %}
+  <meta name="description" content="Arabic OCR toolkit: text extraction, handwriting OCR, translation, table-to-Excel, national ID + passport readers, searchable PDFs.">
+  {% else %}
   <meta name="description" content="أدوات OCR عربية: استخراج النص، تحويل الخط اليدوي، الترجمة، استخراج الجداول إلى Excel، قراءة بطاقة الرقم القومي وجواز السفر، وملفات PDF قابلة للبحث.">
+  {% endif %}
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -14,14 +18,18 @@
 
   <section class="section">
     <div class="container">
-      <h1 style="text-align:center;font-size:clamp(26px,4vw,38px);font-weight:800">أدوات مُستخلِص</h1>
-      <p class="section-sub">مجموعة أدوات OCR عربية مدعومة بالذكاء الاصطناعي — اختر الخدمة التي تحتاجها.</p>
+      <h1 style="text-align:center;font-size:clamp(26px,4vw,38px);font-weight:800">
+        {{ 'Mostakhles tools' if lang == 'en' else 'أدوات مُستخلِص' }}
+      </h1>
+      <p class="section-sub">
+        {{ 'AI-powered Arabic OCR toolkit — pick the service you need.' if lang == 'en' else 'مجموعة أدوات OCR عربية مدعومة بالذكاء الاصطناعي — اختر الخدمة التي تحتاجها.' }}
+      </p>
 
       <div class="card tool-card" style="text-align:center;background:var(--tint);border-color:var(--line);margin-bottom:28px">
         <a href="/chat" style="text-decoration:none;color:inherit">
           <div class="ico"><i data-lucide="message-square"></i></div>
-          <h3>المحادثة مع المستندات</h3>
-          <p>ارفع مستندًا واسأله أي سؤال — مساعدك الذكي للمستندات.</p>
+          <h3>{{ 'Chat with documents' if lang == 'en' else 'المحادثة مع المستندات' }}</h3>
+          <p>{{ 'Upload a document and ask it anything — your smart document assistant.' if lang == 'en' else 'ارفع مستندًا واسأله أي سؤال — مساعدك الذكي للمستندات.' }}</p>
         </a>
       </div>
 
@@ -31,7 +39,7 @@
         {% for slug, s in services.items() if s.category == cat %}
         <a class="card tool-card" href="/tools/{{ slug }}">
           <div class="ico"><i data-lucide="{{ s.icon }}"></i></div>
-          <h3>{{ s.title }}{% if s.free %}<span class="tool-free">مجاني</span>{% endif %}</h3>
+          <h3>{{ s.title }}{% if s.free %}<span class="tool-free">{{ 'Free' if lang == 'en' else 'مجاني' }}</span>{% endif %}</h3>
           <p>{{ s.desc }}</p>
         </a>
         {% endfor %}
