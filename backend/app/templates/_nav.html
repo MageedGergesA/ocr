@@ -42,12 +42,18 @@
         </div>
       </div>
 
-      <a class="nav-link" href="/#pricing">الأسعار</a>
+      <a class="nav-link" href="/#pricing">{{ t('nav.pricing') if t else 'الأسعار' }}</a>
     </nav>
 
     <div class="nav-cta">
+      {% set other_lang = 'en' if lang == 'ar' else 'ar' %}
+      <a class="nav-lang" href="/set-language?lang={{ other_lang }}&next={{ request.url.path }}"
+         title="{{ t('languages_label') if t else 'اللغة' }}"
+         aria-label="Switch language">
+        {{ 'English' if lang == 'ar' else 'العربية' }}
+      </a>
       {% if user %}
-        <a class="btn btn-primary" href="/app">ارفع مستندًا</a>
+        <a class="btn btn-primary" href="/app">{{ t('nav.upload_doc') if t else 'ارفع مستندًا' }}</a>
         <div class="user-menu">
           <button class="user-avatar" type="button" aria-label="حسابي">{{ user.email[0]|upper }}</button>
           <div class="user-dropdown">
@@ -75,3 +81,37 @@
 <!-- Lucide icons loaded once, site-wide (this nav is on every page) -->
 <script src="https://unpkg.com/lucide@0.456.0/dist/umd/lucide.min.js"></script>
 <script>document.addEventListener('DOMContentLoaded', function () { if (window.lucide) lucide.createIcons(); });</script>
+
+<!-- Apply current language direction to <html> on every page without editing each
+     page template. dir + lang attributes are what CSS RTL selectors + screen readers key off of. -->
+<script>
+(function () {
+  var lang = "{{ lang or 'ar' }}";
+  var dir = "{{ dir or 'rtl' }}";
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('dir', dir);
+})();
+</script>
+
+{% if csrf_token %}
+<!-- CSRF auto-header for cookie-authed /v1/* calls.
+     Patches window.fetch so every /v1/* request includes X-CSRF-Token.
+     The backend's _resolve_caller rejects cookie-authed /v1/* without it,
+     protecting against cross-origin XHR attacks under credentialed CORS. -->
+<meta name="csrf-token" content="{{ csrf_token }}">
+<script>
+(function () {
+  var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  var origFetch = window.fetch;
+  window.fetch = function (input, init) {
+    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    if (url.indexOf('/v1/') === 0 || url.indexOf('/v1/') > 0) {
+      init = init || {};
+      init.headers = new Headers(init.headers || {});
+      if (!init.headers.has('X-CSRF-Token')) init.headers.set('X-CSRF-Token', token);
+    }
+    return origFetch(input, init);
+  };
+})();
+</script>
+{% endif %}

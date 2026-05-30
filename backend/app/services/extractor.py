@@ -6,10 +6,45 @@ Two modes:
 
 The actual model call lives in `llm` (Gemini), so cost/quality routing happens there.
 Easy docs -> cheap model (Flash-Lite), hard/handwritten -> stronger model (Flash).
+
+Auto-mode output now includes a `layout` field so the UI can render results in a
+shape that matches the document (form / table / narrative / mixed / prescription).
+Output language is controlled by `output_lang` ('preserve' | 'ar' | 'en').
 """
 import json
 
 from . import llm
+
+# Field-name translation fallback for when the model returns English keys but
+# the user wants Arabic UI. Tiny dictionary — extend as we see common drift.
+EN_TO_AR_FIELDS = {
+    "project_name": "اسم_المشروع",
+    "building_model": "نموذج_المبنى",
+    "name": "الاسم",
+    "full_name": "الاسم_الكامل",
+    "date": "التاريخ",
+    "date_of_birth": "تاريخ_الميلاد",
+    "issue_date": "تاريخ_الإصدار",
+    "expiry_date": "تاريخ_الانتهاء",
+    "amount": "المبلغ",
+    "total": "الإجمالي",
+    "subtotal": "الإجمالي_الفرعي",
+    "tax": "الضريبة",
+    "tax_number": "الرقم_الضريبي",
+    "phone": "الهاتف",
+    "email": "البريد_الإلكتروني",
+    "address": "العنوان",
+    "id_number": "الرقم_القومي",
+    "passport_number": "رقم_جواز_السفر",
+    "currency": "العملة",
+    "seller": "البائع",
+    "buyer": "المشتري",
+    "company": "الشركة",
+    "occupation": "الوظيفة",
+    "nationality": "الجنسية",
+    "place_of_birth": "محل_الميلاد",
+    "sex": "الجنس",
+}
 
 # Convert Arabic-Indic and Persian digits to ASCII so numbers (phones, IDs, dates,
 # amounts) are usable downstream (Odoo fields, exports) instead of "٠١٢".
@@ -44,8 +79,43 @@ def _strip_code_fence(text: str) -> str:
     return text.strip()
 
 
+def _preprocess_image(file_bytes: bytes, media_type: str) -> tuple[bytes, str]:
+    """Resize + auto-rotate + re-encode oversized photos before paying for Gemini tokens.
+
+    Gemini bills by 1024x1024 tile; a 4MB phone photo wastes ~10x the tokens of the
+    same image at 2048px long-side / quality 85. Skips PDFs and non-image inputs.
+    Failures fall through to the original bytes (so a corrupt image still hits the
+    model with its native error path).
+    """
+    if not media_type.startswith("image/") or len(file_bytes) < 200_000:
+        return file_bytes, media_type
+    try:
+        import io
+        from PIL import Image, ImageOps
+        img = Image.open(io.BytesIO(file_bytes))
+        img = ImageOps.exif_transpose(img)  # honour camera orientation tag
+        if img.mode not in ("RGB", "L"):
+            img = img.convert("RGB")
+        # Resize so long side is at most 2048px — preserves OCR-readable detail.
+        w, h = img.size
+        long_side = max(w, h)
+        if long_side > 2048:
+            ratio = 2048 / long_side
+            img = img.resize((int(w * ratio), int(h * ratio)), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=85, optimize=True)
+        new_bytes = buf.getvalue()
+        # Only swap if we actually shrunk it — sometimes a small PNG re-encodes larger.
+        if len(new_bytes) < len(file_bytes):
+            return new_bytes, "image/jpeg"
+    except Exception:  # noqa: BLE001 — preprocessing is opportunistic, never mandatory
+        pass
+    return file_bytes, media_type
+
+
 def _call_model(file_bytes: bytes, media_type: str, prompt: str, hard: bool):
     """One vision call via the configured provider. Returns (text, truncated)."""
+    file_bytes, media_type = _preprocess_image(file_bytes, media_type)
     return llm.generate_from_document(file_bytes, media_type, prompt, hard)
 
 
@@ -151,55 +221,112 @@ def split_pdf_pages(pdf_bytes: bytes) -> list[bytes]:
     return pages
 
 
-def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True) -> dict:
-    """Detect the document type and extract every meaningful field automatically.
+_LANG_INSTRUCTION = {
+    "preserve": (
+        "Keep every value EXACTLY in the document's original language and script — "
+        "do NOT translate, transliterate, or add another language in parentheses. "
+        "Field NAMES should also be in the document's original language (Arabic field "
+        "names like 'اسم_البائع' for an Arabic invoice, English ones for an English doc)."
+    ),
+    "ar": (
+        "Return BOTH field names AND values in Arabic. Translate from the original "
+        "language if needed. Preserve proper nouns (people, brands, ID numbers, codes) "
+        "in their original spelling. Use Arabic snake_case field names like 'اسم_البائع', "
+        "'تاريخ_الإصدار', 'الرقم_القومي'."
+    ),
+    "en": (
+        "Return BOTH field names AND values in English. Translate from the original "
+        "language if needed. Preserve proper nouns (people, brands, ID numbers, codes) "
+        "in their original spelling. Use English snake_case field names like 'seller_name', "
+        "'issue_date', 'national_id'."
+    ),
+}
 
-    Returns: {"document_type": str, "fields": {name: {"value": ..., "confidence": 0-1}}}
+
+def _postprocess_field_names(result: dict, output_lang: str) -> dict:
+    """When output_lang='ar' but the model returned English field names anyway,
+    rewrite the top-level field keys via EN_TO_AR_FIELDS. Values untouched."""
+    if output_lang != "ar":
+        return result
+    fields = result.get("fields")
+    if not isinstance(fields, dict):
+        return result
+    renamed = {}
+    for k, v in fields.items():
+        renamed[EN_TO_AR_FIELDS.get(k, k)] = v
+    result["fields"] = renamed
+    return result
+
+
+def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True,
+                 output_lang: str = "preserve") -> dict:
+    """Detect the document type, infer a layout shape, and extract fields.
+
+    output_lang: 'preserve' (default — same as doc), 'ar', or 'en'.
+    Returns: {
+        "document_type": str,
+        "layout": "form" | "table" | "narrative" | "mixed" | "prescription",
+        "fields": {name: {"value": ..., "confidence": 0-1}}
+    }
     """
+    lang_instr = _LANG_INSTRUCTION.get(output_lang, _LANG_INSTRUCTION["preserve"])
     prompt = (
         "You are a document data-extraction system. Look at this document and:\n"
-        "1. Identify its type (e.g., passport, national ID, invoice, receipt, contract, "
-        "prescription, business card, OR a freeform letter / note / handwritten paragraph).\n"
-        "2. Choose the right output form:\n"
-        "   - If it is a STRUCTURED document (invoice, ID, form, receipt, card, etc.), "
-        "extract its individual named fields. Choose names that fit the document; "
-        "do not invent fields that are not present.\n"
-        "   - If it is FREEFORM TEXT (a letter, note, essay, or any narrative prose with no "
-        "structured fields), do NOT split it into invented fields. Instead return a single "
-        'field named "full_text" whose value is the COMPLETE transcription, preserving line breaks.\n'
-        "The document may be in Arabic, English, or handwritten. Keep every value EXACTLY in the "
-        "document's original language and script — do NOT translate, transliterate, or add another "
-        "language in parentheses. Be thorough and give your best reading for everything — do not skip "
-        "unclear parts.\n"
+        "1. Identify its document_type (e.g., passport, national ID, invoice, receipt, "
+        "contract, prescription, business card, bank statement, OR a freeform letter / "
+        "note / handwritten paragraph).\n"
+        "2. Identify its visual layout. Choose ONE label:\n"
+        "   - 'form'        — labeled fields in rows (invoices, IDs, passports, forms, cards)\n"
+        "   - 'table'       — primarily a table/spreadsheet of homogeneous rows\n"
+        "   - 'narrative'   — running prose with no fields (letters, notes, paragraphs)\n"
+        "   - 'mixed'       — combination (receipt with header + line-items, contract with "
+        "header + clauses, prescription with patient + medications)\n"
+        "   - 'prescription' — specifically a medical prescription (روشتة)\n"
+        "3. Choose the right output form:\n"
+        "   - STRUCTURED document → extract its individual named fields. Choose names that "
+        "fit the document; do not invent fields that are not present.\n"
+        "   - FREEFORM TEXT → return a single field named 'full_text' (or 'النص_الكامل' "
+        "if Arabic) whose value is the COMPLETE transcription, preserving line breaks.\n\n"
+        f"LANGUAGE: {lang_instr}\n\n"
         "DOMAIN HINTS — apply when they fit the detected type:\n"
-        "- Medical prescription (روشتة): prefer correct Egyptian drug spellings (Newclav, Augmentin, "
-        "Hibiotic, Curam, Amrizole, Flagyl, Rhinopro, Telfast, Zyrtec, Allergyl, Histop, Nasostop, "
-        "Otrivin, Ventolin, Farcolin, Brufen, Cetal, Abimol, Paramol, Zithromax, Klacid, Zisrocin). "
-        "'Temp' is body temperature in Celsius — a lone '7' almost certainly means 37. For each medicine, "
-        "give its name and interpret the handwritten dose into a clear Arabic instruction.\n"
+        "- Medical prescription (روشتة): prefer correct Egyptian drug spellings (Newclav, "
+        "Augmentin, Hibiotic, Curam, Amrizole, Flagyl, Rhinopro, Telfast, Zyrtec, Allergyl, "
+        "Histop, Nasostop, Otrivin, Ventolin, Farcolin, Brufen, Cetal, Abimol, Paramol, "
+        "Zithromax, Klacid, Zisrocin). 'Temp' is body temperature in Celsius — a lone '7' "
+        "almost certainly means 37. For each medicine, give its name and interpret the "
+        "handwritten dose into a clear Arabic instruction.\n"
         "Return ONLY valid JSON, no other text, in exactly this shape:\n"
-        '{"document_type": "<type>", "fields": {"<field name>": '
-        '{"value": <value>, "confidence": <0-1>}, ...}}'
+        '{"document_type": "<type>", "layout": "<form|table|narrative|mixed|prescription>", '
+        '"fields": {"<field name>": {"value": <value>, "confidence": <0-1>}, ...}}'
         + CALIBRATION
     )
-    return _run(image_bytes, media_type, prompt, hard)
+    result = _run(image_bytes, media_type, prompt, hard)
+    return _postprocess_field_names(result, output_lang)
 
 
 def extract_schema(image_bytes: bytes, media_type: str, target_schema: dict,
-                   hard: bool = True, hint: str = "") -> dict:
+                   hard: bool = True, hint: str = "", output_lang: str = "preserve") -> dict:
     """Extract a caller-defined set of fields.
 
     target_schema: {field_name: human description}
     hint: optional domain context prepended to the prompt (e.g. a prescription drug list).
+    output_lang: 'preserve' (default), 'ar', or 'en' — controls value language.
     Returns: {field_name: {"value": ..., "confidence": 0-1}, ...}
     """
     field_list = "\n".join(f"- {k}: {v}" for k, v in target_schema.items())
+    # Schema mode: caller fixed the field names, so we only translate VALUES, not keys.
+    value_lang_instr = {
+        "preserve": "Keep every value EXACTLY in the document's original language and script.",
+        "ar": "Return every VALUE in Arabic. Translate from original language if needed. "
+              "Preserve proper nouns (names, brands, IDs) in their original spelling.",
+        "en": "Return every VALUE in English. Translate from original language if needed. "
+              "Preserve proper nouns (names, brands, IDs) in their original spelling.",
+    }.get(output_lang, _LANG_INSTRUCTION["preserve"])
     prompt = (
         (hint.strip() + "\n\n" if hint else "")
         + "Extract the following fields from this document. "
         "The document may be in Arabic, English, or handwritten. "
-        "Keep every value EXACTLY in the document's original language and script — "
-        "do NOT translate, transliterate, or add another language. "
+        f"{value_lang_instr} "
         "Return ONLY valid JSON, no other text. "
         "For each field, return an object with 'value' and 'confidence' (0-1). "
         "If a field is not present, set its value to null."

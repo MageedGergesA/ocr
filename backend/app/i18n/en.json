@@ -1,0 +1,79 @@
+{
+  "lang": {
+    "self": "English",
+    "switch_to_other": "العربية"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "copy": "Copy",
+    "copied": "Copied",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "retry": "Try again",
+    "upload": "Upload a file",
+    "drop_here": "Drop your file here",
+    "or_click_to_upload": "or click to upload",
+    "supported_files": "Image or PDF — up to 20 MB"
+  },
+  "nav": {
+    "tools": "Tools",
+    "solutions": "Solutions",
+    "resources": "Resources",
+    "pricing": "Pricing",
+    "upload_doc": "Upload a document",
+    "login": "Log in",
+    "signup": "Start free",
+    "dashboard": "Dashboard",
+    "account": "Account",
+    "admin": "Admin",
+    "logout": "Log out"
+  },
+  "extract": {
+    "title": "Extract data",
+    "choose_template": "Choose document type (optional)",
+    "auto_detect": "Auto-detect",
+    "output_language": "Output language",
+    "lang_preserve": "Same as document",
+    "lang_ar": "العربية",
+    "lang_en": "English",
+    "extract_btn": "Extract",
+    "extracting": "Extracting…",
+    "confidence_high": "High confidence",
+    "confidence_med": "Medium confidence",
+    "confidence_low": "Low confidence — review",
+    "click_to_edit": "Click to edit",
+    "save_correction": "Save correction",
+    "field": "Field",
+    "value": "Value",
+    "confidence": "Confidence",
+    "no_results": "No data extracted. Check the image quality and try again.",
+    "side_by_side_preview": "Document preview",
+    "result": "Result"
+  },
+  "layout": {
+    "form": "Form/Invoice",
+    "table": "Table",
+    "narrative": "Narrative",
+    "mixed": "Mixed",
+    "prescription": "Prescription",
+    "patient": "Patient",
+    "medications": "Medications"
+  },
+  "dashboard": {
+    "welcome": "Welcome, {email}",
+    "current_plan": "Current plan",
+    "credits_used": "Credits used",
+    "credits_left": "Credits remaining",
+    "history": "History",
+    "api_keys": "API keys",
+    "templates": "Saved templates",
+    "search_history": "Search history…"
+  },
+  "languages_label": "Language"
+}

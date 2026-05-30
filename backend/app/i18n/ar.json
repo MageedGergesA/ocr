@@ -1,0 +1,79 @@
+{
+  "lang": {
+    "self": "العربية",
+    "switch_to_other": "English"
+  },
+  "common": {
+    "loading": "جارٍ التحميل…",
+    "error": "حدث خطأ",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "yes": "نعم",
+    "no": "لا",
+    "close": "إغلاق",
+    "retry": "حاول مجددًا",
+    "upload": "ارفع ملفًا",
+    "drop_here": "أفلت الملف هنا",
+    "or_click_to_upload": "أو اضغط للرفع",
+    "supported_files": "صور أو PDF — حتى 20 ميجابايت"
+  },
+  "nav": {
+    "tools": "الأدوات",
+    "solutions": "الحلول",
+    "resources": "الموارد",
+    "pricing": "الأسعار",
+    "upload_doc": "ارفع مستندًا",
+    "login": "تسجيل الدخول",
+    "signup": "ابدأ مجانًا",
+    "dashboard": "لوحة التحكم",
+    "account": "الحساب",
+    "admin": "لوحة الإدارة",
+    "logout": "خروج"
+  },
+  "extract": {
+    "title": "استخراج البيانات",
+    "choose_template": "اختر نوع المستند (اختياري)",
+    "auto_detect": "كشف تلقائي",
+    "output_language": "لغة النتيجة",
+    "lang_preserve": "نفس لغة المستند",
+    "lang_ar": "العربية",
+    "lang_en": "English",
+    "extract_btn": "استخراج",
+    "extracting": "جارٍ الاستخراج…",
+    "confidence_high": "ثقة عالية",
+    "confidence_med": "ثقة متوسطة",
+    "confidence_low": "ثقة منخفضة — راجع",
+    "click_to_edit": "انقر للتعديل",
+    "save_correction": "حفظ التصحيح",
+    "field": "الحقل",
+    "value": "القيمة",
+    "confidence": "الثقة",
+    "no_results": "لم نستخرج أي بيانات. تأكّد من جودة الصورة وحاول مجددًا.",
+    "side_by_side_preview": "معاينة المستند",
+    "result": "النتيجة"
+  },
+  "layout": {
+    "form": "نموذج/فاتورة",
+    "table": "جدول",
+    "narrative": "نص متصل",
+    "mixed": "مختلط",
+    "prescription": "روشتة طبية",
+    "patient": "بيانات المريض",
+    "medications": "الأدوية"
+  },
+  "dashboard": {
+    "welcome": "مرحبًا، {email}",
+    "current_plan": "خطّتك الحالية",
+    "credits_used": "النقاط المستخدمة",
+    "credits_left": "النقاط المتبقية",
+    "history": "السجل",
+    "api_keys": "مفاتيح الـ API",
+    "templates": "القوالب المحفوظة",
+    "search_history": "ابحث في السجل…"
+  },
+  "languages_label": "اللغة"
+}

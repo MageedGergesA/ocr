@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مُستخلِص — جرّب الاستخراج</title>
+  <title>{{ t('extract.title') }} — مُستخلِص</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -14,8 +14,8 @@
 
   <section class="app-wrap">
     <div class="container">
-      <h1 class="app-title">جرّب الاستخراج الآن</h1>
-      <p class="app-sub">ارفع مستندًا، حدّد الحقول التي تريدها، واحصل على النتائج. مجانًا، بدون تسجيل.</p>
+      <h1 class="app-title">{{ t('extract.title') }}</h1>
+      <p class="app-sub">{{ 'ارفع مستندًا، حدّد الحقول التي تريدها، واحصل على النتائج' if lang=='ar' else 'Upload a document, choose your fields, and get clean structured results.' }}</p>
 
       <div class="app-grid">
 
@@ -33,15 +33,44 @@
             <div id="pdfInfo" class="pdf-info" hidden></div>
           </div>
 
-          <label class="step">2 · طريقة الاستخراج</label>
+          <label class="step">2 · {{ 'طريقة الاستخراج' if lang=='ar' else 'Extraction method' }}</label>
           <div class="mode-row">
             <label class="mode-opt">
               <input type="radio" name="mode" value="auto" checked>
-              <span><b>تعرّف تلقائي</b> — يكتشف نوع المستند ويستخرج حقوله تلقائيًا</span>
+              <span><b>{{ t('extract.auto_detect') }}</b> — {{ 'يكتشف نوع المستند ويستخرج حقوله تلقائيًا' if lang=='ar' else 'detects the document type and extracts its fields' }}</span>
             </label>
             <label class="mode-opt">
               <input type="radio" name="mode" value="custom">
-              <span><b>حقول محددة</b> — أنت تختار الحقول</span>
+              <span><b>{{ 'حقول محددة' if lang=='ar' else 'Specific fields' }}</b> — {{ 'أنت تختار الحقول' if lang=='ar' else 'you choose the fields' }}</span>
+            </label>
+          </div>
+
+          <!-- Output language + optional document-type template picker -->
+          <div class="opts-row">
+            <label class="opt-field">
+              <span class="opt-label">{{ t('extract.output_language') }}</span>
+              <select id="outputLang">
+                <option value="preserve">{{ t('extract.lang_preserve') }}</option>
+                <option value="ar">{{ t('extract.lang_ar') }}</option>
+                <option value="en">{{ t('extract.lang_en') }}</option>
+              </select>
+            </label>
+            <label class="opt-field">
+              <span class="opt-label">{{ t('extract.choose_template') }}</span>
+              <select id="docTypePick">
+                <option value="">{{ t('extract.auto_detect') }}</option>
+                <option value="invoice">{{ 'فاتورة' if lang=='ar' else 'Invoice' }}</option>
+                <option value="egyptian-id">{{ 'بطاقة الرقم القومي' if lang=='ar' else 'National ID' }}</option>
+                <option value="passport">{{ 'جواز سفر' if lang=='ar' else 'Passport' }}</option>
+                <option value="tax-card">{{ 'بطاقة ضريبية' if lang=='ar' else 'Tax card' }}</option>
+                <option value="commercial-register">{{ 'سجل تجاري' if lang=='ar' else 'Commercial register' }}</option>
+                <option value="business-card">{{ 'بطاقة عمل' if lang=='ar' else 'Business card' }}</option>
+                <option value="utility-bill">{{ 'فاتورة مرافق' if lang=='ar' else 'Utility bill' }}</option>
+                <option value="bank-statement">{{ 'كشف حساب' if lang=='ar' else 'Bank statement' }}</option>
+                <option value="prescription">{{ 'روشتة طبية' if lang=='ar' else 'Prescription' }}</option>
+                <option value="sale-contract">{{ 'عقد بيع' if lang=='ar' else 'Sale contract' }}</option>
+                <option value="lease-contract">{{ 'عقد إيجار' if lang=='ar' else 'Lease contract' }}</option>
+              </select>
             </label>
           </div>
           <div id="fieldsWrap" hidden>
@@ -222,14 +251,39 @@
       return schema;
     }
 
+    const I18N = {
+      field: "{{ t('extract.field') }}",
+      value: "{{ t('extract.value') }}",
+      confidence: "{{ t('extract.confidence') }}",
+      high: "{{ t('extract.confidence_high') }}",
+      med:  "{{ t('extract.confidence_med') }}",
+      low:  "{{ t('extract.confidence_low') }}",
+      edit: "{{ t('extract.click_to_edit') }}",
+      save: "{{ t('extract.save_correction') }}",
+      cancel: "{{ t('common.cancel') }}",
+      noResults: "{{ t('extract.no_results') }}",
+      lang: "{{ lang or 'ar' }}",
+    };
+
     function confColor(c) {
       if (c >= 0.85) return '#16a34a';
       if (c >= 0.6)  return '#d97706';
       return '#dc2626';
     }
+    function confClass(c) {
+      if (c == null) return '';
+      if (c >= 0.85) return 'cd-high';
+      if (c >= 0.6) return 'cd-med';
+      return 'cd-low';
+    }
+    function confTitle(c) {
+      if (c == null) return '';
+      if (c >= 0.85) return I18N.high;
+      if (c >= 0.6) return I18N.med;
+      return I18N.low;
+    }
 
-    function esc(s) { return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
-    // Render any value readably — nested objects/arrays (e.g. a medications list) instead of "[object Object]".
+    function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
     function fmtVal(v) {
       if (v == null || v === '') return '—';
       if (Array.isArray(v)) return v.map(fmtVal).filter(s => s && s !== '—').join('<br>') || '—';
@@ -246,21 +300,51 @@
       return String(v);
     }
 
+    // ---- Layout-aware renderer ----
+    // Each field row now carries: a colored confidence dot, an inline-editable value,
+    // and the field name in a column. Low-confidence values get a "review" hint.
     function rowsHtml(data) {
       const rows = Object.entries(data || {}).map(([field, info]) => {
         let value = info, conf = null;
         if (info && typeof info === 'object' && 'value' in info) { value = info.value; conf = info.confidence; }
-        const confPct = conf != null ? Math.round(conf * 100) : null;
-        const bar = confPct != null
-          ? `<div class="conf"><div class="conf-bar" style="width:${confPct}%;background:${confColor(conf)}"></div></div><span class="conf-pct">${confPct}%</span>`
+        const dot = conf != null
+          ? `<span class="cdot ${confClass(conf)}" title="${confTitle(conf)} (${Math.round(conf*100)}%)"></span>`
           : '';
-        return `<div class="row">
-                  <div class="row-field">${esc(field)}</div>
-                  <div class="row-value">${fmtVal(value)}</div>
-                  <div class="row-conf">${bar}</div>
+        const valStr = (value == null || value === '') ? '—' : (typeof value === 'string' ? value : '');
+        const editable = typeof value === 'string';
+        const valHtml = editable
+          ? `<span class="ed-val" data-field="${esc(field)}" title="${I18N.edit}">${esc(valStr || '—')}</span>`
+          : fmtVal(value);
+        return `<div class="row ${confClass(conf)}">
+                  <div class="row-field">${dot}<span>${esc(field)}</span></div>
+                  <div class="row-value">${valHtml}</div>
                 </div>`;
       }).join('');
-      return `<div class="row head"><div>الحقل</div><div>القيمة</div><div>الثقة</div></div>${rows}`;
+      return `<div class="row head"><div>${I18N.field}</div><div>${I18N.value}</div></div>${rows}`;
+    }
+
+    // Layout-specific renderers — switch based on the LLM-detected layout.
+    function narrativeHtml(data) {
+      // 'full_text' or 'النص_الكامل' single-field narrative
+      const ft = (data && (data.full_text || data['النص_الكامل']));
+      const text = ft && (typeof ft === 'object' ? ft.value : ft);
+      if (text == null) return rowsHtml(data);
+      return `<div class="narrative-block">${esc(text).replace(/\n/g, '<br>')}</div>`;
+    }
+    function prescriptionHtml(data) {
+      // Prescription: patient block + medications list. The /v1/tool/prescription endpoint
+      // returns this richer shape; for the /app auto flow we render whatever fields came back.
+      return rowsHtml(data);
+    }
+    function renderByLayout(data, layout) {
+      switch (layout) {
+        case 'narrative': return narrativeHtml(data);
+        case 'prescription': return prescriptionHtml(data);
+        case 'table':
+        case 'form':
+        case 'mixed':
+        default: return rowsHtml(data);
+      }
     }
 
     // ---- export state + helpers ----
@@ -308,12 +392,71 @@
       URL.revokeObjectURL(a.href);
     }
 
-    function render(data, docType) {
+    let lastHistoryId = null;
+    function render(data, docType, layout) {
+      const labelDetected = I18N.lang === 'ar' ? 'نوع المستند المكتشف:' : 'Detected document type:';
+      const labelLayout = I18N.lang === 'ar' ? 'الشكل:' : 'Layout:';
+      const layoutText = layout ? `<span class="layout-tag">${labelLayout} ${esc(layout)}</span>` : '';
       const badge = docType
-        ? `<div class="doctype">نوع المستند المكتشف: <b>${docType}</b></div>` : '';
-      results.innerHTML = badge + rowsHtml(data);
-      setExport({ document_type: docType, data }, flattenSingle(data));
+        ? `<div class="doctype">${labelDetected} <b>${esc(docType)}</b> ${layoutText}</div>` : '';
+      results.innerHTML = badge + renderByLayout(data, layout);
+      setExport({ document_type: docType, layout, data }, flattenSingle(data));
       enableAsk(flattenSingle(data).map(r => `${r.field}: ${r.value ?? ''}`).join('\n'));
+      bindInlineEdits(data);
+    }
+
+    // Inline edit on .ed-val spans — click to edit, Enter to save, Esc to cancel.
+    // We post {field: newValue} to /v1/extract/correct/{history_id} which writes corrected_json.
+    function bindInlineEdits(data) {
+      results.querySelectorAll('.ed-val').forEach(el => {
+        el.addEventListener('click', () => beginEdit(el, data));
+      });
+    }
+    function beginEdit(el, data) {
+      if (el.dataset.editing) return;
+      el.dataset.editing = '1';
+      const oldVal = el.textContent === '—' ? '' : el.textContent;
+      const field = el.dataset.field;
+      const input = document.createElement('input');
+      input.type = 'text'; input.className = 'ed-input'; input.value = oldVal;
+      const save = document.createElement('button');
+      save.className = 'btn btn-primary btn-sm'; save.textContent = I18N.save;
+      const cancel = document.createElement('button');
+      cancel.className = 'btn btn-ghost btn-sm'; cancel.textContent = I18N.cancel;
+      const wrap = document.createElement('span'); wrap.className = 'ed-wrap';
+      wrap.append(input, save, cancel);
+      el.replaceWith(wrap);
+      input.focus(); input.select();
+      const finish = (newVal) => {
+        const span = document.createElement('span');
+        span.className = 'ed-val'; span.dataset.field = field;
+        span.textContent = newVal || '—';
+        span.addEventListener('click', () => beginEdit(span, data));
+        wrap.replaceWith(span);
+      };
+      cancel.addEventListener('click', () => finish(oldVal));
+      save.addEventListener('click', async () => {
+        const newVal = input.value;
+        if (lastHistoryId) {
+          try {
+            await fetch('/v1/extract/correct/' + lastHistoryId, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ field, value: newVal })
+            });
+          } catch {}
+        }
+        // Update local state too so re-exports use corrected values.
+        if (data[field] && typeof data[field] === 'object' && 'value' in data[field]) {
+          data[field].value = newVal;
+        } else {
+          data[field] = newVal;
+        }
+        finish(newVal);
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') save.click();
+        else if (e.key === 'Escape') cancel.click();
+      });
     }
 
     // ---- Ask-about-this-document ----
@@ -405,30 +548,53 @@
     extractBtn.addEventListener('click', async () => {
       if (!currentFile) return;
       extractBtn.disabled = true;
-      extractBtn.textContent = 'جارٍ الاستخراج…';
-      results.innerHTML = '<div class="results-empty">⏳ يتم تحليل المستند…</div>';
+      extractBtn.textContent = "{{ t('extract.extracting') }}";
+      results.innerHTML = `<div class="results-empty">⏳ ${I18N.lang === 'ar' ? 'يتم تحليل المستند…' : 'Analyzing the document…'}</div>`;
       document.getElementById('exportBar').hidden = true;
+      lastHistoryId = null;
 
       const mode = document.querySelector('input[name="mode"]:checked').value;
-      const fd = new FormData();
-      fd.append('file', currentFile);
-      fd.append('target_schema', mode === 'custom' ? JSON.stringify(parseFields()) : '');
-      fd.append('hard', document.getElementById('hard').checked);
+      const docTypePick = document.getElementById('docTypePick').value;
+      const outputLang = document.getElementById('outputLang').value;
+      const hard = document.getElementById('hard').checked;
 
       let batching = false;
       try {
+        // If a specific document type was picked, route to /v1/tool/{slug} which
+        // uses the matching catalog schema. Otherwise the generic /v1/extract.
+        if (docTypePick && mode === 'auto') {
+          const fd = new FormData();
+          fd.append('file', currentFile);
+          fd.append('hard', hard);
+          fd.append('output_lang', outputLang);
+          const res = await fetch('/v1/tool/' + docTypePick, { method: 'POST', body: fd });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.detail || ('HTTP ' + res.status));
+          // Tools return either {kind:'fields', data:{...}} or {kind:'text', text:''}
+          const data = body.data || (body.text ? { text: body.text } : body);
+          render(data, docTypePick, body.kind === 'text' ? 'narrative' : 'form');
+          updateQuota(body.usage);
+          return;
+        }
+
+        const fd = new FormData();
+        fd.append('file', currentFile);
+        fd.append('target_schema', mode === 'custom' ? JSON.stringify(parseFields()) : '');
+        fd.append('hard', hard);
+        fd.append('output_lang', outputLang);
+
         const res = await fetch('/v1/extract', { method: 'POST', body: fd });
         const body = await res.json();
         if (!res.ok) throw new Error(body.detail || ('HTTP ' + res.status));
         if (body.mode === 'batch') {
-          batching = true;  // keep button disabled; pollBatch re-enables it when done
-          extractBtn.textContent = 'معالجة دفعة…';
+          batching = true;
+          extractBtn.textContent = I18N.lang === 'ar' ? 'معالجة دفعة…' : 'Batch processing…';
           results.innerHTML =
-            `<div class="quota-line">⏳ ملف من ${body.total_pages} صفحة — جارٍ المعالجة…</div>`;
+            `<div class="quota-line">⏳ ${body.total_pages} ${I18N.lang === 'ar' ? 'صفحة — جارٍ المعالجة…' : 'pages — processing…'}</div>`;
           pollBatch(body.job_id, body.total_pages);
           return;
         }
-        render(body.data, body.document_type);
+        render(body.data, body.document_type, body.layout);
         updateQuota(body.usage);
       } catch (err) {
         results.innerHTML = `<div class="results-error">⚠️ ${err.message}</div>`;
