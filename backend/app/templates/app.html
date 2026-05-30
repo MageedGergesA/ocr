@@ -20,173 +20,186 @@
       <div class="app-grid">
 
         <!-- LEFT: input -->
-        <div class="panel">
-          <label class="step">1 · {{ 'المستندات' if lang=='ar' else 'Documents' }}</label>
-          <div id="dropzone" class="dropzone">
-            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" multiple hidden>
-            <div id="dzEmpty" class="dz-empty">
-              <div class="dz-ico"><i data-lucide="file-up"></i></div>
-              <p>{{ 'اسحب الملفات هنا أو' if lang=='ar' else 'Drop files here or' }} <span class="link">{{ 'اختر' if lang=='ar' else 'choose' }}</span></p>
-              <small>{{ 'صور أو PDF — حتى 10 ملفات معًا' if lang=='ar' else 'Images or PDF — up to 10 files together' }}</small>
+        <div class="panel panel-clean">
+
+          <!-- ════ STEP 1 — UPLOAD ════ -->
+          <div class="stepblock">
+            <div class="step-head">
+              <span class="step-num">1</span>
+              <span class="step-title">{{ 'ارفع المستند' if lang=='ar' else 'Upload your document' }}</span>
             </div>
-            <!-- Thumbnail grid for multi-image batches -->
-            <div id="thumbGrid" class="thumb-grid" hidden></div>
-            <img id="preview" class="preview" alt="" hidden>
-            <div id="pdfInfo" class="pdf-info" hidden></div>
-          </div>
-          <button type="button" id="addMoreBtn" class="btn btn-ghost btn-sm" hidden style="margin-top:6px">
-            + {{ 'أضف ملفًا آخر' if lang=='ar' else 'Add another file' }}
-          </button>
-
-          <label class="step">2 · {{ 'طريقة الاستخراج' if lang=='ar' else 'Extraction method' }}</label>
-          <div class="mode-row">
-            <label class="mode-opt">
-              <input type="radio" name="mode" value="auto" checked>
-              <span><b>{{ t('extract.auto_detect') }}</b> — {{ 'يكتشف نوع المستند ويستخرج حقوله تلقائيًا' if lang=='ar' else 'detects the document type and extracts its fields' }}</span>
-            </label>
-            <label class="mode-opt">
-              <input type="radio" name="mode" value="custom">
-              <span><b>{{ 'حقول محددة' if lang=='ar' else 'Specific fields' }}</b> — {{ 'أنت تختار الحقول' if lang=='ar' else 'you choose the fields' }}</span>
-            </label>
-          </div>
-
-          <!-- Output language + visual document-type gallery -->
-          <div class="opts-row">
-            <label class="opt-field">
-              <span class="opt-label">{{ t('extract.output_language') }}</span>
-              <select id="outputLang">
-                <option value="preserve">{{ t('extract.lang_preserve') }}</option>
-                <option value="ar">{{ t('extract.lang_ar') }}</option>
-                <option value="en">{{ t('extract.lang_en') }}</option>
-              </select>
-            </label>
-            <label class="opt-field">
-              <span class="opt-label">{{ t('extract.choose_template') }}</span>
-              <button type="button" class="tile-toggle" id="openGallery">
-                <span id="tilePickedLabel">{{ t('extract.auto_detect') }}</span>
-                <span class="tile-caret">▾</span>
-              </button>
-              <input type="hidden" id="docTypePick" value="">
-            </label>
-          </div>
-
-          <!-- Visual template gallery — appears as a popover when clicked -->
-          <div id="galleryPop" class="gallery-pop" hidden>
-            <div class="gallery-grid">
-              <button type="button" class="gtile" data-slug="">
-                <div class="gtile-thumb gth-auto"><span class="gth-ico">✨</span></div>
-                <div class="gtile-label">{{ t('extract.auto_detect') }}</div>
-              </button>
-              <button type="button" class="gtile" data-slug="invoice">
-                <div class="gtile-thumb gth-invoice">
-                  <div class="gth-rows"><span></span><span></span><span></span></div>
-                  <div class="gth-total"></div>
-                </div>
-                <div class="gtile-label">{{ 'فاتورة' if lang=='ar' else 'Invoice' }}</div>
-              </button>
-              <button type="button" class="gtile" data-slug="egyptian-id">
-                <div class="gtile-thumb gth-id">
-                  <div class="gth-id-photo"></div>
-                  <div class="gth-id-lines"><span></span><span></span><span></span></div>
-                </div>
-                <div class="gtile-label">{{ 'بطاقة الرقم القومي' if lang=='ar' else 'National ID' }}</div>
-              </button>
-              <button type="button" class="gtile" data-slug="passport">
-                <div class="gtile-thumb gth-passport">📘</div>
-                <div class="gtile-label">{{ 'جواز سفر' if lang=='ar' else 'Passport' }}</div>
-              </button>
-              <button type="button" class="gtile" data-slug="prescription">
-                <div class="gtile-thumb gth-rx">℞</div>
-                <div class="gtile-label">{{ 'روشتة' if lang=='ar' else 'Prescription' }}</div>
-              </button>
-              <button type="button" class="gtile" data-slug="tax-card">
-                <div class="gtile-thumb gth-tax">%</div>
-                <div class="gtile-label">{{ 'بطاقة ضريبية' if lang=='ar' else 'Tax card' }}</div>
-              </button>
-              <button type="button" class="gtile" data-slug="commercial-register">
-                <div class="gtile-thumb gth-cr">🏢</div>
-                <div class="gtile-label">{{ 'سجل تجاري' if lang=='ar' else 'Commercial reg.' }}</div>
-              </button>
-              <button type="button" class="gtile" data-slug="business-card">
-                <div class="gtile-thumb gth-bcard">📇</div>
-                <div class="gtile-label">{{ 'بطاقة عمل' if lang=='ar' else 'Business card' }}</div>
-              </button>
-              <button type="button" class="gtile" data-slug="utility-bill">
-                <div class="gtile-thumb gth-utility">💡</div>
-                <div class="gtile-label">{{ 'فاتورة مرافق' if lang=='ar' else 'Utility bill' }}</div>
-              </button>
-              <button type="button" class="gtile" data-slug="bank-statement">
-                <div class="gtile-thumb gth-bank">🏦</div>
-                <div class="gtile-label">{{ 'كشف حساب' if lang=='ar' else 'Bank statement' }}</div>
-              </button>
-              <button type="button" class="gtile" data-slug="sale-contract">
-                <div class="gtile-thumb gth-contract">📄</div>
-                <div class="gtile-label">{{ 'عقد بيع' if lang=='ar' else 'Sale contract' }}</div>
-              </button>
-              <button type="button" class="gtile" data-slug="lease-contract">
-                <div class="gtile-thumb gth-contract">🔑</div>
-                <div class="gtile-label">{{ 'عقد إيجار' if lang=='ar' else 'Lease' }}</div>
-              </button>
-              <!-- Upload-your-own template -->
-              <button type="button" class="gtile gtile-upload" id="uploadTplTile">
-                <div class="gtile-thumb gth-upload">⬆️</div>
-                <div class="gtile-label">{{ 'ارفع قالبك' if lang=='ar' else 'Upload your template' }}</div>
-              </button>
-            </div>
-            <!-- Sample templates: ready-to-test files so users can see the
-                 introspect → extract → fill-back flow without building one. -->
-            <div class="sample-tpls">
-              <div class="sample-tpls-title">
-                {{ '📁 جرّب بقوالب جاهزة:' if lang=='ar' else '📁 Try a ready-made template:' }}
+            <div id="dropzone" class="dropzone dropzone-clean">
+              <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" multiple hidden>
+              <div id="dzEmpty" class="dz-empty">
+                <div class="dz-ico"><i data-lucide="upload-cloud"></i></div>
+                <p class="dz-main">{{ 'اسحب الملفات هنا' if lang=='ar' else 'Drop files here' }}</p>
+                <p class="dz-sub">{{ 'أو' if lang=='ar' else 'or' }} <span class="link">{{ 'اختر من جهازك' if lang=='ar' else 'browse from your device' }}</span></p>
+                <small class="dz-formats">{{ 'صور JPG / PNG أو PDF · حتى 10 ملفات' if lang=='ar' else 'JPG / PNG / PDF · up to 10 files' }}</small>
               </div>
-              <div class="sample-tpls-row">
-                <a href="/static/sample-templates/invoice-template.xlsx" download class="sample-chip">
-                  <span class="sample-ext xlsx">XLSX</span>
+              <div id="thumbGrid" class="thumb-grid" hidden></div>
+              <img id="preview" class="preview" alt="" hidden>
+              <div id="pdfInfo" class="pdf-info" hidden></div>
+            </div>
+            <div class="dz-actions">
+              <button type="button" id="addMoreBtn" class="link-btn" hidden>
+                + {{ 'أضف ملفًا' if lang=='ar' else 'Add another' }}
+              </button>
+              <button type="button" id="clearFilesBtn" class="link-btn" hidden>
+                ✕ {{ 'مسح' if lang=='ar' else 'Clear' }}
+              </button>
+            </div>
+            <!-- Sample documents to try (inline, prominent, simple) -->
+            <div class="try-sample">
+              {{ 'جرّب بعينة:' if lang=='ar' else 'Try a sample:' }}
+              <a href="/static/sample-templates/invoice-template.xlsx" download class="sample-link"><span class="ext-tag xlsx">XLSX</span> {{ 'فاتورة' if lang=='ar' else 'Invoice' }}</a>
+              <a href="/static/sample-templates/patient-intake.docx" download class="sample-link"><span class="ext-tag docx">DOCX</span> {{ 'استمارة' if lang=='ar' else 'Form' }}</a>
+              <a href="/static/sample-templates/tax-declaration.pdf" download class="sample-link"><span class="ext-tag pdf">PDF</span> {{ 'إقرار ضريبي' if lang=='ar' else 'Tax form' }}</a>
+              <a href="/static/sample-templates/patient-registration.html" download class="sample-link"><span class="ext-tag html">HTML</span> {{ 'نموذج' if lang=='ar' else 'Form' }}</a>
+            </div>
+          </div>
+
+          <!-- ════ STEP 2 — WHAT TO EXTRACT (3-tab segmented) ════ -->
+          <div class="stepblock" id="step2block">
+            <div class="step-head">
+              <span class="step-num">2</span>
+              <span class="step-title">{{ 'ماذا تريد استخراجه؟' if lang=='ar' else 'What to extract?' }}</span>
+            </div>
+            <div class="segmented" role="tablist">
+              <button class="seg-btn active" data-mode="auto" role="tab" aria-selected="true">
+                <i data-lucide="sparkles"></i>
+                <span>{{ 'تلقائي' if lang=='ar' else 'Auto-detect' }}</span>
+              </button>
+              <button class="seg-btn" data-mode="pick" role="tab" aria-selected="false">
+                <i data-lucide="layout-grid"></i>
+                <span>{{ 'اختر نوعًا' if lang=='ar' else 'Pick a type' }}</span>
+              </button>
+              <button class="seg-btn" data-mode="template" role="tab" aria-selected="false">
+                <i data-lucide="file-text"></i>
+                <span>{{ 'قالبي' if lang=='ar' else 'My template' }}</span>
+              </button>
+            </div>
+
+            <!-- Mode-specific panels -->
+            <div class="mode-panel" data-panel="auto">
+              <div class="mode-help">
+                <i data-lucide="wand-2"></i>
+                <span>{{ 'سنكتشف نوع المستند تلقائيًا ونستخرج كل الحقول المرئية' if lang=='ar' else 'We\'ll detect the document type automatically and extract every visible field.' }}</span>
+              </div>
+            </div>
+
+            <div class="mode-panel" data-panel="pick" hidden>
+              <div class="type-grid">
+                <button type="button" class="type-card" data-slug="invoice">
+                  <div class="tc-thumb gth-invoice"><div class="gth-rows"><span></span><span></span><span></span></div><div class="gth-total"></div></div>
                   <span>{{ 'فاتورة' if lang=='ar' else 'Invoice' }}</span>
-                </a>
-                <a href="/static/sample-templates/patient-intake.docx" download class="sample-chip">
-                  <span class="sample-ext docx">DOCX</span>
-                  <span>{{ 'استمارة مريض' if lang=='ar' else 'Patient intake' }}</span>
-                </a>
-                <a href="/static/sample-templates/sale-contract.docx" download class="sample-chip">
-                  <span class="sample-ext docx">DOCX</span>
+                </button>
+                <button type="button" class="type-card" data-slug="egyptian-id">
+                  <div class="tc-thumb gth-id"><div class="gth-id-photo"></div><div class="gth-id-lines"><span></span><span></span><span></span></div></div>
+                  <span>{{ 'بطاقة الرقم القومي' if lang=='ar' else 'National ID' }}</span>
+                </button>
+                <button type="button" class="type-card" data-slug="passport">
+                  <div class="tc-thumb gth-passport">📘</div>
+                  <span>{{ 'جواز سفر' if lang=='ar' else 'Passport' }}</span>
+                </button>
+                <button type="button" class="type-card" data-slug="prescription">
+                  <div class="tc-thumb gth-rx">℞</div>
+                  <span>{{ 'روشتة' if lang=='ar' else 'Prescription' }}</span>
+                </button>
+                <button type="button" class="type-card" data-slug="tax-card">
+                  <div class="tc-thumb gth-tax">%</div>
+                  <span>{{ 'بطاقة ضريبية' if lang=='ar' else 'Tax card' }}</span>
+                </button>
+                <button type="button" class="type-card" data-slug="bank-statement">
+                  <div class="tc-thumb gth-bank">🏦</div>
+                  <span>{{ 'كشف حساب' if lang=='ar' else 'Bank statement' }}</span>
+                </button>
+                <button type="button" class="type-card" data-slug="utility-bill">
+                  <div class="tc-thumb gth-utility">💡</div>
+                  <span>{{ 'فاتورة مرافق' if lang=='ar' else 'Utility bill' }}</span>
+                </button>
+                <button type="button" class="type-card" data-slug="business-card">
+                  <div class="tc-thumb gth-bcard">📇</div>
+                  <span>{{ 'بطاقة عمل' if lang=='ar' else 'Business card' }}</span>
+                </button>
+                <button type="button" class="type-card" data-slug="commercial-register">
+                  <div class="tc-thumb gth-cr">🏢</div>
+                  <span>{{ 'سجل تجاري' if lang=='ar' else 'Commercial reg.' }}</span>
+                </button>
+                <button type="button" class="type-card" data-slug="sale-contract">
+                  <div class="tc-thumb gth-contract">📄</div>
                   <span>{{ 'عقد بيع' if lang=='ar' else 'Sale contract' }}</span>
-                </a>
-                <a href="/static/sample-templates/patient-registration.html" download class="sample-chip">
-                  <span class="sample-ext html">HTML</span>
-                  <span>{{ 'تسجيل مريض' if lang=='ar' else 'Patient registration' }}</span>
-                </a>
-                <a href="/static/sample-templates/tax-declaration.pdf" download class="sample-chip">
-                  <span class="sample-ext pdf">PDF</span>
-                  <span>{{ 'إقرار ضريبي' if lang=='ar' else 'Tax declaration' }}</span>
-                </a>
+                </button>
+                <button type="button" class="type-card" data-slug="lease-contract">
+                  <div class="tc-thumb gth-contract">🔑</div>
+                  <span>{{ 'عقد إيجار' if lang=='ar' else 'Lease' }}</span>
+                </button>
               </div>
-              <div class="sample-tpls-hint">
-                {{ 'حمّل واحدة، ارفعها بزر «ارفع قالبك» فوق، ثم ارفع مستندًا حقيقيًا لاستخراج البيانات' if lang=='ar' else 'Download one, upload it via "Upload your template" above, then upload a real document to extract values into it.' }}
-              </div>
-          </div>
-          <input type="file" id="tplFileInput" accept=".xlsx,.xls,.docx,.doc,.pdf,.html,.htm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/html" hidden>
-          <div id="fieldsWrap" hidden>
-            <div class="tpl-row">
-              <select id="tplSelect"><option value="">— تحميل قالب محفوظ —</option></select>
-              <button type="button" class="btn btn-ghost" id="saveTplBtn">حفظ كقالب</button>
             </div>
-            <p class="hint">سطر لكل حقل بالصيغة: <code>الاسم: وصف مختصر</code></p>
-            <textarea id="fields" class="fields" rows="6">رقم_الفاتورة: رقم الفاتورة أو المستند
-اسم_العميل: الاسم الكامل للعميل أو الشركة
-التاريخ: تاريخ المستند
-الإجمالي: المبلغ الإجمالي
-الرقم_الضريبي: الرقم الضريبي إن وجد</textarea>
+
+            <div class="mode-panel" data-panel="template" hidden>
+              <input type="file" id="tplFileInput" accept=".xlsx,.xls,.docx,.doc,.pdf,.html,.htm" hidden>
+              <button type="button" id="uploadTplTile" class="big-upload-btn">
+                <i data-lucide="upload"></i>
+                <div>
+                  <div class="bu-title">{{ 'ارفع قالبك' if lang=='ar' else 'Upload your template' }}</div>
+                  <div class="bu-sub">{{ 'Excel · Word · PDF · HTML — وسنستخرج إليه' if lang=='ar' else 'Excel · Word · PDF · HTML — we extract into it' }}</div>
+                </div>
+              </button>
+              <div id="uploadedTplBadge" class="uploaded-tpl-badge" hidden></div>
+              <div class="try-sample-mini">
+                {{ 'لا يوجد قالب؟ جرّب:' if lang=='ar' else 'No template? Try:' }}
+                <a href="/static/sample-templates/invoice-template.xlsx" download class="sample-link"><span class="ext-tag xlsx">XLSX</span> {{ 'فاتورة' if lang=='ar' else 'Invoice' }}</a>
+                <a href="/static/sample-templates/patient-intake.docx" download class="sample-link"><span class="ext-tag docx">DOCX</span> {{ 'استمارة' if lang=='ar' else 'Form' }}</a>
+                <a href="/static/sample-templates/sale-contract.docx" download class="sample-link"><span class="ext-tag docx">DOCX</span> {{ 'عقد' if lang=='ar' else 'Contract' }}</a>
+                <a href="/static/sample-templates/tax-declaration.pdf" download class="sample-link"><span class="ext-tag pdf">PDF</span> {{ 'إقرار' if lang=='ar' else 'Tax' }}</a>
+              </div>
+            </div>
+
+            <!-- Hidden state holders + legacy fields (kept for the existing JS) -->
+            <input type="hidden" id="docTypePick" value="">
+            <div id="fieldsWrap" hidden>
+              <p class="hint" style="margin:0 0 6px">{{ 'الحقول المكتشفة من قالبك — يمكنك التعديل قبل الاستخراج' if lang=='ar' else 'Fields detected from your template — edit before extracting if needed' }}</p>
+              <textarea id="fields" class="fields" rows="5"></textarea>
+            </div>
+            <!-- Old radio inputs kept hidden so the original `mode` parsing works untouched -->
+            <input type="radio" name="mode" value="auto" id="modeAutoRadio" checked hidden>
+            <input type="radio" name="mode" value="custom" id="modeCustomRadio" hidden>
           </div>
 
-          <label class="toggle">
-            <input type="checkbox" id="hard" checked>
-            مستند صعب / مكتوب بخط اليد (دقة أعلى)
-          </label>
+          <!-- ════ STEP 3 — ADVANCED (collapsed by default) ════ -->
+          <details class="advanced-block">
+            <summary class="advanced-summary">
+              <i data-lucide="settings-2"></i>
+              <span>{{ 'خيارات متقدمة' if lang=='ar' else 'Advanced options' }}</span>
+              <span class="adv-caret">▾</span>
+            </summary>
+            <div class="advanced-body">
+              <div class="adv-row">
+                <label class="adv-label">{{ t('extract.output_language') }}</label>
+                <select id="outputLang" class="adv-select">
+                  <option value="preserve">{{ t('extract.lang_preserve') }}</option>
+                  <option value="ar">{{ t('extract.lang_ar') }}</option>
+                  <option value="en">{{ t('extract.lang_en') }}</option>
+                </select>
+              </div>
+              <div class="adv-row">
+                <label class="adv-label">{{ 'دقة الاستخراج' if lang=='ar' else 'Accuracy mode' }}</label>
+                <label class="adv-toggle">
+                  <input type="checkbox" id="hard" checked>
+                  <span>{{ 'عالية الدقة (مستندات صعبة / خط يد)' if lang=='ar' else 'High accuracy (hard documents / handwriting)' }}</span>
+                </label>
+              </div>
+            </div>
+          </details>
 
-          <div id="credits" class="credits-box">💳 …</div>
-
-          <button id="extractBtn" class="btn btn-primary btn-lg full" disabled>استخرج البيانات</button>
+          <!-- ════ ACTION BAR ════ -->
+          <div class="action-bar">
+            <div id="credits" class="action-cost"></div>
+            <button id="extractBtn" class="btn btn-primary btn-lg extract-btn" disabled>
+              <i data-lucide="zap"></i>
+              <span>{{ 'استخراج' if lang=='ar' else 'Extract' }}</span>
+            </button>
+          </div>
         </div>
 
         <!-- RIGHT: output -->
@@ -373,37 +386,65 @@
     }));
     dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
 
-    // show the fields box only when "specific fields" mode is chosen
-    document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => {
-      const custom = document.querySelector('input[name="mode"]:checked').value === 'custom';
-      document.getElementById('fieldsWrap').hidden = !custom;
-      if (custom) loadTemplates();
-    }));
-
-    // ---- Visual template gallery ----
-    const galleryPop = document.getElementById('galleryPop');
-    const openGalleryBtn = document.getElementById('openGallery');
-    const tilePickedLabel = document.getElementById('tilePickedLabel');
+    // ---- Segmented tab switcher (replaces old radio buttons + gallery popover) ----
     const docTypePickHidden = document.getElementById('docTypePick');
+    const modeAutoRadio = document.getElementById('modeAutoRadio');
+    const modeCustomRadio = document.getElementById('modeCustomRadio');
+    const fieldsWrap = document.getElementById('fieldsWrap');
 
-    openGalleryBtn.addEventListener('click', () => {
-      galleryPop.hidden = !galleryPop.hidden;
-    });
-    document.addEventListener('click', (e) => {
-      if (!galleryPop.hidden && !galleryPop.contains(e.target) && e.target !== openGalleryBtn && !openGalleryBtn.contains(e.target)) {
-        galleryPop.hidden = true;
-      }
-    });
-    galleryPop.querySelectorAll('.gtile[data-slug]').forEach(tile => {
-      tile.addEventListener('click', () => {
-        const slug = tile.dataset.slug;
-        const label = tile.querySelector('.gtile-label').textContent;
-        docTypePickHidden.value = slug;
-        // Selecting a built-in catalog tile clears any uploaded-template selection
-        uploadedTplId = null;
-        tilePickedLabel.textContent = label;
-        galleryPop.hidden = true;
+    function setMode(mode) {
+      // Visual segmented state
+      document.querySelectorAll('.seg-btn').forEach(b => {
+        const active = b.dataset.mode === mode;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
       });
+      document.querySelectorAll('.mode-panel').forEach(p => {
+        p.hidden = p.dataset.panel !== mode;
+      });
+      // Drive the original hidden radios + fieldsWrap so the existing extract JS
+      // keeps working without changes downstream.
+      if (mode === 'auto') {
+        modeAutoRadio.checked = true; modeCustomRadio.checked = false;
+        fieldsWrap.hidden = true;
+        docTypePickHidden.value = '';
+        clearTypeCardSelection();
+        uploadedTplId = null; uploadedTplKind = null;
+      } else if (mode === 'pick') {
+        modeAutoRadio.checked = true; modeCustomRadio.checked = false;
+        fieldsWrap.hidden = true;
+        // docTypePickHidden filled by type-card click
+        uploadedTplId = null; uploadedTplKind = null;
+      } else if (mode === 'template') {
+        modeCustomRadio.checked = true; modeAutoRadio.checked = false;
+        // fieldsWrap shown after a template is uploaded (the upload handler does it)
+        docTypePickHidden.value = '';
+        clearTypeCardSelection();
+      }
+      renderCredits();
+    }
+    function clearTypeCardSelection() {
+      document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+    }
+
+    document.querySelectorAll('.seg-btn').forEach(btn => {
+      btn.addEventListener('click', () => setMode(btn.dataset.mode));
+    });
+
+    // Type-card grid (Pick tab) — clicking a card sets the docTypePick value
+    document.querySelectorAll('.type-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        docTypePickHidden.value = card.dataset.slug;
+      });
+    });
+
+    // Clear-files button
+    document.getElementById('clearFilesBtn').addEventListener('click', () => {
+      currentFiles = [];
+      renderThumbs();
+      estimateFiles();
     });
 
     // ---- Upload-your-own template ----
@@ -423,21 +464,17 @@
         if (!r.ok) throw new Error(j.detail || r.status);
         uploadedTplId = j.template_id;
         uploadedTplKind = j.kind;
-        // Switch to custom mode so the discovered schema drives extraction
-        document.querySelector('input[name="mode"][value="custom"]').checked = true;
-        document.getElementById('fieldsWrap').hidden = false;
-        // Populate the fields textarea with the discovered schema
+        modeCustomRadio.checked = true; modeAutoRadio.checked = false;
+        fieldsWrap.hidden = false;
         document.getElementById('fields').value =
           Object.entries(j.fields).map(([k, v]) => `${k}: ${v}`).join('\n');
-        // Clear catalog tile selection
-        docTypePickHidden.value = '';
-        const lbl = (I18N.lang === 'ar' ? 'قالبك: ' : 'Your template: ') + (f.name || 'uploaded');
-        tilePickedLabel.textContent = lbl;
-        galleryPop.hidden = true;
-        const msg = (I18N.lang === 'ar')
-          ? `تمّ التعرف على ${j.field_count} حقلًا من قالبك`
-          : `Detected ${j.field_count} fields from your template`;
-        alert(msg + (j.warning ? `\n${j.warning}` : ''));
+        // Show a confirmation badge inside the template panel
+        const badge = document.getElementById('uploadedTplBadge');
+        badge.hidden = false;
+        const okMsg = I18N.lang === 'ar'
+          ? `✓ ${f.name} — تمّ التعرف على ${j.field_count} حقلًا`
+          : `✓ ${f.name} — detected ${j.field_count} fields`;
+        badge.innerHTML = `<span class="utb-icon">📄</span><span class="utb-text">${okMsg}</span>`;
       } catch (err) {
         alert((I18N.lang === 'ar' ? 'تعذّر قراءة القالب: ' : 'Failed to read template: ') + err.message);
       } finally {
@@ -1016,16 +1053,18 @@
     document.getElementById('hard').addEventListener('change', renderCredits);
     fetch('/v1/usage').then(r => r.json()).then(updateQuota).catch(() => {});
 
-    // ?tool=X pre-selects a gallery tile so deep links from /tools/{slug} land
+    // ?tool=X pre-selects a type card so deep links from /tools/{slug} land
     // on the upgraded UI with the right document type already chosen.
     (function applyToolQueryParam() {
       const params = new URLSearchParams(location.search);
       const toolSlug = params.get('tool');
       if (!toolSlug) return;
-      const tile = document.querySelector(`.gtile[data-slug="${toolSlug}"]`);
-      if (!tile) return;
-      docTypePickHidden.value = toolSlug;
-      tilePickedLabel.textContent = tile.querySelector('.gtile-label').textContent;
+      const card = document.querySelector(`.type-card[data-slug="${toolSlug}"]`);
+      if (!card) return;
+      setMode('pick');
+      card.click();
+      // Scroll the selection into view for clarity
+      try { card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch {}
     })();
   </script>
 
