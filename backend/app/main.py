@@ -103,7 +103,7 @@ else:
     log.info("Sentry not configured (SENTRY_DSN unset) — errors only logged locally")
 
 from app import auth, db, emailer, exceptions as app_exceptions, exports, i18n, jobs, models  # noqa: E402
-from app.services import extractor, llm  # noqa: E402  (after load_dotenv so env is ready)
+from app.services import extractor, llm, template_filler, template_parser  # noqa: E402
 from app.services_catalog import CATEGORIES, SERVICES  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -1379,6 +1379,106 @@ def create_template(request: Request, payload: dict = Body(...), x_api_key: str 
                                     schema_json=schema))
         session.commit()
         return {"ok": True}
+    finally:
+        session.close()
+
+
+# ---------- Upload-your-template ----------
+_TEMPLATE_KINDS = {
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+    "application/pdf",
+    "text/html",
+    "application/xhtml+xml",
+}
+
+
+@app.post("/v1/templates/upload")
+def upload_template(
+    request: Request,
+    file: UploadFile = File(...),
+    name: str = Form(""),
+    save: bool = Form(True),
+    x_api_key: str = Header(None),
+):
+    """Introspect an uploaded template (Excel/Word/PDF form/HTML) and return its
+    discovered fields as a schema. When `save=True` (default), persist as a
+    user Template with the original file bytes so it can be filled back later."""
+    if file.content_type not in _TEMPLATE_KINDS:
+        raise HTTPException(
+            415,
+            "unsupported template type. Use .xlsx, .docx, .pdf, or .html",
+        )
+    raw = file.file.read()
+    if len(raw) > 10 * 1024 * 1024:
+        raise HTTPException(413, "template too large (max 10 MB)")
+    info = template_parser.introspect(raw, file.filename, file.content_type)
+    if not info.get("kind"):
+        raise HTTPException(400, info.get("warning") or "unsupported template")
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        tpl_id = None
+        if save and info["fields"]:
+            tpl_name = name.strip() or (file.filename or "Template").rsplit(".", 1)[0]
+            tpl = models.Template(
+                user_id=api_key.user.id,
+                name=tpl_name[:100],
+                schema_json=info["fields"],
+                source_kind=info["kind"],
+                source_bytes=raw,
+                source_name=file.filename or f"template.{info['kind']}",
+            )
+            session.add(tpl); session.commit(); session.refresh(tpl)
+            tpl_id = tpl.id
+        return {
+            "kind": info["kind"],
+            "fields": info["fields"],
+            "field_count": info["field_count"],
+            "warning": info["warning"],
+            "template_id": tpl_id,
+        }
+    finally:
+        session.close()
+
+
+@app.post("/v1/templates/{tid}/fill")
+def fill_template_endpoint(
+    tid: int, request: Request, payload: dict = Body(...),
+    x_api_key: str = Header(None),
+):
+    """Take an extracted-data dict (from /v1/extract) and stream back the user's
+    template with values filled in. Body: {"data": {...}, "rows": optional list
+    for tables}. Output: the filled file in the original format."""
+    data = payload.get("data") or {}
+    rows = payload.get("rows")
+    if not isinstance(data, dict):
+        raise HTTPException(400, "data must be an object")
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        tpl = session.get(models.Template, tid)
+        if not tpl or tpl.user_id != api_key.user.id:
+            raise HTTPException(404, "template not found")
+        if not tpl.source_bytes or not tpl.source_kind:
+            raise HTTPException(400, "this template has no source file — re-upload to enable filling")
+        try:
+            content, media, _suggested = template_filler.fill_template(
+                tpl.source_bytes, tpl.source_kind, data, rows=rows,
+            )
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(500, f"fill failed: {e}")
+        fname = tpl.source_name or f"filled.{tpl.source_kind}"
+        # Inject "filled-" prefix so user can distinguish original vs filled
+        if "." in fname:
+            stem, ext = fname.rsplit(".", 1)
+            fname = f"filled-{stem}.{ext}"
+        return Response(content=content, media_type=media,
+                        headers={"Content-Disposition": f'attachment; filename="{fname}"'})
     finally:
         session.close()
 

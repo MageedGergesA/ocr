@@ -3,8 +3,8 @@ import secrets
 from datetime import datetime
 
 from sqlalchemy import (
-    JSON, Boolean, Column, DateTime, ForeignKey, Index, Integer, Numeric, String, Text,
-    UniqueConstraint,
+    JSON, Boolean, Column, DateTime, ForeignKey, Index, Integer, LargeBinary, Numeric,
+    String, Text, UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
@@ -86,13 +86,18 @@ class Usage(Base):
 
 
 class Template(Base):
-    """A reusable named field schema saved by a user."""
+    """A reusable named field schema saved by a user. When `source_kind` is set
+    (xlsx/docx/pdf/html), `source_bytes` holds the original uploaded template so
+    extraction results can later be filled back into the same file format."""
     __tablename__ = "templates"
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     name = Column(String, nullable=False)
     schema_json = Column(JsonCol, nullable=False)  # {field: description}
+    source_kind = Column(String(8), nullable=True)   # 'xlsx' | 'docx' | 'pdf' | 'html'
+    source_bytes = Column(LargeBinary, nullable=True)  # original template file
+    source_name = Column(String, nullable=True)        # original filename for download
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

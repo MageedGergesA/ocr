@@ -45,7 +45,7 @@
             </label>
           </div>
 
-          <!-- Output language + optional document-type template picker -->
+          <!-- Output language + visual document-type gallery -->
           <div class="opts-row">
             <label class="opt-field">
               <span class="opt-label">{{ t('extract.output_language') }}</span>
@@ -57,22 +57,79 @@
             </label>
             <label class="opt-field">
               <span class="opt-label">{{ t('extract.choose_template') }}</span>
-              <select id="docTypePick">
-                <option value="">{{ t('extract.auto_detect') }}</option>
-                <option value="invoice">{{ 'فاتورة' if lang=='ar' else 'Invoice' }}</option>
-                <option value="egyptian-id">{{ 'بطاقة الرقم القومي' if lang=='ar' else 'National ID' }}</option>
-                <option value="passport">{{ 'جواز سفر' if lang=='ar' else 'Passport' }}</option>
-                <option value="tax-card">{{ 'بطاقة ضريبية' if lang=='ar' else 'Tax card' }}</option>
-                <option value="commercial-register">{{ 'سجل تجاري' if lang=='ar' else 'Commercial register' }}</option>
-                <option value="business-card">{{ 'بطاقة عمل' if lang=='ar' else 'Business card' }}</option>
-                <option value="utility-bill">{{ 'فاتورة مرافق' if lang=='ar' else 'Utility bill' }}</option>
-                <option value="bank-statement">{{ 'كشف حساب' if lang=='ar' else 'Bank statement' }}</option>
-                <option value="prescription">{{ 'روشتة طبية' if lang=='ar' else 'Prescription' }}</option>
-                <option value="sale-contract">{{ 'عقد بيع' if lang=='ar' else 'Sale contract' }}</option>
-                <option value="lease-contract">{{ 'عقد إيجار' if lang=='ar' else 'Lease contract' }}</option>
-              </select>
+              <button type="button" class="tile-toggle" id="openGallery">
+                <span id="tilePickedLabel">{{ t('extract.auto_detect') }}</span>
+                <span class="tile-caret">▾</span>
+              </button>
+              <input type="hidden" id="docTypePick" value="">
             </label>
           </div>
+
+          <!-- Visual template gallery — appears as a popover when clicked -->
+          <div id="galleryPop" class="gallery-pop" hidden>
+            <div class="gallery-grid">
+              <button type="button" class="gtile" data-slug="">
+                <div class="gtile-thumb gth-auto"><span class="gth-ico">✨</span></div>
+                <div class="gtile-label">{{ t('extract.auto_detect') }}</div>
+              </button>
+              <button type="button" class="gtile" data-slug="invoice">
+                <div class="gtile-thumb gth-invoice">
+                  <div class="gth-rows"><span></span><span></span><span></span></div>
+                  <div class="gth-total"></div>
+                </div>
+                <div class="gtile-label">{{ 'فاتورة' if lang=='ar' else 'Invoice' }}</div>
+              </button>
+              <button type="button" class="gtile" data-slug="egyptian-id">
+                <div class="gtile-thumb gth-id">
+                  <div class="gth-id-photo"></div>
+                  <div class="gth-id-lines"><span></span><span></span><span></span></div>
+                </div>
+                <div class="gtile-label">{{ 'بطاقة الرقم القومي' if lang=='ar' else 'National ID' }}</div>
+              </button>
+              <button type="button" class="gtile" data-slug="passport">
+                <div class="gtile-thumb gth-passport">📘</div>
+                <div class="gtile-label">{{ 'جواز سفر' if lang=='ar' else 'Passport' }}</div>
+              </button>
+              <button type="button" class="gtile" data-slug="prescription">
+                <div class="gtile-thumb gth-rx">℞</div>
+                <div class="gtile-label">{{ 'روشتة' if lang=='ar' else 'Prescription' }}</div>
+              </button>
+              <button type="button" class="gtile" data-slug="tax-card">
+                <div class="gtile-thumb gth-tax">%</div>
+                <div class="gtile-label">{{ 'بطاقة ضريبية' if lang=='ar' else 'Tax card' }}</div>
+              </button>
+              <button type="button" class="gtile" data-slug="commercial-register">
+                <div class="gtile-thumb gth-cr">🏢</div>
+                <div class="gtile-label">{{ 'سجل تجاري' if lang=='ar' else 'Commercial reg.' }}</div>
+              </button>
+              <button type="button" class="gtile" data-slug="business-card">
+                <div class="gtile-thumb gth-bcard">📇</div>
+                <div class="gtile-label">{{ 'بطاقة عمل' if lang=='ar' else 'Business card' }}</div>
+              </button>
+              <button type="button" class="gtile" data-slug="utility-bill">
+                <div class="gtile-thumb gth-utility">💡</div>
+                <div class="gtile-label">{{ 'فاتورة مرافق' if lang=='ar' else 'Utility bill' }}</div>
+              </button>
+              <button type="button" class="gtile" data-slug="bank-statement">
+                <div class="gtile-thumb gth-bank">🏦</div>
+                <div class="gtile-label">{{ 'كشف حساب' if lang=='ar' else 'Bank statement' }}</div>
+              </button>
+              <button type="button" class="gtile" data-slug="sale-contract">
+                <div class="gtile-thumb gth-contract">📄</div>
+                <div class="gtile-label">{{ 'عقد بيع' if lang=='ar' else 'Sale contract' }}</div>
+              </button>
+              <button type="button" class="gtile" data-slug="lease-contract">
+                <div class="gtile-thumb gth-contract">🔑</div>
+                <div class="gtile-label">{{ 'عقد إيجار' if lang=='ar' else 'Lease' }}</div>
+              </button>
+              <!-- Upload-your-own template -->
+              <button type="button" class="gtile gtile-upload" id="uploadTplTile">
+                <div class="gtile-thumb gth-upload">⬆️</div>
+                <div class="gtile-label">{{ 'ارفع قالبك' if lang=='ar' else 'Upload your template' }}</div>
+              </button>
+            </div>
+          </div>
+          <input type="file" id="tplFileInput" accept=".xlsx,.xls,.docx,.doc,.pdf,.html,.htm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/html" hidden>
           <div id="fieldsWrap" hidden>
             <div class="tpl-row">
               <select id="tplSelect"><option value="">— تحميل قالب محفوظ —</option></select>
@@ -206,6 +263,71 @@
       document.getElementById('fieldsWrap').hidden = !custom;
       if (custom) loadTemplates();
     }));
+
+    // ---- Visual template gallery ----
+    const galleryPop = document.getElementById('galleryPop');
+    const openGalleryBtn = document.getElementById('openGallery');
+    const tilePickedLabel = document.getElementById('tilePickedLabel');
+    const docTypePickHidden = document.getElementById('docTypePick');
+
+    openGalleryBtn.addEventListener('click', () => {
+      galleryPop.hidden = !galleryPop.hidden;
+    });
+    document.addEventListener('click', (e) => {
+      if (!galleryPop.hidden && !galleryPop.contains(e.target) && e.target !== openGalleryBtn && !openGalleryBtn.contains(e.target)) {
+        galleryPop.hidden = true;
+      }
+    });
+    galleryPop.querySelectorAll('.gtile[data-slug]').forEach(tile => {
+      tile.addEventListener('click', () => {
+        const slug = tile.dataset.slug;
+        const label = tile.querySelector('.gtile-label').textContent;
+        docTypePickHidden.value = slug;
+        // Selecting a built-in catalog tile clears any uploaded-template selection
+        uploadedTplId = null;
+        tilePickedLabel.textContent = label;
+        galleryPop.hidden = true;
+      });
+    });
+
+    // ---- Upload-your-own template ----
+    let uploadedTplId = null;     // id of the persisted Template if the user uploaded one
+    let uploadedTplKind = null;   // 'xlsx' | 'docx' | 'pdf' | 'html'
+    const tplFileInput = document.getElementById('tplFileInput');
+    document.getElementById('uploadTplTile').addEventListener('click', () => tplFileInput.click());
+    tplFileInput.addEventListener('change', async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const fd = new FormData();
+      fd.append('file', f);
+      fd.append('save', 'true');
+      try {
+        const r = await fetch('/v1/templates/upload', { method: 'POST', body: fd });
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.detail || r.status);
+        uploadedTplId = j.template_id;
+        uploadedTplKind = j.kind;
+        // Switch to custom mode so the discovered schema drives extraction
+        document.querySelector('input[name="mode"][value="custom"]').checked = true;
+        document.getElementById('fieldsWrap').hidden = false;
+        // Populate the fields textarea with the discovered schema
+        document.getElementById('fields').value =
+          Object.entries(j.fields).map(([k, v]) => `${k}: ${v}`).join('\n');
+        // Clear catalog tile selection
+        docTypePickHidden.value = '';
+        const lbl = (I18N.lang === 'ar' ? 'قالبك: ' : 'Your template: ') + (f.name || 'uploaded');
+        tilePickedLabel.textContent = lbl;
+        galleryPop.hidden = true;
+        const msg = (I18N.lang === 'ar')
+          ? `تمّ التعرف على ${j.field_count} حقلًا من قالبك`
+          : `Detected ${j.field_count} fields from your template`;
+        alert(msg + (j.warning ? `\n${j.warning}` : ''));
+      } catch (err) {
+        alert((I18N.lang === 'ar' ? 'تعذّر قراءة القالب: ' : 'Failed to read template: ') + err.message);
+      } finally {
+        tplFileInput.value = '';
+      }
+    });
 
     // ---- saved templates ----
     let savedTemplates = [];
@@ -681,6 +803,8 @@
       const hard = document.getElementById('hard').checked;
 
       let batching = false;
+      // Track the extracted result so we can offer "download filled template" after.
+      lastExtractedData = null;
       try {
         // If a specific document type was picked, route to /v1/tool/{slug} which
         // uses the matching catalog schema. Otherwise the generic /v1/extract.
@@ -695,6 +819,7 @@
           // Tools return either {kind:'fields', data:{...}} or {kind:'text', text:''}
           const data = body.data || (body.text ? { text: body.text } : body);
           render(data, docTypePick, body.kind === 'text' ? 'narrative' : 'form');
+          lastExtractedData = data;
           updateQuota(body.usage);
           return;
         }
@@ -717,13 +842,55 @@
           return;
         }
         render(body.data, body.document_type, body.layout);
+        lastExtractedData = body.data;
         updateQuota(body.usage);
       } catch (err) {
         results.innerHTML = `<div class="results-error">⚠️ ${err.message}</div>`;
       } finally {
         if (!batching) resetButton();
+        // If an uploaded template is selected and we got data, surface the
+        // "download filled template" button next to the export bar.
+        maybeShowFilledDownload();
       }
     });
+
+    // ---- Download filled template ----
+    let lastExtractedData = null;
+    function maybeShowFilledDownload() {
+      const existing = document.getElementById('fillTplBtn');
+      if (existing) existing.remove();
+      if (!uploadedTplId || !lastExtractedData) return;
+      const bar = document.getElementById('exportBar');
+      bar.hidden = false;
+      const btn = document.createElement('button');
+      btn.id = 'fillTplBtn';
+      btn.className = 'btn btn-primary';
+      btn.type = 'button';
+      btn.textContent = I18N.lang === 'ar'
+        ? '⬇️ نزّل قالبك معبّأ'
+        : '⬇️ Download filled template';
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        try {
+          const r = await fetch('/v1/templates/' + uploadedTplId + '/fill', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: lastExtractedData }),
+          });
+          if (!r.ok) {
+            const e = await r.json().catch(() => ({}));
+            throw new Error(e.detail || r.status);
+          }
+          const blob = await r.blob();
+          const ext = uploadedTplKind || 'xlsx';
+          triggerDownload(blob, 'extracted.' + ext);
+        } catch (err) {
+          alert((I18N.lang === 'ar' ? 'تعذّر إنشاء الملف: ' : 'Fill failed: ') + err.message);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+      bar.appendChild(btn);
+    }
 
     // live credit estimate: re-render when accuracy toggle flips; load balance on open
     document.getElementById('hard').addEventListener('change', renderCredits);
