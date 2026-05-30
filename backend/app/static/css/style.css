@@ -1317,3 +1317,37 @@ details[open] .adv-caret { transform: rotate(180deg); }
   .type-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
   .action-bar { flex-direction: column; align-items: stretch; }
 }
+
+/* ════ Wave 14: visible option pills (no dropdowns, no <details>) ════ */
+.opt-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.opt-pill {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  border: 2px solid var(--border); border-radius: 10px;
+  background: var(--bg); cursor: pointer; font: inherit;
+  text-align: start;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+  color: var(--ink);
+}
+.opt-pill:hover { border-color: var(--brand); }
+.opt-pill.active {
+  border-color: var(--brand);
+  background: rgba(27, 94, 99, 0.05);
+  box-shadow: 0 0 0 3px rgba(27, 94, 99, 0.12);
+}
+.opt-pill svg { width: 18px; height: 18px; color: var(--brand); flex-shrink: 0; }
+.opt-pill .flag { font-size: 18px; line-height: 1; flex-shrink: 0; }
+.opt-pill span { font-weight: 600; font-size: 14px; }
+.opt-pill-stack { display: flex; flex-direction: column; gap: 2px; }
+.opt-pill-stack span { font-weight: 700; font-size: 14px; }
+.opt-pill-stack small { color: var(--muted); font-size: 11px; line-height: 1.3; }
+
+/* Active state ring tweak for accuracy + lang (cleaner check indicator) */
+.opt-pill.active::after {
+  content: '✓'; margin-inline-start: auto;
+  color: var(--brand); font-weight: 800; font-size: 14px;
+}

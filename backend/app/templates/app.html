@@ -166,31 +166,55 @@
             <input type="radio" name="mode" value="custom" id="modeCustomRadio" hidden>
           </div>
 
-          <!-- ════ STEP 3 — ADVANCED (collapsed by default) ════ -->
-          <details class="advanced-block">
-            <summary class="advanced-summary">
-              <i data-lucide="settings-2"></i>
-              <span>{{ 'خيارات متقدمة' if lang=='ar' else 'Advanced options' }}</span>
-              <span class="adv-caret">▾</span>
-            </summary>
-            <div class="advanced-body">
-              <div class="adv-row">
-                <label class="adv-label">{{ t('extract.output_language') }}</label>
-                <select id="outputLang" class="adv-select">
-                  <option value="preserve">{{ t('extract.lang_preserve') }}</option>
-                  <option value="ar">{{ t('extract.lang_ar') }}</option>
-                  <option value="en">{{ t('extract.lang_en') }}</option>
-                </select>
-              </div>
-              <div class="adv-row">
-                <label class="adv-label">{{ 'دقة الاستخراج' if lang=='ar' else 'Accuracy mode' }}</label>
-                <label class="adv-toggle">
-                  <input type="checkbox" id="hard" checked>
-                  <span>{{ 'عالية الدقة (مستندات صعبة / خط يد)' if lang=='ar' else 'High accuracy (hard documents / handwriting)' }}</span>
-                </label>
-              </div>
+          <!-- ════ STEP 3 — OUTPUT LANGUAGE (always visible) ════ -->
+          <div class="stepblock">
+            <div class="step-head">
+              <span class="step-num">3</span>
+              <span class="step-title">{{ 'لغة النتيجة' if lang=='ar' else 'Output language' }}</span>
             </div>
-          </details>
+            <div class="opt-row">
+              <button type="button" class="opt-pill active" data-lang="preserve">
+                <i data-lucide="globe"></i>
+                <span>{{ 'نفس لغة المستند' if lang=='ar' else 'Same as document' }}</span>
+              </button>
+              <button type="button" class="opt-pill" data-lang="ar">
+                <span class="flag">🇪🇬</span>
+                <span>{{ 'العربية' if lang=='ar' else 'Arabic' }}</span>
+              </button>
+              <button type="button" class="opt-pill" data-lang="en">
+                <span class="flag">🇬🇧</span>
+                <span>{{ 'الإنجليزية' if lang=='ar' else 'English' }}</span>
+              </button>
+            </div>
+            <!-- Hidden value driven by the buttons; keeps the submit JS unchanged. -->
+            <input type="hidden" id="outputLang" value="preserve">
+          </div>
+
+          <!-- ════ STEP 4 — ACCURACY (always visible) ════ -->
+          <div class="stepblock">
+            <div class="step-head">
+              <span class="step-num">4</span>
+              <span class="step-title">{{ 'دقّة الاستخراج' if lang=='ar' else 'Accuracy' }}</span>
+            </div>
+            <div class="opt-row">
+              <button type="button" class="opt-pill" data-hard="false">
+                <i data-lucide="zap"></i>
+                <div class="opt-pill-stack">
+                  <span>{{ 'سريع' if lang=='ar' else 'Fast' }}</span>
+                  <small>{{ '1 نقطة/صفحة' if lang=='ar' else '1 credit/page' }}</small>
+                </div>
+              </button>
+              <button type="button" class="opt-pill active" data-hard="true">
+                <i data-lucide="award"></i>
+                <div class="opt-pill-stack">
+                  <span>{{ 'دقّة عالية' if lang=='ar' else 'High accuracy' }}</span>
+                  <small>{{ 'لخط اليد والمستندات الصعبة · 8 نقاط/صفحة' if lang=='ar' else 'For handwriting / hard docs · 8 credits/page' }}</small>
+                </div>
+              </button>
+            </div>
+            <!-- Hidden checkbox driven by buttons; existing JS reads .checked. -->
+            <input type="checkbox" id="hard" checked hidden>
+          </div>
 
           <!-- ════ ACTION BAR ════ -->
           <div class="action-bar">
@@ -431,6 +455,27 @@
       btn.addEventListener('click', () => setMode(btn.dataset.mode));
     });
 
+    // ---- Output-language pills (replaces dropdown — all 3 options visible) ----
+    const outputLangHidden = document.getElementById('outputLang');
+    document.querySelectorAll('.opt-pill[data-lang]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.opt-pill[data-lang]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        outputLangHidden.value = btn.dataset.lang;
+      });
+    });
+
+    // ---- Accuracy pills (replaces toggle — both modes visible with cost) ----
+    const hardHidden = document.getElementById('hard');
+    document.querySelectorAll('.opt-pill[data-hard]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.opt-pill[data-hard]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        hardHidden.checked = btn.dataset.hard === 'true';
+        renderCredits();
+      });
+    });
+
     // Type-card grid (Pick tab) — clicking a card sets the docTypePick value
     document.querySelectorAll('.type-card').forEach(card => {
       card.addEventListener('click', () => {
@@ -482,27 +527,36 @@
       }
     });
 
-    // ---- saved templates ----
+    // ---- saved templates (legacy: dropdown + save button now optional) ----
     let savedTemplates = [];
     async function loadTemplates() {
       try {
         savedTemplates = await (await fetch('/v1/templates')).json();
         const sel = document.getElementById('tplSelect');
-        sel.innerHTML = '<option value="">— تحميل قالب محفوظ —</option>'
-          + savedTemplates.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
+        if (sel) {
+          sel.innerHTML = '<option value="">— ' + (I18N.lang === 'ar' ? 'تحميل قالب محفوظ' : 'Load saved template') + ' —</option>'
+            + savedTemplates.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
+        }
       } catch {}
     }
-    document.getElementById('tplSelect').addEventListener('change', (e) => {
+    // Guard: the new clean UI no longer renders these elements. Old templates
+    // still work; new UI uses the visible upload button + auto-save flow instead.
+    const tplSelectEl = document.getElementById('tplSelect');
+    if (tplSelectEl) tplSelectEl.addEventListener('change', (e) => {
       const t = savedTemplates[e.target.value];
       if (!t) return;
       document.getElementById('fields').value =
         Object.entries(t.schema).map(([k, v]) => `${k}: ${v}`).join('\n');
     });
-    document.getElementById('saveTplBtn').addEventListener('click', async () => {
-      const name = prompt('اسم القالب؟');
+    const saveTplBtnEl = document.getElementById('saveTplBtn');
+    if (saveTplBtnEl) saveTplBtnEl.addEventListener('click', async () => {
+      const name = prompt(I18N.lang === 'ar' ? 'اسم القالب؟' : 'Template name?');
       if (!name) return;
       const schema = parseFields();
-      if (!Object.keys(schema).length) { alert('أضف حقولًا أولًا'); return; }
+      if (!Object.keys(schema).length) {
+        alert(I18N.lang === 'ar' ? 'أضف حقولًا أولًا' : 'Add fields first');
+        return;
+      }
       try {
         const r = await fetch('/v1/templates', { method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, schema }) });
