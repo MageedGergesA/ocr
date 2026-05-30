@@ -263,9 +263,12 @@ _LANG_INSTRUCTION = {
 }
 
 
-def _postprocess_field_names(result: dict, output_lang: str) -> dict:
+def _postprocess_field_names(result, output_lang: str) -> dict:
     """When output_lang='ar' but the model returned English field names anyway,
-    rewrite the top-level field keys via EN_TO_AR_FIELDS. Values untouched."""
+    rewrite the top-level field keys via EN_TO_AR_FIELDS. Values untouched.
+    Robust to non-dict results (Gemini occasionally returns a top-level list)."""
+    if not isinstance(result, dict):
+        return result
     if output_lang != "ar":
         return result
     fields = result.get("fields")
@@ -276,6 +279,30 @@ def _postprocess_field_names(result: dict, output_lang: str) -> dict:
         renamed[EN_TO_AR_FIELDS.get(k, k)] = v
     result["fields"] = renamed
     return result
+
+
+def _ensure_dict_result(result, default_doc_type: str = "unknown") -> dict:
+    """Defensive wrapper: Gemini sometimes returns a top-level JSON list or a
+    bare primitive even though our prompt asks for a dict. Normalise so the
+    rest of the pipeline (endpoint, renderer, _record_history) never crashes
+    with 'list' object has no attribute 'get'."""
+    if isinstance(result, dict):
+        return result
+    if isinstance(result, list):
+        # If the list looks like medications (each item has 'name' / 'dosage'),
+        # treat as a prescription with just the medications array.
+        if result and isinstance(result[0], dict) and any(
+            k in result[0] for k in ("name", "dosage", "medication")
+        ):
+            return {"document_type": "prescription", "layout": "prescription",
+                    "medications": result}
+        # Otherwise wrap as a generic table.
+        return {"document_type": default_doc_type, "layout": "table",
+                "table": {"columns": list(result[0].keys()) if result and isinstance(result[0], dict) else [],
+                          "rows": [list(r.values()) if isinstance(r, dict) else [r] for r in result]}}
+    # Primitive — wrap as a narrative.
+    return {"document_type": default_doc_type, "layout": "narrative",
+            "fields": {"full_text": {"value": str(result), "confidence": 0.5}}}
 
 
 def extract_auto_multi(files: list, hard: bool = True,
@@ -290,13 +317,15 @@ def extract_auto_multi(files: list, hard: bool = True,
     """
     lang_instr = _LANG_INSTRUCTION.get(output_lang, _LANG_INSTRUCTION["preserve"])
     n = len(files)
+    # Always return a DICT — even when images are unrelated, wrap them in
+    # {"documents": [...]} so the endpoint never sees a top-level list.
     multi_hint = (
-        f"\nIMPORTANT: You are seeing {n} related images of (potentially) the SAME case. "
-        "Treat them as parts of one record — e.g. the front and back of one ID, both "
-        "sides of a passport, a multi-page receipt, or a customer file with several "
-        "supporting documents. Merge the information across all images into ONE "
-        "result; do NOT return a list with one entry per image unless the images are "
-        "clearly UNRELATED documents.\n"
+        f"\nIMPORTANT: You are seeing {n} related images. Treat them as parts of "
+        "ONE record (front+back of an ID, multi-page receipt, customer file with "
+        "supporting docs) and merge fields into a single result. If the images are "
+        "clearly UNRELATED documents, return "
+        '{"document_type": "mixed", "layout": "mixed", "documents": [{...per-image...}]} '
+        "— but ALWAYS return a JSON OBJECT at the top level, never a bare array.\n"
     ) if n > 1 else ""
     prompt = (
         "You are a document data-extraction system. Read these document images "
@@ -322,6 +351,7 @@ def extract_auto_multi(files: list, hard: bool = True,
         + CALIBRATION
     )
     result = _run_multi(files, prompt, hard)
+    result = _ensure_dict_result(result)
     return _postprocess_field_names(result, output_lang)
 
 
@@ -416,6 +446,7 @@ def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True,
         + CALIBRATION
     )
     result = _run(image_bytes, media_type, prompt, hard)
+    result = _ensure_dict_result(result)
     return _postprocess_field_names(result, output_lang)
 
 

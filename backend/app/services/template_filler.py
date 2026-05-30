@@ -40,8 +40,17 @@ def _value_of(v: Any) -> str:
 def _flatten_to_pairs(data: dict) -> dict:
     """Accept any shape Mostakhles emits and flatten to {clean_key: str_value}.
     Supports: {field: {value, confidence}}, {patient: {field: {...}}, medications: [...]},
-    {header, totals}, plain dicts."""
+    {header, totals}, plain dicts.
+
+    Wrapper keys like 'fields', 'data', 'patient', 'header', 'totals' are TRANSPARENT —
+    we descend into them without prefixing. Otherwise an Excel header 'Customer Name'
+    (cleaned to 'customer_name') would never match the flattened 'fields_customer_name'
+    and the fill would silently leave the cell empty.
+    """
     out: dict[str, str] = {}
+    # Structural wrappers — descend through them without contributing to the key path.
+    transparent = {"fields", "data", "patient", "header", "totals", "result", "info"}
+    skip = {"confidence", "layout", "document_type", "output_lang", "files_count"}
 
     def walk(prefix: str, obj: Any):
         if obj is None:
@@ -51,14 +60,15 @@ def _flatten_to_pairs(data: dict) -> dict:
                 out[_clean_header(prefix)] = _value_of(obj.get("value"))
                 return
             for k, v in obj.items():
-                if k in ("confidence", "layout", "document_type"):
+                if k in skip:
                     continue
-                # Don't prefix top-level keys (so "vendor" stays "vendor", not "data_vendor")
+                if k in transparent:
+                    walk(prefix, v)  # descend without adding to the key path
+                    continue
                 child = k if not prefix else f"{prefix}_{k}"
                 walk(child, v)
         elif isinstance(obj, list):
             # Lists become joined strings unless they're complex (line items).
-            # For line items, callers should pass them separately.
             if all(isinstance(x, (str, int, float)) for x in obj):
                 out[_clean_header(prefix)] = _value_of(obj)
             # Complex lists left to caller via `rows` arg.
@@ -66,6 +76,8 @@ def _flatten_to_pairs(data: dict) -> dict:
             out[_clean_header(prefix)] = _value_of(obj)
 
     walk("", data or {})
+    # Also publish every key with its lowercased form so case-mismatch is forgiving.
+    out.update({k.lower(): v for k, v in list(out.items())})
     return out
 
 
