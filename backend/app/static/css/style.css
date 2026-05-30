@@ -1024,3 +1024,39 @@ details p { color: var(--muted); }
 .gth-contract { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); }
 .gth-upload { background: linear-gradient(135deg, #ccfbf1, #99f6e4); color: #0f766e; font-weight: 700; }
 .gtile-upload { border-color: var(--brand); }
+
+/* ---- Wave 12: multi-file thumbnail grid ---- */
+.thumb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+  padding: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.thumb {
+  position: relative; border: 1px solid var(--border); border-radius: 8px;
+  overflow: hidden; background: var(--bg-alt);
+  aspect-ratio: 3/4; display: flex; flex-direction: column;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
+.thumb-pdf {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 36px; background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+  color: #be185d;
+}
+.thumb-rm {
+  position: absolute; top: 4px;
+  inset-inline-end: 4px;
+  width: 22px; height: 22px; border-radius: 50%;
+  border: none; background: rgba(0,0,0,0.65); color: #fff;
+  cursor: pointer; font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.thumb-rm:hover { background: #dc2626; }
+.thumb-name {
+  font-size: 10px; padding: 4px 6px; background: var(--bg);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--muted); border-top: 1px solid var(--border);
+}

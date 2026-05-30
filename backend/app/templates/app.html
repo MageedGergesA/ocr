@@ -21,17 +21,22 @@
 
         <!-- LEFT: input -->
         <div class="panel">
-          <label class="step">1 · المستند</label>
+          <label class="step">1 · {{ 'المستندات' if lang=='ar' else 'Documents' }}</label>
           <div id="dropzone" class="dropzone">
-            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" hidden>
+            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" multiple hidden>
             <div id="dzEmpty" class="dz-empty">
               <div class="dz-ico"><i data-lucide="file-up"></i></div>
-              <p>اسحب المستند هنا أو <span class="link">اختر ملفًا</span></p>
-              <small>PNG · JPG · WEBP · PDF (متعدد الصفحات)</small>
+              <p>{{ 'اسحب الملفات هنا أو' if lang=='ar' else 'Drop files here or' }} <span class="link">{{ 'اختر' if lang=='ar' else 'choose' }}</span></p>
+              <small>{{ 'صور أو PDF — حتى 10 ملفات معًا' if lang=='ar' else 'Images or PDF — up to 10 files together' }}</small>
             </div>
-            <img id="preview" class="preview" alt="معاينة" hidden>
+            <!-- Thumbnail grid for multi-image batches -->
+            <div id="thumbGrid" class="thumb-grid" hidden></div>
+            <img id="preview" class="preview" alt="" hidden>
             <div id="pdfInfo" class="pdf-info" hidden></div>
           </div>
+          <button type="button" id="addMoreBtn" class="btn btn-ghost btn-sm" hidden style="margin-top:6px">
+            + {{ 'أضف ملفًا آخر' if lang=='ar' else 'Add another file' }}
+          </button>
 
           <label class="step">2 · {{ 'طريقة الاستخراج' if lang=='ar' else 'Extraction method' }}</label>
           <div class="mode-row">
@@ -189,73 +194,153 @@
     const dzEmpty   = document.getElementById('dzEmpty');
     const preview   = document.getElementById('preview');
     const pdfInfo   = document.getElementById('pdfInfo');
+    const thumbGrid = document.getElementById('thumbGrid');
+    const addMoreBtn= document.getElementById('addMoreBtn');
     const extractBtn= document.getElementById('extractBtn');
     const results   = document.getElementById('results');
-    let currentFile = null;
+    // Multi-file state: when files.length === 1 we use the single-file flow;
+    // when > 1 we render a thumbnail grid and POST as `files=` repeated.
+    let currentFiles = [];
     let curPages = 0, curRemaining = 0, curLimit = 0;
     const STRONG = 8, FAST = 1;
 
     function renderCredits() {
       const box = document.getElementById('credits');
       const hard = document.getElementById('hard').checked;
-      let html = `💳 رصيدك: <b>${curRemaining}</b> من ${curLimit} نقطة`;
-      if (curPages > 0) {
-        const active = curPages * (hard ? STRONG : FAST);
-        const other = curPages * (hard ? FAST : STRONG);
-        const pg = curPages > 1 ? ` · ${curPages} صفحة` : '';
-        html += `<br>هذه العملية${pg}: <b>${active} نقطة</b> ${hard ? '(دقة عالية)' : '(سريع)'}`
-              + ` <span class="credits-alt">— بالوضع ${hard ? 'السريع' : 'الدقيق'}: ${other} نقطة</span>`;
+      const isAr = I18N.lang === 'ar';
+      let html = isAr
+        ? `💳 رصيدك: <b>${curRemaining}</b> من ${curLimit} نقطة`
+        : `💳 Credits: <b>${curRemaining}</b> of ${curLimit}`;
+      // Total "pages" = PDF pages from first file + (number of additional image files)
+      const totalUnits = curPages + Math.max(0, currentFiles.length - 1);
+      if (totalUnits > 0) {
+        const active = totalUnits * (hard ? STRONG : FAST);
+        const other = totalUnits * (hard ? FAST : STRONG);
+        const pgLbl = currentFiles.length > 1
+          ? (isAr ? ` · ${currentFiles.length} ملفات` : ` · ${currentFiles.length} files`)
+          : (totalUnits > 1 ? (isAr ? ` · ${totalUnits} صفحة` : ` · ${totalUnits} pages`) : '');
+        const accuracy = hard
+          ? (isAr ? '(دقة عالية)' : '(high accuracy)')
+          : (isAr ? '(سريع)' : '(fast)');
+        const alt = hard
+          ? (isAr ? `— بالوضع السريع: ${other} نقطة` : `— in fast mode: ${other} credits`)
+          : (isAr ? `— بالوضع الدقيق: ${other} نقطة` : `— in accurate mode: ${other} credits`);
+        html += isAr
+          ? `<br>هذه العملية${pgLbl}: <b>${active} نقطة</b> ${accuracy} <span class="credits-alt">${alt}</span>`
+          : `<br>This run${pgLbl}: <b>${active} credits</b> ${accuracy} <span class="credits-alt">${alt}</span>`;
         if (active > curRemaining) {
-          html += `<br><span class="credits-warn">⚠️ رصيدك غير كافٍ — بدّل للوضع السريع أو رقّ خطتك</span>`;
+          const warn = isAr
+            ? '⚠️ رصيدك غير كافٍ — بدّل للوضع السريع أو رقّ خطتك'
+            : '⚠️ Not enough credits — switch to fast mode or upgrade';
+          html += `<br><span class="credits-warn">${warn}</span>`;
           extractBtn.disabled = true;
-        } else if (currentFile) {
+        } else if (currentFiles.length > 0) {
           extractBtn.disabled = false;
         }
       }
       box.innerHTML = html;
     }
 
-    async function estimateFile() {
-      if (!currentFile) { curPages = 0; renderCredits(); return; }
-      if (currentFile.type === 'application/pdf') {
+    async function estimateFiles() {
+      if (!currentFiles.length) { curPages = 0; renderCredits(); return; }
+      const first = currentFiles[0];
+      if (first.type === 'application/pdf') {
         try {
-          const fd = new FormData(); fd.append('file', currentFile);
+          const fd = new FormData(); fd.append('file', first);
           const j = await (await fetch('/v1/estimate', { method: 'POST', body: fd })).json();
           curPages = j.pages || 1;
           if (j.remaining != null) { curRemaining = j.remaining; curLimit = j.limit; }
         } catch { curPages = 1; }
-      } else { curPages = 1; }
+      } else {
+        curPages = 1;
+      }
       renderCredits();
     }
 
-    function setFile(file) {
-      if (!file) return;
-      const isPdf = file.type === 'application/pdf';
-      if (!file.type.startsWith('image/') && !isPdf) return;
-      currentFile = file;
-      if (isPdf) {
-        preview.hidden = true;
-        pdfInfo.hidden = false;
-        pdfInfo.textContent = '📄 ' + file.name;
-      } else {
-        preview.src = URL.createObjectURL(file);
-        preview.hidden = false;
-        pdfInfo.hidden = true;
+    function renderThumbs() {
+      // Single PDF or single image → old single-preview UI.
+      // Multiple files → grid of thumbnails with a remove button on each.
+      if (!currentFiles.length) {
+        dzEmpty.hidden = false; preview.hidden = true; pdfInfo.hidden = true;
+        thumbGrid.hidden = true; thumbGrid.innerHTML = '';
+        addMoreBtn.hidden = true;
+        extractBtn.disabled = true;
+        return;
       }
       dzEmpty.hidden = true;
+      addMoreBtn.hidden = false;
       extractBtn.disabled = false;
-      estimateFile();
+      if (currentFiles.length === 1) {
+        thumbGrid.hidden = true; thumbGrid.innerHTML = '';
+        const f = currentFiles[0];
+        if (f.type === 'application/pdf') {
+          preview.hidden = true;
+          pdfInfo.hidden = false;
+          pdfInfo.textContent = '📄 ' + f.name;
+        } else {
+          preview.src = URL.createObjectURL(f);
+          preview.hidden = false;
+          pdfInfo.hidden = true;
+        }
+        return;
+      }
+      // Multi-file grid
+      preview.hidden = true;
+      pdfInfo.hidden = true;
+      thumbGrid.hidden = false;
+      thumbGrid.innerHTML = currentFiles.map((f, i) => {
+        const src = f.type.startsWith('image/') ? URL.createObjectURL(f) : '';
+        const isPdf = f.type === 'application/pdf';
+        const ico = isPdf
+          ? '<div class="thumb-pdf">📄</div>'
+          : `<img src="${src}" alt="">`;
+        return `<div class="thumb" data-idx="${i}">
+                  ${ico}
+                  <button type="button" class="thumb-rm" data-rm="${i}" title="Remove">×</button>
+                  <div class="thumb-name">${esc(f.name)}</div>
+                </div>`;
+      }).join('');
+      thumbGrid.querySelectorAll('.thumb-rm').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.rm, 10);
+          currentFiles.splice(idx, 1);
+          renderThumbs();
+          estimateFiles();
+        });
+      });
     }
 
-    dropzone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', e => setFile(e.target.files[0]));
+    function addFiles(newFiles) {
+      // Accept image/pdf only; cap at 10; dedupe by name+size.
+      const accepted = Array.from(newFiles).filter(f =>
+        f && (f.type.startsWith('image/') || f.type === 'application/pdf'));
+      const have = new Set(currentFiles.map(f => f.name + ':' + f.size));
+      accepted.forEach(f => {
+        const key = f.name + ':' + f.size;
+        if (!have.has(key) && currentFiles.length < 10) {
+          currentFiles.push(f);
+          have.add(key);
+        }
+      });
+      renderThumbs();
+      estimateFiles();
+    }
+
+    dropzone.addEventListener('click', (e) => {
+      // Don't open file picker when clicking on a thumbnail/remove button
+      if (e.target.closest('.thumb-rm') || e.target.closest('.thumb')) return;
+      fileInput.click();
+    });
+    addMoreBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => addFiles(e.target.files));
     ['dragover','dragenter'].forEach(ev => dropzone.addEventListener(ev, e => {
       e.preventDefault(); dropzone.classList.add('drag');
     }));
     ['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => {
       e.preventDefault(); dropzone.classList.remove('drag');
     }));
-    dropzone.addEventListener('drop', e => setFile(e.dataTransfer.files[0]));
+    dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
 
     // show the fields box only when "specific fields" mode is chosen
     document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => {
@@ -790,10 +875,13 @@
     }
 
     extractBtn.addEventListener('click', async () => {
-      if (!currentFile) return;
+      if (!currentFiles.length) return;
       extractBtn.disabled = true;
       extractBtn.textContent = "{{ t('extract.extracting') }}";
-      results.innerHTML = `<div class="results-empty">⏳ ${I18N.lang === 'ar' ? 'يتم تحليل المستند…' : 'Analyzing the document…'}</div>`;
+      const analyzingMsg = currentFiles.length > 1
+        ? (I18N.lang === 'ar' ? `يتم تحليل ${currentFiles.length} ملفات…` : `Analyzing ${currentFiles.length} files…`)
+        : (I18N.lang === 'ar' ? 'يتم تحليل المستند…' : 'Analyzing the document…');
+      results.innerHTML = `<div class="results-empty">⏳ ${analyzingMsg}</div>`;
       document.getElementById('exportBar').hidden = true;
       lastHistoryId = null;
 
@@ -803,20 +891,18 @@
       const hard = document.getElementById('hard').checked;
 
       let batching = false;
-      // Track the extracted result so we can offer "download filled template" after.
       lastExtractedData = null;
       try {
-        // If a specific document type was picked, route to /v1/tool/{slug} which
-        // uses the matching catalog schema. Otherwise the generic /v1/extract.
-        if (docTypePick && mode === 'auto') {
+        // /v1/tool/{slug} only supports single-file today; for multi-file the
+        // generic /v1/extract path handles batching via files[].
+        if (docTypePick && mode === 'auto' && currentFiles.length === 1) {
           const fd = new FormData();
-          fd.append('file', currentFile);
+          fd.append('file', currentFiles[0]);
           fd.append('hard', hard);
           fd.append('output_lang', outputLang);
           const res = await fetch('/v1/tool/' + docTypePick, { method: 'POST', body: fd });
           const body = await res.json();
           if (!res.ok) throw new Error(body.detail || ('HTTP ' + res.status));
-          // Tools return either {kind:'fields', data:{...}} or {kind:'text', text:''}
           const data = body.data || (body.text ? { text: body.text } : body);
           render(data, docTypePick, body.kind === 'text' ? 'narrative' : 'form');
           lastExtractedData = data;
@@ -825,7 +911,10 @@
         }
 
         const fd = new FormData();
-        fd.append('file', currentFile);
+        // Send all files under the `files` field (FastAPI list[UploadFile]).
+        // For single file, also include `file` for backward compatibility.
+        currentFiles.forEach(f => fd.append('files', f));
+        if (currentFiles.length === 1) fd.append('file', currentFiles[0]);
         fd.append('target_schema', mode === 'custom' ? JSON.stringify(parseFields()) : '');
         fd.append('hard', hard);
         fd.append('output_lang', outputLang);
@@ -895,6 +984,18 @@
     // live credit estimate: re-render when accuracy toggle flips; load balance on open
     document.getElementById('hard').addEventListener('change', renderCredits);
     fetch('/v1/usage').then(r => r.json()).then(updateQuota).catch(() => {});
+
+    // ?tool=X pre-selects a gallery tile so deep links from /tools/{slug} land
+    // on the upgraded UI with the right document type already chosen.
+    (function applyToolQueryParam() {
+      const params = new URLSearchParams(location.search);
+      const toolSlug = params.get('tool');
+      if (!toolSlug) return;
+      const tile = document.querySelector(`.gtile[data-slug="${toolSlug}"]`);
+      if (!tile) return;
+      docTypePickHidden.value = toolSlug;
+      tilePickedLabel.textContent = tile.querySelector('.gtile-label').textContent;
+    })();
   </script>
 
 </body>

@@ -157,22 +157,41 @@ def _generate(_credits: int = 0, **kwargs):
 
 
 def generate_from_document(file_bytes, media_type, prompt, hard):
-    """Multimodal call (image/PDF + prompt). Returns (text, truncated)."""
+    """Multimodal call (single image/PDF + prompt). Returns (text, truncated).
+    Thin wrapper around generate_from_documents for back-compat."""
+    return generate_from_documents([(file_bytes, media_type)], prompt, hard)
+
+
+def generate_from_documents(files: list, prompt: str, hard: bool):
+    """Multimodal call with one OR MANY images / PDFs in a single Gemini request.
+
+    `files` is a list of (bytes, media_type) tuples. Gemini can cross-reference
+    across them — useful for ID front+back of the same person, multi-page
+    receipts, or a customer file with several supporting docs.
+
+    Cost: charged per image (Gemini bills per tile internally). 2 images on
+    hard = 16 credits; 4 = 32. Caller is responsible for enforcing quota before
+    the call.
+
+    Returns (text, truncated). If max_output_tokens is hit, caller should
+    consider splitting into per-image calls.
+    """
     from google.genai import types
-    # Daily-spend circuit breaker — refuse if we'd push past MAX_DAILY_GEMINI_USD.
-    credits = 8 if hard else 1
+    n = max(1, len(files))
+    credits = (8 if hard else 1) * n
     enforce_daily_budget(credits)
     model = GEMINI_HARD if hard else GEMINI_EASY
-    part = types.Part.from_bytes(data=file_bytes, mime_type=media_type)
-    # temperature=0 + fixed seed → minimise nondeterminism for the same image.
+    parts = [types.Part.from_bytes(data=b, mime_type=mt) for b, mt in files]
+    # Scale output tokens with image count so a 4-image extract doesn't truncate.
+    base = 16000 if hard else 8192
+    max_tokens = min(base * max(1, n // 2), 32000)
     config = types.GenerateContentConfig(
-        max_output_tokens=16000 if hard else 8192,
+        max_output_tokens=max_tokens,
         temperature=0.0,
         top_p=1.0,
         seed=42,
     )
-    # Pass credits to _generate so retries (each a real Gemini call) are counted.
-    resp = _generate(_credits=credits, model=model, contents=[part, prompt], config=config)
+    resp = _generate(_credits=credits, model=model, contents=parts + [prompt], config=config)
     text = resp.text or ""
     truncated = False
     try:

@@ -365,16 +365,13 @@ def tools_hub(request: Request):
 
 @app.get("/tools/{slug}", response_class=HTMLResponse)
 def tool_page(request: Request, slug: str):
-    svc = SERVICES.get(slug)
-    if not svc:
+    """Deep link into the main /app extractor with the picked tool pre-selected.
+    Consolidates the formerly-separate tool.html into one upgraded UI surface so
+    every tool gets the visual gallery, multi-image upload, layout-aware renderer,
+    confidence dots, inline edit, and template-upload features for free."""
+    if slug not in SERVICES:
         return RedirectResponse("/tools", status_code=303)
-    session = db.SessionLocal()
-    try:
-        if not _current_user(session, request):
-            return RedirectResponse("/login", status_code=303)
-    finally:
-        session.close()
-    return templates.TemplateResponse(request, "tool.html", _ctx(request, slug=slug, svc=svc))
+    return RedirectResponse(f"/app?tool={slug}", status_code=303)
 
 
 # ---------- Web auth + dashboard ----------
@@ -1751,10 +1748,11 @@ def compare_docs(request: Request, file_a: UploadFile = File(...), file_b: Uploa
 def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slow
                        # (synchronous) model call never blocks the event loop.
     request: Request,
-    file: UploadFile = File(...),
-    target_schema: str = Form(""),  # optional — empty/omitted means auto-detect
+    file: UploadFile = File(None),         # backward-compat single-file param
+    files: list[UploadFile] = File([]),    # NEW: multi-file. Send the form field as `files` repeated.
+    target_schema: str = Form(""),         # optional — empty/omitted means auto-detect
     hard: bool = Form(True),
-    output_lang: str = Form("preserve"),  # 'preserve' | 'ar' | 'en'
+    output_lang: str = Form("preserve"),   # 'preserve' | 'ar' | 'en'
     x_api_key: str = Header(None),
 ):
     if not llm.is_configured():
@@ -1774,16 +1772,31 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
         except json.JSONDecodeError:
             raise HTTPException(400, "target_schema must be valid JSON: {field: description}")
 
+    # Unify the two upload paths. Backward-compat: `file=` single is also accepted.
+    upload_list = [u for u in ([file] + list(files or [])) if u is not None and u.filename]
+    if not upload_list:
+        raise HTTPException(400, "at least one file is required (field 'file' or 'files')")
+    if len(upload_list) > 10:
+        raise HTTPException(413, "too many files in one batch (max 10)")
+
     allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
-    if file.content_type not in allowed:
-        raise HTTPException(415, f"unsupported file type: {file.content_type}. "
-                                 "Use PNG, JPG, WEBP, GIF, or PDF.")
+    for u in upload_list:
+        if u.content_type not in allowed:
+            raise HTTPException(415, f"unsupported file type: {u.content_type}. "
+                                     "Use PNG, JPG, WEBP, GIF, or PDF.")
 
-    image_bytes = file.file.read()
-    if len(image_bytes) > 20 * 1024 * 1024:
-        raise HTTPException(413, "file too large (max 20 MB)")
+    # Read all files into memory + enforce 20MB per file.
+    multi_files: list[tuple[bytes, str]] = []
+    for u in upload_list:
+        b = u.file.read()
+        if len(b) > 20 * 1024 * 1024:
+            raise HTTPException(413, f"file '{u.filename}' too large (max 20 MB)")
+        multi_files.append((b, u.content_type))
+    # Primary file for the single-image path (also used for PDF page count).
+    image_bytes, image_ct = multi_files[0]
+    n_files = len(multi_files)
 
-    n_pages = _count_pdf_pages(image_bytes) if file.content_type == "application/pdf" else None
+    n_pages = _count_pdf_pages(image_bytes) if image_ct == "application/pdf" else None
     native_max = int(os.getenv("PDF_NATIVE_MAX_PAGES", "5"))  # ≤ this → one merged call
     hard_max = int(os.getenv("MAX_PDF_PAGES", "100"))         # > this → rejected
 
@@ -1793,7 +1806,9 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
         api_key = _resolve_caller(session, x_api_key, request)
 
         # Large PDF → background batch job (one call per page; never truncates).
-        if n_pages and n_pages > native_max:
+        # Only the single-file path goes through batching today; multi-image
+        # uploads are always under the size threshold (1-10 images).
+        if n_files == 1 and n_pages and n_pages > native_max:
             if n_pages > hard_max:
                 raise HTTPException(413, f"this PDF has {n_pages} pages; the limit is {hard_max}. "
                                          "Split it into smaller files.")
@@ -1801,25 +1816,38 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
             job_id = jobs.start_batch(image_bytes, hard, api_key.id, n_pages)
             return {"mode": "batch", "job_id": job_id, "total_pages": n_pages, "status": "processing"}
 
-        # Single image or small PDF → one synchronous call.
-        cost = auth.credits_for(hard)
+        # Single image OR multi-image batch → one synchronous call (Gemini handles
+        # multiple images in a single request and bills per image).
+        cost = auth.credits_for(hard) * n_files
         auth.enforce_limit(session, api_key, needed=cost)
         import time as _time
         _t0 = _time.time()
         layout = None
         try:
             if schema:
-                data = extractor.extract_schema(image_bytes, file.content_type, schema,
+                # Schema mode: single image only for now (rare to combine images
+                # with a fixed schema). Use the first file.
+                data = extractor.extract_schema(image_bytes, image_ct, schema,
                                                 hard=hard, output_lang=output_lang)
                 document_type, mode = None, "schema"
+            elif n_files > 1:
+                # Multi-image auto: send all to Gemini at once so it can
+                # cross-reference (ID front+back, multi-page receipt, etc.).
+                result = extractor.extract_auto_multi(multi_files, hard=hard,
+                                                       output_lang=output_lang)
+                document_type = result.get("document_type")
+                layout = result.get("layout")
+                if any(k in result for k in ("patient", "medications", "header",
+                                              "line_items", "clauses", "totals", "table")):
+                    data = result
+                else:
+                    data = result.get("fields", result)
+                mode = "auto_multi"
             else:
-                result = extractor.extract_auto(image_bytes, file.content_type, hard=hard,
+                result = extractor.extract_auto(image_bytes, image_ct, hard=hard,
                                                 output_lang=output_lang)
                 document_type = result.get("document_type")
                 layout = result.get("layout")
-                # For rich shapes (prescription/invoice/contract with header+lines/etc.)
-                # there's no "fields" key — pass the WHOLE result through as data so the
-                # client can render patient + medications, header + line_items, etc.
                 if any(k in result for k in ("patient", "medications", "header",
                                               "line_items", "clauses", "totals", "table")):
                     data = result
@@ -1841,6 +1869,7 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
             "document_type": document_type,
             "layout": layout,
             "output_lang": output_lang,
+            "files_count": n_files,
             "data": data,
             "usage": {"used": used, "limit": limit, "remaining": max(0, limit - used), "charged": cost},
         }

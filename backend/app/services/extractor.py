@@ -79,6 +79,26 @@ def _strip_code_fence(text: str) -> str:
     return text.strip()
 
 
+def _call_model_multi(files: list, prompt: str, hard: bool):
+    """Call Gemini once with multiple images. Each image is preprocessed first."""
+    processed = [_preprocess_image(b, mt) for b, mt in files]
+    return llm.generate_from_documents(processed, prompt, hard)
+
+
+def _run_multi(files: list, prompt: str, hard: bool) -> dict:
+    """Multi-image variant of _run."""
+    text, truncated = _call_model_multi(files, prompt, hard)
+    try:
+        return _normalize_digits(json.loads(_strip_code_fence(text)))
+    except json.JSONDecodeError:
+        if truncated:
+            raise ValueError(
+                "the response was truncated — try splitting the upload into smaller batches "
+                "or extracting fewer fields."
+            )
+        raise
+
+
 def _preprocess_image(file_bytes: bytes, media_type: str) -> tuple[bytes, str]:
     """Resize + auto-rotate + re-encode oversized photos before paying for Gemini tokens.
 
@@ -256,6 +276,53 @@ def _postprocess_field_names(result: dict, output_lang: str) -> dict:
         renamed[EN_TO_AR_FIELDS.get(k, k)] = v
     result["fields"] = renamed
     return result
+
+
+def extract_auto_multi(files: list, hard: bool = True,
+                       output_lang: str = "preserve") -> dict:
+    """Multi-image variant: extract from several images in a single Gemini call
+    so the model can CROSS-REFERENCE them (e.g. ID front+back of the same
+    person, multi-page receipts, a customer file with passport + ID + contract).
+
+    `files` is a list of (bytes, media_type) tuples — pass in upload order.
+    Returns the same rich shapes as extract_auto (prescription / invoice /
+    contract / form / etc.).
+    """
+    lang_instr = _LANG_INSTRUCTION.get(output_lang, _LANG_INSTRUCTION["preserve"])
+    n = len(files)
+    multi_hint = (
+        f"\nIMPORTANT: You are seeing {n} related images of (potentially) the SAME case. "
+        "Treat them as parts of one record — e.g. the front and back of one ID, both "
+        "sides of a passport, a multi-page receipt, or a customer file with several "
+        "supporting documents. Merge the information across all images into ONE "
+        "result; do NOT return a list with one entry per image unless the images are "
+        "clearly UNRELATED documents.\n"
+    ) if n > 1 else ""
+    prompt = (
+        "You are a document data-extraction system. Read these document images "
+        "like an expert and produce a RICH, INTERPRETED structured result."
+        + multi_hint +
+        "Identify document_type and pick a layout label: 'form', 'table', "
+        "'narrative', 'mixed', or 'prescription'.\n\n"
+        "Output shape rules (same as single-image):\n"
+        "- prescription → {document_type, layout, patient: {...}, "
+        "medications: [{name, drug_class, form, dosage, duration, confidence}], "
+        "as_needed?, phone_numbers?, notes?}\n"
+        "- invoice/receipt with line items → {document_type, layout, header, "
+        "line_items: {columns, rows}, totals}\n"
+        "- contract → {document_type, layout, header, clauses: [{title, text, "
+        "confidence}], totals}\n"
+        "- table → {document_type, layout: 'table', table: {columns, rows}}\n"
+        "- narrative → {document_type, layout: 'narrative', fields: {full_text: "
+        "{value, confidence}}}\n"
+        "- form/ID/card → {document_type, layout: 'form', fields: {<name>: "
+        "{value, confidence}}}\n\n"
+        f"LANGUAGE: {lang_instr}\n\n"
+        "Return ONLY valid JSON, no other text, no markdown fences."
+        + CALIBRATION
+    )
+    result = _run_multi(files, prompt, hard)
+    return _postprocess_field_names(result, output_lang)
 
 
 def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True,
