@@ -10,3 +10,6 @@ google-genai>=1.0
 tenacity>=8.0
 requests
 sentry-sdk>=2.0
+psycopg2-binary>=2.9
+alembic>=1.13
+pydantic-settings>=2.0

@@ -18,12 +18,12 @@
         <p>نظرة عامة على كل الحسابات والاستخدام والنمو.</p>
       </header>
 
-      <!-- USERS KPIs -->
+      <!-- Top KPI strip -->
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-label">المستخدمون</div>
           <div class="kpi-big">{{ total_users }}<span> حساب</span></div>
-          <div class="kpi-meta">{{ verified }} مؤكَّد · {{ unverified }} غير مؤكَّد</div>
+          <div class="kpi-meta">{{ verified }} مؤكَّد ({{ verify_rate }}%) · {{ paid_users }} مدفوع</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">اشتراكات هذا الأسبوع</div>
@@ -36,9 +36,70 @@
           <div class="kpi-meta">{{ month_credits }} نقطة · اليوم {{ today_extractions }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">تكلفة Gemini التقديرية (الشهر)</div>
+          <div class="kpi-label">تكلفة Gemini (الشهر)</div>
           <div class="kpi-big">${{ est_cost_month }}<span></span></div>
           <div class="kpi-meta">{{ hard_ops }} دقة عالية · {{ fast_ops }} سريع</div>
+        </div>
+      </div>
+
+      <!-- Funnel + growth KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">معدّل التفعيل</div>
+          <div class="kpi-big">{{ activation_rate }}<span>%</span></div>
+          <div class="kpi-meta">{{ active_users }} مستخدم نشط (استخدم الخدمة)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">تحويل للمدفوع</div>
+          <div class="kpi-big">{{ paid_conversion }}<span>%</span></div>
+          <div class="kpi-meta">{{ paid_users }} من {{ total_users }} حساب</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">نموّ يومي</div>
+          <div class="kpi-big {% if dod_growth >= 0 %}up{% else %}down{% endif %}">
+            {{ '+' if dod_growth >= 0 else '' }}{{ dod_growth }}<span>%</span>
+          </div>
+          <div class="kpi-meta">اليوم {{ today_extractions }} مقابل أمس {{ '...' if false else '' }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">نموّ أسبوعي</div>
+          <div class="kpi-big {% if wow_growth >= 0 %}up{% else %}down{% endif %}">
+            {{ '+' if wow_growth >= 0 else '' }}{{ wow_growth }}<span>%</span>
+          </div>
+          <div class="kpi-meta">{{ churn_candidates }} حساب غير نشط (>7 أيام)</div>
+        </div>
+      </div>
+
+      <!-- Performance KPIs -->
+      <div class="acc-card">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="zap"></i></span>
+          <div>
+            <h2>مؤشرات الأداء</h2>
+            <p>زمن الاستجابة + الإنتاجية. مبنية على {{ timed_ops }} عملية مقيسة.</p>
+          </div>
+        </div>
+        <div class="kpi-grid" style="margin:0">
+          <div class="kpi-card">
+            <div class="kpi-label">متوسط زمن المعالجة</div>
+            <div class="kpi-big">{{ (avg_ms or 0) // 1000 if avg_ms else '—' }}<span> ث</span></div>
+            <div class="kpi-meta">{{ avg_ms or '—' }} ميلي ثانية</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">الوسيط (P50)</div>
+            <div class="kpi-big">{{ (p50_ms or 0) // 1000 if p50_ms else '—' }}<span> ث</span></div>
+            <div class="kpi-meta">نصف الطلبات أسرع من هذا</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">P95</div>
+            <div class="kpi-big">{{ (p95_ms or 0) // 1000 if p95_ms else '—' }}<span> ث</span></div>
+            <div class="kpi-meta">95% من الطلبات أسرع</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">الإنتاجية اليومية</div>
+            <div class="kpi-big">{{ throughput_per_day }}<span> عملية</span></div>
+            <div class="kpi-meta">متوسط يومي · ذروة عند الساعة {{ peak_hour if peak_hour is not none else '—' }}</div>
+          </div>
         </div>
       </div>
 
@@ -82,6 +143,78 @@
         </div>
       </div>
 
+      <!-- Forecasting -->
+      <div class="acc-card">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="trending-up"></i></span>
+          <div>
+            <h2>التوقّعات</h2>
+            <p>إسقاط خطّي مبني على معدّل آخر 30 يومًا — قابل للتحديث مع تغيّر الإيقاع.</p>
+          </div>
+        </div>
+        <div class="kpi-grid" style="margin:0 0 18px">
+          <div class="kpi-card">
+            <div class="kpi-label">اشتراكات نهاية الشهر</div>
+            <div class="kpi-big">{{ proj_signups_month }}<span> متوقّع</span></div>
+            <div class="kpi-meta">يتبقى {{ days_left }} يوم على نهاية الشهر</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">عمليات نهاية الشهر</div>
+            <div class="kpi-big">{{ proj_extractions_month }}<span></span></div>
+            <div class="kpi-meta">{{ proj_credits_month }} نقطة متوقّعة</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">تكلفة Gemini نهاية الشهر</div>
+            <div class="kpi-big">${{ proj_cost_month }}<span></span></div>
+            <div class="kpi-meta">بالمعدّل الحالي</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">للوصول إلى 100 مستخدم</div>
+            <div class="kpi-big">{{ ms_users_100 if ms_users_100 is not none else '∞' }}<span> يوم</span></div>
+            <div class="kpi-meta">و 1000 خلال {{ ms_users_1000 if ms_users_1000 is not none else '∞' }} يوم</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:14px;color:var(--muted);font-weight:700;margin:6px 0 8px">توقّع الاشتراكات — 30 يومًا قادمة</h3>
+        <div class="chart">
+          {% for f in forecast_30d %}
+          <div class="chart-bar" style="--h:{{ (f.signups / forecast_signup_max * 100) if forecast_signup_max else 0 }}%" title="{{ f.d }} — {{ f.signups }}">
+            <span class="chart-bar-fill forecast"></span>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="chart-axis">
+          <span>اليوم +1</span><span>اليوم +15</span><span>اليوم +30</span>
+        </div>
+
+        <h3 style="font-size:14px;color:var(--muted);font-weight:700;margin:18px 0 8px">توقّع الاستخدام — 30 يومًا قادمة (نقاط)</h3>
+        <div class="chart">
+          {% for f in forecast_30d %}
+          <div class="chart-bar" style="--h:{{ (f.credits / forecast_usage_max * 100) if forecast_usage_max else 0 }}%" title="{{ f.d }} — {{ f.credits }}">
+            <span class="chart-bar-fill forecast"></span>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="chart-axis">
+          <span>اليوم +1</span><span>اليوم +15</span><span>اليوم +30</span>
+        </div>
+      </div>
+
+      <!-- Per-user averages -->
+      <div class="acc-card">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="users"></i></span>
+          <div><h2>متوسطات لكل مستخدم نشط</h2><p>للمستخدمين الذين أجروا عملية واحدة على الأقل هذا الشهر.</p></div>
+        </div>
+        <div class="acc-profile" style="max-width:none">
+          <div class="acc-row"><span>متوسط النقاط / مستخدم</span><b>{{ avg_credits_per_user }}</b></div>
+          <div class="acc-row"><span>متوسط العمليات / مستخدم</span><b>{{ avg_ops_per_user }}</b></div>
+          <div class="acc-row"><span>عدد المستخدمين النشطين</span><b>{{ active_users }}</b></div>
+          <div class="acc-row"><span>متوسط زمن المعالجة</span><b>{{ avg_ms or '—' }} ms</b></div>
+          <div class="acc-row"><span>أبطأ عملية على الإطلاق</span><b>{{ slowest_ms or '—' }} ms</b></div>
+        </div>
+      </div>
+
       <!-- Plan distribution -->
       <div class="acc-card">
         <div class="acc-card-head">
@@ -106,7 +239,7 @@
             <div><h2>أكثر المستخدمين هذا الشهر</h2><p>حسب النقاط المستهلَكة.</p></div>
           </div>
           {% if top_users %}
-          <div class="keys">
+          <div class="keys scrollable">
             <div class="krow khead"><div>المستخدم</div><div>الخطة</div><div>النقاط</div><div>العمليات</div></div>
             {% for u in top_users %}
             <div class="krow">
@@ -155,7 +288,7 @@
             <div><h2>أحدث التسجيلات</h2><p>آخر 10 حسابات.</p></div>
           </div>
           {% if recent_signups %}
-          <div class="keys">
+          <div class="keys scrollable">
             <div class="krow khead"><div>التاريخ</div><div>البريد</div><div>الخطة</div><div>التأكيد</div></div>
             {% for s in recent_signups %}
             <div class="krow">
@@ -174,7 +307,7 @@
             <div><h2>آخر النشاط</h2><p>آخر 15 عملية عبر كل الحسابات.</p></div>
           </div>
           {% if recent_activity %}
-          <div class="keys">
+          <div class="keys scrollable">
             <div class="krow khead"><div>الوقت</div><div>المستخدم</div><div>النوع</div><div>النقاط</div></div>
             {% for h in recent_activity %}
             <div class="krow">
