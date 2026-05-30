@@ -4,9 +4,12 @@ Free tier is enforced here: each successful extraction increments a per-key,
 per-month counter; when it reaches the plan limit the caller gets a 429.
 """
 import hashlib
+import hmac
+import ipaddress
 import os
 import secrets
 from datetime import datetime
+from urllib.parse import urlparse
 
 import requests
 from fastapi import HTTPException
@@ -145,9 +148,11 @@ def increment_usage(db: Session, api_key: models.ApiKey, count: int = 1) -> None
 # ---- Passwords (stdlib pbkdf2, no extra deps) ----
 
 def hash_password(password: str) -> str:
+    # 600_000 iterations is OWASP 2023's minimum for pbkdf2-sha256. Existing 200k
+    # hashes verify fine because the iteration count is encoded in the stored string.
     salt = secrets.token_hex(16)
-    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), bytes.fromhex(salt), 200_000)
-    return f"pbkdf2_sha256$200000${salt}${dk.hex()}"
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), bytes.fromhex(salt), 600_000)
+    return f"pbkdf2_sha256$600000${salt}${dk.hex()}"
 
 
 def verify_password(password: str, stored: str) -> bool:
@@ -219,28 +224,38 @@ def delete_session(db: Session, token: str | None) -> None:
         db.commit()
 
 
-# ---- Login rate-limit (in-memory; production: front with Cloudflare / Redis) ----
-_LOGIN_ATTEMPTS: dict[str, list[float]] = {}
-_LOGIN_WINDOW_SEC = 900   # 15 min
-_LOGIN_MAX = 5            # attempts per IP per window
+# ---- In-memory rate-limit (production: front with Cloudflare / Redis) ----
+# Per-process, per-key. Wipe on restart. Acceptable for MVP behind a single worker
+# + Cloudflare edge limit; replace with Redis when scaling out workers.
+_RATE_BUCKETS: dict[str, list[float]] = {}
 
 
-def login_rate_limit_check(ip: str | None) -> bool:
-    """Return True if this IP is allowed to attempt login now."""
+def rate_limit_check(key: str | None, max_attempts: int, window_sec: int) -> bool:
+    """Return True if this `key` is allowed another attempt now."""
     import time
-    if not ip:
-        return True
+    if not key:
+        return True  # no key → don't rate limit (caller has no IP, e.g. CLI)
     now = time.time()
-    attempts = [t for t in _LOGIN_ATTEMPTS.get(ip, []) if now - t < _LOGIN_WINDOW_SEC]
-    _LOGIN_ATTEMPTS[ip] = attempts
-    return len(attempts) < _LOGIN_MAX
+    bucket = [t for t in _RATE_BUCKETS.get(key, []) if now - t < window_sec]
+    _RATE_BUCKETS[key] = bucket
+    return len(bucket) < max_attempts
+
+
+def rate_limit_record(key: str | None) -> None:
+    """Record an attempt for the given key."""
+    import time
+    if not key:
+        return
+    _RATE_BUCKETS.setdefault(key, []).append(time.time())
+
+
+# Legacy names for the login flow — keep the public API stable.
+def login_rate_limit_check(ip: str | None) -> bool:
+    return rate_limit_check(f"login:{ip}", max_attempts=5, window_sec=900)
 
 
 def login_rate_limit_record(ip: str | None) -> None:
-    import time
-    if not ip:
-        return
-    _LOGIN_ATTEMPTS.setdefault(ip, []).append(time.time())
+    rate_limit_record(f"login:{ip}")
 
 
 # ---- Password reset tokens (1-hour TTL) ----
@@ -264,8 +279,66 @@ def consume_password_reset(db: Session, token: str) -> "models.User | None":
     return user
 
 
+# ---- Webhook URL safety (SSRF prevention) ----
+
+_BLOCKED_HOSTS = frozenset({
+    "localhost", "metadata", "metadata.google.internal",
+    "169.254.169.254",  # AWS / Azure / GCP instance metadata
+    "100.100.100.200",  # Alibaba Cloud metadata
+})
+
+
+def is_safe_webhook_url(url: str | None) -> bool:
+    """Reject SSRF targets. Allow only https + public-routable hosts.
+
+    Rejects: http, file://, ftp://, loopback, link-local, private CIDRs, multicast,
+    reserved, instance-metadata endpoints. Hostnames are allowed without DNS resolution
+    here — the production deploy should enforce egress filtering at the network layer
+    to defeat DNS rebinding (out of scope for app-layer code)."""
+    if not url:
+        return True  # empty means "no webhook" — fine
+    try:
+        p = urlparse(url.strip())
+    except Exception:  # noqa: BLE001
+        return False
+    if p.scheme != "https":
+        return False
+    host = (p.hostname or "").strip().lower()
+    if not host or host in _BLOCKED_HOSTS:
+        return False
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return True  # public hostname; egress filter is the second layer
+    if (ip.is_loopback or ip.is_private or ip.is_link_local
+            or ip.is_multicast or ip.is_reserved or ip.is_unspecified):
+        return False
+    return True
+
+
+def sign_webhook_payload(secret: str, body: bytes, timestamp: str) -> str:
+    """HMAC-SHA256 over `timestamp.body`. Customers verify with the same secret."""
+    msg = f"{timestamp}.".encode() + body
+    return hmac.new(secret.encode(), msg, hashlib.sha256).hexdigest()
+
+
 def ensure_demo_user() -> None:
-    """Seed the demo user + fixed demo key so the public /app page works."""
+    """Seed the demo user + fixed demo key so the public /app page works.
+
+    Production guard: refuses to seed if (a) ENV=prod AND (b) DEMO_API_KEY is the
+    publicly-known default 'mk_demo_public'. Operators must override the key in
+    prod .env or accept that no public demo runs. Without this guard, a
+    prod deploy that forgets to set DEMO_API_KEY would publish a 2000-credit/month
+    free key with a guessable name.
+    """
+    import logging
+    _log = logging.getLogger("mostakhles")
+    if os.getenv("ENV", "local") == "prod" and DEMO_API_KEY == "mk_demo_public":
+        _log.warning(
+            "ensure_demo_user: refusing to seed demo key 'mk_demo_public' in prod. "
+            "Set DEMO_API_KEY to a non-default secret to enable the public demo."
+        )
+        return
     db = SessionLocal()
     try:
         if db.query(models.ApiKey).filter_by(key=DEMO_API_KEY).first():
