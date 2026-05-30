@@ -133,6 +133,37 @@
                 <div class="gtile-label">{{ 'ارفع قالبك' if lang=='ar' else 'Upload your template' }}</div>
               </button>
             </div>
+            <!-- Sample templates: ready-to-test files so users can see the
+                 introspect → extract → fill-back flow without building one. -->
+            <div class="sample-tpls">
+              <div class="sample-tpls-title">
+                {{ '📁 جرّب بقوالب جاهزة:' if lang=='ar' else '📁 Try a ready-made template:' }}
+              </div>
+              <div class="sample-tpls-row">
+                <a href="/static/sample-templates/invoice-template.xlsx" download class="sample-chip">
+                  <span class="sample-ext xlsx">XLSX</span>
+                  <span>{{ 'فاتورة' if lang=='ar' else 'Invoice' }}</span>
+                </a>
+                <a href="/static/sample-templates/patient-intake.docx" download class="sample-chip">
+                  <span class="sample-ext docx">DOCX</span>
+                  <span>{{ 'استمارة مريض' if lang=='ar' else 'Patient intake' }}</span>
+                </a>
+                <a href="/static/sample-templates/sale-contract.docx" download class="sample-chip">
+                  <span class="sample-ext docx">DOCX</span>
+                  <span>{{ 'عقد بيع' if lang=='ar' else 'Sale contract' }}</span>
+                </a>
+                <a href="/static/sample-templates/patient-registration.html" download class="sample-chip">
+                  <span class="sample-ext html">HTML</span>
+                  <span>{{ 'تسجيل مريض' if lang=='ar' else 'Patient registration' }}</span>
+                </a>
+                <a href="/static/sample-templates/tax-declaration.pdf" download class="sample-chip">
+                  <span class="sample-ext pdf">PDF</span>
+                  <span>{{ 'إقرار ضريبي' if lang=='ar' else 'Tax declaration' }}</span>
+                </a>
+              </div>
+              <div class="sample-tpls-hint">
+                {{ 'حمّل واحدة، ارفعها بزر «ارفع قالبك» فوق، ثم ارفع مستندًا حقيقيًا لاستخراج البيانات' if lang=='ar' else 'Download one, upload it via "Upload your template" above, then upload a real document to extract values into it.' }}
+              </div>
           </div>
           <input type="file" id="tplFileInput" accept=".xlsx,.xls,.docx,.doc,.pdf,.html,.htm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/html" hidden>
           <div id="fieldsWrap" hidden>

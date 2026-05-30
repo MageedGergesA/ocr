@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Patient Registration Form</title>
+<style>
+body { font-family: 'Segoe UI', sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; color: #1f2937; }
+h1 { color: #1B5E63; border-bottom: 2px solid #1B5E63; padding-bottom: 8px; }
+.row { display: grid; grid-template-columns: 200px 1fr; gap: 12px; margin: 10px 0; align-items: center; }
+label { font-weight: 600; color: #374151; }
+input, select { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+table { width: 100%; border-collapse: collapse; margin: 18px 0; }
+th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
+th { background: #f3f4f6; color: #1B5E63; }
+</style>
+</head>
+<body>
+<h1>Patient Registration Form</h1>
+<p>Please complete all fields. Upload this form to Mostakhles with the patient's ID + insurance card to auto-fill.</p>
+<form>
+  <div class="row"><label for="full_name">Full Name</label><input id="full_name" name="full_name" type="text" placeholder="e.g. Mohamed Ali Hassan"></div>
+  <div class="row"><label for="date_of_birth">Date of Birth</label><input id="date_of_birth" name="date_of_birth" type="date"></div>
+  <div class="row"><label for="national_id">National ID</label><input id="national_id" name="national_id" type="text" placeholder="14 digits"></div>
+  <div class="row"><label for="phone_number">Phone Number</label><input id="phone_number" name="phone_number" type="tel" placeholder="+20 1XX XXX XXXX"></div>
+  <div class="row"><label for="email">Email</label><input id="email" name="email" type="email"></div>
+  <div class="row"><label for="address">Address</label><input id="address" name="address" type="text"></div>
+  <div class="row"><label for="insurance_provider">Insurance Provider</label><input id="insurance_provider" name="insurance_provider" type="text"></div>
+  <div class="row"><label for="insurance_number">Insurance Number</label><input id="insurance_number" name="insurance_number" type="text"></div>
+  <div class="row"><label for="emergency_contact">Emergency Contact</label><input id="emergency_contact" name="emergency_contact" type="text"></div>
+  <div class="row"><label for="blood_group">Blood Group</label><input id="blood_group" name="blood_group" type="text" placeholder="A+, O-, ..."></div>
+  <div class="row"><label for="allergies">Allergies</label><input id="allergies" name="allergies" type="text"></div>
+  <div class="row"><label for="chronic_conditions">Chronic Conditions</label><input id="chronic_conditions" name="chronic_conditions" type="text"></div>
+</form>
+<h3>Medication History</h3>
+<table>
+  <thead><tr><th>Medication Name</th><th>Dosage</th><th>Frequency</th><th>Start Date</th></tr></thead>
+  <tbody><tr><td></td><td></td><td></td><td></td></tr></tbody>
+</table>
+</body>
+</html>
