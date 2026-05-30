@@ -1092,20 +1092,40 @@ details p { color: var(--muted); }
 .panel-clean { padding: 20px 24px; }
 .panel-clean > * + * { margin-top: 22px; }
 
-/* ---- Step block layout ---- */
+/* ---- Step block layout ----
+   All rules scoped under .stepblock so they DON'T inherit from the landing
+   page's older `.step-num` (margin: 0 auto centers the badge — wrong here).
+   Explicit justify-content + flex: 0 on children keeps the badge + icon +
+   title tightly clustered at the inline-start edge in both RTL and LTR. */
 .stepblock { }
-.step-head {
+.stepblock .step-head {
   display: flex; align-items: center; gap: 10px;
-  margin-bottom: 12px;
+  justify-content: flex-start;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
 }
-.step-num {
+.stepblock .step-num {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 50%;
-  background: var(--brand); color: #fff;
-  font-weight: 700; font-size: 13px;
+  width: 30px; height: 30px;
+  margin: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--brand) 0%, #2a8389 100%);
+  color: #fff;
+  font-weight: 800; font-size: 14px;
+  flex: 0 0 auto;
+  box-shadow: 0 2px 4px rgba(27, 94, 99, 0.2);
 }
-.step-title {
-  font-size: 16px; font-weight: 700; color: var(--ink);
+.stepblock .step-icon {
+  width: 18px; height: 18px;
+  color: var(--brand); opacity: 0.85;
+  flex: 0 0 auto;
+}
+.stepblock .step-title {
+  font-size: 17px; font-weight: 700; color: var(--ink);
+  line-height: 1.3;
+  flex: 0 1 auto;
+  margin: 0;
 }
 
 /* ---- Cleaner dropzone ---- */
