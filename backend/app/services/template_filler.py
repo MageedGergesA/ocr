@@ -116,11 +116,14 @@ def fill_xlsx(template_bytes: bytes, extracted: dict,
     out = io.BytesIO(); wb.save(out); return out.getvalue()
 
 
-def fill_docx(template_bytes: bytes, extracted: dict) -> bytes:
+def fill_docx(template_bytes: bytes, extracted: dict,
+              rows: list[dict] | None = None) -> bytes:
     """Fill a Word template:
-       - For the first table, second row, write values matching the header row.
+       - For the first table, write one row per record. With `rows=None` we
+         write a single data row (row 2). With `rows=[{...}, {...}]` we write
+         one row per record (auto-adds rows as needed).
        - For each content control (sdt), if its tag/alias matches a field, set
-         its text run.
+         its text run (single-record only).
        - For "{{ field }}" Jinja-style placeholders in paragraphs, simple replace.
     """
     from docx import Document
@@ -128,21 +131,25 @@ def fill_docx(template_bytes: bytes, extracted: dict) -> bytes:
     doc = Document(io.BytesIO(template_bytes))
     flat = _flatten_to_pairs(extracted)
 
-    # (1) First table — write row 2 mapped by header row
+    # (1) First table — write one row per record under the row-1 headers.
     if doc.tables:
         tbl = doc.tables[0]
         if len(tbl.rows) >= 1:
             header_cells = [c.text.strip() for c in tbl.rows[0].cells]
             header_keys = [_clean_header(h) for h in header_cells]
-            # Ensure a data row exists
-            if len(tbl.rows) < 2:
+            # Multi-record mode: write one row per `rows` entry.
+            records = rows if rows else [extracted]
+            while len(tbl.rows) < len(records) + 1:
                 tbl.add_row()
-            data_row = tbl.rows[1]
-            for col_idx, key in enumerate(header_keys):
-                if col_idx >= len(data_row.cells) or not key:
-                    continue
-                cell = data_row.cells[col_idx]
-                cell.text = flat.get(key, "")
+            for r_idx, record in enumerate(records, start=1):
+                if r_idx >= len(tbl.rows):
+                    break
+                rflat = _flatten_to_pairs(record) if record is not extracted else flat
+                data_row = tbl.rows[r_idx]
+                for col_idx, key in enumerate(header_keys):
+                    if col_idx >= len(data_row.cells) or not key:
+                        continue
+                    data_row.cells[col_idx].text = rflat.get(key, "")
 
     # (2) Content controls (sdt) → fill the inner <w:t>
     try:
@@ -199,7 +206,7 @@ def fill_template(template_bytes: bytes, kind: str, extracted: dict,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "extracted.xlsx")
     if kind == "docx":
-        return (fill_docx(template_bytes, extracted),
+        return (fill_docx(template_bytes, extracted, rows=rows),
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "extracted.docx")
     raise ValueError(f"fill_template: unsupported kind '{kind}' (xlsx/docx only)")

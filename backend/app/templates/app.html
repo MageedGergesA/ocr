@@ -783,6 +783,24 @@
     }
 
     function renderByLayout(data, layout) {
+      // Multi-document result (uploaded 2+ unrelated docs together) — render
+      // each one as its own card with the right sub-renderer.
+      if (data && Array.isArray(data.documents) && data.documents.length) {
+        const docs = data.documents;
+        const headerLbl = I18N.lang === 'ar' ? 'مستند' : 'Document';
+        return docs.map((d, i) => {
+          const dt = d.document_type ? ` · ${esc(d.document_type)}` : '';
+          const lay = d.layout || 'form';
+          const inner = renderByLayout(d, lay);
+          return `<div class="doc-card">
+                    <div class="doc-card-head">
+                      <span class="doc-num">${i + 1}</span>
+                      <span class="doc-title">${headerLbl} ${i + 1}${dt}</span>
+                    </div>
+                    <div class="doc-card-body">${inner}</div>
+                  </div>`;
+        }).join('');
+      }
       // Detect rich shapes first by their characteristic keys, regardless of layout label.
       if (data && (data.patient || data.medications)) return prescriptionHtml(data);
       if (data && (data.header && (data.line_items || data.totals))) return invoiceHtml(data);
@@ -1083,9 +1101,17 @@
       btn.addEventListener('click', async () => {
         btn.disabled = true;
         try {
+          // Multi-doc result → send each document as a separate row in the template.
+          // Single-doc → send the whole shape as `data` (filler will flatten).
+          const isMulti = lastExtractedData
+            && Array.isArray(lastExtractedData.documents)
+            && lastExtractedData.documents.length > 0;
+          const body = isMulti
+            ? { data: lastExtractedData.documents[0], rows: lastExtractedData.documents }
+            : { data: lastExtractedData };
           const r = await fetch('/v1/templates/' + uploadedTplId + '/fill', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: lastExtractedData }),
+            body: JSON.stringify(body),
           });
           if (!r.ok) {
             const e = await r.json().catch(() => ({}));

@@ -1351,3 +1351,23 @@ details[open] .adv-caret { transform: rotate(180deg); }
   content: '✓'; margin-inline-start: auto;
   color: var(--brand); font-weight: 800; font-size: 14px;
 }
+
+/* ════ Multi-document result cards ════ */
+.doc-card {
+  border: 1px solid var(--border); border-radius: 12px;
+  margin-bottom: 16px; overflow: hidden;
+  background: var(--bg);
+}
+.doc-card-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
+}
+.doc-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--brand); color: #fff;
+  font-weight: 700; font-size: 13px;
+}
+.doc-title { font-size: 14px; font-weight: 700; color: var(--ink); }
+.doc-card-body { padding: 14px; }
