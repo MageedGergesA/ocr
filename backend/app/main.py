@@ -104,7 +104,7 @@ else:
 
 from app import auth, db, emailer, exceptions as app_exceptions, exports, i18n, jobs, models  # noqa: E402
 from app.services import extractor, llm, template_filler, template_parser  # noqa: E402
-from app.services_catalog import CATEGORIES, SERVICES  # noqa: E402
+from app.services_catalog import CATEGORIES, SERVICES, localized  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -359,8 +359,10 @@ def api_docs(request: Request):
 
 @app.get("/tools", response_class=HTMLResponse)
 def tools_hub(request: Request):
+    lang = i18n.resolve_lang(request, None)
+    svc, cats = localized(lang)
     return templates.TemplateResponse(request, "tools.html",
-                                      _ctx(request, services=SERVICES, categories=CATEGORIES))
+                                      _ctx(request, services=svc, categories=cats))
 
 
 @app.get("/tools/{slug}", response_class=HTMLResponse)
@@ -846,26 +848,25 @@ def dashboard(request: Request, q: str = ""):
                         "charged": h.charged, "created_at": str(h.created_at)[:16]}
                         for h in filtered[:20]]
 
-        csrf = auth.session_csrf_token(session, request.cookies.get("sid")) or ""
-        return templates.TemplateResponse(request, "dashboard.html", {
-            "user": user, "plan": user.plan, "limit": limit, "keys": keys,
-            "templates": templates_list, "history": history_list,
-            "webhook_url": user.webhook_url or "", "csrf_token": csrf,
+        return templates.TemplateResponse(request, "dashboard.html", _ctx(request,
+            plan=user.plan, limit=limit, keys=keys,
+            templates=templates_list, history=history_list,
+            webhook_url=user.webhook_url or "",
             # analytics
-            "month_credits": month_credits, "month_extractions": month_extractions,
-            "today_credits": today_credits, "today_extractions": today_extractions,
-            "total_extractions": total_extractions, "total_credits_ever": total_credits_ever,
-            "last_activity": str(last_activity)[:16] if last_activity else None,
-            "days_to_renewal": days_to_renewal,
-            "projected_month": projected_month, "will_exceed": will_exceed,
-            "remaining": max(0, limit - month_credits),
-            "usage_pct": min(100, round(month_credits / limit * 100)) if limit else 0,
-            "chart_days": chart_days, "chart_max": chart_max,
-            "top_tools": [{"name": n, "credits": c, "pct": round(c / top_tools_max * 100)} for n, c in top_tools],
-            "top_doctypes": [{"name": n, "count": c} for n, c in top_doctypes],
-            "mode_fast": mode_fast, "mode_hard": mode_hard, "mode_other": mode_other,
-            "q": q,
-        })
+            month_credits=month_credits, month_extractions=month_extractions,
+            today_credits=today_credits, today_extractions=today_extractions,
+            total_extractions=total_extractions, total_credits_ever=total_credits_ever,
+            last_activity=str(last_activity)[:16] if last_activity else None,
+            days_to_renewal=days_to_renewal,
+            projected_month=projected_month, will_exceed=will_exceed,
+            remaining=max(0, limit - month_credits),
+            usage_pct=min(100, round(month_credits / limit * 100)) if limit else 0,
+            chart_days=chart_days, chart_max=chart_max,
+            top_tools=[{"name": n, "credits": c, "pct": round(c / top_tools_max * 100)} for n, c in top_tools],
+            top_doctypes=[{"name": n, "count": c} for n, c in top_doctypes],
+            mode_fast=mode_fast, mode_hard=mode_hard, mode_other=mode_other,
+            q=q,
+        ))
     finally:
         session.close()
 
@@ -1526,9 +1527,8 @@ def account_page(request: Request):
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
-        csrf = auth.session_csrf_token(session, request.cookies.get("sid")) or ""
         return templates.TemplateResponse(request, "account.html",
-            {"user": user, "msg": None, "err": None, "csrf_token": csrf})
+            _ctx(request, msg=None, err=None))
     finally:
         session.close()
 
@@ -1545,14 +1545,18 @@ def account_change_password(request: Request,
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
-        ctx = {"user": user, "msg": None, "err": None,
-               "csrf_token": auth.session_csrf_token(session, request.cookies.get("sid")) or ""}
+        lang = i18n.resolve_lang(request, user)
+        EN = lang == "en"
+        ctx = _ctx(request, msg=None, err=None)
         if not user.password_hash or not auth.verify_password(current_password, user.password_hash):
-            ctx["err"] = "كلمة المرور الحالية غير صحيحة."
+            ctx["err"] = ("Current password is incorrect." if EN
+                          else "كلمة المرور الحالية غير صحيحة.")
         elif len(new_password) < 8:
-            ctx["err"] = "كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل."
+            ctx["err"] = ("New password must be at least 8 characters." if EN
+                          else "كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل.")
         elif new_password != confirm_password:
-            ctx["err"] = "كلمتا المرور الجديدتان غير متطابقتين."
+            ctx["err"] = ("New passwords do not match." if EN
+                          else "كلمتا المرور الجديدتان غير متطابقتين.")
         else:
             user.password_hash = auth.hash_password(new_password)
             # Invalidate all OTHER sessions so a stolen cookie loses access on rotation.
@@ -1563,7 +1567,8 @@ def account_change_password(request: Request,
                             models.Session.token != current_sid)
                     .delete(synchronize_session=False))
             session.commit()
-            ctx["msg"] = "تم تغيير كلمة المرور بنجاح. تم تسجيل خروج كل الجلسات الأخرى."
+            ctx["msg"] = ("Password updated. All other sessions have been signed out." if EN
+                          else "تم تغيير كلمة المرور بنجاح. تم تسجيل خروج كل الجلسات الأخرى.")
         return templates.TemplateResponse(request, "account.html", ctx)
     finally:
         session.close()
@@ -1580,19 +1585,23 @@ def account_change_email(request: Request,
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
-        ctx = {"user": user, "msg": None, "err": None,
-               "csrf_token": auth.session_csrf_token(session, request.cookies.get("sid")) or ""}
+        lang = i18n.resolve_lang(request, user)
+        EN = lang == "en"
+        ctx = _ctx(request, msg=None, err=None)
         new_email = new_email.strip().lower()
         if not user.password_hash or not auth.verify_password(current_password, user.password_hash):
-            ctx["err"] = "كلمة المرور غير صحيحة."
+            ctx["err"] = "Password is incorrect." if EN else "كلمة المرور غير صحيحة."
         elif "@" not in new_email or "." not in new_email.split("@")[-1]:
-            ctx["err"] = "صيغة البريد غير صحيحة."
+            ctx["err"] = "Invalid email format." if EN else "صيغة البريد غير صحيحة."
         elif auth.is_disposable_email(new_email):
-            ctx["err"] = "لا نقبل عناوين البريد المؤقّتة."
+            ctx["err"] = ("Disposable email addresses are not allowed." if EN
+                          else "لا نقبل عناوين البريد المؤقّتة.")
         elif new_email == user.email:
-            ctx["err"] = "هذا هو بريدك الحالي بالفعل."
+            ctx["err"] = ("That's already your current email." if EN
+                          else "هذا هو بريدك الحالي بالفعل.")
         elif session.query(models.User).filter_by(email=new_email).first():
-            ctx["err"] = "هذا البريد مستخدم في حساب آخر."
+            ctx["err"] = ("This email is used by another account." if EN
+                          else "هذا البريد مستخدم في حساب آخر.")
         else:
             # Update email + require re-verification. Send link to the NEW address.
             user.email = new_email
@@ -1604,8 +1613,11 @@ def account_change_email(request: Request,
                 emailer.send_verification_email(new_email, verify_url)
             except Exception:  # noqa: BLE001
                 pass
-            ctx["msg"] = (f"تم تغيير البريد إلى {new_email}. "
-                          "أرسلنا رابط تأكيد إلى البريد الجديد — اضغطه لإعادة تفعيل حسابك.")
+            ctx["msg"] = ((f"Email changed to {new_email}. "
+                           "We've sent a verification link to the new address — "
+                           "click it to reactivate your account.") if EN else
+                          (f"تم تغيير البريد إلى {new_email}. "
+                           "أرسلنا رابط تأكيد إلى البريد الجديد — اضغطه لإعادة تفعيل حسابك."))
         return templates.TemplateResponse(request, "account.html", ctx)
     finally:
         session.close()
@@ -1620,15 +1632,18 @@ def account_delete(request: Request, current_password: str = Form(...),
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
-        csrf = auth.session_csrf_token(session, request.cookies.get("sid")) or ""
+        lang = i18n.resolve_lang(request, user)
+        EN = lang == "en"
         if not user.password_hash or not auth.verify_password(current_password, user.password_hash):
             return templates.TemplateResponse(request, "account.html",
-                {"user": user, "msg": None, "csrf_token": csrf,
-                 "err": "كلمة المرور غير صحيحة — لم نحذف حسابك."})
+                _ctx(request, msg=None,
+                     err=("Password is incorrect — your account was not deleted." if EN
+                          else "كلمة المرور غير صحيحة — لم نحذف حسابك.")))
         if confirm.strip().upper() != "DELETE":
             return templates.TemplateResponse(request, "account.html",
-                {"user": user, "msg": None, "csrf_token": csrf,
-                 "err": "للتأكيد اكتب الكلمة DELETE (بالأحرف الإنجليزية الكبيرة) في خانة التأكيد."})
+                _ctx(request, msg=None,
+                     err=("Type DELETE (uppercase) in the confirmation box to proceed." if EN
+                          else "للتأكيد اكتب الكلمة DELETE (بالأحرف الإنجليزية الكبيرة) في خانة التأكيد.")))
         # Cascade-clean the user's data. WebhookDelivery + Subscription +
         # PaymentEvent get the explicit sweep here so a customer's "delete my
         # account" leaves nothing behind (matches the privacy policy claim).

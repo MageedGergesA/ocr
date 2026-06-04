@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>الحساب والإعدادات — مُستخلِص</title>
+  <title>{{ 'Account & settings' if lang == 'en' else 'الحساب والإعدادات' }} — Mostakhles</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -14,8 +14,8 @@
   <section class="account-wrap">
     <div class="account-page">
       <header class="account-head">
-        <h1>الحساب والإعدادات</h1>
-        <p>إدارة بياناتك وكلمة المرور وحسابك.</p>
+        <h1>{{ 'Account & settings' if lang == 'en' else 'الحساب والإعدادات' }}</h1>
+        <p>{{ 'Manage your profile, password and account.' if lang == 'en' else 'إدارة بياناتك وكلمة المرور وحسابك.' }}</p>
       </header>
 
       {% if msg %}<div class="acc-flash ok"><i data-lucide="check-circle"></i><span>{{ msg }}</span></div>{% endif %}
@@ -30,18 +30,18 @@
             <div class="profile-badges">
               <span class="chip chip-plan">{{ user.plan }}</span>
               {% if user.email_verified %}
-                <span class="chip chip-ok"><i data-lucide="badge-check"></i> مؤكَّد</span>
+                <span class="chip chip-ok"><i data-lucide="badge-check"></i> {{ 'Verified' if lang == 'en' else 'مؤكَّد' }}</span>
               {% else %}
-                <span class="chip chip-warn"><i data-lucide="alert-triangle"></i> غير مؤكَّد</span>
+                <span class="chip chip-warn"><i data-lucide="alert-triangle"></i> {{ 'Unverified' if lang == 'en' else 'غير مؤكَّد' }}</span>
               {% endif %}
-              <span class="chip chip-muted"><i data-lucide="calendar"></i> منذ {{ user.created_at.strftime('%Y-%m-%d') }}</span>
+              <span class="chip chip-muted"><i data-lucide="calendar"></i> {{ 'Since' if lang == 'en' else 'منذ' }} {{ user.created_at.strftime('%Y-%m-%d') }}</span>
             </div>
           </div>
         </div>
         <div class="profile-links">
-          <a class="acc-link" href="/dashboard"><i data-lucide="layout-dashboard"></i> لوحة التحكم</a>
-          <a class="acc-link" href="/#pricing"><i data-lucide="trending-up"></i> ترقية الخطة</a>
-          <a class="acc-link" href="/docs"><i data-lucide="terminal"></i> واجهة API</a>
+          <a class="acc-link" href="/dashboard"><i data-lucide="layout-dashboard"></i> {{ 'Dashboard' if lang == 'en' else 'لوحة التحكم' }}</a>
+          <a class="acc-link" href="/#pricing"><i data-lucide="trending-up"></i> {{ 'Upgrade plan' if lang == 'en' else 'ترقية الخطة' }}</a>
+          <a class="acc-link" href="/docs"><i data-lucide="terminal"></i> {{ 'API' if lang == 'en' else 'واجهة API' }}</a>
         </div>
       </div>
 
@@ -50,28 +50,28 @@
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="key-round"></i></span>
           <div>
-            <h2>تغيير كلمة المرور</h2>
-            <p>استخدم كلمة مرور قوية لا تستخدمها في مكان آخر.</p>
+            <h2>{{ 'Change password' if lang == 'en' else 'تغيير كلمة المرور' }}</h2>
+            <p>{{ 'Use a strong password you don\'t use elsewhere.' if lang == 'en' else 'استخدم كلمة مرور قوية لا تستخدمها في مكان آخر.' }}</p>
           </div>
         </div>
         <form method="post" action="/account/password" class="acc-form">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <div class="field">
-            <label>كلمة المرور الحالية</label>
+            <label>{{ 'Current password' if lang == 'en' else 'كلمة المرور الحالية' }}</label>
             <input type="password" name="current_password" required autocomplete="current-password">
           </div>
           <div class="field-row">
             <div class="field">
-              <label>كلمة المرور الجديدة</label>
-              <input type="password" name="new_password" minlength="8" required autocomplete="new-password" placeholder="8 أحرف على الأقل">
+              <label>{{ 'New password' if lang == 'en' else 'كلمة المرور الجديدة' }}</label>
+              <input type="password" name="new_password" minlength="8" required autocomplete="new-password" placeholder="{{ 'At least 8 characters' if lang == 'en' else '8 أحرف على الأقل' }}">
             </div>
             <div class="field">
-              <label>التأكيد</label>
-              <input type="password" name="confirm_password" minlength="8" required autocomplete="new-password" placeholder="أعد كتابتها">
+              <label>{{ 'Confirm' if lang == 'en' else 'التأكيد' }}</label>
+              <input type="password" name="confirm_password" minlength="8" required autocomplete="new-password" placeholder="{{ 'Retype it' if lang == 'en' else 'أعد كتابتها' }}">
             </div>
           </div>
           <div class="acc-actions">
-            <button class="btn btn-primary" type="submit"><i data-lucide="check"></i> تحديث كلمة المرور</button>
+            <button class="btn btn-primary" type="submit"><i data-lucide="check"></i> {{ 'Update password' if lang == 'en' else 'تحديث كلمة المرور' }}</button>
           </div>
         </form>
       </div>
@@ -81,24 +81,30 @@
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="mail"></i></span>
           <div>
-            <h2>تغيير البريد الإلكتروني</h2>
-            <p>سنرسل رابط تأكيد إلى البريد الجديد — حسابك سيكون غير مفعَّل حتى تضغط الرابط.</p>
+            <h2>{{ 'Change email' if lang == 'en' else 'تغيير البريد الإلكتروني' }}</h2>
+            <p>
+              {% if lang == 'en' %}
+                We'll send a verification link to the new email — your account stays unverified until you click it.
+              {% else %}
+                سنرسل رابط تأكيد إلى البريد الجديد — حسابك سيكون غير مفعَّل حتى تضغط الرابط.
+              {% endif %}
+            </p>
           </div>
         </div>
         <form method="post" action="/account/email" class="acc-form">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <div class="field-row">
             <div class="field">
-              <label>البريد الجديد</label>
+              <label>{{ 'New email' if lang == 'en' else 'البريد الجديد' }}</label>
               <input type="email" name="new_email" required placeholder="you@example.com">
             </div>
             <div class="field">
-              <label>كلمة المرور الحالية</label>
+              <label>{{ 'Current password' if lang == 'en' else 'كلمة المرور الحالية' }}</label>
               <input type="password" name="current_password" required autocomplete="current-password" placeholder="••••••••">
             </div>
           </div>
           <div class="acc-actions">
-            <button class="btn btn-primary" type="submit"><i data-lucide="send"></i> تغيير البريد</button>
+            <button class="btn btn-primary" type="submit"><i data-lucide="send"></i> {{ 'Change email' if lang == 'en' else 'تغيير البريد' }}</button>
           </div>
         </form>
       </div>
@@ -108,26 +114,34 @@
         <div class="acc-card-head">
           <span class="acc-icon danger-icon"><i data-lucide="trash-2"></i></span>
           <div>
-            <h2>منطقة الخطر</h2>
-            <p>حذف الحساب يزيل بياناتك نهائيًا: المفاتيح، القوالب، سجل المعالجة، الجلسات. لا يمكن التراجع.</p>
+            <h2>{{ 'Danger zone' if lang == 'en' else 'منطقة الخطر' }}</h2>
+            <p>
+              {% if lang == 'en' %}
+                Deleting your account permanently removes your data: keys, templates, processing history, sessions. This cannot be undone.
+              {% else %}
+                حذف الحساب يزيل بياناتك نهائيًا: المفاتيح، القوالب، سجل المعالجة، الجلسات. لا يمكن التراجع.
+              {% endif %}
+            </p>
           </div>
         </div>
         <form method="post" action="/account/delete" class="acc-form"
-              onsubmit="return confirm('هل أنت متأكد؟ هذا الإجراء لا يمكن التراجع عنه.')">
+              onsubmit="return confirm('{{ 'Are you sure? This action cannot be undone.' if lang == 'en' else 'هل أنت متأكد؟ هذا الإجراء لا يمكن التراجع عنه.' }}')">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <div class="field-row">
             <div class="field">
-              <label>كلمة المرور للتأكيد</label>
+              <label>{{ 'Password to confirm' if lang == 'en' else 'كلمة المرور للتأكيد' }}</label>
               <input type="password" name="current_password" required autocomplete="current-password" placeholder="••••••••">
             </div>
             <div class="field">
-              <label>اكتب <code>DELETE</code> للتأكيد</label>
+              <label>
+                {% if lang == 'en' %}Type <code>DELETE</code> to confirm{% else %}اكتب <code>DELETE</code> للتأكيد{% endif %}
+              </label>
               <input type="text" name="confirm" required pattern="DELETE"
                      placeholder="DELETE" autocomplete="off">
             </div>
           </div>
           <div class="acc-actions">
-            <button class="btn btn-danger" type="submit"><i data-lucide="trash-2"></i> حذف الحساب نهائيًا</button>
+            <button class="btn btn-danger" type="submit"><i data-lucide="trash-2"></i> {{ 'Delete account permanently' if lang == 'en' else 'حذف الحساب نهائيًا' }}</button>
           </div>
         </form>
       </div>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة التحكم — مُستخلِص</title>
+  <title>{{ 'Dashboard' if lang == 'en' else 'لوحة التحكم' }} — Mostakhles</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -14,36 +14,66 @@
   <section class="account-wrap">
     <div class="account-page" style="max-width:1080px">
       <header class="account-head">
-        <h1>لوحة التحكم</h1>
-        <p>مرحبًا، <b>{{ user.email }}</b> — الخطة الحالية: <b style="color:var(--brand-dark);text-transform:capitalize">{{ plan }}</b></p>
+        <h1>{{ 'Dashboard' if lang == 'en' else 'لوحة التحكم' }}</h1>
+        <p>
+          {% if lang == 'en' %}
+            Welcome, <b>{{ user.email }}</b> — current plan:
+            <b style="color:var(--brand-dark);text-transform:capitalize">{{ plan }}</b>
+          {% else %}
+            مرحبًا، <b>{{ user.email }}</b> — الخطة الحالية:
+            <b style="color:var(--brand-dark);text-transform:capitalize">{{ plan }}</b>
+          {% endif %}
+        </p>
       </header>
 
       <!-- KPI strip -->
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-label">هذا الشهر</div>
+          <div class="kpi-label">{{ 'This month' if lang == 'en' else 'هذا الشهر' }}</div>
           <div class="kpi-big">{{ month_credits }}<span>/ {{ limit }}</span></div>
           <div class="kpi-bar"><div class="kpi-bar-fill {% if will_exceed %}warn{% endif %}" style="width:{{ usage_pct }}%"></div></div>
-          <div class="kpi-meta">{{ month_extractions }} عملية · يتبقى {{ remaining }} نقطة</div>
+          <div class="kpi-meta">
+            {% if lang == 'en' %}
+              {{ month_extractions }} ops · {{ remaining }} credits left
+            {% else %}
+              {{ month_extractions }} عملية · يتبقى {{ remaining }} نقطة
+            {% endif %}
+          </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">اليوم</div>
-          <div class="kpi-big">{{ today_credits }}<span> نقطة</span></div>
-          <div class="kpi-meta">{{ today_extractions }} عملية</div>
+          <div class="kpi-label">{{ 'Today' if lang == 'en' else 'اليوم' }}</div>
+          <div class="kpi-big">{{ today_credits }}<span> {{ 'credits' if lang == 'en' else 'نقطة' }}</span></div>
+          <div class="kpi-meta">
+            {% if lang == 'en' %}{{ today_extractions }} ops{% else %}{{ today_extractions }} عملية{% endif %}
+          </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">إجمالي الاستخراجات</div>
-          <div class="kpi-big">{{ total_extractions }}<span> عملية</span></div>
-          <div class="kpi-meta">{{ total_credits_ever }} نقطة منذ التسجيل</div>
+          <div class="kpi-label">{{ 'Total extractions' if lang == 'en' else 'إجمالي الاستخراجات' }}</div>
+          <div class="kpi-big">{{ total_extractions }}<span> {{ 'ops' if lang == 'en' else 'عملية' }}</span></div>
+          <div class="kpi-meta">
+            {% if lang == 'en' %}
+              {{ total_credits_ever }} credits since signup
+            {% else %}
+              {{ total_credits_ever }} نقطة منذ التسجيل
+            {% endif %}
+          </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">تجديد الحصة</div>
-          <div class="kpi-big">{{ days_to_renewal }}<span> يوم</span></div>
+          <div class="kpi-label">{{ 'Quota renewal' if lang == 'en' else 'تجديد الحصة' }}</div>
+          <div class="kpi-big">{{ days_to_renewal }}<span> {{ 'days' if lang == 'en' else 'يوم' }}</span></div>
           <div class="kpi-meta">
             {% if will_exceed %}
-              <span style="color:#b4472f">⚠ بهذا المعدل ستتجاوز: {{ projected_month }} نقطة</span>
+              {% if lang == 'en' %}
+                <span style="color:#b4472f">⚠ At this rate you'll exceed: {{ projected_month }} credits</span>
+              {% else %}
+                <span style="color:#b4472f">⚠ بهذا المعدل ستتجاوز: {{ projected_month }} نقطة</span>
+              {% endif %}
             {% else %}
-              التوقّع للشهر: {{ projected_month }} نقطة
+              {% if lang == 'en' %}
+                Projected for the month: {{ projected_month }} credits
+              {% else %}
+                التوقّع للشهر: {{ projected_month }} نقطة
+              {% endif %}
             {% endif %}
           </div>
         </div>
@@ -54,13 +84,19 @@
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="activity"></i></span>
           <div>
-            <h2>الاستخدام خلال آخر 30 يومًا</h2>
-            <p>النقاط المُستهلَكة يوميًا. آخر نشاط: <b>{{ last_activity or "—" }}</b></p>
+            <h2>{{ 'Usage — last 30 days' if lang == 'en' else 'الاستخدام خلال آخر 30 يومًا' }}</h2>
+            <p>
+              {% if lang == 'en' %}
+                Credits consumed per day. Last activity: <b>{{ last_activity or "—" }}</b>
+              {% else %}
+                النقاط المُستهلَكة يوميًا. آخر نشاط: <b>{{ last_activity or "—" }}</b>
+              {% endif %}
+            </p>
           </div>
         </div>
         <div class="chart">
           {% for d in chart_days %}
-          <div class="chart-bar" style="--h:{{ (d.v / chart_max * 100) if chart_max else 0 }}%" title="{{ d.d }} — {{ d.v }} نقطة">
+          <div class="chart-bar" style="--h:{{ (d.v / chart_max * 100) if chart_max else 0 }}%" title="{{ d.d }} — {{ d.v }} {{ 'credits' if lang == 'en' else 'نقطة' }}">
             <span class="chart-bar-fill"></span>
           </div>
           {% endfor %}
@@ -78,8 +114,8 @@
           <div class="acc-card-head">
             <span class="acc-icon"><i data-lucide="bar-chart-3"></i></span>
             <div>
-              <h2>الأدوات الأكثر استخدامًا</h2>
-              <p>هذا الشهر — حسب النقاط المُستهلَكة.</p>
+              <h2>{{ 'Most-used tools' if lang == 'en' else 'الأدوات الأكثر استخدامًا' }}</h2>
+              <p>{{ 'This month — by credits consumed.' if lang == 'en' else 'هذا الشهر — حسب النقاط المُستهلَكة.' }}</p>
             </div>
           </div>
           {% if top_tools %}
@@ -92,33 +128,35 @@
             </div>
             {% endfor %}
           </div>
-          {% else %}<p class="hint">لا توجد بيانات بعد لهذا الشهر.</p>{% endif %}
+          {% else %}<p class="hint">{{ 'No data yet for this month.' if lang == 'en' else 'لا توجد بيانات بعد لهذا الشهر.' }}</p>{% endif %}
         </div>
 
         <div class="acc-card">
           <div class="acc-card-head">
             <span class="acc-icon"><i data-lucide="pie-chart"></i></span>
             <div>
-              <h2>وضع المعالجة</h2>
-              <p>هذا الشهر — توزيع العمليات.</p>
+              <h2>{{ 'Processing mode' if lang == 'en' else 'وضع المعالجة' }}</h2>
+              <p>{{ 'This month — operation breakdown.' if lang == 'en' else 'هذا الشهر — توزيع العمليات.' }}</p>
             </div>
           </div>
           {% set total_ops = mode_fast + mode_hard + mode_other %}
           {% if total_ops %}
           <div class="mode-stack">
-            {% if mode_hard %}<div class="mode-seg mode-hard" style="width:{{ (mode_hard / total_ops * 100) }}%" title="دقة عالية: {{ mode_hard }}"></div>{% endif %}
-            {% if mode_fast %}<div class="mode-seg mode-fast" style="width:{{ (mode_fast / total_ops * 100) }}%" title="سريع: {{ mode_fast }}"></div>{% endif %}
-            {% if mode_other %}<div class="mode-seg mode-other" style="width:{{ (mode_other / total_ops * 100) }}%" title="أخرى: {{ mode_other }}"></div>{% endif %}
+            {% if mode_hard %}<div class="mode-seg mode-hard" style="width:{{ (mode_hard / total_ops * 100) }}%" title="{{ 'High accuracy' if lang == 'en' else 'دقة عالية' }}: {{ mode_hard }}"></div>{% endif %}
+            {% if mode_fast %}<div class="mode-seg mode-fast" style="width:{{ (mode_fast / total_ops * 100) }}%" title="{{ 'Fast' if lang == 'en' else 'سريع' }}: {{ mode_fast }}"></div>{% endif %}
+            {% if mode_other %}<div class="mode-seg mode-other" style="width:{{ (mode_other / total_ops * 100) }}%" title="{{ 'Other' if lang == 'en' else 'أخرى' }}: {{ mode_other }}"></div>{% endif %}
           </div>
           <div class="mode-legend">
-            <span><i class="dot mode-hard"></i> دقة عالية <b>{{ mode_hard }}</b></span>
-            <span><i class="dot mode-fast"></i> سريع <b>{{ mode_fast }}</b></span>
-            {% if mode_other %}<span><i class="dot mode-other"></i> أخرى <b>{{ mode_other }}</b></span>{% endif %}
+            <span><i class="dot mode-hard"></i> {{ 'High accuracy' if lang == 'en' else 'دقة عالية' }} <b>{{ mode_hard }}</b></span>
+            <span><i class="dot mode-fast"></i> {{ 'Fast' if lang == 'en' else 'سريع' }} <b>{{ mode_fast }}</b></span>
+            {% if mode_other %}<span><i class="dot mode-other"></i> {{ 'Other' if lang == 'en' else 'أخرى' }} <b>{{ mode_other }}</b></span>{% endif %}
           </div>
-          {% else %}<p class="hint">لا توجد عمليات هذا الشهر.</p>{% endif %}
+          {% else %}<p class="hint">{{ 'No operations this month.' if lang == 'en' else 'لا توجد عمليات هذا الشهر.' }}</p>{% endif %}
 
           {% if top_doctypes %}
-          <h3 style="font-size:13.5px;margin-top:22px;color:var(--muted);font-weight:700">أكثر أنواع المستندات</h3>
+          <h3 style="font-size:13.5px;margin-top:22px;color:var(--muted);font-weight:700">
+            {{ 'Top document types' if lang == 'en' else 'أكثر أنواع المستندات' }}
+          </h3>
           <div class="doctype-list">
             {% for d in top_doctypes %}
             <span class="chip chip-muted">{{ d.name }} · <b>{{ d.count }}</b></span>
@@ -133,28 +171,41 @@
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="key-round"></i></span>
           <div>
-            <h2>مفاتيح الـ API</h2>
-            <p>استخدم المفتاح في ترويسة <code>x-api-key</code> عند استدعاء الـ API.</p>
+            <h2>{{ 'API keys' if lang == 'en' else 'مفاتيح الـ API' }}</h2>
+            <p>
+              {% if lang == 'en' %}
+                Use the key in the <code>x-api-key</code> header when calling the API.
+              {% else %}
+                استخدم المفتاح في ترويسة <code>x-api-key</code> عند استدعاء الـ API.
+              {% endif %}
+            </p>
           </div>
           <form method="post" action="/dashboard/keys" style="margin-inline-start:auto">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <button class="btn btn-primary" type="submit">+ مفتاح جديد</button>
+            <button class="btn btn-primary" type="submit">+ {{ 'New key' if lang == 'en' else 'مفتاح جديد' }}</button>
           </form>
         </div>
         <div class="keys">
-          <div class="krow khead"><div>المفتاح</div><div>الاستخدام (الشهر)</div><div>الحالة</div><div></div></div>
+          <div class="krow khead">
+            <div>{{ 'Key' if lang == 'en' else 'المفتاح' }}</div>
+            <div>{{ 'Usage (month)' if lang == 'en' else 'الاستخدام (الشهر)' }}</div>
+            <div>{{ 'Status' if lang == 'en' else 'الحالة' }}</div>
+            <div></div>
+          </div>
           {% for k in keys %}
           <div class="krow">
             <div class="kkey"><code>{{ k.key }}</code>
-              <button class="copy-btn" onclick="navigator.clipboard.writeText('{{ k.key }}');this.textContent='✓'">نسخ</button>
+              <button class="copy-btn" onclick="navigator.clipboard.writeText('{{ k.key }}');this.textContent='✓'">
+                {{ 'Copy' if lang == 'en' else 'نسخ' }}
+              </button>
             </div>
             <div>{{ k.used }} / {{ limit }}</div>
-            <div>{% if k.active %}<span class="chip chip-ok">فعّال</span>{% else %}<span class="chip chip-warn">ملغى</span>{% endif %}</div>
+            <div>{% if k.active %}<span class="chip chip-ok">{{ 'Active' if lang == 'en' else 'فعّال' }}</span>{% else %}<span class="chip chip-warn">{{ 'Revoked' if lang == 'en' else 'ملغى' }}</span>{% endif %}</div>
             <div>
               {% if k.active %}
               <form method="post" action="/dashboard/keys/{{ k.id }}/revoke" style="margin:0">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <button class="link-btn" type="submit">إلغاء</button>
+                <button class="link-btn" type="submit">{{ 'Revoke' if lang == 'en' else 'إلغاء' }}</button>
               </form>
               {% endif %}
             </div>
@@ -168,32 +219,51 @@
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="history"></i></span>
           <div style="flex:1">
-            <h2>آخر الاستخراجات</h2>
-            <p>آخر 20 عملية — اضغط «عرض» لرؤية نتيجة الاستخراج الكاملة.</p>
+            <h2>{{ 'Recent extractions' if lang == 'en' else 'آخر الاستخراجات' }}</h2>
+            <p>
+              {% if lang == 'en' %}
+                Last 20 ops — click "View" to see the full extraction.
+              {% else %}
+                آخر 20 عملية — اضغط «عرض» لرؤية نتيجة الاستخراج الكاملة.
+              {% endif %}
+            </p>
           </div>
           <a class="btn btn-ghost" href="/dashboard/history.csv" style="white-space:nowrap">
             <i data-lucide="download"></i> CSV
           </a>
         </div>
         <form method="get" action="/dashboard" style="display:flex;gap:8px;margin-bottom:14px">
-          <input type="search" name="q" value="{{ q or '' }}" placeholder="بحث في النوع أو نوع المستند…"
+          <input type="search" name="q" value="{{ q or '' }}" placeholder="{{ 'Search by kind or document type…' if lang == 'en' else 'بحث في النوع أو نوع المستند…' }}"
                  style="flex:1;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px">
-          <button class="btn btn-ghost" type="submit">بحث</button>
-          {% if q %}<a class="btn btn-ghost" href="/dashboard">مسح</a>{% endif %}
+          <button class="btn btn-ghost" type="submit">{{ 'Search' if lang == 'en' else 'بحث' }}</button>
+          {% if q %}<a class="btn btn-ghost" href="/dashboard">{{ 'Clear' if lang == 'en' else 'مسح' }}</a>{% endif %}
         </form>
         {% if history %}
         <div class="keys">
-          <div class="krow khead"><div>التاريخ</div><div>النوع</div><div>النقاط</div><div></div></div>
+          <div class="krow khead">
+            <div>{{ 'Date' if lang == 'en' else 'التاريخ' }}</div>
+            <div>{{ 'Kind' if lang == 'en' else 'النوع' }}</div>
+            <div>{{ 'Credits' if lang == 'en' else 'النقاط' }}</div>
+            <div></div>
+          </div>
           {% for h in history %}
           <div class="krow">
             <div>{{ h.created_at }}</div>
             <div>{{ h.kind }}{% if h.document_type %} · <span style="color:var(--muted)">{{ h.document_type }}</span>{% endif %}</div>
             <div>{{ h.charged }}</div>
-            <div><a class="copy-btn" href="/v1/history/{{ h.id }}" target="_blank">عرض</a></div>
+            <div><a class="copy-btn" href="/v1/history/{{ h.id }}" target="_blank">{{ 'View' if lang == 'en' else 'عرض' }}</a></div>
           </div>
           {% endfor %}
         </div>
-        {% else %}<p class="hint">لا يوجد سجل بعد. ابدأ من <a href="/app">صفحة الرفع</a>.</p>{% endif %}
+        {% else %}
+        <p class="hint">
+          {% if lang == 'en' %}
+            No history yet. Start from the <a href="/app">upload page</a>.
+          {% else %}
+            لا يوجد سجل بعد. ابدأ من <a href="/app">صفحة الرفع</a>.
+          {% endif %}
+        </p>
+        {% endif %}
       </div>
 
       <!-- Templates -->
@@ -201,8 +271,14 @@
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="bookmark"></i></span>
           <div>
-            <h2>القوالب المحفوظة</h2>
-            <p>عرّف حقولك في صفحة الاستخراج واحفظها كقالب لاستخدامها لاحقًا.</p>
+            <h2>{{ 'Saved templates' if lang == 'en' else 'القوالب المحفوظة' }}</h2>
+            <p>
+              {% if lang == 'en' %}
+                Define your fields on the extraction page and save as a template for later.
+              {% else %}
+                عرّف حقولك في صفحة الاستخراج واحفظها كقالب لاستخدامها لاحقًا.
+              {% endif %}
+            </p>
           </div>
         </div>
         {% if templates %}
@@ -210,15 +286,17 @@
           {% for t in templates %}
           <div class="krow">
             <div><b>{{ t.name }}</b></div>
-            <div class="kkey">{{ t.fields | join('، ') }}</div>
+            <div class="kkey">{{ t.fields | join(', ' if lang == 'en' else '، ') }}</div>
             <div></div>
             <div><form method="post" action="/dashboard/templates/{{ t.id }}/delete" style="margin:0">
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-              <button class="link-btn" type="submit">حذف</button></form></div>
+              <button class="link-btn" type="submit">{{ 'Delete' if lang == 'en' else 'حذف' }}</button></form></div>
           </div>
           {% endfor %}
         </div>
-        {% else %}<p class="hint">لا توجد قوالب محفوظة بعد.</p>{% endif %}
+        {% else %}
+        <p class="hint">{{ 'No saved templates yet.' if lang == 'en' else 'لا توجد قوالب محفوظة بعد.' }}</p>
+        {% endif %}
       </div>
 
       <!-- Webhook + API snippet (collapsed bottom) -->
@@ -228,24 +306,40 @@
             <span class="acc-icon"><i data-lucide="webhook"></i></span>
             <div>
               <h2>Webhook</h2>
-              <p>سنرسل نتائج مهام معالجة الدفعات إلى هذا الرابط عند اكتمالها.</p>
+              <p>
+                {% if lang == 'en' %}
+                  We'll POST batch results to this URL on completion.
+                {% else %}
+                  سنرسل نتائج مهام معالجة الدفعات إلى هذا الرابط عند اكتمالها.
+                {% endif %}
+              </p>
             </div>
           </div>
           <form method="post" action="/dashboard/webhook" class="acc-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <div class="field">
-              <label>عنوان Webhook</label>
+              <label>{{ 'Webhook URL' if lang == 'en' else 'عنوان Webhook' }}</label>
               <input type="url" name="webhook_url" value="{{ webhook_url }}" placeholder="https://example.com/webhook">
             </div>
-            <div class="acc-actions"><button class="btn btn-primary" type="submit"><i data-lucide="save"></i> حفظ</button></div>
+            <div class="acc-actions">
+              <button class="btn btn-primary" type="submit">
+                <i data-lucide="save"></i> {{ 'Save' if lang == 'en' else 'حفظ' }}
+              </button>
+            </div>
           </form>
         </div>
         <div class="acc-card">
           <div class="acc-card-head">
             <span class="acc-icon"><i data-lucide="terminal"></i></span>
             <div>
-              <h2>استدعاء سريع (cURL)</h2>
-              <p>ابدأ في ثوانٍ من سطر الأوامر — استبدل <code>YOUR_KEY</code> بمفتاحك من الأعلى.</p>
+              <h2>{{ 'Quick call (cURL)' if lang == 'en' else 'استدعاء سريع (cURL)' }}</h2>
+              <p>
+                {% if lang == 'en' %}
+                  Start in seconds from the command line — replace <code>YOUR_KEY</code> with a key from above.
+                {% else %}
+                  ابدأ في ثوانٍ من سطر الأوامر — استبدل <code>YOUR_KEY</code> بمفتاحك من الأعلى.
+                {% endif %}
+              </p>
             </div>
           </div>
           <pre class="code">curl -X POST {{ request.base_url }}v1/extract \

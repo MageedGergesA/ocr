@@ -12,39 +12,53 @@ category groups services on the /tools hub: ocr | parsers | realestate
 SERVICES = {
     # ---------------- OCR & AI ----------------
     "arabic-ocr": {
-        "title": "استخراج النص (OCR عربي)", "category": "ocr", "icon": "scan-text",
+        "title": "استخراج النص (OCR عربي)",
+        "title_en": "Arabic text extraction (OCR)",
+        "category": "ocr", "icon": "scan-text",
         "desc": "حوّل أي صورة أو PDF إلى نص قابل للنسخ — عربي أو إنجليزي.",
+        "desc_en": "Turn any image or PDF into copyable text — Arabic or English.",
         "kind": "text", "hard": True, "free": True,
         "prompt": ("Transcribe ALL text in this document exactly as written, preserving line "
                    "breaks and natural reading order. It may be Arabic or English. "
                    "Return ONLY the transcribed text, no commentary."),
     },
     "handwriting": {
-        "title": "تحويل الخط اليدوي إلى نص", "category": "ocr", "icon": "pen-line",
+        "title": "تحويل الخط اليدوي إلى نص",
+        "title_en": "Handwriting to text",
+        "category": "ocr", "icon": "pen-line",
         "desc": "اقرأ المستندات المكتوبة بخط اليد بالعربية وحوّلها إلى نص رقمي.",
+        "desc_en": "Read Arabic handwritten documents and turn them into digital text.",
         "kind": "text", "hard": True, "free": True,
         "prompt": ("This document is handwritten. Read it carefully, letter by letter, and "
                    "transcribe ALL its text exactly, preserving line breaks. Arabic or English. "
                    "Return ONLY the transcribed text, no commentary."),
     },
     "translate": {
-        "title": "ترجمة المستندات", "category": "ocr", "icon": "languages",
+        "title": "ترجمة المستندات",
+        "title_en": "Document translation",
+        "category": "ocr", "icon": "languages",
         "desc": "اقرأ مستندًا بالعربية واحصل على ترجمته الإنجليزية فورًا.",
+        "desc_en": "Read an Arabic document and get an instant English translation.",
         "kind": "text", "hard": True, "free": False,
         "prompt": ("Read all the text in this document and translate it into clear, natural "
                    "English, preserving structure. Return ONLY the English translation."),
     },
     "summarize": {
-        "title": "تلخيص المستندات", "category": "ocr", "icon": "align-left",
+        "title": "تلخيص المستندات",
+        "title_en": "Document summarization",
+        "category": "ocr", "icon": "align-left",
         "desc": "احصل على ملخّص موجز لأهم نقاط أي مستند طويل.",
+        "desc_en": "Get a concise summary of the key points of any long document.",
         "kind": "text", "hard": True, "free": False,
         "prompt": ("Read this document and write a concise bullet-point summary of its key "
                    "points, in the document's main language. Return ONLY the summary."),
     },
     "entity-detection": {
-        "title": "كشف الكيانات", "category": "ocr", "icon": "scan-search",
+        "title": "كشف الكيانات",
+        "title_en": "Entity detection",
+        "category": "ocr", "icon": "scan-search",
         "desc": "استخرج الأسماء والبريد والهواتف والتواريخ والمبالغ من أي مستند دفعة واحدة.",
-        # Standard entity extraction — easy tier handles it; 8x cheaper.
+        "desc_en": "Extract names, emails, phones, dates and amounts from any document in one shot.",
         "kind": "fields", "hard": False, "free": False,
         "schema": {
             "الأسماء": "all person and company names found, comma-separated",
@@ -56,8 +70,11 @@ SERVICES = {
         },
     },
     "auto-classify": {
-        "title": "تصنيف ووسم المستند", "category": "ocr", "icon": "tags",
+        "title": "تصنيف ووسم المستند",
+        "title_en": "Auto-classify & tag",
+        "category": "ocr", "icon": "tags",
         "desc": "تعرّف على نوع المستند ولغته وأضف وسومًا وملخصًا تلقائيًا.",
+        "desc_en": "Detect the document type, language, and add tags and a summary automatically.",
         "kind": "fields", "hard": False, "free": False,
         "schema": {
             "نوع_المستند": "the document type",
@@ -67,8 +84,11 @@ SERVICES = {
         },
     },
     "validate": {
-        "title": "التحقق من البيانات", "category": "ocr", "icon": "badge-check",
+        "title": "التحقق من البيانات",
+        "title_en": "Data validation",
+        "category": "ocr", "icon": "badge-check",
         "desc": "افحص المستند واكتشف التناقضات والأخطاء والتواريخ المنتهية والمبالغ غير المتطابقة.",
+        "desc_en": "Audit a document for inconsistencies, errors, expired dates and mismatched totals.",
         "kind": "text", "hard": True, "free": False,
         "prompt": ("Carefully check this document for problems: inconsistent or wrong totals, "
                    "expired or invalid dates, missing required fields, contradictory or suspicious "
@@ -76,20 +96,29 @@ SERVICES = {
                    "consistent. Reply in the document's language."),
     },
     "table-excel": {
-        "title": "استخراج الجداول إلى Excel", "category": "ocr", "icon": "table",
+        "title": "استخراج الجداول إلى Excel",
+        "title_en": "Tables to Excel",
+        "category": "ocr", "icon": "table",
         "desc": "حوّل الجداول في الفواتير والكشوف إلى ملف Excel منظّم.",
+        "desc_en": "Turn tables from invoices and statements into structured Excel files.",
         "kind": "table", "hard": True, "free": False,
     },
     "searchable-pdf": {
-        "title": "PDF قابل للبحث", "category": "ocr", "icon": "file-search",
+        "title": "PDF قابل للبحث",
+        "title_en": "Searchable PDF",
+        "category": "ocr", "icon": "file-search",
         "desc": "حوّل صورة ممسوحة إلى PDF يمكن البحث في نصّه ونسخه.",
+        "desc_en": "Turn a scanned image into a PDF whose text can be searched and copied.",
         "kind": "searchable_pdf", "hard": True, "free": False,
     },
 
     # ---------------- Document parsers ----------------
     "invoice": {
-        "title": "قارئ الفواتير", "category": "parsers", "icon": "receipt-text",
+        "title": "قارئ الفواتير",
+        "title_en": "Invoice reader",
+        "category": "parsers", "icon": "receipt-text",
         "desc": "استخرج بيانات الفاتورة: البائع، المشتري، الضريبة، الإجمالي.",
+        "desc_en": "Extract invoice data: seller, buyer, tax, total.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
             "اسم_البائع": "seller/vendor name", "اسم_المشتري": "buyer/customer name",
@@ -100,9 +129,11 @@ SERVICES = {
         },
     },
     "egyptian-id": {
-        "title": "قارئ بطاقة الرقم القومي", "category": "parsers", "icon": "id-card",
+        "title": "قارئ بطاقة الرقم القومي",
+        "title_en": "Egyptian National ID reader",
+        "category": "parsers", "icon": "id-card",
         "desc": "استخرج بيانات بطاقة الرقم القومي المصرية تلقائيًا.",
-        # Fixed-layout ID — easy tier matches accuracy at 8x lower cost.
+        "desc_en": "Automatically extract data from an Egyptian national ID card.",
         "kind": "fields", "hard": False, "free": False,
         "schema": {
             "الاسم": "full name", "الرقم_القومي": "14-digit national ID number",
@@ -112,9 +143,11 @@ SERVICES = {
         },
     },
     "passport": {
-        "title": "قارئ جواز السفر", "category": "parsers", "icon": "book-user",
+        "title": "قارئ جواز السفر",
+        "title_en": "Passport reader",
+        "category": "parsers", "icon": "book-user",
         "desc": "استخرج بيانات جواز السفر بما في ذلك خانة القراءة الآلية (MRZ).",
-        # MRZ is OCR-trivial; easy tier handles it perfectly.
+        "desc_en": "Extract passport data including the machine-readable zone (MRZ).",
         "kind": "fields", "hard": False, "free": False,
         "schema": {
             "full_name": "full name", "passport_number": "passport number",
@@ -124,8 +157,11 @@ SERVICES = {
         },
     },
     "commercial-register": {
-        "title": "قارئ السجل التجاري", "category": "parsers", "icon": "building-2",
+        "title": "قارئ السجل التجاري",
+        "title_en": "Commercial-register reader",
+        "category": "parsers", "icon": "building-2",
         "desc": "استخرج بيانات السجل التجاري للشركات تلقائيًا.",
+        "desc_en": "Automatically extract company commercial-register data.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
             "اسم_الشركة": "company name", "رقم_السجل_التجاري": "commercial register number",
@@ -134,9 +170,11 @@ SERVICES = {
         },
     },
     "tax-card": {
-        "title": "قارئ البطاقة الضريبية", "category": "parsers", "icon": "badge-percent",
+        "title": "قارئ البطاقة الضريبية",
+        "title_en": "Tax card reader",
+        "category": "parsers", "icon": "badge-percent",
         "desc": "استخرج بيانات البطاقة الضريبية والرقم الضريبي.",
-        # Fixed-form document — easy tier handles it.
+        "desc_en": "Extract tax-card details and the tax registration number.",
         "kind": "fields", "hard": False, "free": False,
         "schema": {
             "الاسم": "taxpayer name", "رقم_التسجيل_الضريبي": "tax registration number",
@@ -144,8 +182,11 @@ SERVICES = {
         },
     },
     "business-card": {
-        "title": "ماسح بطاقات العمل", "category": "parsers", "icon": "contact-round",
+        "title": "ماسح بطاقات العمل",
+        "title_en": "Business-card scanner",
+        "category": "parsers", "icon": "contact-round",
         "desc": "حوّل بطاقة العمل إلى جهة اتصال منظّمة.",
+        "desc_en": "Turn a business card into a structured contact.",
         "kind": "fields", "hard": False, "free": False,
         "schema": {
             "الاسم": "person name", "المسمى_الوظيفي": "job title", "الشركة": "company",
@@ -154,9 +195,11 @@ SERVICES = {
         },
     },
     "utility-bill": {
-        "title": "قارئ فواتير المرافق", "category": "parsers", "icon": "lightbulb",
+        "title": "قارئ فواتير المرافق",
+        "title_en": "Utility-bill reader",
+        "category": "parsers", "icon": "lightbulb",
         "desc": "استخرج بيانات فواتير الكهرباء والمياه والغاز.",
-        # Standard utility bill layouts — easy tier suffices.
+        "desc_en": "Extract data from electricity, water and gas bills.",
         "kind": "fields", "hard": False, "free": False,
         "schema": {
             "اسم_المشترك": "subscriber name", "رقم_الحساب": "account number",
@@ -166,8 +209,11 @@ SERVICES = {
         },
     },
     "bank-statement": {
-        "title": "قارئ كشف الحساب البنكي", "category": "parsers", "icon": "landmark",
+        "title": "قارئ كشف الحساب البنكي",
+        "title_en": "Bank-statement reader",
+        "category": "parsers", "icon": "landmark",
         "desc": "استخرج بيانات كشف الحساب البنكي وأرصدته.",
+        "desc_en": "Extract bank-statement data and balances.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
             "اسم_صاحب_الحساب": "account holder name", "رقم_الحساب": "account number",
@@ -177,8 +223,11 @@ SERVICES = {
         },
     },
     "prescription": {
-        "title": "قارئ الروشتات الطبية", "category": "parsers", "icon": "pill",
+        "title": "قارئ الروشتات الطبية",
+        "title_en": "Medical-prescription reader",
+        "category": "parsers", "icon": "pill",
         "desc": "حوّل الروشتة الطبية (حتى المكتوبة بخط اليد) إلى بيانات منظّمة وأدوية مُفسّرة.",
+        "desc_en": "Turn a medical prescription (even handwritten) into structured data with parsed medications.",
         "kind": "prescription", "hard": True, "free": False,
         "hint": (
             "This is a handwritten Egyptian medical prescription (روشتة). "
@@ -197,8 +246,11 @@ SERVICES = {
         },
     },
     "shipping-label": {
-        "title": "قارئ بوالص الشحن", "category": "parsers", "icon": "package",
+        "title": "قارئ بوالص الشحن",
+        "title_en": "Shipping-label reader",
+        "category": "parsers", "icon": "package",
         "desc": "استخرج بيانات الشحنة من بوليصة الشحن.",
+        "desc_en": "Extract shipment data from a shipping label.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
             "المرسل": "sender", "المستلم": "recipient", "عنوان_التسليم": "delivery address",
@@ -209,8 +261,11 @@ SERVICES = {
 
     # ---------------- Real estate ----------------
     "sale-contract": {
-        "title": "عقد بيع عقار", "category": "realestate", "icon": "home",
+        "title": "عقد بيع عقار",
+        "title_en": "Property sale contract",
+        "category": "realestate", "icon": "home",
         "desc": "استخرج بيانات عقد بيع العقار: الأطراف، الوحدة، السعر، السداد.",
+        "desc_en": "Extract property sale-contract data: parties, unit, price, payment.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
             "البائع": "seller", "المشتري": "buyer", "وصف_العقار": "property description",
@@ -219,8 +274,11 @@ SERVICES = {
         },
     },
     "lease-contract": {
-        "title": "عقد إيجار", "category": "realestate", "icon": "scroll-text",
+        "title": "عقد إيجار",
+        "title_en": "Lease contract",
+        "category": "realestate", "icon": "scroll-text",
         "desc": "استخرج بيانات عقد الإيجار: المؤجر، المستأجر، المدة، القيمة.",
+        "desc_en": "Extract lease-contract data: landlord, tenant, term, rent.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
             "المؤجر": "landlord", "المستأجر": "tenant", "وصف_العقار": "property",
@@ -230,8 +288,11 @@ SERVICES = {
         },
     },
     "ownership-doc": {
-        "title": "وثيقة ملكية", "category": "realestate", "icon": "scroll",
+        "title": "وثيقة ملكية",
+        "title_en": "Property-ownership document",
+        "category": "realestate", "icon": "scroll",
         "desc": "استخرج بيانات وثيقة/سند ملكية العقار.",
+        "desc_en": "Extract data from a property-ownership document/title.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
             "اسم_المالك": "owner name", "رقم_الوثيقة": "document number",
@@ -240,9 +301,11 @@ SERVICES = {
         },
     },
     "tenant-data": {
-        "title": "بيانات المستأجر", "category": "realestate", "icon": "user",
+        "title": "بيانات المستأجر",
+        "title_en": "Tenant data",
+        "category": "realestate", "icon": "user",
         "desc": "استخرج بيانات المستأجر لملء نظام إدارة العقارات.",
-        # Simple field extraction — easy tier matches at 8x lower cost.
+        "desc_en": "Extract tenant data to populate a property-management system.",
         "kind": "fields", "hard": False, "free": False,
         "schema": {
             "اسم_المستأجر": "tenant name", "رقم_الهوية": "ID number", "الهاتف": "phone",
@@ -251,8 +314,11 @@ SERVICES = {
         },
     },
     "unit-data": {
-        "title": "بيانات الوحدة العقارية", "category": "realestate", "icon": "building",
+        "title": "بيانات الوحدة العقارية",
+        "title_en": "Property-unit data",
+        "category": "realestate", "icon": "building",
         "desc": "استخرج مواصفات الوحدة العقارية من كتيّب أو عرض.",
+        "desc_en": "Extract property-unit specs from a brochure or listing.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
             "رقم_الوحدة": "unit number", "النوع": "type", "المساحة": "area",
@@ -261,13 +327,19 @@ SERVICES = {
         },
     },
     "payment-schedule": {
-        "title": "جدول السداد", "category": "realestate", "icon": "calendar-clock",
+        "title": "جدول السداد",
+        "title_en": "Payment schedule",
+        "category": "realestate", "icon": "calendar-clock",
         "desc": "استخرج جدول الأقساط والدفعات إلى Excel.",
+        "desc_en": "Extract an installment / payment schedule to Excel.",
         "kind": "table", "hard": True, "free": False,
     },
     "contract-clauses": {
-        "title": "تحليل بنود العقد", "category": "realestate", "icon": "scale",
+        "title": "تحليل بنود العقد",
+        "title_en": "Contract-clause analysis",
+        "category": "realestate", "icon": "scale",
         "desc": "اكتشف ولخّص بنود العقد: الأطراف، المدة، السداد، الغرامات، الإنهاء.",
+        "desc_en": "Surface and summarize the contract clauses: parties, term, payment, penalties, termination.",
         "kind": "fields", "hard": True, "free": False,
         "schema": {
             "الأطراف": "the contracting parties", "موضوع_العقد": "subject/purpose",
@@ -284,3 +356,24 @@ CATEGORIES = [
     ("parsers", "قارئات المستندات"),
     ("realestate", "العقارات"),
 ]
+
+CATEGORIES_EN = [
+    ("ocr", "OCR & AI"),
+    ("parsers", "Document parsers"),
+    ("realestate", "Real estate"),
+]
+
+
+def localized(lang: str):
+    """Return (services, categories) with English labels swapped in when lang=='en'.
+    Falls back to Arabic for any service missing an EN translation."""
+    if lang == "en":
+        svc = {}
+        for slug, s in SERVICES.items():
+            svc[slug] = {
+                **s,
+                "title": s.get("title_en", s["title"]),
+                "desc": s.get("desc_en", s["desc"]),
+            }
+        return svc, CATEGORIES_EN
+    return SERVICES, CATEGORIES

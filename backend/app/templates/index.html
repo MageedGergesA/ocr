@@ -134,14 +134,19 @@
   <!-- INTERACTIVE DEMO -->
   <section id="try-it" class="section">
     <div class="container">
-      <span class="eyebrow">جرّبها الآن</span>
-      <h2>شاهدها تعمل <span class="muted">— في ثوانٍ</span></h2>
-      <p class="section-sub">اختر نوع مستند وشاهد مُستخلِص يقرأه ويستخرج حقوله أمامك.</p>
+      <span class="eyebrow">{{ 'Try it now' if lang == 'en' else 'جرّبها الآن' }}</span>
+      <h2>
+        {% if lang == 'en' %}See it in action <span class="muted">— in seconds</span>
+        {% else %}شاهدها تعمل <span class="muted">— في ثوانٍ</span>{% endif %}
+      </h2>
+      <p class="section-sub">
+        {{ 'Pick a document type and watch Mostakhles read and extract its fields live.' if lang == 'en' else 'اختر نوع مستند وشاهد مُستخلِص يقرأه ويستخرج حقوله أمامك.' }}
+      </p>
 
       <div class="demo-tabs">
-        <button class="demo-tab active" data-s="0" type="button"><i data-lucide="receipt-text"></i> فاتورة</button>
-        <button class="demo-tab" data-s="1" type="button"><i data-lucide="id-card"></i> بطاقة هوية</button>
-        <button class="demo-tab" data-s="2" type="button"><i data-lucide="pen-line"></i> روشتة بخط اليد</button>
+        <button class="demo-tab active" data-s="0" type="button"><i data-lucide="receipt-text"></i> {{ 'Invoice' if lang == 'en' else 'فاتورة' }}</button>
+        <button class="demo-tab" data-s="1" type="button"><i data-lucide="id-card"></i> {{ 'ID card' if lang == 'en' else 'بطاقة هوية' }}</button>
+        <button class="demo-tab" data-s="2" type="button"><i data-lucide="pen-line"></i> {{ 'Handwritten Rx' if lang == 'en' else 'روشتة بخط اليد' }}</button>
       </div>
 
       <div class="demo-stage">
@@ -177,22 +182,29 @@
 
         <div class="demo-result">
           <div class="rcard">
-            <div class="hv-head"><i data-lucide="sparkles"></i> البيانات المستخرجة</div>
+            <div class="hv-head"><i data-lucide="sparkles"></i> {{ 'Extracted data' if lang == 'en' else 'البيانات المستخرجة' }}</div>
             <div id="demoBody">
               <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
               <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
               <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
               <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
               <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
-              <div class="hv-foot"><span class="hv-doc-chip"><i data-lucide="file-text"></i> <span id="demoChip">فاتورة عربية</span></span><span>دقة 99% · أقل من 5 ثوانٍ</span></div>
+              <div class="hv-foot">
+                <span class="hv-doc-chip"><i data-lucide="file-text"></i>
+                  <span id="demoChip">{{ 'Arabic invoice' if lang == 'en' else 'فاتورة عربية' }}</span>
+                </span>
+                <span>{{ '99% accuracy · under 5s' if lang == 'en' else 'دقة 99% · أقل من 5 ثوانٍ' }}</span>
+              </div>
             </div>
           </div>
           {% if user %}
-          <a class="btn btn-primary btn-lg full" href="/app">جرّب على مستندك الآن</a>
+          <a class="btn btn-primary btn-lg full" href="/app">{{ 'Try it on your document' if lang == 'en' else 'جرّب على مستندك الآن' }}</a>
           {% else %}
-          <a class="btn btn-primary btn-lg full" href="/signup">جرّب على مستندك الآن</a>
+          <a class="btn btn-primary btn-lg full" href="/signup">{{ 'Try it on your document' if lang == 'en' else 'جرّب على مستندك الآن' }}</a>
           {% endif %}
-          <p class="demo-hint">عرض توضيحي على نماذج — مستنداتك الحقيقية تُعالَج بخصوصية تامة بعد تسجيلك.</p>
+          <p class="demo-hint">
+            {{ 'Demo on sample data — your real documents are processed privately after signup.' if lang == 'en' else 'عرض توضيحي على نماذج — مستنداتك الحقيقية تُعالَج بخصوصية تامة بعد تسجيلك.' }}
+          </p>
         </div>
       </div>
     </div>
@@ -202,8 +214,13 @@
   <section class="statement">
     <div class="container">
       <p class="statement-text">
-        الأدوات العالمية لم تُبنَ للعربية. نحن بُنينا لها وحدها.
-        <span class="muted">نقرأ المطبوع والمخطوط بخط اليد بدقة تتجاوز 99٪ على المطبوعة، ونحوّله إلى بيانات جاهزة للإنتاج — كل يوم.</span>
+        {% if lang == 'en' %}
+          Global tools weren't built for Arabic. We were built for it — and only for it.
+          <span class="muted">We read print and handwriting at over 99% accuracy on printed docs, and turn it into production-ready data — every day.</span>
+        {% else %}
+          الأدوات العالمية لم تُبنَ للعربية. نحن بُنينا لها وحدها.
+          <span class="muted">نقرأ المطبوع والمخطوط بخط اليد بدقة تتجاوز 99٪ على المطبوعة، ونحوّله إلى بيانات جاهزة للإنتاج — كل يوم.</span>
+        {% endif %}
       </p>
     </div>
   </section>
@@ -211,24 +228,32 @@
   <!-- PLATFORM / CHANNELS -->
   <section class="section">
     <div class="container">
-      <span class="eyebrow">منصة موحّدة</span>
-      <h2>منصة واحدة <span class="muted">— أينما تعمل</span></h2>
-      <p class="section-sub">محرّك ذكاء واحد، تصل إليه من حيث تعمل: المتصفّح، الـ API، أو أودو مباشرة.</p>
+      <span class="eyebrow">{{ 'Unified platform' if lang == 'en' else 'منصة موحّدة' }}</span>
+      <h2>
+        {% if lang == 'en' %}One platform <span class="muted">— wherever you work</span>
+        {% else %}منصة واحدة <span class="muted">— أينما تعمل</span>{% endif %}
+      </h2>
+      <p class="section-sub">
+        {{ 'One AI engine — reach it from the browser, the API, or directly inside Odoo.' if lang == 'en' else 'محرّك ذكاء واحد، تصل إليه من حيث تعمل: المتصفّح، الـ API، أو أودو مباشرة.' }}
+      </p>
       <div class="cards" style="grid-template-columns:repeat(3,1fr)">
         <div class="card">
           <div class="ico"><i data-lucide="globe"></i></div>
-          <h3>تطبيق الويب</h3>
-          <p>اسحب وأفلت مستنداتك واحصل على البيانات فورًا — بدون أي تثبيت.</p>
+          <h3>{{ 'Web app' if lang == 'en' else 'تطبيق الويب' }}</h3>
+          <p>{{ 'Drop your documents and get data instantly — no installation.' if lang == 'en' else 'اسحب وأفلت مستنداتك واحصل على البيانات فورًا — بدون أي تثبيت.' }}</p>
         </div>
         <div class="card">
           <div class="ico"><i data-lucide="terminal"></i></div>
-          <h3>واجهة API</h3>
-          <p>نقطة نهاية واحدة <code>/v1/extract</code> تدمجها في أي نظام بمفتاح API.</p>
+          <h3>{{ 'API' if lang == 'en' else 'واجهة API' }}</h3>
+          <p>
+            {% if lang == 'en' %}One <code>/v1/extract</code> endpoint to integrate into any system with an API key.
+            {% else %}نقطة نهاية واحدة <code>/v1/extract</code> تدمجها في أي نظام بمفتاح API.{% endif %}
+          </p>
         </div>
         <div class="card">
           <div class="ico"><i data-lucide="boxes"></i></div>
-          <h3>وحدة أودو</h3>
-          <p>املأ أي حقل في أي نموذج أودو من مستند — مباشرة داخل الـ ERP.</p>
+          <h3>{{ 'Odoo module' if lang == 'en' else 'وحدة أودو' }}</h3>
+          <p>{{ 'Fill any field on any Odoo model from a document — directly inside the ERP.' if lang == 'en' else 'املأ أي حقل في أي نموذج أودو من مستند — مباشرة داخل الـ ERP.' }}</p>
         </div>
       </div>
     </div>
@@ -237,10 +262,29 @@
   <!-- CAPABILITIES -->
   <section class="section">
     <div class="container">
-      <span class="eyebrow">قدرات المنصة</span>
-      <h2>أكثر مما تطلب <span class="muted">— منصة مستندات متكاملة</span></h2>
-      <p class="section-sub">لا تستخرج البيانات فقط. افهمها، قارنها، حلّلها، وادفعها إلى أنظمتك — كل ذلك من مكان واحد.</p>
+      <span class="eyebrow">{{ 'Platform capabilities' if lang == 'en' else 'قدرات المنصة' }}</span>
+      <h2>
+        {% if lang == 'en' %}More than you'd ask <span class="muted">— a full document platform</span>
+        {% else %}أكثر مما تطلب <span class="muted">— منصة مستندات متكاملة</span>{% endif %}
+      </h2>
+      <p class="section-sub">
+        {{ 'Don\'t just extract data. Understand it, compare it, analyze it, push it into your systems — all from one place.' if lang == 'en' else 'لا تستخرج البيانات فقط. افهمها، قارنها، حلّلها، وادفعها إلى أنظمتك — كل ذلك من مكان واحد.' }}
+      </p>
       <div class="cap-grid">
+        {% if lang == 'en' %}
+        <div class="cap"><div class="ci"><i data-lucide="scan-text"></i></div><div><h4>Auto extraction</h4><p>We detect the document type and extract its fields with no setup.</p></div></div>
+        <div class="cap"><div class="ci"><i data-lucide="list-checks"></i></div><div><h4>Custom schema</h4><p>Define your fields precisely and get them structured every time.</p></div></div>
+        <div class="cap"><div class="ci"><i data-lucide="message-square"></i></div><div><h4>Chat with the document</h4><p>Ask it directly: what's the total? who signed? summarize the contract.</p></div></div>
+        <div class="cap"><div class="ci"><i data-lucide="git-compare"></i></div><div><h4>Document comparison</h4><p>See what changed between two versions — diffs and gaps, instantly.</p></div></div>
+        <div class="cap"><div class="ci"><i data-lucide="file-search"></i></div><div><h4>Contract-clause detection</h4><p>We flag the material clauses and risks in Arabic contracts.</p></div></div>
+        <div class="cap"><div class="ci"><i data-lucide="tags"></i></div><div><h4>Auto classify & tag</h4><p>Sort and tag incoming documents with zero manual effort.</p></div></div>
+        <div class="cap"><div class="ci"><i data-lucide="layers"></i></div><div><h4>Batch processing</h4><p>Upload dozens of pages at once with parallel background processing.</p></div></div>
+        <div class="cap"><div class="ci"><i data-lucide="badge-check"></i></div><div><h4>Per-field confidence</h4><p>Know which values are confirmed and which need review — before you commit.</p></div></div>
+        <div class="cap"><div class="ci"><i data-lucide="download"></i></div><div><h4>Export to any format</h4><p>Excel · CSV · PDF · Word · XML — ready for your systems.</p></div></div>
+        <div class="cap"><div class="ci"><i data-lucide="webhook"></i></div><div><h4>Webhooks & automation</h4><p>Get results delivered automatically the moment they're ready.</p></div></div>
+        <div class="cap"><div class="ci"><i data-lucide="history"></i></div><div><h4>Processing history</h4><p>Review every past operation and re-download results anytime.</p></div></div>
+        <div class="cap"><div class="ci"><i data-lucide="plug"></i></div><div><h4>API & Odoo module</h4><p>One engine reachable from the browser, the API and Odoo directly.</p></div></div>
+        {% else %}
         <div class="cap"><div class="ci"><i data-lucide="scan-text"></i></div><div><h4>استخراج تلقائي</h4><p>نتعرّف على نوع المستند ونستخرج حقوله دون إعداد مسبق.</p></div></div>
         <div class="cap"><div class="ci"><i data-lucide="list-checks"></i></div><div><h4>مخطط مخصص</h4><p>عرّف حقولك بدقة واحصل عليها منظّمة في كل مرة.</p></div></div>
         <div class="cap"><div class="ci"><i data-lucide="message-square"></i></div><div><h4>محادثة مع المستند</h4><p>اسأل مستندك مباشرة: ما الإجمالي؟ من وقّع؟ لخّص العقد.</p></div></div>
@@ -253,6 +297,7 @@
         <div class="cap"><div class="ci"><i data-lucide="webhook"></i></div><div><h4>Webhooks وأتمتة</h4><p>استقبل النتائج تلقائيًا في أنظمتك لحظة جاهزيتها.</p></div></div>
         <div class="cap"><div class="ci"><i data-lucide="history"></i></div><div><h4>سجلّ المعالجة</h4><p>راجع كل عملية سابقة وأعد تنزيل نتائجها وقتما تشاء.</p></div></div>
         <div class="cap"><div class="ci"><i data-lucide="plug"></i></div><div><h4>API ووحدة أودو</h4><p>محرّك واحد تصل إليه من المتصفّح والـ API وأودو مباشرة.</p></div></div>
+        {% endif %}
       </div>
     </div>
   </section>
@@ -260,10 +305,12 @@
   <!-- INTEGRATIONS BAND -->
   <section class="section section-alt">
     <div class="container" style="text-align:center">
-      <h2>يعمل مع أدواتك</h2>
-      <p class="section-sub">صدّر نتائجك إلى الصيغ والأنظمة التي تستخدمها بالفعل.</p>
+      <h2>{{ 'Works with your tools' if lang == 'en' else 'يعمل مع أدواتك' }}</h2>
+      <p class="section-sub">
+        {{ 'Export results to the formats and systems you already use.' if lang == 'en' else 'صدّر نتائجك إلى الصيغ والأنظمة التي تستخدمها بالفعل.' }}
+      </p>
       <div class="integ-row">
-        <span class="integ-chip"><img src="https://cdn.simpleicons.org/odoo/714B67" alt="Odoo"> أودو</span>
+        <span class="integ-chip"><img src="https://cdn.simpleicons.org/odoo/714B67" alt="Odoo"> {{ 'Odoo' if lang == 'en' else 'أودو' }}</span>
         <span class="integ-chip"><img src="https://cdn.simpleicons.org/microsoftexcel/217346" alt="Excel"> Excel</span>
         <span class="integ-chip"><img src="https://cdn.simpleicons.org/googlesheets/0F9D58" alt="Google Sheets"> Google Sheets</span>
         <span class="integ-chip"><img src="https://cdn.simpleicons.org/adobeacrobatreader/EC1C24" alt="PDF"> PDF</span>
@@ -277,11 +324,16 @@
   <!-- LANGUAGES -->
   <section class="section section-alt">
     <div class="container" style="text-align:center">
-      <span class="eyebrow">تغطية اللغات</span>
-      <h2>متخصّصون في العربية <span class="muted">— وندعم أكثر من 30 لغة</span></h2>
-      <p class="section-sub">محرّك واحد يقرأ مستنداتك المطبوعة بلغات العالم الرئيسية. العربية والخط اليدوي العربي هما تخصّصنا.</p>
+      <span class="eyebrow">{{ 'Language coverage' if lang == 'en' else 'تغطية اللغات' }}</span>
+      <h2>
+        {% if lang == 'en' %}Arabic specialists <span class="muted">— and 30+ languages supported</span>
+        {% else %}متخصّصون في العربية <span class="muted">— وندعم أكثر من 30 لغة</span>{% endif %}
+      </h2>
+      <p class="section-sub">
+        {{ 'One engine reads your printed documents in the world\'s major languages. Arabic and Arabic handwriting are our specialty.' if lang == 'en' else 'محرّك واحد يقرأ مستنداتك المطبوعة بلغات العالم الرئيسية. العربية والخط اليدوي العربي هما تخصّصنا.' }}
+      </p>
       <div class="lang-wrap">
-        <span class="lang-chip star">العربية</span>
+        <span class="lang-chip star">{{ 'Arabic' if lang == 'en' else 'العربية' }}</span>
         <span class="lang-chip star">English</span>
         <span class="lang-chip star">Français</span>
         <span class="lang-chip">فارسی</span>
@@ -312,19 +364,31 @@
         <span class="lang-chip">Filipino</span>
         <span class="lang-chip">Kiswahili</span>
       </div>
-      <p class="lang-note">الدعم الكامل للخط اليدوي متاح للعربية. تختلف الدقة حسب اللغة وجودة المستند.</p>
+      <p class="lang-note">
+        {{ 'Full handwriting support is available for Arabic. Accuracy varies by language and document quality.' if lang == 'en' else 'الدعم الكامل للخط اليدوي متاح للعربية. تختلف الدقة حسب اللغة وجودة المستند.' }}
+      </p>
     </div>
   </section>
 
   <!-- USE CASES -->
   <section id="use-cases" class="section section-alt">
     <div class="container">
-      <h2>من يستخدم <span class="muted">مُستخلِص؟</span></h2>
+      <h2>
+        {% if lang == 'en' %}Who uses <span class="muted">Mostakhles?</span>
+        {% else %}من يستخدم <span class="muted">مُستخلِص؟</span>{% endif %}
+      </h2>
       <div class="cards">
+        {% if lang == 'en' %}
+        <div class="card"><h3>Accountants</h3><p>Push invoices and receipts into Odoo without typing them in.</p></div>
+        <div class="card"><h3>Delivery companies</h3><p>Read shipping data and customer addresses from scanned papers.</p></div>
+        <div class="card"><h3>Clinics & pharmacies</h3><p>Convert handwritten prescriptions into structured records.</p></div>
+        <div class="card"><h3>HR teams</h3><p>Extract ID data and employee contracts automatically.</p></div>
+        {% else %}
         <div class="card"><h3>المحاسبون</h3><p>إدخال الفواتير والإيصالات في أودو دون كتابة يدوية.</p></div>
         <div class="card"><h3>شركات التوصيل</h3><p>قراءة بيانات الشحن وعناوين العملاء من الأوراق الممسوحة.</p></div>
         <div class="card"><h3>العيادات والصيدليات</h3><p>تحويل الوصفات المكتوبة بخط اليد إلى سجلات منظمة.</p></div>
         <div class="card"><h3>الموارد البشرية</h3><p>استخراج بيانات الهويات وعقود الموظفين تلقائيًا.</p></div>
+        {% endif %}
       </div>
     </div>
   </section>
@@ -332,40 +396,30 @@
   <!-- SECURITY -->
   <section id="security" class="section">
     <div class="container">
-      <span class="eyebrow">الأمان والثقة</span>
-      <h2>أمان وخصوصية <span class="muted">تستحق ثقتك</span></h2>
-      <p class="section-sub">نتعامل مع مستنداتك بمسؤولية — هذه ليست شعارات، بل سياساتنا الفعلية.</p>
+      <span class="eyebrow">{{ 'Security & trust' if lang == 'en' else 'الأمان والثقة' }}</span>
+      <h2>
+        {% if lang == 'en' %}Security & privacy <span class="muted">you can trust</span>
+        {% else %}أمان وخصوصية <span class="muted">تستحق ثقتك</span>{% endif %}
+      </h2>
+      <p class="section-sub">
+        {{ 'We handle your documents responsibly — these aren\'t slogans, they\'re our actual policies.' if lang == 'en' else 'نتعامل مع مستنداتك بمسؤولية — هذه ليست شعارات، بل سياساتنا الفعلية.' }}
+      </p>
       <div class="security-grid">
-        <div class="sec-card">
-          <div class="ico"><i data-lucide="shield-check"></i></div>
-          <h3>لا نُخزّن مستنداتك</h3>
-          <p>تُعالَج المستندات في الذاكرة وتُحذَف فور انتهاء الاستخراج — لا أرشفة، لا احتفاظ.</p>
-        </div>
-        <div class="sec-card">
-          <div class="ico"><i data-lucide="lock"></i></div>
-          <h3>اتصال مشفّر</h3>
-          <p>كل البيانات تُنقَل عبر اتصال مشفّر (HTTPS/TLS) من جهازك إلى الخادم.</p>
-        </div>
-        <div class="sec-card">
-          <div class="ico"><i data-lucide="key-round"></i></div>
-          <h3>تحكّم كامل بالوصول</h3>
-          <p>حساب محمي بكلمة مرور، ومفاتيح API يمكنك إلغاؤها في أي لحظة من لوحة التحكم.</p>
-        </div>
-        <div class="sec-card">
-          <div class="ico"><i data-lucide="wallet"></i></div>
-          <h3>فوترة شفّافة</h3>
-          <p>نظام نقاط واضح — ترى تكلفة كل عملية قبل تنفيذها. بلا رسوم مفاجئة.</p>
-        </div>
-        <div class="sec-card">
-          <div class="ico"><i data-lucide="globe-2"></i></div>
-          <h3>مبنيّ للمنطقة العربية</h3>
-          <p>متخصصون في مستندات مصر والخليج — الفواتير والعقود والهويات بالعربية والخط اليدوي.</p>
-        </div>
-        <div class="sec-card">
-          <div class="ico"><i data-lucide="gauge"></i></div>
-          <h3>أنت تتحكّم بالتكلفة</h3>
-          <p>اختر الوضع السريع أو الدقيق لكل مستند، وراقب رصيدك لحظيًا.</p>
-        </div>
+        {% if lang == 'en' %}
+        <div class="sec-card"><div class="ico"><i data-lucide="shield-check"></i></div><h3>We don't store your documents</h3><p>Documents are processed in memory and deleted the moment extraction completes — no archive, no retention.</p></div>
+        <div class="sec-card"><div class="ico"><i data-lucide="lock"></i></div><h3>Encrypted in transit</h3><p>All data travels over an encrypted (HTTPS/TLS) connection from your device to our servers.</p></div>
+        <div class="sec-card"><div class="ico"><i data-lucide="key-round"></i></div><h3>Full access control</h3><p>Password-protected account and API keys you can revoke anytime from the dashboard.</p></div>
+        <div class="sec-card"><div class="ico"><i data-lucide="wallet"></i></div><h3>Transparent billing</h3><p>Clear credits system — you see the cost of each operation before it runs. No surprise fees.</p></div>
+        <div class="sec-card"><div class="ico"><i data-lucide="globe-2"></i></div><h3>Built for the Arab region</h3><p>Specialists in Egyptian & Gulf documents — invoices, contracts and IDs in Arabic and handwriting.</p></div>
+        <div class="sec-card"><div class="ico"><i data-lucide="gauge"></i></div><h3>You control the cost</h3><p>Pick fast or high-accuracy mode per document and watch your balance live.</p></div>
+        {% else %}
+        <div class="sec-card"><div class="ico"><i data-lucide="shield-check"></i></div><h3>لا نُخزّن مستنداتك</h3><p>تُعالَج المستندات في الذاكرة وتُحذَف فور انتهاء الاستخراج — لا أرشفة، لا احتفاظ.</p></div>
+        <div class="sec-card"><div class="ico"><i data-lucide="lock"></i></div><h3>اتصال مشفّر</h3><p>كل البيانات تُنقَل عبر اتصال مشفّر (HTTPS/TLS) من جهازك إلى الخادم.</p></div>
+        <div class="sec-card"><div class="ico"><i data-lucide="key-round"></i></div><h3>تحكّم كامل بالوصول</h3><p>حساب محمي بكلمة مرور، ومفاتيح API يمكنك إلغاؤها في أي لحظة من لوحة التحكم.</p></div>
+        <div class="sec-card"><div class="ico"><i data-lucide="wallet"></i></div><h3>فوترة شفّافة</h3><p>نظام نقاط واضح — ترى تكلفة كل عملية قبل تنفيذها. بلا رسوم مفاجئة.</p></div>
+        <div class="sec-card"><div class="ico"><i data-lucide="globe-2"></i></div><h3>مبنيّ للمنطقة العربية</h3><p>متخصصون في مستندات مصر والخليج — الفواتير والعقود والهويات بالعربية والخط اليدوي.</p></div>
+        <div class="sec-card"><div class="ico"><i data-lucide="gauge"></i></div><h3>أنت تتحكّم بالتكلفة</h3><p>اختر الوضع السريع أو الدقيق لكل مستند، وراقب رصيدك لحظيًا.</p></div>
+        {% endif %}
       </div>
     </div>
   </section>
@@ -373,10 +427,82 @@
   <!-- PRICING -->
   <section id="pricing" class="section section-alt">
     <div class="container">
-      <h2>أسعار بسيطة <span class="muted">وشفافة</span></h2>
-      <p class="section-sub">النقاط مشتركة عبر الويب وأودو والـ API. الصفحة = <b>نقطة واحدة</b> بالوضع السريع، أو <b>8 نقاط</b> بالدقة العالية (العربي والخط اليدوي).</p>
+      <h2>
+        {% if lang == 'en' %}Simple <span class="muted">transparent pricing</span>
+        {% else %}أسعار بسيطة <span class="muted">وشفافة</span>{% endif %}
+      </h2>
+      <p class="section-sub">
+        {% if lang == 'en' %}
+          Credits are shared across web, Odoo and the API. Page = <b>1 credit</b> in fast mode, or <b>8 credits</b> in high-accuracy mode (Arabic & handwriting).
+        {% else %}
+          النقاط مشتركة عبر الويب وأودو والـ API. الصفحة = <b>نقطة واحدة</b> بالوضع السريع، أو <b>8 نقاط</b> بالدقة العالية (العربي والخط اليدوي).
+        {% endif %}
+      </p>
 
       <div class="pricing pricing-5">
+        {% if lang == 'en' %}
+        <div class="plan">
+          <h3>🎁 Free</h3>
+          <div class="price">$0<span>/month</span></div>
+          <p class="quota">300 credits/month</p>
+          <ul>
+            <li>Web + Odoo + API</li>
+            <li>All languages & handwriting</li>
+            <li>Telegram community support</li>
+            <li>No credit card required</li>
+          </ul>
+          <a class="btn btn-ghost full" href="/signup">Start free</a>
+        </div>
+        <div class="plan">
+          <h3>🌱 Lite</h3>
+          <div class="price">$9<span>/month</span></div>
+          <p class="quota">1,200 credits/month</p>
+          <ul>
+            <li>Everything in Free</li>
+            <li>Credit rollover to next month</li>
+            <li>Email support</li>
+            <li>For individuals & freelancers</li>
+          </ul>
+          <a class="btn btn-ghost full" href="/signup">Subscribe</a>
+        </div>
+        <div class="plan">
+          <h3>🚀 Starter</h3>
+          <div class="price">$29<span>/month</span></div>
+          <p class="quota">3,500 credits/month</p>
+          <ul>
+            <li>Everything in Lite</li>
+            <li>Top-up ($5 per 400 credits)</li>
+            <li>Faster email support</li>
+            <li>For small businesses</li>
+          </ul>
+          <a class="btn btn-ghost full" href="/signup">Subscribe</a>
+        </div>
+        <div class="plan featured">
+          <div class="tag">🔥 Most popular</div>
+          <h3>Pro</h3>
+          <div class="price">$69<span>/month</span></div>
+          <p class="quota">8,500 credits (+20% bonus)</p>
+          <ul>
+            <li>Everything in Starter</li>
+            <li>Priority WhatsApp support</li>
+            <li>7-day free trial</li>
+            <li>For departments & teams</li>
+          </ul>
+          <a class="btn btn-primary full" href="/signup">Try 7 days free</a>
+        </div>
+        <div class="plan">
+          <h3>💼 Business</h3>
+          <div class="price">$199<span>/month</span></div>
+          <p class="quota">28,000 credits/month</p>
+          <ul>
+            <li>Everything in Pro</li>
+            <li>Dedicated account manager + SLA</li>
+            <li>Flexible annual contract</li>
+            <li>For mid-sized organizations</li>
+          </ul>
+          <a class="btn btn-ghost full" href="mailto:support@mostakhles.ai">Contact us</a>
+        </div>
+        {% else %}
         <div class="plan">
           <h3>🎁 مجانية</h3>
           <div class="price">$0<span>/شهر</span></div>
@@ -389,7 +515,6 @@
           </ul>
           <a class="btn btn-ghost full" href="/signup">ابدأ مجانًا</a>
         </div>
-
         <div class="plan">
           <h3>🌱 Lite</h3>
           <div class="price">$9<span>/شهر</span></div>
@@ -402,7 +527,6 @@
           </ul>
           <a class="btn btn-ghost full" href="/signup">اشترك</a>
         </div>
-
         <div class="plan">
           <h3>🚀 Starter</h3>
           <div class="price">$29<span>/شهر</span></div>
@@ -415,7 +539,6 @@
           </ul>
           <a class="btn btn-ghost full" href="/signup">اشترك</a>
         </div>
-
         <div class="plan featured">
           <div class="tag">🔥 الأكثر شيوعًا</div>
           <h3>Pro</h3>
@@ -429,7 +552,6 @@
           </ul>
           <a class="btn btn-primary full" href="/signup">جرّب 7 أيام مجانًا</a>
         </div>
-
         <div class="plan">
           <h3>💼 Business</h3>
           <div class="price">$199<span>/شهر</span></div>
@@ -442,16 +564,31 @@
           </ul>
           <a class="btn btn-ghost full" href="mailto:support@mostakhles.ai">تواصل معنا</a>
         </div>
+        {% endif %}
       </div>
 
-      <p class="pricing-annual">💡 خصم <b>20%</b> على كل خطة سنوية — وفّر شهرين كاملين.</p>
+      <p class="pricing-annual">
+        {% if lang == 'en' %}
+          💡 <b>20%</b> off on every annual plan — save two full months.
+        {% else %}
+          💡 خصم <b>20%</b> على كل خطة سنوية — وفّر شهرين كاملين.
+        {% endif %}
+      </p>
 
       <div class="assurance">
+        {% if lang == 'en' %}
+        <span><b>✓</b> No credit card for Free</span>
+        <span><b>✓</b> Full refund within 14 days</span>
+        <span><b>✓</b> Credit rollover (Lite and above)</span>
+        <span><b>✓</b> Unlimited top-ups</span>
+        <span><b>✓</b> Cancel anytime</span>
+        {% else %}
         <span><b>✓</b> بدون بطاقة ائتمان للمجانية</span>
         <span><b>✓</b> استرداد كامل خلال 14 يومًا</span>
         <span><b>✓</b> ترحيل النقاط (Lite فما فوق)</span>
         <span><b>✓</b> شحن إضافي بدون حدود</span>
         <span><b>✓</b> ألغِ في أي وقت</span>
+        {% endif %}
       </div>
     </div>
   </section>
@@ -459,12 +596,20 @@
   <!-- FAQ -->
   <section id="faq" class="section">
     <div class="container narrow">
-      <h2>الأسئلة الشائعة</h2>
+      <h2>{{ 'Frequently asked questions' if lang == 'en' else 'الأسئلة الشائعة' }}</h2>
+      {% if lang == 'en' %}
+      <details><summary>Does it really support Arabic handwriting?</summary><p>Yes. That's why we exist — we use advanced vision models that read Arabic and English handwriting together.</p></details>
+      <details><summary>How does it integrate with Odoo?</summary><p>Install a free module from the Apps Store, pick a model and fields, and an upload button appears inside the record. We fill the fields automatically from the document.</p></details>
+      <details><summary>Which languages are supported?</summary><p>Arabic and English first, but the model practically supports any language in the document.</p></details>
+      <details><summary>Is my data safe?</summary><p>We don't store your documents after extraction. They're processed and deleted immediately.</p></details>
+      <details><summary>What happens if I exceed the free quota?</summary><p>We pause extractions until next month or until you upgrade — with no surprise charges.</p></details>
+      {% else %}
       <details><summary>هل يدعم الخط اليدوي العربي فعلًا؟</summary><p>نعم. هذا هو سبب وجودنا — نستخدم نماذج رؤية متقدمة تقرأ الخط اليدوي العربي والإنجليزي معًا.</p></details>
       <details><summary>كيف يتكامل مع أودو؟</summary><p>تثبّت وحدة مجانية من متجر التطبيقات، تختار النموذج والحقول، ويظهر زر رفع داخل السجل. نملأ الحقول تلقائيًا من المستند.</p></details>
       <details><summary>ما اللغات المدعومة؟</summary><p>العربية والإنجليزية أولًا، لكن النموذج يدعم عمليًا أي لغة في المستند.</p></details>
       <details><summary>هل بياناتي آمنة؟</summary><p>لا نخزّن مستنداتك بعد الاستخراج. تُعالج وتُحذف فورًا.</p></details>
       <details><summary>ماذا يحدث إذا تجاوزت الحصة المجانية؟</summary><p>نوقف الاستخراج حتى الشهر التالي أو ترقية الخطة — دون أي رسوم مفاجئة.</p></details>
+      {% endif %}
     </div>
   </section>
 
@@ -472,6 +617,22 @@
 
   <script>
     (function () {
+      {% if lang == 'en' %}
+      var data = [
+        { word: 'Arab businesses', chip: 'Arabic invoice', f: [
+          ['Customer', 'أحمد حسن', 'ok'], ['Invoice no.', 'INV-2025-0042', 'ok'],
+          ['Date', '2025-03-01', 'ok'], ['Total', '1,530 EGP', 'ok'], ['Tax ID', '304-221-119', 'mid'] ] },
+        { word: 'Invoices & contracts', chip: 'Lease contract', f: [
+          ['Party A', 'شركة النخبة', 'ok'], ['Party B', 'محمد علي', 'ok'],
+          ['Term', '12 months', 'ok'], ['Rent', '4,000 EGP/month', 'ok'], ['Start date', '2025-01-01', 'mid'] ] },
+        { word: 'IDs & passports', chip: 'National ID', f: [
+          ['Name', 'سارة إبراهيم', 'ok'], ['National ID', '29805011200123', 'ok'],
+          ['Date of birth', '1998-05-01', 'ok'], ['City', 'القاهرة', 'ok'], ['Expiry', '2030-12-31', 'mid'] ] },
+        { word: 'Handwriting', chip: 'Handwritten Rx', f: [
+          ['Patient', 'خالد يوسف', 'ok'], ['Diagnosis', 'التهاب الحلق', 'mid'],
+          ['Medication', 'أموكسيسيلين 500', 'ok'], ['Dose', '3× daily', 'ok'], ['Duration', '7 days', 'ok'] ] }
+      ];
+      {% else %}
       var data = [
         { word: 'الأعمال العربية', chip: 'فاتورة عربية', f: [
           ['اسم العميل', 'أحمد حسن', 'ok'], ['رقم الفاتورة', 'INV-2025-0042', 'ok'],
@@ -486,6 +647,7 @@
           ['اسم المريض', 'خالد يوسف', 'ok'], ['التشخيص', 'التهاب الحلق', 'mid'],
           ['الدواء', 'أموكسيسيلين 500', 'ok'], ['الجرعة', '3 مرات يوميًا', 'ok'], ['المدة', '7 أيام', 'ok'] ] }
       ];
+      {% endif %}
       var rotate = document.getElementById('rotate');
       var chip = document.getElementById('chipText');
       var body = document.getElementById('hvBody');
@@ -513,6 +675,19 @@
 
     // Interactive demo: pick a sample → scan → reveal extracted fields.
     (function () {
+      {% if lang == 'en' %}
+      var demo = [
+        { chip: 'Arabic invoice', f: [
+          ['Customer', 'أحمد حسن', ''], ['Invoice no.', 'INV-2025-0042', ''],
+          ['Date', '2025-03-01', ''], ['Total', '1,530 EGP', ''], ['Tax ID', '304-221-119', 'mid'] ] },
+        { chip: 'National ID', f: [
+          ['Name', 'سارة إبراهيم', ''], ['National ID', '29805011200123', ''],
+          ['Date of birth', '1998-05-01', ''], ['City', 'القاهرة', ''], ['Expiry', '2030-12-31', 'mid'] ] },
+        { chip: 'Handwritten Rx', f: [
+          ['Patient', 'خالد يوسف', ''], ['Diagnosis', 'التهاب الحلق', 'mid'],
+          ['Medication', 'أموكسيسيلين 500', ''], ['Dose', '3× daily', ''], ['Duration', '7 days', ''] ] }
+      ];
+      {% else %}
       var demo = [
         { chip: 'فاتورة عربية', f: [
           ['اسم العميل', 'أحمد حسن', ''], ['رقم الفاتورة', 'INV-2025-0042', ''],
@@ -524,6 +699,7 @@
           ['اسم المريض', 'خالد يوسف', ''], ['التشخيص', 'التهاب الحلق', 'mid'],
           ['الدواء', 'أموكسيسيلين 500', ''], ['الجرعة', '3 مرات يوميًا', ''], ['المدة', '7 أيام', ''] ] }
       ];
+      {% endif %}
       var tabs = document.querySelectorAll('.demo-tab');
       var papers = document.querySelectorAll('#demoDoc .paper');
       var docEl = document.getElementById('demoDoc');
@@ -563,9 +739,13 @@
   <!-- FINAL CTA -->
   <section id="demo" class="cta-final">
     <div class="container">
-      <h2>مستنداتك العربية، مفهومة ومؤتمتة — ابدأ اليوم</h2>
-      <p>ارفع أول مستند خلال دقيقة. بدون بطاقة ائتمان، وبكامل القدرات.</p>
-      <a class="btn btn-primary btn-lg" href="/signup">ابدأ مجانًا</a>
+      <h2>
+        {{ 'Your Arabic documents — understood and automated. Start today.' if lang == 'en' else 'مستنداتك العربية، مفهومة ومؤتمتة — ابدأ اليوم' }}
+      </h2>
+      <p>
+        {{ 'Upload your first document in under a minute. No credit card, full capabilities.' if lang == 'en' else 'ارفع أول مستند خلال دقيقة. بدون بطاقة ائتمان، وبكامل القدرات.' }}
+      </p>
+      <a class="btn btn-primary btn-lg" href="/signup">{{ 'Start free' if lang == 'en' else 'ابدأ مجانًا' }}</a>
     </div>
   </section>
 
@@ -573,32 +753,38 @@
     <div class="container">
       <div class="footer-cols">
         <div class="footer-col">
-          <a class="brand" href="/">مُستخلِص<span>.ai</span></a>
-          <p style="margin-top:10px;max-width:260px">منصة الذكاء الاصطناعي لفهم وأتمتة مستندات الأعمال العربية.</p>
+          <a class="brand" href="/">{{ 'Mostakhles' if lang == 'en' else 'مُستخلِص' }}<span>.ai</span></a>
+          <p style="margin-top:10px;max-width:260px">
+            {{ 'The AI platform for understanding and automating Arabic business documents.' if lang == 'en' else 'منصة الذكاء الاصطناعي لفهم وأتمتة مستندات الأعمال العربية.' }}
+          </p>
         </div>
         <div class="footer-col">
-          <h4>المنتج</h4>
-          <a href="/tools">الأدوات</a>
-          <a href="/chat">المحادثة مع المستندات</a>
-          <a href="/compare">مقارنة المستندات</a>
-          <a href="/#pricing">الأسعار</a>
+          <h4>{{ 'Product' if lang == 'en' else 'المنتج' }}</h4>
+          <a href="/tools">{{ 'Tools' if lang == 'en' else 'الأدوات' }}</a>
+          <a href="/chat">{{ 'Chat with documents' if lang == 'en' else 'المحادثة مع المستندات' }}</a>
+          <a href="/compare">{{ 'Document comparison' if lang == 'en' else 'مقارنة المستندات' }}</a>
+          <a href="/#pricing">{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</a>
         </div>
         <div class="footer-col">
-          <h4>المطوّرون</h4>
-          <a href="/docs">واجهة API</a>
-          <a href="/#security">الأمان والخصوصية</a>
-          <a href="/#faq">الأسئلة الشائعة</a>
+          <h4>{{ 'Developers' if lang == 'en' else 'المطوّرون' }}</h4>
+          <a href="/docs">{{ 'API' if lang == 'en' else 'واجهة API' }}</a>
+          <a href="/#security">{{ 'Security & privacy' if lang == 'en' else 'الأمان والخصوصية' }}</a>
+          <a href="/#faq">{{ 'FAQ' if lang == 'en' else 'الأسئلة الشائعة' }}</a>
         </div>
         <div class="footer-col">
-          <h4>قانوني</h4>
-          <a href="/privacy">سياسة الخصوصية</a>
-          <a href="/terms">شروط الاستخدام</a>
-          <a href="mailto:support@mostakhles.ai">تواصل معنا</a>
+          <h4>{{ 'Legal' if lang == 'en' else 'قانوني' }}</h4>
+          <a href="/privacy">{{ 'Privacy policy' if lang == 'en' else 'سياسة الخصوصية' }}</a>
+          <a href="/terms">{{ 'Terms of use' if lang == 'en' else 'شروط الاستخدام' }}</a>
+          <a href="mailto:support@mostakhles.ai">{{ 'Contact us' if lang == 'en' else 'تواصل معنا' }}</a>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 مُستخلِص — جميع الحقوق محفوظة</span>
-        <span>🔒 مستنداتك لا تُخزَّن · اتصال مشفّر</span>
+        <span>
+          {{ '© 2026 Mostakhles — All rights reserved' if lang == 'en' else '© 2026 مُستخلِص — جميع الحقوق محفوظة' }}
+        </span>
+        <span>
+          {{ '🔒 Your documents are not stored · encrypted in transit' if lang == 'en' else '🔒 مستنداتك لا تُخزَّن · اتصال مشفّر' }}
+        </span>
       </div>
     </div>
   </footer>
