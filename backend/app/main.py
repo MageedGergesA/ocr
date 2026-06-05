@@ -1300,21 +1300,14 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
                         data_bytes, ct, svc["schema"], hard, hint=svc.get("hint", ""),
                         output_lang=output_lang)}
             elif kind == "prescription":
+                # Pass the rich rx structure straight through. The frontend's
+                # prescriptionHtml() expects {patient, medications, as_needed?,
+                # phone_numbers?, notes?} and won't render the medications table
+                # if it can't find `medications`. The earlier flatten-to-rows
+                # transform broke that — meds went into a generic table that
+                # prescriptionHtml never reads.
                 rx = extractor.extract_prescription(data_bytes, ct, hard)
-                meds = rx.get("medications") or []
-                rows = []
-                for m in meds:
-                    name = (m.get("name") or "").strip()
-                    cls = (m.get("drug_class") or "").strip()
-                    conf = m.get("confidence")
-                    rows.append([
-                        f"{name} ({cls})" if cls else name,
-                        m.get("form") or "",
-                        m.get("dosage") or "",
-                        f"{round(conf * 100)}%" if isinstance(conf, (int, float)) else "",
-                    ])
-                out = {"kind": "prescription", "patient": rx.get("patient") or {},
-                       "columns": ["الدواء", "الشكل الدوائي", "الجرعة والتعليمات", "الثقة"], "rows": rows}
+                out = {"kind": "prescription", **rx}
             elif kind == "table":
                 t = extractor.run_table(data_bytes, ct, hard)
                 out = {"kind": "table", "columns": t["columns"], "rows": t["rows"]}

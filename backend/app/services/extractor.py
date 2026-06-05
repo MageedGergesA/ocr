@@ -182,31 +182,64 @@ def compare(text_a: str, text_b: str) -> str:
 def extract_prescription(image_bytes: bytes, media_type: str, hard: bool = True) -> dict:
     """Rich, interpreted reading of a handwritten medical prescription.
 
-    Returns {"patient": {field: {value, confidence}}, "medications": [{name, drug_class, form,
-    dosage, confidence}]}. The model decides how many medications there are and interprets each
-    dose into a plain-Arabic instruction — like a pharmacist reading the script.
+    Returns the prescription shape plus a cognitive envelope:
+      {
+        "patient":     {field: {value, confidence}, ...},
+        "medications": [{name, drug_class, form, dosage, duration?, confidence}, ...],
+        "as_needed":   [{name, confidence}, ...],     # PRN medicines
+        "phone_numbers": [...],
+        "notes":       [...],
+        "summary":     "one-sentence reading of the Rx",
+        "validations": [{check, ok, detail}, ...],
+        "derived":     {medication_count, antibiotic_present, nsaid_present, ...}
+      }
     """
     prompt = (
         "This is a HANDWRITTEN Egyptian medical prescription (روشتة). Read it like an experienced "
-        "Egyptian pharmacist and produce a RICH, INTERPRETED result.\n"
+        "Egyptian clinical pharmacist and produce a RICH, INTERPRETED result with cognitive cross-checks.\n"
         "Known Egyptian drugs — prefer the correct spelling if a handwritten name is close: Newclav, "
         "Augmentin, Hibiotic, Curam, Amrizole, Flagyl, Rhinopro, Telfast, Zyrtec, Allergyl, Histop, "
         "Nasostop, Otrivin, Sinucare, Ventolin, Farcolin, Brufen, Cetal, Abimol, Paramol, Zithromax, "
-        "Klacid, Zisrocin.\n"
+        "Klacid, Zisrocin, Voltaren, Nexium, Concor, Norvasc.\n"
         "For EACH medication identify: its name; its drug class / active ingredient if recognizable "
         "(e.g. Newclav → أموكسيسيلين/كلافولانيك، Amrizole → ميترونيدازول); its formulation (معلّق/شراب/"
-        "نقط/أقراص…); and INTERPRET the handwritten dose into a clear Arabic instruction "
-        "(e.g. '4 مل كل 12 ساعة'، 'مرتين يوميًا لمدة 5 أيام'). If a dose is illegible write 'غير واضح'.\n"
+        "نقط/أقراص…); INTERPRET the handwritten dose into a clear Arabic instruction "
+        "(e.g. '4 مل كل 12 ساعة'، 'مرتين يوميًا لمدة 5 أيام'); and add a separate `duration` field if "
+        "you can identify a course length in days. If a dose is illegible write 'غير واضح'.\n"
         "'Temp' is body temperature in Celsius (a lone '7' almost certainly means 37). 'Age' is in years, "
         "'Wt' is weight in kg.\n"
         "Keep all names and values in their ORIGINAL language; do NOT translate Arabic into English. "
-        "Give a calibrated 0-1 confidence per item; never inflate confidence on unclear handwriting.\n"
+        "Give a calibrated 0-1 confidence per item; never inflate confidence on unclear handwriting.\n\n"
+        "ALSO produce, in the same JSON object:\n"
+        "- summary: a one-sentence, plain-Arabic clinical summary (e.g. 'وصفة طبية لمريض عمره X سنة "
+        "بتشخيص Y، تتضمن مضاد حيوي + خافض حرارة لمدة Z أيام').\n"
+        "- derived: {\"medication_count\": <int>, \"antibiotic_present\": true|false, "
+        "\"nsaid_present\": true|false (ibuprofen/diclofenac/naproxen/brufen/voltaren), "
+        "\"duration_days_max\": <int or null>, \"has_handwritten_dose\": true|false "
+        "(any medication confidence < 0.7)}.\n"
+        "- validations: an array of {check, ok, detail} entries — include EVERY check that applies:\n"
+        "  * has_patient_name (patient name extracted)\n"
+        "  * has_doctor_name (doctor name extracted)\n"
+        "  * has_date (date extracted and reasonable)\n"
+        "  * has_diagnosis (D.G / تشخيص extracted)\n"
+        "  * medications_have_doses (every med has a dosage AND duration)\n"
+        "  * temp_sanity (if temperature present, 30 ≤ temp ≤ 42)\n"
+        "  * age_sanity (if age present, 0 ≤ age ≤ 120)\n"
+        "  * pediatric_dose_warning (if age < 12 years AND a typically-adult dose like 500mg+ amoxicillin seen)\n"
+        "  * antibiotic_course (if antibiotic_present, full duration ≥ 5 days)\n"
+        "Mark ok=true even for passing checks so the user can see what was verified.\n\n"
         "Return ONLY valid JSON in EXACTLY this shape:\n"
         '{"patient": {"الطبيب": {"value": "", "confidence": 0}, "التخصص": {"value": "", "confidence": 0}, '
         '"المريض": {"value": "", "confidence": 0}, "التاريخ": {"value": "", "confidence": 0}, '
         '"التشخيص": {"value": "", "confidence": 0}, "العمر": {"value": "", "confidence": 0}, '
         '"الوزن": {"value": "", "confidence": 0}, "الحرارة": {"value": "", "confidence": 0}}, '
-        '"medications": [{"name": "", "drug_class": "", "form": "", "dosage": "", "confidence": 0}]}'
+        '"medications": [{"name": "", "drug_class": "", "form": "", "dosage": "", "duration": "", "confidence": 0}], '
+        '"as_needed": [{"name": "", "confidence": 0}], '
+        '"phone_numbers": [], "notes": [], '
+        '"summary": "", '
+        '"derived": {"medication_count": 0, "antibiotic_present": false, "nsaid_present": false, '
+        '"duration_days_max": null, "has_handwritten_dose": false}, '
+        '"validations": [{"check": "", "ok": true, "detail": ""}]}'
         + CALIBRATION
     )
     return _run(image_bytes, media_type, prompt, hard)
