@@ -14,11 +14,14 @@ Config (.env):
   GEMINI_TIMEOUT_MS                       (per-call, default 60_000)
   MAX_DAILY_GEMINI_USD                    (global circuit breaker, default 50.0)
 """
+import logging
 import os
 import threading
 from datetime import datetime, timedelta
 
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
+
+log = logging.getLogger("mostakhles.llm")
 
 GEMINI_EASY = os.getenv("GEMINI_MODEL_EASY", "gemini-3.1-flash-lite")
 GEMINI_HARD = os.getenv("GEMINI_MODEL_HARD", "gemini-3.5-flash")
@@ -191,7 +194,23 @@ def generate_from_documents(files: list, prompt: str, hard: bool):
         top_p=1.0,
         seed=42,
     )
-    resp = _generate(_credits=credits, model=model, contents=parts + [prompt], config=config)
+    try:
+        resp = _generate(_credits=credits, model=model, contents=parts + [prompt], config=config)
+    except Exception as exc:
+        # Hard-tier model overloaded? Fall back to easy tier so the user gets
+        # SOMETHING instead of a blank error. Lower accuracy on handwriting but
+        # ≫ a hard failure. Only fires for transient errors AFTER tenacity's
+        # 3 retries exhausted; non-transient errors (auth, daily quota) bubble.
+        s = str(exc)
+        is_overload = any(tok in s for tok in ("503", "UNAVAILABLE", "RESOURCE_EXHAUSTED"))
+        if hard and is_overload and model != GEMINI_EASY:
+            log.warning("hard-tier %s exhausted retries with %s — falling back to easy-tier %s",
+                        model, type(exc).__name__, GEMINI_EASY)
+            # Charge easy-tier cost (we already recorded hard-tier spend); the
+            # difference is small and the user gets a result. Worth it.
+            resp = _generate(_credits=0, model=GEMINI_EASY, contents=parts + [prompt], config=config)
+        else:
+            raise
     text = resp.text or ""
     truncated = False
     try:
