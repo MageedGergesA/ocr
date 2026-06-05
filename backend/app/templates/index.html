@@ -439,6 +439,18 @@
         {% endif %}
       </p>
 
+      {% macro subscribe_btn(plan, label, primary=False) -%}
+        {%- if user -%}
+        <form method="post" action="/billing/checkout" style="margin:0">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="plan" value="{{ plan }}">
+          <button class="btn {{ 'btn-primary' if primary else 'btn-ghost' }} full" type="submit">{{ label }}</button>
+        </form>
+        {%- else -%}
+        <a class="btn {{ 'btn-primary' if primary else 'btn-ghost' }} full" href="/signup?next=/%23pricing">{{ label }}</a>
+        {%- endif -%}
+      {%- endmacro %}
+
       <div class="pricing pricing-5">
         {% if lang == 'en' %}
         <div class="plan">
@@ -463,7 +475,7 @@
             <li>Email support</li>
             <li>For individuals & freelancers</li>
           </ul>
-          <a class="btn btn-ghost full" href="/signup">Subscribe</a>
+          {{ subscribe_btn('lite', 'Subscribe') }}
         </div>
         <div class="plan">
           <h3>🚀 Starter</h3>
@@ -475,7 +487,7 @@
             <li>Faster email support</li>
             <li>For small businesses</li>
           </ul>
-          <a class="btn btn-ghost full" href="/signup">Subscribe</a>
+          {{ subscribe_btn('starter', 'Subscribe') }}
         </div>
         <div class="plan featured">
           <div class="tag">🔥 Most popular</div>
@@ -488,7 +500,7 @@
             <li>7-day free trial</li>
             <li>For departments & teams</li>
           </ul>
-          <a class="btn btn-primary full" href="/signup">Try 7 days free</a>
+          {{ subscribe_btn('pro', 'Subscribe', primary=True) }}
         </div>
         <div class="plan">
           <h3>💼 Business</h3>
@@ -525,7 +537,7 @@
             <li>دعم بالبريد الإلكتروني</li>
             <li>للأفراد والمستقلّين</li>
           </ul>
-          <a class="btn btn-ghost full" href="/signup">اشترك</a>
+          {{ subscribe_btn('lite', 'اشترك') }}
         </div>
         <div class="plan">
           <h3>🚀 Starter</h3>
@@ -537,7 +549,7 @@
             <li>دعم بريدي أسرع</li>
             <li>للشركات الصغيرة</li>
           </ul>
-          <a class="btn btn-ghost full" href="/signup">اشترك</a>
+          {{ subscribe_btn('starter', 'اشترك') }}
         </div>
         <div class="plan featured">
           <div class="tag">🔥 الأكثر شيوعًا</div>
@@ -550,7 +562,7 @@
             <li>تجربة 7 أيام مجانًا</li>
             <li>للأقسام والفِرق</li>
           </ul>
-          <a class="btn btn-primary full" href="/signup">جرّب 7 أيام مجانًا</a>
+          {{ subscribe_btn('pro', 'اشترك الآن', primary=True) }}
         </div>
         <div class="plan">
           <h3>💼 Business</h3>

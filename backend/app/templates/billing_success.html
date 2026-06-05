@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ 'Payment successful' if lang == 'en' else 'تم الدفع بنجاح' }} — Mostakhles</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  {% include "_nav.html" %}
+
+  <section class="section">
+    <div class="container narrow">
+      <div class="auth-box" style="text-align:center">
+        <div style="font-size:64px;line-height:1;margin-bottom:12px">🎉</div>
+        <h1 style="margin-bottom:8px">{{ 'Payment received' if lang == 'en' else 'تم استلام الدفع' }}</h1>
+        <p style="color:var(--muted);line-height:1.9;margin:14px 0 22px">
+          {% if lang == 'en' %}
+            We're activating your new plan now. It usually takes under a minute.
+            You'll get an email confirmation, and the new credits appear on your
+            <a href="/dashboard">dashboard</a> as soon as the webhook lands.
+          {% else %}
+            نقوم بتفعيل خطتك الجديدة الآن، وعادةً ما يستغرق ذلك أقل من دقيقة.
+            ستصلك رسالة تأكيد، وستظهر النقاط الجديدة في
+            <a href="/dashboard">لوحة التحكم</a> بمجرد وصول إشعار الدفع.
+          {% endif %}
+        </p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <a class="btn btn-primary" href="/dashboard">
+            {{ 'Go to dashboard' if lang == 'en' else 'إلى لوحة التحكم' }}
+          </a>
+          <a class="btn btn-ghost" href="/app">
+            {{ 'Start extracting' if lang == 'en' else 'ابدأ الاستخراج' }}
+          </a>
+        </div>
+        <p style="margin-top:24px;font-size:13px;color:var(--muted)">
+          {% if lang == 'en' %}
+            Receipt was emailed to <b>{{ user.email if user else 'your inbox' }}</b>.
+          {% else %}
+            تم إرسال الإيصال إلى <b>{{ user.email if user else 'بريدك' }}</b>.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

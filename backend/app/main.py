@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import Body, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
+from fastapi import Body, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -104,6 +104,7 @@ else:
 
 from app import auth, db, emailer, exceptions as app_exceptions, exports, i18n, jobs, models  # noqa: E402
 from app.services import extractor, llm, template_filler, template_parser  # noqa: E402
+from app.config import settings  # noqa: E402
 from app.services_catalog import CATEGORIES, SERVICES, localized  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -197,6 +198,13 @@ app_exceptions.register_handlers(app)
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
+
+# Local Paymob mock — only mounted in ENV=local so /billing/checkout works
+# without real merchant credentials. Set PAYMOB_BASE_URL=http://localhost:8000/_mock/paymob
+# (or similar) and the Paymob client treats it as the real API.
+if _env == "local":
+    from app.services.paymob_mock import router as _paymob_mock_router  # noqa: E402
+    app.include_router(_paymob_mock_router)
 
 
 @app.get("/healthz")
@@ -1911,3 +1919,96 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
         }
     finally:
         session.close()
+
+
+# ============================================================================
+# Billing (Paymob)
+# ============================================================================
+#
+# Flow:
+#   1. User on /#pricing clicks "Subscribe Pro" → POST /billing/checkout?plan=pro
+#   2. We mint a `merchant_order_id` encoding (user_id, plan, nonce),
+#      call Paymob's 3-step API and redirect the user to the iframe.
+#   3. Paymob HMAC-signs the callback to /billing/paymob/callback (Sitting 2).
+#   4. After webhook confirms, user lands on /billing/success.
+#
+# The merchant_order_id IS the channel for user→payment mapping — Paymob echoes
+# it back on the webhook and we decode it to know which user to upgrade.
+
+from app.services import paymob as _paymob  # noqa: E402
+from app.services.plans import PAID_PLANS, get_plan  # noqa: E402
+
+
+def _mint_merchant_order_id(user_id: int, plan_slug: str) -> str:
+    """Format: mst_v1_{user_id}_{plan}_{nonce}. Self-contained so the webhook
+    can map a Paymob callback back to a user without a pre-checkout DB write."""
+    return f"mst_v1_{user_id}_{plan_slug}_{secrets.token_hex(6)}"
+
+
+def _parse_merchant_order_id(mid: str) -> tuple[int, str] | None:
+    """Reverse _mint_merchant_order_id. Returns (user_id, plan_slug) or None
+    if the format doesn't match (e.g. Paymob-test traffic)."""
+    parts = (mid or "").split("_")
+    if len(parts) < 5 or parts[0] != "mst" or parts[1] != "v1":
+        return None
+    try:
+        return int(parts[2]), parts[3]
+    except (ValueError, IndexError):
+        return None
+
+
+@app.post("/billing/checkout")
+def billing_checkout(request: Request, plan: str = Form(...), csrf_token: str = Form("")):
+    """Mint a Paymob checkout for the requested plan. Auth'd users only."""
+    _require_csrf(request, csrf_token)
+    plan_cfg = get_plan(plan)
+    if not plan_cfg:
+        raise HTTPException(status_code=400, detail=f"unknown plan: {plan}")
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login?next=/%23pricing", status_code=303)
+        amount_egp = round(plan_cfg.usd * settings.EGP_PER_USD, 2)
+        mid = _mint_merchant_order_id(user.id, plan_cfg.slug)
+        billing = {
+            "first_name": (user.email.split("@")[0] or "Customer")[:50],
+            "last_name": "Mostakhles",
+            "email": user.email,
+            "phone_number": "+201000000000",  # Paymob requires non-empty
+            "country": "EG", "city": "Cairo", "street": "NA",
+            "building": "NA", "floor": "NA", "apartment": "NA",
+        }
+        try:
+            iframe, _order_id = _paymob.begin_checkout(amount_egp, mid, billing)
+        except _paymob.PaymobError as exc:
+            log.error("paymob checkout failed: %s", exc)
+            raise HTTPException(status_code=502, detail=f"payment provider error: {exc}")
+        return RedirectResponse(iframe, status_code=303)
+    finally:
+        session.close()
+
+
+@app.get("/billing/success", response_class=HTMLResponse)
+def billing_success(request: Request):
+    """Generic landing after Paymob redirect. The plan upgrade itself happens
+    in the webhook (Sitting 2) — this page just confirms to the user."""
+    return templates.TemplateResponse(request, "billing_success.html", _ctx(request))
+
+
+@app.post("/billing/paymob/callback")
+async def paymob_callback(request: Request, hmac_sig: str = Query("", alias="hmac")):
+    """Paymob → Mostakhles webhook. HMAC verification + Subscription upgrade
+    is filled in Sitting 2 — this stub records the raw payload so we can
+    verify the mock fires correctly end-to-end."""
+    body = await request.json()
+    obj = body.get("obj") or {}
+    if not _paymob.verify_hmac(obj, hmac_sig):
+        log.warning("paymob callback rejected: HMAC mismatch (txn=%s)", obj.get("id"))
+        raise HTTPException(status_code=403, detail="invalid signature")
+    mid = (obj.get("order") or {}).get("merchant_order_id", "")
+    decoded = _parse_merchant_order_id(mid)
+    log.info("paymob callback OK: txn=%s success=%s mid=%s decoded=%s",
+             obj.get("id"), obj.get("success"), mid, decoded)
+    # Subscription/PaymentEvent writes land in Sitting 2.
+    return {"received": True, "txn": obj.get("id"), "decoded": decoded}

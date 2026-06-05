@@ -98,6 +98,16 @@ class Settings(BaseSettings):
     PAYMOB_API_KEY: str = ""
     PAYMOB_HMAC: str = ""
     PAYMOB_IFRAME_ID: str = ""
+    # Paymob's integration_id maps a merchant config (card / wallet / Fawry).
+    # Different from the API key — it's set per payment method in the merchant portal.
+    PAYMOB_INTEGRATION_ID: str = ""
+    # Override the base URL to point the client at the local mock for tests / dev.
+    # Leave empty to hit the real Paymob API.
+    PAYMOB_BASE_URL: str = "https://accept.paymob.com"
+    # USD prices on the pricing page → EGP at checkout. Paymob settles in EGP.
+    # Bumped manually when the rate drifts; configurable so we don't ship a code
+    # change for an FX move.
+    EGP_PER_USD: float = 50.0
 
     @property
     def admin_email_set(self) -> frozenset[str]:
