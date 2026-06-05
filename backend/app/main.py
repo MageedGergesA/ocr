@@ -768,7 +768,7 @@ def reset_password(request: Request, token: str,
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request, q: str = ""):
+def dashboard(request: Request, q: str = "", paid: str = ""):
     from collections import Counter
     from datetime import date, datetime as dt, timedelta
     from calendar import monthrange
@@ -860,6 +860,7 @@ def dashboard(request: Request, q: str = ""):
             plan=user.plan, limit=limit, keys=keys,
             templates=templates_list, history=history_list,
             webhook_url=user.webhook_url or "",
+            paid_flash=paid,  # "1" right after a Paymob success → render green banner
             # analytics
             month_credits=month_credits, month_extractions=month_extractions,
             today_credits=today_credits, today_extractions=today_extractions,
@@ -1935,7 +1936,9 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
 # The merchant_order_id IS the channel for user→payment mapping — Paymob echoes
 # it back on the webhook and we decode it to know which user to upgrade.
 
-from app.services import paymob as _paymob  # noqa: E402
+from datetime import datetime, timedelta  # noqa: E402
+
+from app.services import paymob as _paymob, plans  # noqa: E402
 from app.services.plans import PAID_PLANS, get_plan  # noqa: E402
 
 
@@ -1998,17 +2001,101 @@ def billing_success(request: Request):
 
 @app.post("/billing/paymob/callback")
 async def paymob_callback(request: Request, hmac_sig: str = Query("", alias="hmac")):
-    """Paymob → Mostakhles webhook. HMAC verification + Subscription upgrade
-    is filled in Sitting 2 — this stub records the raw payload so we can
-    verify the mock fires correctly end-to-end."""
-    body = await request.json()
+    """Paymob → Mostakhles webhook. Verifies HMAC, decodes merchant_order_id
+    back to (user, plan), idempotently writes the PaymentEvent + Subscription,
+    and flips user.plan so the next request sees the new quota.
+
+    Returns 200 on every legitimate Paymob hit (success OR failure) so the
+    provider doesn't retry — we already recorded what happened. Only HMAC
+    mismatches return 403."""
+    raw = await request.body()
+    try:
+        body = json.loads(raw or b"{}")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="invalid JSON")
     obj = body.get("obj") or {}
     if not _paymob.verify_hmac(obj, hmac_sig):
         log.warning("paymob callback rejected: HMAC mismatch (txn=%s)", obj.get("id"))
         raise HTTPException(status_code=403, detail="invalid signature")
+
+    txn_id = str(obj.get("id") or "")
+    success = bool(obj.get("success"))
     mid = (obj.get("order") or {}).get("merchant_order_id", "")
     decoded = _parse_merchant_order_id(mid)
     log.info("paymob callback OK: txn=%s success=%s mid=%s decoded=%s",
-             obj.get("id"), obj.get("success"), mid, decoded)
-    # Subscription/PaymentEvent writes land in Sitting 2.
-    return {"received": True, "txn": obj.get("id"), "decoded": decoded}
+             txn_id, success, mid, decoded)
+
+    if not txn_id:
+        return {"received": True, "ignored": "missing txn id"}
+
+    session = db.SessionLocal()
+    try:
+        # Idempotency: short-circuit if we've already processed this Paymob txn.
+        # The UNIQUE(provider, external_id) on PaymentEvent is the durable
+        # backstop — this check just avoids the extra work + an IntegrityError.
+        existing = (session.query(models.PaymentEvent)
+                    .filter_by(provider="paymob", external_id=txn_id).first())
+        if existing:
+            log.info("paymob callback: txn=%s already processed (event id=%s), skipping",
+                     txn_id, existing.id)
+            return {"received": True, "duplicate": True}
+
+        amount_cents = int(obj.get("amount_cents") or 0)
+        amount_usd = round(amount_cents / 100 / settings.EGP_PER_USD, 2) if amount_cents else None
+
+        user = None
+        plan_slug = None
+        subscription_id = None
+
+        if decoded and success:
+            user_id, plan_slug = decoded
+            user = session.query(models.User).filter_by(id=user_id).first()
+            plan_cfg = plans.get_plan(plan_slug)
+            if user and plan_cfg:
+                # Close any active subscription on this user before opening a new one.
+                # Two active subs would let the dashboard / quota logic disagree on
+                # which plan is current.
+                now = datetime.utcnow()
+                (session.query(models.Subscription)
+                        .filter_by(user_id=user.id, status="active")
+                        .update({"status": "cancelled", "cancelled_at": now,
+                                 "updated_at": now}, synchronize_session=False))
+                sub = models.Subscription(
+                    user_id=user.id,
+                    provider="paymob",
+                    external_id=txn_id,
+                    plan=plan_slug,
+                    status="active",
+                    current_period_end=now + timedelta(days=30),
+                    amount_usd=amount_usd,
+                )
+                session.add(sub)
+                session.flush()  # need sub.id for the PaymentEvent FK
+                subscription_id = sub.id
+                user.plan = plan_slug
+                log.info("paymob upgrade: user=%s plan=%s sub=%s amount_usd=%s",
+                         user.id, plan_slug, sub.id, amount_usd)
+            else:
+                log.warning("paymob upgrade skipped: user=%s plan=%s (user_exists=%s, plan_known=%s)",
+                            user_id, plan_slug, bool(user), bool(plan_cfg))
+
+        event_type = "paymob.transaction.success" if success else "paymob.transaction.failed"
+        evt = models.PaymentEvent(
+            provider="paymob",
+            external_id=txn_id,
+            event_type=event_type,
+            subscription_id=subscription_id,
+            user_id=user.id if user else None,
+            amount_usd=amount_usd,
+            raw_payload=raw.decode("utf-8", errors="replace")[:65535],
+            processed_at=datetime.utcnow(),
+        )
+        session.add(evt)
+        session.commit()
+        return {"received": True, "txn": txn_id, "upgraded": bool(subscription_id)}
+    except Exception:
+        session.rollback()
+        log.exception("paymob callback failed: txn=%s", txn_id)
+        raise
+    finally:
+        session.close()

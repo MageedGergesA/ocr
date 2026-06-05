@@ -13,6 +13,21 @@
 
   <section class="account-wrap">
     <div class="account-page" style="max-width:1080px">
+      {% if paid_flash == '1' %}
+      <div class="acc-flash ok" style="margin-bottom:18px">
+        <i data-lucide="check-circle"></i>
+        <span>
+          {% if lang == 'en' %}
+            🎉 Payment received — your <b>{{ plan|capitalize }}</b> plan is now active.
+            New quota: <b>{{ limit }}</b> credits this month.
+          {% else %}
+            🎉 تم استلام الدفع — خطة <b>{{ plan|capitalize }}</b> فعّالة الآن.
+            الحصة الجديدة: <b>{{ limit }}</b> نقطة هذا الشهر.
+          {% endif %}
+        </span>
+      </div>
+      {% endif %}
+
       <header class="account-head">
         <h1>{{ 'Dashboard' if lang == 'en' else 'لوحة التحكم' }}</h1>
         <p>
