@@ -120,13 +120,34 @@ SERVICES = {
         "desc": "استخرج بيانات الفاتورة: البائع، المشتري، الضريبة، الإجمالي.",
         "desc_en": "Extract invoice data: seller, buyer, tax, total.",
         "kind": "fields", "hard": True, "free": False,
-        "schema": {
-            "اسم_البائع": "seller/vendor name", "اسم_المشتري": "buyer/customer name",
-            "رقم_الفاتورة": "invoice number", "التاريخ": "invoice date",
-            "تاريخ_الاستحقاق": "due date", "الرقم_الضريبي": "tax/VAT number",
-            "العملة": "currency", "الإجمالي_قبل_الضريبة": "subtotal before tax",
-            "الضريبة": "tax/VAT amount", "الإجمالي": "grand total",
-        },
+        "expert_role": "an Egyptian-licensed accountant reviewing this tax invoice",
+        "cognitive_brief": """
+Egyptian/GCC tax invoices follow ETA/ZATCA formats. Conventions to watch:
+- VAT in Egypt is typically 14% (general) or 5% (essentials), some items exempt.
+- Saudi VAT is 15%, UAE VAT is 5%.
+- Tax ID format (EG): ###-###-### or 9 contiguous digits; (SA) 15 digits starting with 3.
+- Common currencies: EGP, SAR, AED, USD. If you see "ج.م" or "L.E." → EGP.
+- Buyer often labelled العميل/المُشترى, seller as المُورِّد/البائع.
+
+BEYOND THE REQUIRED FIELDS, extract:
+- line_items: every visible row as columns=[الصنف, الكمية, سعر الوحدة, الإجمالي] and rows=[[...], ...]
+- totals: subtotal, tax, grand_total — each as {value, confidence} (these go in the "totals" key of the envelope, NOT "fields")
+
+DERIVE (compute these even if not stated, put in "derived"):
+- currency: ISO 4217 code (EGP/SAR/AED/USD/…)
+- tax_rate_pct: tax / subtotal × 100, rounded to 1 decimal
+- computed_subtotal: sum of line_items totals
+- computed_tax: subtotal × (tax_rate_pct/100)
+- computed_grand_total: subtotal + tax
+- line_item_count: number of rows
+
+VALIDATE (every check goes in "validations", ok=true even when passing):
+- subtotal_matches: does computed_subtotal equal the stated subtotal? (1 EGP tolerance)
+- total_matches: does subtotal + tax equal the stated grand_total? (1 EGP tolerance)
+- tax_rate_known: is tax_rate_pct in {0, 5, 14, 15} ± 0.5? (Egyptian/GCC standard rates)
+- tax_id_format: does the tax ID match a known country format?
+- date_sanity: is the invoice date not in the future?
+""",
     },
     "egyptian-id": {
         "title": "قارئ بطاقة الرقم القومي",
@@ -135,12 +156,36 @@ SERVICES = {
         "desc": "استخرج بيانات بطاقة الرقم القومي المصرية تلقائيًا.",
         "desc_en": "Automatically extract data from an Egyptian national ID card.",
         "kind": "fields", "hard": False, "free": False,
-        "schema": {
-            "الاسم": "full name", "الرقم_القومي": "14-digit national ID number",
-            "العنوان": "address", "تاريخ_الميلاد": "date of birth",
-            "تاريخ_الإصدار": "issue date", "تاريخ_الانتهاء": "expiry date",
-            "الوظيفة": "occupation if present",
-        },
+        "expert_role": "an Egyptian civil-registry officer reading a National ID card",
+        "cognitive_brief": """
+The Egyptian National ID is 14 digits with embedded data:
+  Position 1     = century-of-birth digit  (2 = 1900s, 3 = 2000s)
+  Positions 2-3  = year of birth (YY)
+  Positions 4-5  = month of birth (MM)
+  Positions 6-7  = day of birth (DD)
+  Positions 8-9  = governorate code (01=Cairo, 02=Alexandria, 11=Damietta, 12=Daqahlia, 13=Sharqia, 14=Qaliubiya, 21=Giza, 22=Beni Suef, …)
+  Positions 10-12= sequence number
+  Position 13    = gender (ODD = male, EVEN = female)
+  Position 14    = checksum
+
+DERIVE (compute from the 14 digits, put in "derived"):
+- birthdate_from_id: full ISO date YYYY-MM-DD reconstructed from digits 1-7
+- gender_from_id: "male" or "female" from digit 13
+- governorate_from_id: name in Arabic AND English from digits 8-9
+- age_years: today's year minus birth year (rough)
+- days_until_expiry: signed integer (negative = already expired)
+
+VALIDATE (every check in "validations"):
+- id_length: exactly 14 digits
+- id_first_digit: must be 2 or 3
+- id_date_valid: digits 1-7 decode to a real calendar date
+- name_matches_card: extracted name matches the typed name field on card
+- not_expired: expiry date is in the future (if expiry was extracted)
+- birthdate_matches: extracted birthdate field equals birthdate_from_id
+
+The card may have a photo, signature, governorate seal, and finger-printed
+"إصدار" (issue) date stamped on the back. Don't confuse issue with expiry.
+""",
     },
     "passport": {
         "title": "قارئ جواز السفر",
@@ -149,12 +194,35 @@ SERVICES = {
         "desc": "استخرج بيانات جواز السفر بما في ذلك خانة القراءة الآلية (MRZ).",
         "desc_en": "Extract passport data including the machine-readable zone (MRZ).",
         "kind": "fields", "hard": False, "free": False,
-        "schema": {
-            "full_name": "full name", "passport_number": "passport number",
-            "nationality": "nationality", "date_of_birth": "date of birth",
-            "place_of_birth": "place of birth", "sex": "sex (M/F)",
-            "issue_date": "issue date", "expiry_date": "expiry date",
-        },
+        "expert_role": "an immigration officer who reads passports daily and knows the ICAO 9303 MRZ standard",
+        "cognitive_brief": """
+Every modern passport's bottom carries a two-line MRZ (Machine-Readable Zone) in
+OCR-B font. Format (Type 3 — passports): 44 chars × 2 lines.
+  Line 1: P<{ISSUER_CODE}{SURNAME}<<{GIVEN_NAMES}
+  Line 2: {PASSPORT_NO}{check}{NATIONALITY}{YYMMDD_BIRTH}{check}{SEX}{YYMMDD_EXPIRY}{check}{PERSONAL_NO}{check}{composite_check}
+
+Country codes are 3 letters: EGY=Egypt, SAU=Saudi, ARE=UAE, USA=US, GBR=UK.
+'<' fills empty positions and acts as a separator.
+
+DERIVE (put in "derived"):
+- mrz_line_1, mrz_line_2: the raw OCR-read MRZ strings if visible
+- birthdate_iso_from_mrz: YYYY-MM-DD reconstructed from MRZ (century inferred — values >25 = 19xx, ≤25 = 20xx, typical heuristic)
+- expiry_iso_from_mrz: same conversion for expiry
+- nationality_full: country name in English+Arabic from the 3-letter code
+- issuer_full: same for issuer code
+- days_until_expiry: integer (negative = expired)
+
+VALIDATE (every check in "validations"):
+- mrz_present: did you see the two-line MRZ?
+- mrz_length_ok: each MRZ line is 44 chars
+- name_matches: visual name above MRZ equals the MRZ-decoded name
+- dob_matches: visual date_of_birth equals MRZ-decoded birthdate
+- passport_number_matches: visual number equals MRZ field
+- not_expired: expiry is in the future
+- valid_6_months: expiry is ≥6 months out (Schengen / many countries require this)
+
+If a field appears ONLY in the MRZ and not in the visual zone, that's a defect — note it.
+""",
     },
     "commercial-register": {
         "title": "قارئ السجل التجاري",
@@ -215,12 +283,35 @@ SERVICES = {
         "desc": "استخرج بيانات كشف الحساب البنكي وأرصدته.",
         "desc_en": "Extract bank-statement data and balances.",
         "kind": "fields", "hard": True, "free": False,
-        "schema": {
-            "اسم_صاحب_الحساب": "account holder name", "رقم_الحساب": "account number",
-            "IBAN": "IBAN if present", "اسم_البنك": "bank name", "الفترة": "statement period",
-            "الرصيد_الافتتاحي": "opening balance", "الرصيد_الختامي": "closing balance",
-            "إجمالي_الإيداعات": "total deposits", "إجمالي_السحوبات": "total withdrawals",
-        },
+        "expert_role": "a corporate-banking analyst auditing a customer's account statement",
+        "cognitive_brief": """
+A bank statement has a HEADER (account info + period + balances) and a
+TRANSACTIONS table (date, description, debit/credit, running balance).
+
+Beyond the required header fields, EXTRACT the full transaction table as
+line_items with columns=[التاريخ, البيان, مدين, دائن, الرصيد] and rows=[[...], ...].
+Include EVERY transaction visible, in chronological order.
+
+DERIVE (put in "derived"):
+- transaction_count: number of rows in line_items
+- detected_currency: from any balance or transaction value (EGP/SAR/AED/USD)
+- iban_country: first 2 letters of IBAN (EG/SA/AE/US) if IBAN present
+- iban_valid: simple mod-97 check on the IBAN (true/false)
+- computed_total_deposits: sum of all credit (دائن) values across line_items
+- computed_total_withdrawals: sum of all debit (مدين) values
+- computed_closing_balance: opening_balance + deposits - withdrawals
+- largest_credit: max single credit amount across transactions
+- largest_debit: max single debit amount across transactions
+- avg_monthly_balance: rough avg of running-balance column
+
+VALIDATE (every check in "validations"):
+- iban_format_ok: IBAN length matches country standard (EG=29, SA=24, AE=23)
+- deposits_match: computed_total_deposits ≈ stated إجمالي_الإيداعات (1 unit tolerance)
+- withdrawals_match: same for withdrawals
+- closing_balance_matches: computed_closing_balance ≈ stated closing balance
+- transactions_in_period: every transaction date falls within the stated period
+- no_duplicate_dates_amounts: flag identical (date, amount, description) rows as possible double-posting
+""",
     },
     "prescription": {
         "title": "قارئ الروشتات الطبية",
@@ -229,6 +320,41 @@ SERVICES = {
         "desc": "حوّل الروشتة الطبية (حتى المكتوبة بخط اليد) إلى بيانات منظّمة وأدوية مُفسّرة.",
         "desc_en": "Turn a medical prescription (even handwritten) into structured data with parsed medications.",
         "kind": "prescription", "hard": True, "free": False,
+        # The existing extract_prescription path already produces a rich shape
+        # (patient + medications[]); these notes layer in extra validation and
+        # interaction-checking when the expert path is selected.
+        "expert_role": "a clinical pharmacist reading an Egyptian doctor's handwritten prescription (روشتة)",
+        "cognitive_brief": """
+Common Egyptian Rx conventions:
+- 'R/' starts the medicine list.
+- 'D.G' = diagnosis. 'Age' = years. 'Wt' = weight in kg. 'Temp' = °C (normal 36-41; lone '7' usually means 37).
+- Dosage shorthand: BID = twice daily, TID = three times, QID = four, PRN = as needed,
+  OD = once daily, hs = at bedtime, ac = before meals, pc = after meals.
+
+Known Egyptian drugs (prefer if handwriting is close):
+Newclav, Augmentin, Hibiotic, Curam, Amrizole, Flagyl, Rhinopro, Telfast, Zyrtec,
+Allergyl, Histop, Nasostop, Otrivin, Sinucare, Ventolin, Farcolin, Brufen, Cetal,
+Abimol, Paramol, Zithromax, Klacid, Zisrocin, Voltaren, Nexium, Concor, Norvasc.
+
+DERIVE (put in "derived"):
+- medication_count: how many distinct medicines on the list
+- has_handwritten_dose: any medication with confidence < 0.7 due to handwriting
+- antibiotic_present: any medicine that's an antibiotic (penicillin, cephalosporin, macrolide…)
+- nsaid_present: ibuprofen, diclofenac, ketoprofen, naproxen, brufen, voltaren
+- duration_days_total: longest duration field across all medicines
+
+VALIDATE (put in "validations"):
+- has_patient_name: patient name extracted
+- has_doctor_name: doctor name/signature extracted
+- has_date: date extracted and in the past
+- medication_dosages_present: every medication has a dosage AND duration
+- temp_sanity: if temperature present, must be 30 ≤ temp ≤ 42 °C
+- age_sanity: if age present, must be 0 ≤ age ≤ 120 years
+- pediatric_dose_warning: if age < 12 years AND a typically-adult dose seen (e.g. >500mg of amoxicillin), flag it
+- antibiotic_duration: if antibiotic_present, full duration should be ≥ 5 days (typical course)
+
+NEVER inflate confidence on unclear handwriting. If you can't read it, set confidence ≤ 0.5.
+""",
         "hint": (
             "This is a handwritten Egyptian medical prescription (روشتة). "
             "If a handwritten drug name is close to a known Egyptian drug, prefer its correct spelling: "
@@ -341,12 +467,68 @@ SERVICES = {
         "desc": "اكتشف ولخّص بنود العقد: الأطراف، المدة، السداد، الغرامات، الإنهاء.",
         "desc_en": "Surface and summarize the contract clauses: parties, term, payment, penalties, termination.",
         "kind": "fields", "hard": True, "free": False,
-        "schema": {
-            "الأطراف": "the contracting parties", "موضوع_العقد": "subject/purpose",
-            "المدة": "term/duration", "القيمة": "contract value", "شروط_الدفع": "payment terms",
-            "الغرامات": "penalties / late fees", "شروط_الإنهاء": "termination conditions",
-            "التوقيعات": "who signed / whether signed",
-        },
+        "expert_role": "a corporate lawyer reviewing an Arabic real-estate / commercial contract for risk",
+        "cognitive_brief": """
+Arabic contracts typically open with البسملة, then identify الأطراف (parties),
+موضوع العقد (subject), then numbered clauses (بند الأول، الثاني، ...), then
+التوقيعات at the bottom.
+
+BEYOND the required fields, identify the full CLAUSE TABLE and emit it in the
+"clauses" key of the envelope (NOT as a flat field). Each clause should be:
+  {"title": "بند الدفع", "text": "<the full clause text>", "confidence": 0-1, "risk": "low|medium|high"}
+
+DERIVE (put in "derived"):
+- party_count: how many distinct parties
+- clause_count: how many numbered clauses you identified
+- contract_value_numeric: pure number from "القيمة" (currency in separate field)
+- duration_months: term/duration converted to months (1 year → 12)
+- has_arbitration: boolean — does any clause name a specific court or arbitration forum?
+- has_force_majeure: boolean — clause covers force majeure (قوة قاهرة)?
+- has_confidentiality: boolean — confidentiality / NDA clause present?
+- has_auto_renewal: boolean — does it auto-renew silently?
+- highest_risk_clauses: array of titles flagged as 'high' risk
+
+VALIDATE (every check in "validations"):
+- parties_count_ge_2: at least 2 parties named
+- has_subject: subject/purpose clause present
+- has_term: duration/term specified
+- has_payment_terms: payment schedule defined
+- has_signatures: at least the count_of_parties signatures visible
+- governing_law_stated: does the contract specify governing law (e.g. القانون المصري)?
+- effective_date_present: does it state when the contract begins?
+
+For risk grading: clauses with one-sided indemnity, broad confidentiality with
+no exit, unlimited liability, or unfair termination = high. Standard mutual
+obligations = low.
+""",
+    },
+
+    "tax-card": {
+        # promoted to expert — Egyptian VAT-registration card is short but verifiable
+        "title": "قارئ البطاقة الضريبية",
+        "title_en": "Tax card reader",
+        "category": "parsers", "icon": "badge-percent",
+        "desc": "استخرج بيانات البطاقة الضريبية والرقم الضريبي.",
+        "desc_en": "Extract tax-card details and the tax registration number.",
+        "kind": "fields", "hard": False, "free": False,
+        "expert_role": "an Egyptian tax-authority officer authenticating a البطاقة الضريبية",
+        "cognitive_brief": """
+The Egyptian tax card (البطاقة الضريبية) shows: taxpayer name, tax registration
+number, activity, address, and the issuing tax office (المأمورية).
+
+Egyptian tax IDs are 9 digits, often shown as ###-###-### (e.g. 304-221-119).
+
+DERIVE (put in "derived"):
+- tax_id_digits_only: the 9-digit number without dashes
+- tax_id_format_canonical: rendered as ###-###-### regardless of source format
+- activity_category: short label categorizing the activity (e.g. "خدمات استشارية", "تجارة تجزئة", "تصنيع")
+
+VALIDATE:
+- tax_id_length: exactly 9 digits after stripping non-digits
+- tax_id_visible: was the tax ID legibly extracted with confidence ≥ 0.8?
+- maamoreya_named: was a specific tax office mentioned?
+- address_present: physical address line was extracted
+""",
     },
 }
 

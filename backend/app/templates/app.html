@@ -786,6 +786,60 @@
       ].filter(Boolean).join('');
     }
 
+    // Cognitive banner — when expert extraction returns summary / validations /
+    // derived, surface them ABOVE the raw fields so the user sees the smart
+    // layer (computed values, format validations, doc-type detection) before
+    // the field table. Renders nothing if none of those keys are present.
+    function cognitiveBanner(data) {
+      if (!data || typeof data !== 'object') return '';
+      const hasAny = data.summary || (Array.isArray(data.validations) && data.validations.length) ||
+                     (data.derived && Object.keys(data.derived).length);
+      if (!hasAny) return '';
+      const EN = I18N.lang === 'en';
+      const lblSummary = EN ? 'Summary' : 'الملخص';
+      const lblValid   = EN ? 'Verifications' : 'التحقّقات';
+      const lblDerived = EN ? 'Computed' : 'بيانات مُستنتَجة';
+      const lblOk      = EN ? 'OK' : 'سليم';
+      const lblFail    = EN ? 'Issue' : 'مشكلة';
+
+      const summaryHtml = data.summary
+        ? `<div class="cog-summary"><i data-lucide="sparkles"></i> <span>${esc(data.summary)}</span></div>`
+        : '';
+
+      const validations = Array.isArray(data.validations) ? data.validations : [];
+      const validHtml = validations.length ? `
+        <div class="cog-block">
+          <div class="cog-block-h"><i data-lucide="shield-check"></i> ${lblValid} (${validations.length})</div>
+          <ul class="cog-checks">
+            ${validations.map(v => {
+              const ok = v && v.ok !== false;
+              const cls = ok ? 'ok' : 'fail';
+              const ico = ok ? '✓' : '⚠';
+              const lbl = ok ? lblOk : lblFail;
+              const name = esc(v.check || '');
+              const detail = v.detail ? ` <small>${esc(v.detail)}</small>` : '';
+              return `<li class="${cls}"><span class="cog-ico">${ico}</span><b>${name}</b> — ${lbl}${detail}</li>`;
+            }).join('')}
+          </ul>
+        </div>` : '';
+
+      const derived = (data.derived && typeof data.derived === 'object') ? data.derived : {};
+      const derivedKeys = Object.keys(derived);
+      const derivedHtml = derivedKeys.length ? `
+        <div class="cog-block">
+          <div class="cog-block-h"><i data-lucide="calculator"></i> ${lblDerived} (${derivedKeys.length})</div>
+          <div class="cog-derived">
+            ${derivedKeys.map(k => {
+              const v = derived[k];
+              const display = (v && typeof v === 'object') ? JSON.stringify(v) : String(v);
+              return `<div class="cog-d"><span class="k">${esc(k)}</span><span class="v">${esc(display)}</span></div>`;
+            }).join('')}
+          </div>
+        </div>` : '';
+
+      return `<div class="cog-banner">${summaryHtml}${validHtml}${derivedHtml}</div>`;
+    }
+
     function renderByLayout(data, layout) {
       // Multi-document result (uploaded 2+ unrelated docs together) — render
       // each one as its own card with the right sub-renderer.
@@ -805,18 +859,37 @@
                   </div>`;
         }).join('');
       }
+
+      // Cognitive banner first (when expert extraction surfaces summary /
+      // validations / derived — invisible for legacy thin extraction).
+      const cog = cognitiveBanner(data);
+
+      // Expert envelope: nest the fields/line_items/totals/clauses keys.
+      // The cognitive banner already shows the smart layer; below it we still
+      // render the body shape that matches what's present.
+      if (data && data.fields && (data.line_items || data.totals || data.clauses)) {
+        // mixed expert envelope — render as invoice-ish or contract-ish below the banner
+        const bodyData = { header: data.fields, line_items: data.line_items, totals: data.totals, clauses: data.clauses };
+        if (Array.isArray(data.clauses)) return cog + contractHtml(bodyData);
+        return cog + invoiceHtml(bodyData);
+      }
+      if (data && data.fields && !data.line_items && !data.clauses) {
+        // expert form envelope — just render the fields below the banner
+        return cog + rowsHtml(data.fields);
+      }
+
       // Detect rich shapes first by their characteristic keys, regardless of layout label.
-      if (data && (data.patient || data.medications)) return prescriptionHtml(data);
-      if (data && (data.header && (data.line_items || data.totals))) return invoiceHtml(data);
-      if (data && (data.header && Array.isArray(data.clauses))) return contractHtml(data);
-      if (data && data.table) return tableShape(data.table);
+      if (data && (data.patient || data.medications)) return cog + prescriptionHtml(data);
+      if (data && (data.header && (data.line_items || data.totals))) return cog + invoiceHtml(data);
+      if (data && (data.header && Array.isArray(data.clauses))) return cog + contractHtml(data);
+      if (data && data.table) return cog + tableShape(data.table);
       switch (layout) {
-        case 'narrative': return narrativeHtml(data);
-        case 'prescription': return prescriptionHtml(data);
+        case 'narrative': return cog + narrativeHtml(data);
+        case 'prescription': return cog + prescriptionHtml(data);
         case 'table':
         case 'form':
         case 'mixed':
-        default: return rowsHtml(data);
+        default: return cog + rowsHtml(data);
       }
     }
 

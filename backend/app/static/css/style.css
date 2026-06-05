@@ -1391,3 +1391,46 @@ details[open] .adv-caret { transform: rotate(180deg); }
 }
 .doc-title { font-size: 14px; font-weight: 700; color: var(--ink); }
 .doc-card-body { padding: 14px; }
+
+/* ─────────── Cognitive banner (expert extraction summary + checks + derived) ─────────── */
+.cog-banner {
+  background: linear-gradient(135deg, #f0f7ff 0%, #f8f5ff 100%);
+  border: 1px solid #c8d8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin: 0 0 18px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.cog-summary {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 15px; line-height: 1.65; color: #1e3a8a; font-weight: 600;
+  padding-bottom: 10px; border-bottom: 1px dashed #c8d8f0;
+}
+.cog-summary svg { width: 20px; height: 20px; stroke: #4f46e5; flex-shrink: 0; margin-top: 2px; }
+.cog-block-h {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;
+}
+.cog-block-h svg { width: 14px; height: 14px; stroke: var(--muted); }
+.cog-checks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.cog-checks li {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 8px; font-size: 13.5px;
+}
+.cog-checks li.ok { background: #ecfdf5; color: #14532d; }
+.cog-checks li.fail { background: #fef2f2; color: #991b1b; }
+.cog-checks li.ok .cog-ico { color: #16a34a; font-weight: 800; }
+.cog-checks li.fail .cog-ico { color: #dc2626; font-weight: 800; }
+.cog-checks small { color: inherit; opacity: 0.85; margin-inline-start: auto; font-weight: 400; font-size: 12.5px; }
+.cog-derived {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px;
+}
+.cog-d {
+  display: flex; flex-direction: column; padding: 8px 12px;
+  background: white; border: 1px solid #e0e7ff; border-radius: 8px;
+  font-size: 12.5px;
+}
+.cog-d .k { color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: lowercase; }
+.cog-d .v { color: var(--ink); font-weight: 700; word-break: break-word; margin-top: 2px; }

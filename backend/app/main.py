@@ -1280,9 +1280,25 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
             if kind == "text":
                 out = {"kind": "text", "text": extractor.run_text(data_bytes, ct, svc["prompt"], hard)}
             elif kind == "fields":
-                out = {"kind": "fields", "data": extractor.extract_schema(
-                    data_bytes, ct, svc["schema"], hard, hint=svc.get("hint", ""),
-                    output_lang=output_lang)}
+                # Tools with `expert_role` + `cognitive_brief` go through the rich
+                # extractor that emits {document_type, fields, line_items?, totals?,
+                # clauses?, validations, derived, summary}. Tools without those
+                # fields fall back to the thin schema-only extractor so existing
+                # 22+ services keep working unchanged.
+                if svc.get("expert_role") and svc.get("cognitive_brief"):
+                    rich = extractor.extract_expert(
+                        data_bytes, ct,
+                        expert_role=svc["expert_role"],
+                        cognitive_brief=svc["cognitive_brief"],
+                        schema=svc["schema"],
+                        hard=hard, output_lang=output_lang,
+                        document_type_hint=slug,
+                    )
+                    out = {"kind": "expert", "data": rich}
+                else:
+                    out = {"kind": "fields", "data": extractor.extract_schema(
+                        data_bytes, ct, svc["schema"], hard, hint=svc.get("hint", ""),
+                        output_lang=output_lang)}
             elif kind == "prescription":
                 rx = extractor.extract_prescription(data_bytes, ct, hard)
                 meds = rx.get("medications") or []

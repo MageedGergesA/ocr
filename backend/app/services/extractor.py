@@ -480,3 +480,100 @@ def extract_schema(image_bytes: bytes, media_type: str, target_schema: dict,
         f"Fields:\n{field_list}"
     )
     return _run(image_bytes, media_type, prompt, hard)
+
+
+# ---------------------------------------------------------------------------
+# Expert extraction — domain-aware, validation-rich, structured-output
+# ---------------------------------------------------------------------------
+#
+# This is the "cognitive" path used by tools whose catalog config supplies an
+# expert_role + cognitive_brief. The prompt is structured into:
+#
+#   1. PERSONA          (who you are when reading this doc)
+#   2. CONTEXT          (domain conventions that matter)
+#   3. REQUIRED FIELDS  (the caller's schema — value + confidence each)
+#   4. DERIVATIONS      (what to COMPUTE beyond the raw fields)
+#   5. VALIDATIONS      (what to verify and flag)
+#   6. OUTPUT SHAPE     (the rich JSON envelope to emit)
+#
+# Output envelope is consistent across all expert tools so the UI renderer and
+# the per-doc-type exporters in exports.py can dispatch cleanly:
+#
+#   {
+#     "document_type": "<type>",
+#     "layout": "form" | "mixed" | "table" | "narrative" | "prescription",
+#     "fields": { <name>: {"value", "confidence"}, ... },   # always present
+#     "line_items": {"columns": [...], "rows": [[...]]},     # optional, mixed
+#     "totals":     { <name>: {"value", "confidence"}, ... },# optional, mixed
+#     "clauses":    [{"title", "text", "confidence"}, ...],  # optional, mixed
+#     "validations":[{"check", "ok", "detail"}, ...],        # ALWAYS — even if empty
+#     "derived":    { <name>: <computed value>, ... },       # ALWAYS — even if empty
+#     "summary":    "one-sentence document summary"          # ALWAYS — written for the user
+#   }
+
+
+def extract_expert(image_bytes: bytes, media_type: str, *,
+                   expert_role: str,
+                   cognitive_brief: str,
+                   schema: dict,
+                   hard: bool = True,
+                   output_lang: str = "preserve",
+                   document_type_hint: str = "") -> dict:
+    """Domain-aware extraction. The cognitive_brief should describe the
+    document context, what to derive, and what to validate — see the docstring
+    above for the output envelope."""
+    field_list = "\n".join(f"- {k}: {v}" for k, v in schema.items())
+    value_lang_instr = {
+        "preserve": "Keep every value EXACTLY in the document's original language and script.",
+        "ar": "Return every VALUE in Arabic. Translate from original language if needed. "
+              "Preserve proper nouns (names, brands, IDs) in their original spelling.",
+        "en": "Return every VALUE in English. Translate from original language if needed. "
+              "Preserve proper nouns (names, brands, IDs) in their original spelling.",
+    }.get(output_lang, _LANG_INSTRUCTION["preserve"])
+
+    doc_hint = f' (document_type: "{document_type_hint}")' if document_type_hint else ""
+
+    prompt = f"""[PERSONA]
+You are {expert_role}. Read this document the way that expert would —
+notice domain conventions, spot inconsistencies, compute what isn't stated
+explicitly. Don't just copy text; UNDERSTAND it.
+
+[CONTEXT & GUIDELINES]
+{cognitive_brief.strip()}
+
+[REQUIRED FIELDS]
+Extract these exactly{doc_hint}, returning each as {{value, confidence}}:
+{field_list}
+If a required field is genuinely absent, set value=null and confidence=0.
+
+[OUTPUT ENVELOPE — return ONE JSON OBJECT, nothing else]
+{{
+  "document_type": "<short type id matching the document>",
+  "layout": "form" | "mixed" | "table" | "narrative",
+  "fields": {{
+    "<field_name>": {{"value": ..., "confidence": 0.0-1.0}}
+    // every required field above, plus any other notable header data you find
+  }},
+  "line_items": {{"columns": [...], "rows": [[...], ...]}}, // include ONLY if the doc has tabular rows (invoice line items, bank txns, payment schedule)
+  "totals":     {{"<name>": {{"value": ..., "confidence": ...}}, ...}}, // include ONLY if the doc has totals/sums
+  "clauses":    [{{"title": "...", "text": "...", "confidence": ...}}, ...], // include ONLY if the doc is a contract/agreement with named clauses
+  "validations": [
+    {{"check": "short_name", "ok": true|false, "detail": "what you verified, in the document's language or English"}}
+    // include EVERY validation from [CONTEXT & GUIDELINES] above — passing OR failing — so the user sees what was checked
+  ],
+  "derived": {{
+    "<computed_name>": <value or short string>
+    // every derivation listed in [CONTEXT & GUIDELINES] — computed values, decoded data, flags
+  }},
+  "summary": "one-sentence plain-language summary of what this document is and what's noteworthy"
+}}
+
+LANGUAGE: {value_lang_instr}
+
+{CALIBRATION}
+
+Return ONLY the JSON object. No markdown fences, no commentary."""
+
+    result = _run(image_bytes, media_type, prompt, hard)
+    result = _ensure_dict_result(result)
+    return _postprocess_field_names(result, output_lang)
