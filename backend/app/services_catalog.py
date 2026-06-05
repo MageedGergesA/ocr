@@ -148,6 +148,13 @@ VALIDATE (every check goes in "validations", ok=true even when passing):
 - tax_id_format: does the tax ID match a known country format?
 - date_sanity: is the invoice date not in the future?
 """,
+        "schema": {
+            "اسم_البائع": "seller/vendor name", "اسم_المشتري": "buyer/customer name",
+            "رقم_الفاتورة": "invoice number", "التاريخ": "invoice date",
+            "تاريخ_الاستحقاق": "due date", "الرقم_الضريبي": "tax/VAT number",
+            "العملة": "currency", "الإجمالي_قبل_الضريبة": "subtotal before tax",
+            "الضريبة": "tax/VAT amount", "الإجمالي": "grand total",
+        },
     },
     "egyptian-id": {
         "title": "قارئ بطاقة الرقم القومي",
@@ -186,6 +193,12 @@ VALIDATE (every check in "validations"):
 The card may have a photo, signature, governorate seal, and finger-printed
 "إصدار" (issue) date stamped on the back. Don't confuse issue with expiry.
 """,
+        "schema": {
+            "الاسم": "full name", "الرقم_القومي": "14-digit national ID number",
+            "العنوان": "address", "تاريخ_الميلاد": "date of birth",
+            "تاريخ_الإصدار": "issue date", "تاريخ_الانتهاء": "expiry date",
+            "الوظيفة": "occupation if present",
+        },
     },
     "passport": {
         "title": "قارئ جواز السفر",
@@ -223,6 +236,12 @@ VALIDATE (every check in "validations"):
 
 If a field appears ONLY in the MRZ and not in the visual zone, that's a defect — note it.
 """,
+        "schema": {
+            "full_name": "full name", "passport_number": "passport number",
+            "nationality": "nationality", "date_of_birth": "date of birth",
+            "place_of_birth": "place of birth", "sex": "sex (M/F)",
+            "issue_date": "issue date", "expiry_date": "expiry date",
+        },
     },
     "commercial-register": {
         "title": "قارئ السجل التجاري",
@@ -312,6 +331,12 @@ VALIDATE (every check in "validations"):
 - transactions_in_period: every transaction date falls within the stated period
 - no_duplicate_dates_amounts: flag identical (date, amount, description) rows as possible double-posting
 """,
+        "schema": {
+            "اسم_صاحب_الحساب": "account holder name", "رقم_الحساب": "account number",
+            "IBAN": "IBAN if present", "اسم_البنك": "bank name", "الفترة": "statement period",
+            "الرصيد_الافتتاحي": "opening balance", "الرصيد_الختامي": "closing balance",
+            "إجمالي_الإيداعات": "total deposits", "إجمالي_السحوبات": "total withdrawals",
+        },
     },
     "prescription": {
         "title": "قارئ الروشتات الطبية",
@@ -501,6 +526,12 @@ For risk grading: clauses with one-sided indemnity, broad confidentiality with
 no exit, unlimited liability, or unfair termination = high. Standard mutual
 obligations = low.
 """,
+        "schema": {
+            "الأطراف": "the contracting parties", "موضوع_العقد": "subject/purpose",
+            "المدة": "term/duration", "القيمة": "contract value", "شروط_الدفع": "payment terms",
+            "الغرامات": "penalties / late fees", "شروط_الإنهاء": "termination conditions",
+            "التوقيعات": "who signed / whether signed",
+        },
     },
 
     "tax-card": {
@@ -529,6 +560,10 @@ VALIDATE:
 - maamoreya_named: was a specific tax office mentioned?
 - address_present: physical address line was extracted
 """,
+        "schema": {
+            "الاسم": "taxpayer name", "رقم_التسجيل_الضريبي": "tax registration number",
+            "النشاط": "activity", "العنوان": "address", "المأمورية": "tax office",
+        },
     },
 }
 
