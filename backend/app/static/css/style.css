@@ -9332,3 +9332,45 @@ body.lp-body {
   background: #0f1722 !important;
   border-color: #1f2937;
 }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   LOCKDOWN 1h — flatten the case-study quote gradient + other
+   live tinted backgrounds still rendering after 1g.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* Featured case study quote (homepage "What teams say after one month")
+   used a 135° mint gradient #f0fdfa → #ccfbf1 that read as a soft
+   color band on the testimonials section. Flatten to neutral. */
+.lp-case-quote {
+  background: #f9fafb !important;
+  background-image: none !important;
+  border-color: #e5e7eb !important;
+}
+[data-theme="dark"] .lp-case-quote {
+  background: #0f1722 !important;
+  background-image: none !important;
+  border-color: #1f2937 !important;
+}
+
+/* Case photo violet residue (.lp-case-photo-1 was #8b5cf6). The
+   matching photo-2 was already mint-ified in 1d; mirror here so the
+   pair are consistent. */
+.lp-case-photo-1 {
+  background: #0f766e !important;
+}
+[data-theme="dark"] .lp-case-photo-1 {
+  background: #14b8a6 !important;
+}
+
+/* National-ID doc mock — was cream/yellow gradient. Flatten. */
+.lp-doc-id {
+  background: #f9fafb !important;
+  background-image: none !important;
+  border: 1px solid #e5e7eb;
+}
+[data-theme="dark"] .lp-doc-id {
+  background: #0f1722 !important;
+  background-image: none !important;
+  border-color: #1f2937;
+}
