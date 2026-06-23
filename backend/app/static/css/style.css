@@ -9282,3 +9282,53 @@ body.lp-body {
   .lp-ui-bar-fill,
   .lp-ui-spinner { animation: none !important; }
 }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   LOCKDOWN 1g — flatten tinted illustration backgrounds.
+
+   Several decorative document mockups across the site used cream
+   (#fffbeb / #fef3c7) backgrounds intended to evoke "paper". They
+   read as color drift on a teknolines-clean site — especially in
+   dark mode where the cream stands out against #0b1018. Repaint to
+   neutral surfaces; keep the ruled-line texture so the "paper" hint
+   stays intact.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* About-page invoice mock (the rotated card on /about hero) */
+.lp-about-pad {
+  background: #f9fafb !important;
+  border: 1px solid #e5e7eb;
+}
+[data-theme="dark"] .lp-about-pad {
+  background: #0f1722 !important;
+  border-color: #1f2937;
+}
+.lp-about-line { color: #1f2937 !important; }
+[data-theme="dark"] .lp-about-line { color: #e5e7eb !important; }
+.lp-about-line.lp-l2 { color: #6b7280 !important; }
+[data-theme="dark"] .lp-about-line.lp-l2 { color: #9ca3af !important; }
+.lp-about-line.lp-l4 { color: var(--brand) !important; }
+[data-theme="dark"] .lp-about-line.lp-l4 { color: #2dd4bf !important; }
+.lp-about-line.lp-l5 { color: var(--brand) !important; }
+[data-theme="dark"] .lp-about-line.lp-l5 { color: #5eead4 !important; }
+.lp-about-line.lp-l6 { color: #6b7280 !important; }
+[data-theme="dark"] .lp-about-line.lp-l6 { color: #9ca3af !important; }
+
+/* Compare-panel "original" handwritten doc — was cream #fffbeb */
+.lp-orig-doc {
+  background: #f9fafb !important;
+}
+[data-theme="dark"] .lp-orig-doc {
+  background: #0f1722 !important;
+}
+
+/* Handwriting doc mockup (lp-doc-hw) — was cream */
+.lp-doc-hw {
+  background: #f9fafb !important;
+  border: 1px solid #e5e7eb;
+}
+[data-theme="dark"] .lp-doc-hw {
+  background: #0f1722 !important;
+  border-color: #1f2937;
+}
