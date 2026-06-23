@@ -1,48 +1,70 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مقارنة المستندات — مُستخلِص</title>
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <title>{{ 'Compare documents — Mostakhles' if lang == 'en' else 'مقارنة المستندات — مُستخلِص' }}</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-  {% include "_nav.html" %}
+<body class="has-shell">
 
-  <section class="app-wrap">
-    <div class="container">
-      <h1 class="app-title"><i data-lucide="git-compare"></i> مقارنة المستندات</h1>
-      <p class="app-sub">ارفع مستندين واكتشف الفروقات بينهما — ما تغيّر، ما الناقص، وما المتطابق.</p>
+  {% set active_nav = 'tools' %}
+  <div class="shell-wrap">
+    {% include "_appshell.html" %}
+
+    <main class="shell-main">
+      <div class="shell-main-head">
+        <div class="shell-crumb">
+          <a href="/dashboard">{{ 'Documents' if lang == 'en' else 'المستندات' }}</a>
+          <span class="sep">/</span>
+          <span>{{ 'Compare documents' if lang == 'en' else 'مقارنة المستندات' }}</span>
+        </div>
+      </div>
+
+      <h1 class="app-title"><i data-lucide="git-compare"></i> {{ 'Compare documents' if lang == 'en' else 'مقارنة المستندات' }}</h1>
+      <p class="app-sub">{{ 'Upload two documents and find the differences — what changed, what\'s missing, what matches.' if lang == 'en' else 'ارفع مستندين واكتشف الفروقات بينهما — ما تغيّر، ما الناقص، وما المتطابق.' }}</p>
 
       <div class="app-grid">
         <div class="panel">
-          <label class="step">المستند الأول</label>
-          <label class="file-pick"><input type="file" id="fa" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"><span id="fan">اختر ملفًا…</span></label>
-          <label class="step" style="margin-top:18px">المستند الثاني</label>
-          <label class="file-pick"><input type="file" id="fb" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"><span id="fbn">اختر ملفًا…</span></label>
-          <label class="toggle" style="margin-top:14px"><input type="checkbox" id="hard" checked> دقة أعلى</label>
-          <button id="cmpBtn" class="btn btn-primary btn-lg full" disabled>قارن</button>
+          <label class="step">{{ 'First document' if lang == 'en' else 'المستند الأول' }}</label>
+          <label class="file-pick"><input type="file" id="fa" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"><span id="fan">{{ 'Choose a file…' if lang == 'en' else 'اختر ملفًا…' }}</span></label>
+          <label class="step" style="margin-top:18px">{{ 'Second document' if lang == 'en' else 'المستند الثاني' }}</label>
+          <label class="file-pick"><input type="file" id="fb" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"><span id="fbn">{{ 'Choose a file…' if lang == 'en' else 'اختر ملفًا…' }}</span></label>
+          <label class="toggle" style="margin-top:14px"><input type="checkbox" id="hard" checked> {{ 'High accuracy' if lang == 'en' else 'دقة أعلى' }}</label>
+          <button id="cmpBtn" class="btn btn-primary btn-lg full" disabled>{{ 'Compare' if lang == 'en' else 'قارن' }}</button>
         </div>
         <div class="panel">
-          <label class="step">النتيجة</label>
-          <div id="out" class="results"><div class="results-empty">اختر مستندين ثم اضغط "قارن".</div></div>
+          <label class="step">{{ 'Result' if lang == 'en' else 'النتيجة' }}</label>
+          <div id="out" class="results"><div class="results-empty">{{ 'Pick two documents, then click Compare.' if lang == 'en' else 'اختر مستندين ثم اضغط «قارن».' }}</div></div>
         </div>
       </div>
-    </div>
-  </section>
+    </main>
+  </div>
 
-  <script>
+  <script nonce="{{ csp_nonce }}">
+    const EN = "{{ 'true' if lang == 'en' else 'false' }}" === 'true';
     const fa = document.getElementById('fa'), fb = document.getElementById('fb');
     const cmpBtn = document.getElementById('cmpBtn'), out = document.getElementById('out');
     function check() { cmpBtn.disabled = !(fa.files[0] && fb.files[0]); }
-    fa.addEventListener('change', () => { document.getElementById('fan').textContent = fa.files[0]?.name || 'اختر ملفًا…'; check(); });
-    fb.addEventListener('change', () => { document.getElementById('fbn').textContent = fb.files[0]?.name || 'اختر ملفًا…'; check(); });
+    const choose = EN ? 'Choose a file…' : 'اختر ملفًا…';
+    fa.addEventListener('change', () => { document.getElementById('fan').textContent = fa.files[0]?.name || choose; check(); });
+    fb.addEventListener('change', () => { document.getElementById('fbn').textContent = fb.files[0]?.name || choose; check(); });
     cmpBtn.addEventListener('click', async () => {
       if (!fa.files[0] || !fb.files[0]) return;
-      cmpBtn.disabled = true; cmpBtn.textContent = 'جارٍ المقارنة…';
-      out.innerHTML = '<div class="results-empty">⏳ يتم تحليل المستندين…</div>';
+      cmpBtn.disabled = true; cmpBtn.textContent = EN ? 'Comparing…' : 'جارٍ المقارنة…';
+      out.innerHTML = `<div class="results-empty">⏳ ${EN ? 'Analyzing both documents…' : 'يتم تحليل المستندين…'}</div>`;
       const fd = new FormData();
       fd.append('file_a', fa.files[0]); fd.append('file_b', fb.files[0]);
       fd.append('hard', document.getElementById('hard').checked);
@@ -53,7 +75,7 @@
         out.innerHTML = `<pre class="text-out">${(j.report || '').replace(/</g, '&lt;')}</pre>`;
       } catch (e) {
         out.innerHTML = `<div class="results-error">⚠️ ${e.message}</div>`;
-      } finally { cmpBtn.disabled = false; cmpBtn.textContent = 'قارن'; }
+      } finally { cmpBtn.disabled = false; cmpBtn.textContent = EN ? 'Compare' : 'قارن'; }
     });
   </script>
 </body>

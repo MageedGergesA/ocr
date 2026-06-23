@@ -1,0 +1,128 @@
+<!-- Long-form Apps Store listing for Mostakhles Connector.
+     This file is rendered as the main content of the listing page on
+     apps.odoo.com. Self-contained: all styles are inlined, no remote assets.
+     Image references are relative to /static/description/.
+-->
+<section class="oe_container">
+
+<!-- ─────────────────────────── HERO ─────────────────────────── -->
+<div class="oe_row" style="background:#0f766e;color:#fff;padding:48px 32px;border-radius:12px;text-align:center;margin-bottom:36px">
+  <h1 style="font-size:36px;font-weight:800;letter-spacing:-.02em;margin:0 0 14px;color:#fff">
+    Mostakhles — Arabic Document AI for Odoo
+  </h1>
+  <p style="font-size:18px;line-height:1.6;max-width:720px;margin:0 auto;color:#d1fae5">
+    Extract structured fields from <strong style="color:#fff">Arabic invoices, national IDs, prescriptions, contracts, and handwritten documents</strong> — straight into Odoo records, in one click.
+  </p>
+</div>
+
+<!-- ─────────────────────────── WHY ─────────────────────────── -->
+<div class="oe_row" style="margin:48px 0">
+  <h2 style="font-size:26px;font-weight:700;letter-spacing:-.015em;color:#0f172a;margin:0 0 20px">
+    Why Mostakhles?
+  </h2>
+  <p style="font-size:15px;line-height:1.7;color:#334155;margin:0 0 16px">
+    Generic OCR fails on Arabic. Google Vision, AWS Textract, and Mindee were trained on Western printed text — they struggle with cursive Arabic, mixed Arabic-English documents, handwritten prescriptions, and Egyptian/Saudi/Gulf-specific document layouts.
+  </p>
+  <p style="font-size:15px;line-height:1.7;color:#334155;margin:0">
+    Mostakhles is purpose-built for MENA documents. The module connects your Odoo instance to the Mostakhles AI API and exposes a one-click <strong>Extract</strong> wizard on any record — invoices, partners, leads, HR contracts, real-estate sales, anything.
+  </p>
+</div>
+
+<!-- ─────────────────────────── WHAT YOU GET ─────────────────────────── -->
+<div class="oe_row" style="margin:48px 0">
+  <h2 style="font-size:26px;font-weight:700;letter-spacing:-.015em;color:#0f172a;margin:0 0 20px">
+    What you get
+  </h2>
+  <ul style="font-size:15px;line-height:1.8;color:#334155;padding-inline-start:24px;margin:0">
+    <li><strong>One-click "Extract with Mostakhles" button</strong> on any Odoo model that you map. Drop an image or PDF, watch the fields populate.</li>
+    <li><strong>28+ document types</strong> auto-detected: tax invoices, Egyptian national IDs, Saudi commercial registers, Arabic prescriptions, lease contracts, passports, bank statements, business cards, utility bills.</li>
+    <li><strong>Cognitive extraction</strong>: each result includes a per-field confidence score, plain-language summary, validations (tax-ID checksums, IBAN, MRZ check digits, totals reconcile), and computed values (subtotals, tax, ages).</li>
+    <li><strong>Field mapping wizard</strong>: configure how Mostakhles fields land in your Odoo records, save reusable mappings per doctype, share across users.</li>
+    <li><strong>Privacy first</strong>: documents are never used to train any AI model — contractually guaranteed via the Mostakhles DPA.</li>
+    <li><strong>Bilingual UI</strong>: every label available in Arabic and English; respects user's preferred language.</li>
+  </ul>
+</div>
+
+<!-- ─────────────────────────── HOW IT WORKS ─────────────────────────── -->
+<div class="oe_row" style="margin:48px 0;background:#f8fafc;padding:32px;border-radius:12px;border:1px solid #e2e8f0">
+  <h2 style="font-size:26px;font-weight:700;letter-spacing:-.015em;color:#0f172a;margin:0 0 22px">
+    How it works
+  </h2>
+  <ol style="font-size:15px;line-height:1.8;color:#334155;padding-inline-start:24px;margin:0">
+    <li><strong>Configure the API key</strong> — sign up at mostakhles.ai for free credits (30/month, no credit card), paste the key into Settings → Mostakhles.</li>
+    <li><strong>Click "Extract"</strong> — on any Odoo form view, the wizard opens. Drop a document, pick the target doctype (or let auto-detect run), hit Extract.</li>
+    <li><strong>Review &amp; apply</strong> — the wizard shows extracted fields with confidence scores. Edit any low-confidence values inline. Click Apply to write them into the Odoo record.</li>
+    <li><strong>Audit trail</strong> — every extraction is logged on the related record's chatter with the source filename, doctype, and confidence summary.</li>
+  </ol>
+</div>
+
+<!-- ─────────────────────────── DOC TYPES ─────────────────────────── -->
+<div class="oe_row" style="margin:48px 0">
+  <h2 style="font-size:26px;font-weight:700;letter-spacing:-.015em;color:#0f172a;margin:0 0 20px">
+    Supported document types
+  </h2>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:18px;font-size:14.5px;line-height:1.6;color:#334155">
+    <div>
+      <strong style="display:block;color:#0f766e;font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px">Financial</strong>
+      Egyptian tax invoices · Saudi VAT invoices · UAE TRN invoices · Bank statements · Receipts · Purchase orders · Credit notes
+    </div>
+    <div>
+      <strong style="display:block;color:#0f766e;font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px">Identity</strong>
+      Egyptian national ID · Saudi Iqama · UAE Emirates ID · Passports · Driving licences · Birth certificates
+    </div>
+    <div>
+      <strong style="display:block;color:#0f766e;font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px">Legal &amp; real estate</strong>
+      Lease agreements · Sale contracts · Commercial registers · Power of attorney · Court documents
+    </div>
+    <div>
+      <strong style="display:block;color:#0f766e;font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px">Healthcare</strong>
+      Handwritten prescriptions · Lab reports · Medical certificates · Insurance claim forms
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────── PRICING ─────────────────────────── -->
+<div class="oe_row" style="margin:48px 0;border:1px solid #e2e8f0;border-radius:12px;padding:28px">
+  <h2 style="font-size:26px;font-weight:700;letter-spacing:-.015em;color:#0f172a;margin:0 0 16px">
+    Pricing
+  </h2>
+  <p style="font-size:15px;line-height:1.7;color:#334155;margin:0 0 12px">
+    The Odoo module is <strong>free</strong>. It connects to the Mostakhles SaaS API, which is metered by credits:
+  </p>
+  <ul style="font-size:15px;line-height:1.8;color:#334155;padding-inline-start:24px;margin:0 0 8px">
+    <li><strong>Free</strong> — 30 credits / month, no card</li>
+    <li><strong>Lite</strong> — $9 / month — 1,200 credits</li>
+    <li><strong>Pro</strong> — $59 / month — 8,500 credits + Odoo module + webhooks</li>
+    <li><strong>Business</strong> — $199 / month — 28,000 credits + SSO, audit log, retention controls</li>
+  </ul>
+  <p style="font-size:14px;color:#64748b;margin:12px 0 0">
+    See <a href="https://mostakhles.ai/pricing" style="color:#0f766e;font-weight:600">mostakhles.ai/pricing</a> for full details.
+  </p>
+</div>
+
+<!-- ─────────────────────────── REQUIREMENTS ─────────────────────────── -->
+<div class="oe_row" style="margin:48px 0">
+  <h2 style="font-size:26px;font-weight:700;letter-spacing:-.015em;color:#0f172a;margin:0 0 16px">
+    Requirements
+  </h2>
+  <ul style="font-size:15px;line-height:1.8;color:#334155;padding-inline-start:24px;margin:0">
+    <li>Odoo 19.0 (Community or Enterprise)</li>
+    <li>Python <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px">requests</code> library (auto-installed by Odoo's pre-install check)</li>
+    <li>Outbound HTTPS access to <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:13px">api.mostakhles.ai</code></li>
+    <li>A free or paid Mostakhles account — sign up at <a href="https://mostakhles.ai/signup" style="color:#0f766e;font-weight:600">mostakhles.ai/signup</a></li>
+  </ul>
+</div>
+
+<!-- ─────────────────────────── SUPPORT ─────────────────────────── -->
+<div class="oe_row" style="margin:48px 0;background:#0f172a;color:#fff;padding:32px;border-radius:12px;text-align:center">
+  <h2 style="font-size:22px;font-weight:700;color:#fff;margin:0 0 14px">Support &amp; contact</h2>
+  <p style="font-size:15px;color:#cbd5e1;margin:0 0 18px">
+    Bug reports, feature requests, or just say hi — we read every email.
+  </p>
+  <p style="margin:0">
+    <a href="mailto:support@mostakhles.ai" style="display:inline-block;background:#fff;color:#0f172a;font-weight:700;padding:12px 26px;border-radius:8px;text-decoration:none;margin:0 4px">support@mostakhles.ai</a>
+    <a href="https://mostakhles.ai/docs" style="display:inline-block;background:transparent;color:#fff;font-weight:600;padding:12px 26px;border-radius:8px;text-decoration:none;border:1px solid rgba(255,255,255,.30);margin:0 4px">API documentation</a>
+  </p>
+</div>
+
+</section>

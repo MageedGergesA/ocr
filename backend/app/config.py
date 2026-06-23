@@ -95,6 +95,16 @@ class Settings(BaseSettings):
     PAYPAL_SECRET: str = ""
     PAYPAL_WEBHOOK_ID: str = ""
     PAYPAL_MODE: Literal["sandbox", "live"] = "sandbox"
+    # PayPal API base. Default points at sandbox; swap to live when going prod
+    # or to the local mock for development (http://localhost:8000/_mock/paypal).
+    PAYPAL_BASE_URL: str = "https://api-m.sandbox.paypal.com"
+    # PayPal plan IDs — created once via the PayPal merchant dashboard (or the
+    # Catalog API) for each tier we sell. Leave empty to mean "this tier is
+    # not yet offered via PayPal" (the checkout will reject those plans).
+    PAYPAL_PLAN_ID_LITE: str = ""
+    PAYPAL_PLAN_ID_STARTER: str = ""
+    PAYPAL_PLAN_ID_PRO: str = ""
+    PAYPAL_PLAN_ID_BUSINESS: str = ""
     PAYMOB_API_KEY: str = ""
     PAYMOB_HMAC: str = ""
     PAYMOB_IFRAME_ID: str = ""

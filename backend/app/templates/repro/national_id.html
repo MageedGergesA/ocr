@@ -1,0 +1,63 @@
+{# Polished National ID — landscape card-style layout. #}
+<!DOCTYPE html>
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ 'البطاقة القومية' if dir == 'rtl' else 'National ID' }} — {{ full_name_ar or full_name_en }}</title>
+  <style>
+    @page { size: A4 landscape; margin: 18mm; }
+    body { font-family: 'Cairo', 'Helvetica', sans-serif; color: #1b1813; margin: 0; padding: 24px; max-width: 920px; margin-inline: auto; }
+    .nid-head { padding-bottom: 14px; border-bottom: 3px solid #0f766e; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .nid-title { font-size: 22px; font-weight: 800; color: #0a564f; margin: 0; }
+    .nid-issuer { font-size: 12px; color: #7a7165; }
+    .nid-number-strip { background: #0a564f; color: #d1fae5; padding: 14px 22px; border-radius: 8px; font-size: 19px; font-weight: 700; letter-spacing: 3px; font-family: 'JetBrains Mono', 'Courier New', monospace; margin-bottom: 22px; text-align: center; direction: ltr; }
+    .nid-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px 28px; margin-bottom: 22px; font-size: 14px; }
+    .nid-grid .lbl { display: block; font-size: 11px; color: #7a7165; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; font-weight: 700; }
+    .nid-grid .val { font-weight: 600; color: #1b1813; }
+    .nid-decoded { background: #d1fae5; border-radius: 8px; padding: 14px 18px; }
+    .nid-decoded h3 { margin: 0 0 10px; font-size: 12px; color: #065f46; text-transform: uppercase; letter-spacing: 0.06em; }
+    .nid-decoded-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 16px; font-size: 13px; }
+    .nid-decoded .lbl { font-size: 10px; color: #047857; text-transform: uppercase; margin-bottom: 2px; }
+    .nid-decoded .val { font-weight: 700; color: #065f46; }
+    .nid-foot { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e5e0d4; display: flex; justify-content: space-between; font-size: 11px; color: #7a7165; }
+  </style>
+</head>
+<body>
+  <header class="nid-head">
+    <h1 class="nid-title">{{ 'البطاقة القومية' if dir == 'rtl' else 'National ID Card' }}</h1>
+    {% if issuing_country %}<div class="nid-issuer">{{ issuing_country }}</div>{% endif %}
+  </header>
+
+  {% if id_number %}<div class="nid-number-strip">{{ id_number }}</div>{% endif %}
+
+  <div class="nid-grid">
+    {% if full_name_ar %}<div><span class="lbl">{{ 'الاسم بالعربية' if dir == 'rtl' else 'Arabic Name' }}</span><span class="val">{{ full_name_ar }}</span></div>{% endif %}
+    {% if full_name_en %}<div><span class="lbl">{{ 'الاسم باللاتيني' if dir == 'rtl' else 'Latin Name' }}</span><span class="val">{{ full_name_en }}</span></div>{% endif %}
+    {% if date_of_birth %}<div><span class="lbl">{{ 'تاريخ الميلاد' if dir == 'rtl' else 'Date of Birth' }}</span><span class="val">{{ date_of_birth }}</span></div>{% endif %}
+    {% if sex %}<div><span class="lbl">{{ 'النوع' if dir == 'rtl' else 'Sex' }}</span><span class="val">{{ sex }}</span></div>{% endif %}
+    {% if address %}<div style="grid-column: 1 / -1"><span class="lbl">{{ 'العنوان' if dir == 'rtl' else 'Address' }}</span><span class="val">{{ address }}</span></div>{% endif %}
+    {% if religion %}<div><span class="lbl">{{ 'الديانة' if dir == 'rtl' else 'Religion' }}</span><span class="val">{{ religion }}</span></div>{% endif %}
+    {% if marital_status %}<div><span class="lbl">{{ 'الحالة الاجتماعية' if dir == 'rtl' else 'Marital Status' }}</span><span class="val">{{ marital_status }}</span></div>{% endif %}
+    {% if occupation %}<div><span class="lbl">{{ 'الوظيفة' if dir == 'rtl' else 'Occupation' }}</span><span class="val">{{ occupation }}</span></div>{% endif %}
+    {% if issue_date %}<div><span class="lbl">{{ 'تاريخ الإصدار' if dir == 'rtl' else 'Issue Date' }}</span><span class="val">{{ issue_date }}</span></div>{% endif %}
+    {% if expiry_date %}<div><span class="lbl">{{ 'تاريخ الانتهاء' if dir == 'rtl' else 'Expiry' }}</span><span class="val">{{ expiry_date }}</span></div>{% endif %}
+  </div>
+
+  {% if decoded %}
+  <section class="nid-decoded">
+    <h3>{{ 'البيانات المُستنتجة من الرقم القومي' if dir == 'rtl' else 'Decoded from National ID' }}</h3>
+    <div class="nid-decoded-grid">
+      {% if decoded.birth_date %}<div><div class="lbl">{{ 'تاريخ الميلاد' if dir == 'rtl' else 'Birth Date' }}</div><div class="val">{{ decoded.birth_date }}</div></div>{% endif %}
+      {% if decoded.governorate_name %}<div><div class="lbl">{{ 'المحافظة' if dir == 'rtl' else 'Governorate' }}</div><div class="val">{{ decoded.governorate_name }}</div></div>{% endif %}
+      {% if decoded.sex %}<div><div class="lbl">{{ 'النوع' if dir == 'rtl' else 'Sex' }}</div><div class="val">{{ decoded.sex }}</div></div>{% endif %}
+      {% if decoded.sequence %}<div><div class="lbl">{{ 'الرقم التسلسلي' if dir == 'rtl' else 'Sequence' }}</div><div class="val">{{ decoded.sequence }}</div></div>{% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <footer class="nid-foot">
+    <span>{{ 'مُستخلِص — Mostakhles' }}</span>
+    <span>{{ extracted_at }}</span>
+  </footer>
+</body>
+</html>

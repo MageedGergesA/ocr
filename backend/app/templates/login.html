@@ -3,13 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
   <title>{{ 'Log in' if lang == 'en' else 'تسجيل الدخول' }} — Mostakhles</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-  {% include "_nav.html" %}
+<body class="lp-body">
+  {% include "_lpheader.html" %}
 
   <section class="auth-wrap">
     <div class="auth-card">

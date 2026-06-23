@@ -1,0 +1,391 @@
+{# Polished generic report — corporate consultancy style inspired by BRD docs.
+   Used for any document type that doesn't have a specialized template.
+   Renders a cover-page title block, document metadata table, numbered
+   sections with subsections, and a footer with confidentiality + page numbers.
+
+   Data shape expected (from _flatten_generic):
+     - doctype_label: "Passport" / "Invoice" / etc.
+     - cover_meta: [[label, value], ...]
+     - summary: optional one-paragraph string
+     - sections: [{title, kind, ...}, ...]
+       - kind='fields'    -> {items: [{label, value, value_secondary?, cls}]}
+       - kind='subsections' -> {subsections: [{title, items}]}
+       - kind='table'     -> {columns, rows}
+       - kind='list'      -> {items: [...]}
+       - kind='mono'      -> {lines: [...]}     # for MRZ / IBAN / code blocks
+       - kind='callout'   -> {body, tone}       # tone='note'|'warn'|'pass'
+#}
+<!DOCTYPE html>
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ doctype_label or 'Document' }} — Mostakhles</title>
+  <style>
+    @page { size: A4 portrait; margin: 20mm 16mm 18mm 16mm; }
+    @page :first { margin-top: 14mm; }
+
+    * { box-sizing: border-box; }
+    html, body { background: #fff; }
+    body {
+      font-family: 'Segoe UI', 'Cairo', 'Helvetica Neue', Arial, sans-serif;
+      color: #1f2937;
+      margin: 0; padding: 0;
+      line-height: 1.55;
+      font-size: 11.5pt;
+    }
+    .doc { max-width: 760px; margin: 0 auto; padding: 18px 22px; }
+
+    /* ─── Running header strip (top of every page) ──────────────────── */
+    .doc-banner {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0 10px;
+      border-bottom: 1.5px solid #1e3a8a;
+      margin-bottom: 22px;
+      font-size: 10pt;
+      color: #6b7280;
+    }
+    .doc-banner-brand { display: flex; align-items: center; gap: 8px; }
+    .doc-banner-mark {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #0f766e 100%);
+      color: #fff; display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px;
+    }
+    .doc-banner-strong { color: #1e3a8a; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; font-size: 10pt; }
+    .doc-banner-meta { color: #6b7280; }
+    .doc-banner-meta b { color: #1e3a8a; font-weight: 600; margin: 0 4px; }
+
+    /* ─── Cover hero (navy block with title + gold subtitle) ───────── */
+    .cover {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 80%, #243a96 100%);
+      color: #fff;
+      padding: 60px 36px;
+      border-radius: 4px;
+      margin-bottom: 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: ""; position: absolute; inset: 0;
+      background-image: radial-gradient(circle at 90% 0%, rgba(255,255,255,0.08), transparent 40%);
+      pointer-events: none;
+    }
+    .cover h1 {
+      font-size: 32pt; font-weight: 800; letter-spacing: 0.02em;
+      margin: 0 0 14px; line-height: 1.1; text-transform: uppercase;
+      position: relative;
+    }
+    .cover .cover-sub {
+      font-size: 16pt; font-weight: 700; color: #f59e0b;
+      letter-spacing: 0.04em; margin: 0 0 16px;
+      text-transform: uppercase; position: relative;
+    }
+    .cover .cover-tag {
+      font-size: 12pt; color: #cbd5e1; margin: 0; position: relative;
+      font-weight: 400;
+    }
+    .cover .cover-divider {
+      width: 60px; height: 2px; background: #f59e0b;
+      margin: 18px auto 0; position: relative;
+    }
+
+    /* ─── Cover metadata table (Field / Value with blue header) ───── */
+    table.meta-table {
+      width: 100%; border-collapse: collapse;
+      margin-bottom: 36px;
+      font-size: 11pt;
+      border: 1px solid #cbd5e1;
+    }
+    table.meta-table thead {
+      background: #1e3a8a;
+      color: #fff;
+    }
+    table.meta-table th {
+      padding: 11px 14px;
+      text-align: start;
+      font-weight: 700;
+      font-size: 11pt;
+      letter-spacing: 0.02em;
+    }
+    table.meta-table td {
+      padding: 9px 14px;
+      border-top: 1px solid #e5e7eb;
+      background: #fff;
+    }
+    table.meta-table td:first-child {
+      width: 30%; color: #4b5563; font-weight: 600;
+    }
+    table.meta-table tbody tr:nth-child(even) td { background: #f9fafb; }
+
+    /* ─── Section header (full-width navy bar with "1. TITLE") ────── */
+    .sec {
+      margin: 30px 0 22px;
+    }
+    /* Each per-document block starts on a fresh page when printed. */
+    .sec.is-doc-header { page-break-before: always; break-before: page; }
+    .sec.is-doc-header:first-of-type { page-break-before: avoid; break-before: auto; }
+    .sec-bar {
+      display: flex; align-items: center;
+      background: #1e3a8a;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 2px;
+      font-size: 14pt; font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-bottom: 18px;
+    }
+    .sec-bar-num { margin-inline-end: 12px; font-weight: 900; opacity: 0.85; }
+    .sec-bar.tone-teal { background: #0f766e; }
+    .sec-bar.tone-amber { background: #b45309; }
+
+    /* ─── Subsection (numbered, underlined) ──────────────────────── */
+    .subsec { margin-bottom: 22px; }
+    .subsec h3 {
+      font-size: 12.5pt; font-weight: 700; color: #1e3a8a;
+      margin: 0 0 10px; padding-bottom: 6px;
+      border-bottom: 1px solid #cbd5e1;
+    }
+    .subsec h3 .num { color: #6b7280; font-weight: 600; margin-inline-end: 8px; }
+
+    /* ─── Field rows (Label / Value pairs) ───────────────────────── */
+    .fields { display: grid; grid-template-columns: 38% 1fr; gap: 0; }
+    .field-row {
+      display: contents;
+    }
+    .field-lbl, .field-val {
+      padding: 8px 12px;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 10.5pt;
+    }
+    .field-lbl {
+      color: #4b5563; font-weight: 600;
+      background: #f9fafb;
+    }
+    .field-val { color: #1f2937; font-weight: 500; word-break: break-word; }
+    .field-row.low .field-val,
+    .field-row.fail .field-val {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .conf-dot {
+      flex: none;
+      display: inline-block;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #10b981;
+    }
+    .conf-dot.med { background: #f59e0b; }
+    .conf-dot.low { background: #ef4444; }
+    .field-val-secondary {
+      display: block;
+      font-size: 9.5pt; color: #6b7280; margin-top: 2px;
+    }
+
+    /* ─── Data table (for tabular data) ─────────────────────────── */
+    table.data-table {
+      width: 100%; border-collapse: collapse;
+      margin: 10px 0 6px;
+      font-size: 10.5pt;
+      border: 1px solid #cbd5e1;
+    }
+    table.data-table thead {
+      background: #0f766e; color: #fff;
+    }
+    table.data-table th {
+      padding: 8px 12px; text-align: start;
+      font-weight: 700; letter-spacing: 0.02em;
+      font-size: 10pt;
+    }
+    table.data-table td {
+      padding: 8px 12px;
+      border-top: 1px solid #e5e7eb;
+    }
+    table.data-table tbody tr:nth-child(even) td { background: #f9fafb; }
+
+    /* ─── Monospaced block (MRZ / codes) ────────────────────────── */
+    .mono-block {
+      background: #0f172a; color: #d1fae5;
+      padding: 14px 18px; border-radius: 4px;
+      font-family: 'Courier New', monospace; font-size: 10.5pt;
+      letter-spacing: 1.5px; white-space: pre-wrap; word-break: break-all;
+      margin: 6px 0;
+    }
+
+    /* ─── Lists ─────────────────────────────────────────────────── */
+    .field-list { margin: 6px 0; padding-inline-start: 22px; font-size: 10.5pt; }
+    .field-list li { margin-bottom: 4px; }
+
+    /* ─── Callouts (validation results, notes) ──────────────────── */
+    .callout {
+      padding: 12px 16px; border-radius: 4px;
+      margin: 6px 0; font-size: 10.5pt;
+      border-inline-start: 4px solid;
+    }
+    [dir="rtl"] .callout { border-inline-start: 0; border-inline-end: 4px solid; }
+    .callout.note { background: #eff6ff; border-color: #1e3a8a; color: #1e3a8a; }
+    .callout.warn { background: #fef3c7; border-color: #b45309; color: #92400e; }
+    .callout.pass { background: #d1fae5; border-color: #0f766e; color: #065f46; }
+    .callout.fail { background: #fee2e2; border-color: #b91c1c; color: #991b1b; }
+
+    /* ─── Summary banner ────────────────────────────────────────── */
+    .doc-summary {
+      background: #eff6ff;
+      padding: 16px 20px;
+      border-inline-start: 4px solid #1e3a8a;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 28px;
+      font-size: 11pt; line-height: 1.6;
+      color: #1e3a8a;
+    }
+    [dir="rtl"] .doc-summary { border-inline-start: 0; border-inline-end: 4px solid #1e3a8a; border-radius: 4px 0 0 4px; }
+
+    /* ─── Footer (confidentiality + page x of y) ─────────────────── */
+    .doc-foot {
+      margin-top: 50px;
+      padding-top: 12px;
+      border-top: 1px solid #cbd5e1;
+      display: flex; justify-content: space-between;
+      font-size: 9.5pt; color: #6b7280;
+    }
+    .doc-foot-strong { color: #1e3a8a; font-weight: 700; letter-spacing: 0.03em; }
+  </style>
+</head>
+<body>
+<div class="doc">
+
+  {# ─── Top banner (brand + version) ─── #}
+  <div class="doc-banner">
+    <div class="doc-banner-brand">
+      <span class="doc-banner-mark">M</span>
+      <span class="doc-banner-strong">Mostakhles</span>
+    </div>
+    <div class="doc-banner-meta">
+      {% if dir == 'rtl' %}مُستخلِص<b>|</b>تقرير المستند{% else %}Document Report<b>|</b>Mostakhles{% endif %}
+      {% if extracted_at %}<b>|</b>v1.0{% endif %}
+    </div>
+  </div>
+
+  {# ─── Cover hero block ─── #}
+  <div class="cover">
+    <h1>{{ doctype_label }}</h1>
+    <p class="cover-sub">{{ 'تقرير استخراج البيانات' if dir == 'rtl' else 'DATA EXTRACTION REPORT' }}</p>
+    <p class="cover-tag">{{ 'تم إنتاج هذا التقرير تلقائيًا بواسطة مُستخلِص — ذكاء المستندات' if dir == 'rtl' else 'Auto-generated by Mostakhles — Arabic Document AI' }}</p>
+    <div class="cover-divider"></div>
+  </div>
+
+  {# ─── Cover metadata table ─── #}
+  {% if cover_meta %}
+  <table class="meta-table">
+    <thead>
+      <tr>
+        <th>{{ 'الحقل' if dir == 'rtl' else 'Field' }}</th>
+        <th>{{ 'القيمة' if dir == 'rtl' else 'Value' }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for label, value in cover_meta %}
+      <tr><td>{{ label }}</td><td>{{ value }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {# ─── Summary banner ─── #}
+  {% if summary %}
+  <div class="doc-summary">{{ summary }}</div>
+  {% endif %}
+
+  {# ─── Sections ─── #}
+  {% for section in sections %}
+  <div class="sec {{ 'is-doc-header' if section.kind == 'doc_header' else '' }}">
+    <div class="sec-bar {{ section.tone | default('') }}">
+      <span class="sec-bar-num">{{ loop.index }}.</span>
+      <span>{{ section.title }}</span>
+    </div>
+
+    {% if section.kind == 'fields' %}
+      <div class="fields">
+        {% for f in section['items'] %}
+        <div class="field-row {{ f.cls | default('') }}">
+          <div class="field-lbl">{{ f.label }}</div>
+          <div class="field-val">
+            {% if f.cls == 'low' %}<span class="conf-dot med"></span>{% elif f.cls == 'fail' %}<span class="conf-dot low"></span>{% endif %}
+            <span>{{ f.value }}{% if f.value_secondary %}<span class="field-val-secondary">{{ f.value_secondary }}</span>{% endif %}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    {% elif section.kind == 'subsections' %}
+      {% for sub in section['items'] %}
+      <div class="subsec">
+        <h3><span class="num">{{ loop.index0 + 1 }}.{{ loop.index }}</span>{{ sub.title }}</h3>
+        <div class="fields">
+          {% for f in sub['items'] %}
+          <div class="field-row {{ f.cls | default('') }}">
+            <div class="field-lbl">{{ f.label }}</div>
+            <div class="field-val">
+              {% if f.cls == 'low' %}<span class="conf-dot med"></span>{% elif f.cls == 'fail' %}<span class="conf-dot low"></span>{% endif %}
+              <span>{{ f.value }}{% if f.value_secondary %}<span class="field-val-secondary">{{ f.value_secondary }}</span>{% endif %}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+
+    {% elif section.kind == 'table' %}
+      <table class="data-table">
+        <thead>
+          <tr>{% for c in section.columns %}<th>{{ c }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+          {% for row in section.rows %}
+          <tr>{% for c in row %}<td>{{ c }}</td>{% endfor %}</tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+    {% elif section.kind == 'mono' %}
+      <div class="mono-block">{% for line in section.lines %}{{ line }}
+{% endfor %}</div>
+
+    {% elif section.kind == 'list' %}
+      <ul class="field-list">
+        {% for item in section['items'] %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+
+    {% elif section.kind == 'callouts' %}
+      {% for c in section['items'] %}
+      <div class="callout {{ c.tone | default('note') }}">{{ c.body }}</div>
+      {% endfor %}
+
+    {% elif section.kind == 'doc_header' %}
+      {# Per-document mini-cover used inside multi-document reports #}
+      {% if section.summary %}
+      <div class="doc-summary" style="margin-bottom:14px">{{ section.summary }}</div>
+      {% endif %}
+      {% if section.cover_meta %}
+      <table class="meta-table" style="margin-bottom:14px">
+        <tbody>
+          {% for label, value in section.cover_meta %}
+          <tr><td>{{ label }}</td><td>{{ value }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+
+    {% elif section.kind == 'text' %}
+      <p>{{ section.body }}</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  {# ─── Footer ─── #}
+  <div class="doc-foot">
+    <span class="doc-foot-strong">{{ 'سري — للاستخدام الداخلي' if dir == 'rtl' else 'CONFIDENTIAL — Internal Use Only' }}</span>
+    <span>{{ extracted_at }}</span>
+  </div>
+
+</div>
+</body>
+</html>

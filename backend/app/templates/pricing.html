@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <title>{{ 'Pricing — Mostakhles' if lang == 'en' else 'الأسعار — مُستخلِص' }}</title>
+  <meta name="description" content="{{ 'Volume-based plans, no per-seat fees. Free 30 credits/month, paid plans from $9/mo. AI Visual Reproduction add-on available on Pro+.' if lang == 'en' else 'خطط حسب الحجم، بدون رسوم لكل مستخدم. مجاني 30 نقطة/شهر، الخطط المدفوعة من $9/شهر.' }}">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="lp-body">
+
+  {% set active_lp_nav = 'pricing' %}
+  {% include "_lpheader.html" %}
+
+  <div class="lp-shell">
+
+    {# ════════════════ HERO — Pick your plan ════════════════ #}
+    <section class="lp-section lp-pricing-band" id="pricing" data-cad="monthly">
+      <header class="lp-section-head lp-center">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</p>
+        <h1 class="lp-h2 lp-h2-jumbo">{{ 'Pick your plan' if lang == 'en' else 'اختر خطّتك' }}</h1>
+        <p class="lp-section-sub">{{ 'Volume-based credits — no per-seat fees. Annual saves 17%.' if lang == 'en' else 'نقاط حسب الحجم — بدون رسوم لكل مستخدم. السنوي يوفّر 17%.' }}</p>
+      </header>
+
+      <div class="lp-pricing-toggle">
+        <div class="lp-pt-group" role="group">
+          <button class="lp-pt-btn active" type="button" data-cad="monthly">{{ 'Monthly' if lang == 'en' else 'شهري' }}</button>
+          <button class="lp-pt-btn" type="button" data-cad="yearly">
+            {{ 'Annual' if lang == 'en' else 'سنوي' }}
+            <span class="lp-pt-save">−17%</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="lp-plans">
+
+        {# Free #}
+        <article class="lp-plan">
+          <header>
+            <h3>{{ 'Free' if lang == 'en' else 'مجاني' }}</h3>
+            <p>{{ 'No commitment' if lang == 'en' else 'بدون التزام' }}</p>
+          </header>
+          <div class="lp-plan-price">
+            <span class="lp-plan-amount">$0</span>
+            <span class="lp-plan-cad">/ {{ 'forever' if lang == 'en' else 'مجاني' }}</span>
+          </div>
+          <p class="lp-plan-note">{{ 'Try the platform.' if lang == 'en' else 'لتجربة المنصة.' }}</p>
+          <a class="lp-btn lp-btn-ghost lp-btn-full" href="/signup">{{ 'Start free' if lang == 'en' else 'ابدأ مجانًا' }}</a>
+          <ul class="lp-plan-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ '30 credits / month' if lang == 'en' else '30 نقطة / شهر' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'All 28 doc types' if lang == 'en' else 'جميع الـ 28 نوع مستند' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Web app + API' if lang == 'en' else 'تطبيق ويب + API' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Word + PDF export' if lang == 'en' else 'تصدير Word + PDF' }}</li>
+          </ul>
+        </article>
+
+        {# Lite #}
+        <article class="lp-plan">
+          <span class="lp-plan-tag-corner" data-yr hidden>{{ 'Save 50%' if lang == 'en' else 'وفّر 50%' }}</span>
+          <header>
+            <h3>Lite</h3>
+            <p>{{ '1,200 pages / month' if lang == 'en' else '1,200 صفحة / شهر' }}</p>
+          </header>
+          <div class="lp-plan-price">
+            <span class="lp-plan-amount" data-mo>$9</span><span class="lp-plan-amount" data-yr hidden>$7</span>
+            <span class="lp-plan-cad">/ {{ 'month' if lang == 'en' else 'شهر' }}</span>
+          </div>
+          <p class="lp-plan-note"><span data-mo>{{ 'Billed monthly' if lang == 'en' else 'فوترة شهرية' }}</span><span data-yr hidden>{{ 'Billed annually' if lang == 'en' else 'فوترة سنوية' }}</span></p>
+          <a class="lp-btn lp-btn-dark lp-btn-full" href="/billing/checkout?plan=lite">{{ 'Subscribe' if lang == 'en' else 'اشترك' }}</a>
+          <ul class="lp-plan-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Everything in Free' if lang == 'en' else 'كل ما في الخطة المجانية' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Excel + CSV + XML exports' if lang == 'en' else 'تصدير Excel + CSV + XML' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Saved templates' if lang == 'en' else 'قوالب محفوظة' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Email support' if lang == 'en' else 'دعم بالبريد' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Renews monthly, cancel any time' if lang == 'en' else 'تجديد شهري، إلغاء أي وقت' }}</li>
+          </ul>
+        </article>
+
+        {# Pro — featured plan, visually emphasized with black border + lift #}
+        <article class="lp-plan lp-plan-featured">
+          <span class="lp-plan-best-badge">{{ 'Most popular' if lang == 'en' else 'الأكثر شيوعًا' }}</span>
+          <span class="lp-plan-tag-corner" data-yr hidden>{{ 'Save 67%' if lang == 'en' else 'وفّر 67%' }}</span>
+          <header>
+            <h3>Pro</h3>
+            <p>{{ '8,500 pages / month' if lang == 'en' else '8,500 صفحة / شهر' }}</p>
+          </header>
+          <div class="lp-plan-price">
+            <span class="lp-plan-amount" data-mo>$59</span><span class="lp-plan-amount" data-yr hidden>$49</span>
+            <span class="lp-plan-cad">/ {{ 'month' if lang == 'en' else 'شهر' }}</span>
+          </div>
+          <p class="lp-plan-note"><span data-mo>{{ 'Billed monthly · $0.0069/page' if lang == 'en' else 'فوترة شهرية · $0.0069 / صفحة' }}</span><span data-yr hidden>{{ 'Billed annually' if lang == 'en' else 'فوترة سنوية' }}</span></p>
+          <a class="lp-btn lp-btn-dark lp-btn-full" href="/billing/checkout?plan=pro">{{ 'Subscribe' if lang == 'en' else 'اشترك' }}</a>
+          <ul class="lp-plan-list">
+            <li class="lp-plan-list-head">{{ 'Everything in Lite, plus:' if lang == 'en' else 'كل ما في Lite، بالإضافة إلى:' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Cognitive extraction (full)' if lang == 'en' else 'استخراج معرفي (كامل)' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Odoo module + webhooks' if lang == 'en' else 'وحدة أودو + Webhooks' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Priority support' if lang == 'en' else 'دعم ذو أولوية' }}</li>
+          </ul>
+        </article>
+
+        {# Business #}
+        <article class="lp-plan">
+          <span class="lp-plan-tag-corner" data-yr hidden>{{ 'Save 73%' if lang == 'en' else 'وفّر 73%' }}</span>
+          <header>
+            <h3>Business</h3>
+            <p>{{ '28,000 pages / month' if lang == 'en' else '28,000 صفحة / شهر' }}</p>
+          </header>
+          <div class="lp-plan-price">
+            <span class="lp-plan-amount" data-mo>$199</span><span class="lp-plan-amount" data-yr hidden>$166</span>
+            <span class="lp-plan-cad">/ {{ 'month' if lang == 'en' else 'شهر' }}</span>
+          </div>
+          <p class="lp-plan-note"><span data-mo>{{ 'Billed monthly' if lang == 'en' else 'فوترة شهرية' }}</span><span data-yr hidden>{{ 'Billed annually' if lang == 'en' else 'فوترة سنوية' }}</span></p>
+          <a class="lp-btn lp-btn-dark lp-btn-full" href="/billing/checkout?plan=business">{{ 'Subscribe' if lang == 'en' else 'اشترك' }}</a>
+          <ul class="lp-plan-list">
+            <li class="lp-plan-list-head">{{ 'Everything in Pro, plus:' if lang == 'en' else 'كل ما في Pro، بالإضافة إلى:' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Up to 5 team members' if lang == 'en' else 'حتى 5 أعضاء فريق' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Audit log + retention controls' if lang == 'en' else 'سجل تدقيق + ضوابط احتفاظ' }}</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>{{ 'Custom integrations' if lang == 'en' else 'تكاملات مخصّصة' }}</li>
+          </ul>
+        </article>
+      </div>
+
+      {# Trust strip — risk reversal directly under the cards. Enterprise
+         buyers look here for "money-back / no contracts / cancel anytime"
+         before clicking Subscribe. #}
+      <ul class="lp-pricing-trust">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 8 10 8 10s8-5 8-10V6l-8-4z"/><path d="m9 12 2 2 4-4"/></svg>
+          <div>
+            <strong>{{ '14-day money-back' if lang == 'en' else 'استرداد 14 يومًا' }}</strong>
+            <small>{{ 'Full refund on any paid plan, no questions' if lang == 'en' else 'استرداد كامل لأي خطّة مدفوعة، بدون أسئلة' }}</small>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="m13 8 4 4-4 4"/></svg>
+          <div>
+            <strong>{{ 'Cancel any time' if lang == 'en' else 'إلغاء في أي وقت' }}</strong>
+            <small>{{ 'One click. Keep access through period end.' if lang == 'en' else 'بنقرة واحدة. الوصول حتى نهاية الدورة.' }}</small>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7V3M16 7V3M3 11h18"/><rect x="3" y="5" width="18" height="16" rx="2"/></svg>
+          <div>
+            <strong>{{ 'No contracts' if lang == 'en' else 'بدون عقود' }}</strong>
+            <small>{{ 'Month-to-month or annual. Your choice.' if lang == 'en' else 'شهرية أو سنوية. باختيارك.' }}</small>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <div>
+            <strong>{{ 'Instant access' if lang == 'en' else 'وصول فوري' }}</strong>
+            <small>{{ 'Use credits within 30 seconds of signup' if lang == 'en' else 'استخدم النقاط خلال 30 ثانية من التسجيل' }}</small>
+          </div>
+        </li>
+      </ul>
+
+      {# Optional add-ons #}
+      <div class="lp-addons">
+        <header class="lp-addons-head">
+          <h3>{{ 'Optional add-ons' if lang == 'en' else 'إضافات اختيارية' }}</h3>
+          <p>{{ 'Stack any of these onto any paid plan' if lang == 'en' else 'أضف أيًا منها إلى أي خطة مدفوعة' }}</p>
+        </header>
+        <div class="lp-addon-grid">
+          <article class="lp-addon-card">
+            <h4>{{ 'AI Visual Reproduction' if lang == 'en' else 'إعادة الإنتاج البصرية' }}</h4>
+            <p>{{ 'Output a polished HTML/PDF that visually mirrors your source document.' if lang == 'en' else 'ينتج HTML/PDF منسّق يشبه مستندك الأصلي بصريًا.' }}</p>
+            <div class="lp-addon-foot">
+              <strong>+3 {{ 'credits / extraction' if lang == 'en' else 'نقاط / استخراج' }}</strong>
+              <small>{{ 'Available on Pro and above' if lang == 'en' else 'متاح في Pro فما فوق' }}</small>
+            </div>
+          </article>
+          <article class="lp-addon-card">
+            <h4>{{ 'Bulk Credit Packs' if lang == 'en' else 'حزم نقاط بالجملة' }}</h4>
+            <p>{{ 'One-time credit top-ups that never expire — perfect for seasonal spikes.' if lang == 'en' else 'حزم نقاط لمرة واحدة لا تنتهي صلاحيتها — مثالية للذروات الموسمية.' }}</p>
+            <div class="lp-addon-foot">
+              <strong>{{ 'from $0.005/credit' if lang == 'en' else 'تبدأ من $0.005 / نقطة' }}</strong>
+              <small>{{ 'On-demand, no contract' if lang == 'en' else 'حسب الطلب، بدون عقد' }}</small>
+            </div>
+          </article>
+          <article class="lp-addon-card">
+            <h4>{{ 'Custom Doctype Training' if lang == 'en' else 'تدريب نوع مستند مخصّص' }}</h4>
+            <p>{{ 'Have a unique form? We train a parser tuned to your exact layout in 5-7 days.' if lang == 'en' else 'نموذج فريد؟ ندرّب محلّل مخصّص لتصميمك في 5-7 أيام.' }}</p>
+            <div class="lp-addon-foot">
+              <strong>{{ 'Contact sales' if lang == 'en' else 'تواصل مع المبيعات' }}</strong>
+              <small>{{ 'Available on Business' if lang == 'en' else 'متاح في Business' }}</small>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      {# Compare all features #}
+      <div class="lp-compare">
+        <header class="lp-compare-head">
+          <h3>{{ 'Compare all features' if lang == 'en' else 'قارن كل الميزات' }}</h3>
+        </header>
+        <div class="lp-compare-scroll">
+          <table class="lp-compare-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>{{ 'Free' if lang == 'en' else 'مجاني' }}</th>
+                <th>Lite</th>
+                <th>Pro <span class="lp-compare-best">{{ 'Best value' if lang == 'en' else 'الأفضل قيمة' }}</span></th>
+                <th>Business</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="lp-compare-section"><td colspan="5">{{ 'Extraction limits' if lang == 'en' else 'حدود الاستخراج' }}</td></tr>
+              <tr><td>{{ 'Credits per month' if lang == 'en' else 'النقاط شهريًا' }}</td><td>30</td><td>1,200</td><td>8,500</td><td>28,000</td></tr>
+              <tr><td>{{ 'Pages per month (avg)' if lang == 'en' else 'الصفحات شهريًا (متوسط)' }}</td><td>10</td><td>400</td><td>2,800</td><td>9,300</td></tr>
+              <tr><td>{{ 'Max pages per upload' if lang == 'en' else 'حد أقصى للصفحات بالرفع' }}</td><td>5</td><td>50</td><td>100</td><td>100</td></tr>
+              <tr><td>{{ 'Max file size' if lang == 'en' else 'حد أقصى لحجم الملف' }}</td><td>5 MB</td><td>20 MB</td><td>20 MB</td><td>20 MB</td></tr>
+
+              <tr class="lp-compare-section"><td colspan="5">{{ 'Document types' if lang == 'en' else 'أنواع المستندات' }}</td></tr>
+              <tr><td>{{ '28 doc types (invoice, ID, Rx, contract, …)' if lang == 'en' else '28 نوع مستند (فاتورة، هوية، روشتة، عقد، …)' }}</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Arabic handwriting OCR' if lang == 'en' else 'OCR الخط اليدوي العربي' }}</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Multi-document batch (up to 10 files)' if lang == 'en' else 'دفعات متعددة المستندات (حتى 10 ملفات)' }}</td><td>—</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Cognitive overlay + validations' if lang == 'en' else 'تحليل معرفي + فحوصات' }}</td><td>—</td><td>{{ 'Basic' if lang == 'en' else 'أساسي' }}</td><td>{{ 'Full' if lang == 'en' else 'كامل' }}</td><td>{{ 'Full' if lang == 'en' else 'كامل' }}</td></tr>
+              <tr><td>{{ 'AI visual reproduction (Path B)' if lang == 'en' else 'إعادة الإنتاج البصرية بالـ AI' }}</td><td>—</td><td>—</td><td>{{ 'Add-on' if lang == 'en' else 'إضافة' }}</td><td>{{ 'Included' if lang == 'en' else 'مشمول' }}</td></tr>
+
+              <tr class="lp-compare-section"><td colspan="5">{{ 'Export formats' if lang == 'en' else 'صيغ التصدير' }}</td></tr>
+              <tr><td>{{ 'JSON, PDF, Word' if lang == 'en' else 'JSON، PDF، Word' }}</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Excel, CSV, XML' if lang == 'en' else 'Excel، CSV، XML' }}</td><td>—</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Layout-aware Excel (invoice / Rx / table)' if lang == 'en' else 'Excel حسب التصميم (فاتورة / روشتة / جدول)' }}</td><td>—</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Polished branded reproduction' if lang == 'en' else 'إعادة إنتاج منسّقة بعلامتك' }}</td><td>—</td><td>—</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Custom upload-your-own templates' if lang == 'en' else 'قوالب مرفوعة من العميل' }}</td><td>—</td><td>✓</td><td>✓</td><td>✓</td></tr>
+
+              <tr class="lp-compare-section"><td colspan="5">{{ 'Integrations & API' if lang == 'en' else 'تكاملات و API' }}</td></tr>
+              <tr><td>{{ 'REST API access' if lang == 'en' else 'وصول REST API' }}</td><td>{{ 'Limited' if lang == 'en' else 'محدود' }}</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Async batch jobs + webhooks' if lang == 'en' else 'دفعات غير متزامنة + Webhooks' }}</td><td>—</td><td>{{ '5 / hour' if lang == 'en' else '5 / ساعة' }}</td><td>{{ '60 / hour' if lang == 'en' else '60 / ساعة' }}</td><td>{{ 'Unlimited' if lang == 'en' else 'غير محدود' }}</td></tr>
+              <tr><td>{{ 'Odoo App Store module' if lang == 'en' else 'وحدة متجر تطبيقات Odoo' }}</td><td>—</td><td>—</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Zapier / Make connectors' if lang == 'en' else 'موصلات Zapier / Make' }}</td><td>—</td><td>—</td><td>✓</td><td>✓</td></tr>
+
+              <tr class="lp-compare-section"><td colspan="5">{{ 'Team & Admin' if lang == 'en' else 'الفريق و الإدارة' }}</td></tr>
+              <tr><td>{{ 'Team members' if lang == 'en' else 'أعضاء الفريق' }}</td><td>1</td><td>1</td><td>1</td><td>{{ 'Up to 5' if lang == 'en' else 'حتى 5' }}</td></tr>
+              <tr><td>{{ 'Audit log + retention controls' if lang == 'en' else 'سجل تدقيق + ضوابط احتفاظ' }}</td><td>—</td><td>—</td><td>—</td><td>✓</td></tr>
+              <tr><td>{{ 'EU data residency option' if lang == 'en' else 'خيار إقامة بيانات أوروبية' }}</td><td>—</td><td>—</td><td>—</td><td>✓</td></tr>
+
+              <tr class="lp-compare-section"><td colspan="5">{{ 'Support' if lang == 'en' else 'الدعم' }}</td></tr>
+              <tr><td>{{ 'Community + docs' if lang == 'en' else 'المجتمع + الوثائق' }}</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Email support (24-hour response)' if lang == 'en' else 'دعم بالبريد (رد 24 ساعة)' }}</td><td>—</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Priority support (4-hour response)' if lang == 'en' else 'دعم ذو أولوية (رد 4 ساعات)' }}</td><td>—</td><td>—</td><td>✓</td><td>✓</td></tr>
+              <tr><td>{{ 'Dedicated account manager' if lang == 'en' else 'مدير حساب مخصّص' }}</td><td>—</td><td>—</td><td>—</td><td>✓</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="lp-pricing-foot">
+        {% if lang == 'en' %}
+        For <b>higher volumes</b>, <b>on-prem deployment</b>, or custom integrations, <a href="/contact" class="lp-link">contact us</a>.
+        {% else %}
+        لحجم أكبر، نشر داخل مؤسستك، أو تكاملات مخصّصة، <a href="/contact" class="lp-link">تواصل معنا</a>.
+        {% endif %}
+      </p>
+
+      <script nonce="{{ csp_nonce }}">
+      (function () {
+        var sec = document.getElementById('pricing');
+        if (!sec) return;
+        function setCad(cad) {
+          sec.setAttribute('data-cad', cad);
+          sec.querySelectorAll('.lp-pt-btn').forEach(function (b) {
+            b.classList.toggle('active', b.getAttribute('data-cad') === cad);
+          });
+          sec.querySelectorAll('[data-mo]').forEach(function (e) { e.hidden = cad !== 'monthly'; });
+          sec.querySelectorAll('[data-yr]').forEach(function (e) { e.hidden = cad !== 'yearly'; });
+          try { localStorage.setItem('mostakhles.cad', cad); } catch (e) {}
+        }
+        try { var saved = localStorage.getItem('mostakhles.cad'); if (saved === 'yearly' || saved === 'monthly') setCad(saved); } catch (e) {}
+        sec.querySelectorAll('.lp-pt-btn').forEach(function (b) {
+          b.addEventListener('click', function () { setCad(b.getAttribute('data-cad')); });
+        });
+      })();
+      </script>
+    </section>
+
+    {# ════════════════ FAQ ════════════════ #}
+    <section class="lp-section lp-section-narrow lp-faq-section">
+      <header class="lp-section-head lp-center">
+        <p class="lp-kicker"><span class="lp-dot"></span>FAQ</p>
+        <h2 class="lp-h2">{{ 'Pricing FAQs' if lang == 'en' else 'الأسئلة الشائعة عن الأسعار' }}</h2>
+      </header>
+      <div class="lp-faq">
+        <details class="lp-faq-item" open>
+          <summary>{{ 'How does Mostakhles compare to Google / AWS / Mindee?' if lang == 'en' else 'كيف يقارن مُستخلِص بـ Google / AWS / Mindee؟' }}<span class="lp-faq-caret">▾</span></summary>
+          <p>{{ 'Those tools were trained on English, printed Western documents. They handle a clean Visa receipt well but stumble on Arabic handwriting and on documents that mix scripts. Mostakhles is trained specifically on MENA documents and adds a cognitive layer (summary + validations + computed values) the others don\'t have.' if lang == 'en' else 'تلك الأدوات مدرّبة على المستندات الإنجليزية المطبوعة. تتعثّر مع خط اليد العربي والمستندات مختلطة الكتابة. مُستخلِص مدرّب تحديدًا على مستندات الشرق الأوسط مع طبقة معرفية إضافية.' }}</p>
+        </details>
+        <details class="lp-faq-item">
+          <summary>{{ 'Do you train on my documents?' if lang == 'en' else 'هل تدرّبون على مستنداتي؟' }}<span class="lp-faq-caret">▾</span></summary>
+          <p>{{ 'No. Documents are never used to train or improve our models. Files are encrypted in transit and at rest, and auto-delete after a retention window you control (default: 30 days).' if lang == 'en' else 'لا. المستندات لا تُستخدم أبدًا لتدريب نماذجنا. الملفات مشفّرة وتُحذف بعد فترة احتفاظ تتحكّم بها (افتراضي 30 يوم).' }}</p>
+        </details>
+        <details class="lp-faq-item">
+          <summary>{{ 'What counts as a credit?' if lang == 'en' else 'ما الذي يُعدّ كنقطة؟' }}<span class="lp-faq-caret">▾</span></summary>
+          <p>{{ 'Fast tier: 1 credit per page. High-accuracy tier (used for handwriting, Arabic prescriptions, complex tables): 8 credits per page. Auto mode picks the right tier per document — most invoices and forms fall in the 1-credit range.' if lang == 'en' else 'الوضع السريع: 1 نقطة للصفحة. الوضع عالي الدقة (للخط اليدوي والروشتات والجداول المعقّدة): 8 نقاط للصفحة. الوضع التلقائي يختار التيار المناسب — معظم الفواتير في نطاق 1 نقطة.' }}</p>
+        </details>
+        <details class="lp-faq-item">
+          <summary>{{ 'Can I purchase add-ons separately?' if lang == 'en' else 'هل يمكنني شراء الإضافات منفصلة؟' }}<span class="lp-faq-caret">▾</span></summary>
+          <p>{{ 'Yes. AI Visual Reproduction is pay-per-use (+3 credits per extraction) on Pro and above. Bulk Credit Packs are one-time top-ups with no expiry. Custom Doctype Training is a contracted engagement available on Business.' if lang == 'en' else 'نعم. إعادة الإنتاج البصرية بنظام الدفع لكل استخدام (+3 نقاط) في Pro فأعلى. حزم النقاط لمرة واحدة بدون انتهاء صلاحية. تدريب نوع المستند المخصّص ضمن عقد متاح في Business.' }}</p>
+        </details>
+        <details class="lp-faq-item">
+          <summary>{{ 'What happens when I exceed my monthly credits?' if lang == 'en' else 'ماذا يحدث إذا تجاوزت نقاطي الشهرية؟' }}<span class="lp-faq-caret">▾</span></summary>
+          <p>{{ 'Extractions pause until you top up with a Bulk Credit Pack or upgrade. We send a warning email at 75% utilization so you can plan ahead. No surprise overage charges.' if lang == 'en' else 'تتوقّف الاستخراجات حتى تشحن من حزم النقاط أو ترقي خطّتك. نرسل بريد تنبيه عند 75% من الاستهلاك لتخطّط مسبقًا. لا رسوم مفاجئة.' }}</p>
+        </details>
+        <details class="lp-faq-item">
+          <summary>{{ 'How do I cancel or downgrade?' if lang == 'en' else 'كيف ألغي اشتراكي أو أخفض الخطة؟' }}<span class="lp-faq-caret">▾</span></summary>
+          <p>{{ 'From your account dashboard, one click. Monthly plans cancel at the end of the current period. Annual plans can be downgraded — the difference becomes a credit on your next renewal. No retention calls.' if lang == 'en' else 'من لوحة حسابك بنقرة واحدة. الخطط الشهرية تُلغى نهاية الفترة الحالية. السنوية يمكن تخفيضها — الفرق يتحوّل إلى رصيد للتجديد التالي. بدون مكالمات إقناع.' }}</p>
+        </details>
+        <details class="lp-faq-item">
+          <summary>{{ 'Do you offer discounts for schools or NGOs?' if lang == 'en' else 'هل لديكم خصومات للمدارس والمنظمات غير الربحية؟' }}<span class="lp-faq-caret">▾</span></summary>
+          <p>{{ 'Yes — 50% off Pro and Business for accredited universities, registered charities, and academic research. Contact us with proof of status.' if lang == 'en' else 'نعم — 50% خصم على Pro و Business للجامعات المعتمدة، الجمعيات الخيرية المسجّلة، والأبحاث الأكاديمية. تواصل معنا مع إثبات.' }}</p>
+        </details>
+        <details class="lp-faq-item">
+          <summary>{{ 'Is the Odoo module included?' if lang == 'en' else 'هل وحدة أودو مشمولة؟' }}<span class="lp-faq-caret">▾</span></summary>
+          <p>{{ 'Yes, on Pro and Business. Native Odoo 18/19 module — installs from Odoo Apps, uploads from inside any record, populates Invoicing/HR/CRM directly. No extra license fee.' if lang == 'en' else 'نعم في Pro و Business. وحدة أودو 18/19 أصلية — تُثبّت من متجر Odoo، ترفع من داخل أي سجل، تملأ الفواتير والـ HR والـ CRM مباشرة. بدون رسوم ترخيص إضافية.' }}</p>
+        </details>
+      </div>
+    </section>
+
+    {# ════════════════ FINAL CTA — ported from home page (kicker + features) ════ #}
+    <section class="lp-section lp-final-cta">
+      <span class="lp-cta-blob lp-cta-blob-1" aria-hidden="true"></span>
+      <span class="lp-cta-blob lp-cta-blob-2" aria-hidden="true"></span>
+      <span class="lp-cta-blob lp-cta-blob-4" aria-hidden="true"></span>
+      <span class="lp-cta-blob lp-cta-blob-5" aria-hidden="true"></span>
+
+      <div class="lp-cta-inner">
+        <p class="lp-cta-kicker">{{ 'FREE FOREVER · NO CARD · 30 SECONDS' if lang == 'en' else 'مجاني للأبد · بدون بطاقة · 30 ثانية' }}</p>
+        <h2 class="lp-cta-h">{{ '30 free credits. No credit card.' if lang == 'en' else '30 نقطة مجانية. بدون بطاقة.' }}</h2>
+        <p class="lp-cta-sub">{{ 'See the result before you decide on a plan.' if lang == 'en' else 'شاهد النتيجة قبل اختيار الخطّة.' }}</p>
+        <div class="lp-cta-pill-row">
+          <a class="lp-cta-pill" href="/signup">{{ 'Start free' if lang == 'en' else 'ابدأ مجانًا' }}</a>
+          <a class="lp-cta-pill-ghost" href="/contact?topic=sales">{{ 'Talk to sales' if lang == 'en' else 'تواصل مع المبيعات' }}</a>
+        </div>
+        <ul class="lp-cta-features">
+          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ '14-day money-back guarantee' if lang == 'en' else 'استرداد 14 يومًا' }}</li>
+          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ 'Cancel any time' if lang == 'en' else 'إلغاء في أي وقت' }}</li>
+          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ 'Instant access' if lang == 'en' else 'وصول فوري' }}</li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+  {% include "_lpfooter.html" ignore missing %}
+</body>
+</html>

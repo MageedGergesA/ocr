@@ -3,16 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
   <title>{{ 'Account & settings' if lang == 'en' else 'الحساب والإعدادات' }} — Mostakhles</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-  {% include "_nav.html" %}
+<body class="has-shell">
 
-  <section class="account-wrap">
-    <div class="account-page">
+  {% set active_nav = 'settings' %}
+  <div class="shell-wrap">
+    {% include "_appshell.html" %}
+
+    <main class="shell-main">
+      <div class="shell-main-head">
+        <div class="shell-crumb">
+          <span>{{ 'Account & settings' if lang == 'en' else 'الحساب والإعدادات' }}</span>
+        </div>
+      </div>
+
+      <div class="account-page">
       <header class="account-head">
         <h1>{{ 'Account & settings' if lang == 'en' else 'الحساب والإعدادات' }}</h1>
         <p>{{ 'Manage your profile, password and account.' if lang == 'en' else 'إدارة بياناتك وكلمة المرور وحسابك.' }}</p>
@@ -109,6 +128,98 @@
         </form>
       </div>
 
+      {# ── Manage subscription (Sitting D) ──────────────────────────── #}
+      {% if active_subscription %}
+      <div class="acc-card" id="subscription">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="receipt"></i></span>
+          <div>
+            <h2>{{ 'Manage subscription' if lang == 'en' else 'إدارة الاشتراك' }}</h2>
+            <p>
+              {% if lang == 'en' %}
+                Current plan, renewal schedule, and one-click cancel.
+              {% else %}
+                خطّتك الحالية، موعد التجديد، وإلغاء بنقرة واحدة.
+              {% endif %}
+            </p>
+          </div>
+        </div>
+
+        <dl class="sub-info">
+          <div>
+            <dt>{{ 'Plan' if lang == 'en' else 'الخطة' }}</dt>
+            <dd>
+              <span class="sub-plan">{{ active_subscription.plan|capitalize }}</span>
+              {% if active_subscription.status == 'active' %}
+                <span class="sub-badge sub-badge-ok">{{ 'Active' if lang == 'en' else 'مفعّل' }}</span>
+              {% elif active_subscription.status == 'past_due' %}
+                <span class="sub-badge sub-badge-warn">{{ 'Past due' if lang == 'en' else 'متأخر' }}</span>
+              {% elif active_subscription.status == 'cancelled' %}
+                <span class="sub-badge sub-badge-cancelled">{{ 'Cancelled · access until period end' if lang == 'en' else 'مُلغى · الوصول حتى نهاية الدورة' }}</span>
+              {% endif %}
+            </dd>
+          </div>
+          <div>
+            <dt>{{ 'Payment method' if lang == 'en' else 'طريقة الدفع' }}</dt>
+            <dd>{% if active_subscription.provider == 'paypal' %}PayPal{% else %}Paymob{% endif %}</dd>
+          </div>
+          {% if active_subscription.amount_usd %}
+          <div>
+            <dt>{{ 'Amount' if lang == 'en' else 'المبلغ' }}</dt>
+            <dd><code>${{ '%g'|format(active_subscription.amount_usd|float) }}</code> / {{ 'month' if lang == 'en' else 'شهر' }}</dd>
+          </div>
+          {% endif %}
+          {% if active_subscription.current_period_end %}
+          <div>
+            <dt>
+              {% if active_subscription.status == 'cancelled' %}
+                {{ 'Access until' if lang == 'en' else 'الوصول حتى' }}
+              {% else %}
+                {{ 'Renews on' if lang == 'en' else 'يتجدّد في' }}
+              {% endif %}
+            </dt>
+            <dd>{{ active_subscription.current_period_end.strftime('%Y-%m-%d') }}</dd>
+          </div>
+          {% endif %}
+        </dl>
+
+        {% if active_subscription.status == 'active' or active_subscription.status == 'past_due' %}
+        <form method="post" action="/billing/cancel" class="acc-form"
+              onsubmit="return confirm('{{ 'Cancel your subscription? You will keep access until the end of the current billing period.' if lang == 'en' else 'إلغاء الاشتراك؟ ستحتفظ بالوصول حتى نهاية دورة الفوترة الحالية.' }}')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <div class="acc-actions">
+            <button class="btn btn-ghost" type="submit"><i data-lucide="x-circle"></i> {{ 'Cancel subscription' if lang == 'en' else 'إلغاء الاشتراك' }}</button>
+            <a class="btn btn-primary" href="/pricing"><i data-lucide="arrow-up-right"></i> {{ 'Change plan' if lang == 'en' else 'تغيير الخطة' }}</a>
+          </div>
+        </form>
+        {% else %}
+        <div class="acc-actions">
+          <a class="btn btn-primary" href="/pricing"><i data-lucide="arrow-up-right"></i> {{ 'Subscribe again' if lang == 'en' else 'اشترك من جديد' }}</a>
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      {# No active subscription → invite them to /pricing #}
+      <div class="acc-card" id="subscription">
+        <div class="acc-card-head">
+          <span class="acc-icon"><i data-lucide="receipt"></i></span>
+          <div>
+            <h2>{{ 'Subscription' if lang == 'en' else 'الاشتراك' }}</h2>
+            <p>
+              {% if lang == 'en' %}
+                You're on the <strong>Free</strong> plan. Upgrade to lift your monthly credit cap.
+              {% else %}
+                أنت على الخطّة <strong>المجانية</strong>. ترقَّ لرفع سقف نقاطك الشهرية.
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        <div class="acc-actions">
+          <a class="btn btn-primary" href="/pricing"><i data-lucide="trending-up"></i> {{ 'See plans' if lang == 'en' else 'عرض الخطط' }}</a>
+        </div>
+      </div>
+      {% endif %}
+
       <!-- Danger zone -->
       <div class="acc-card danger">
         <div class="acc-card-head">
@@ -146,6 +257,7 @@
         </form>
       </div>
     </div>
-  </section>
+    </main>
+  </div>
 </body>
 </html>

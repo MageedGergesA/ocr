@@ -111,6 +111,46 @@ SERVICES = {
         "desc_en": "Turn a scanned image into a PDF whose text can be searched and copied.",
         "kind": "searchable_pdf", "hard": True, "free": False,
     },
+    # ---------------- New free utility tools (Wave 15A.2) ----------------
+    "language-detect": {
+        "title": "كشف اللغة",
+        "title_en": "Language detection",
+        "category": "ocr", "icon": "languages",
+        "desc": "حدّد اللغة الأساسية في المستند ونسبة كل لغة عند التداخل — سريع ومجاني.",
+        "desc_en": "Identify the primary language of a document and the ratio when mixed — fast and free.",
+        "kind": "text", "hard": False, "free": True,
+        "prompt": ("Identify the language(s) used in this document. Reply with a one-line "
+                   "summary like: 'Primary: Arabic (Egyptian dialect, 92%) · Secondary: Latin "
+                   "drug names (8%)'. If only one language, just name it and confidence. "
+                   "Return ONLY that one-line summary."),
+    },
+    "doc-quality-check": {
+        "title": "فحص جودة المستند",
+        "title_en": "Document quality check",
+        "category": "ocr", "icon": "check-circle",
+        "desc": "افحص جودة المسح قبل الدفع: الإضاءة، الدقّة، الميلان، الوهج. مجاني.",
+        "desc_en": "Check scan quality before paying: lighting, resolution, tilt, glare. Free.",
+        "kind": "text", "hard": False, "free": True,
+        "prompt": ("You are a document-imaging quality auditor. Review this document image and "
+                   "produce a SHORT quality report in 4-6 bullet points covering: lighting, "
+                   "focus/blur, tilt/rotation, glare/shadows, contrast, and OCR-readiness. End "
+                   "with a single-line verdict: 'READY for OCR ✓' or 'RE-SCAN recommended — "
+                   "specifically: <reason>'. Reply in the user's language (Arabic or English). "
+                   "Return ONLY the report, no preamble."),
+    },
+    "redact-pii": {
+        "title": "إخفاء البيانات الشخصية",
+        "title_en": "Redact PII",
+        "category": "ocr", "icon": "shield",
+        "desc": "ابحث عن البيانات الشخصية (أسماء، أرقام، عناوين) واقترح صياغة بدون كشفها — مجاني.",
+        "desc_en": "Find personal data (names, IDs, addresses) and suggest a redacted rewrite — free.",
+        "kind": "text", "hard": False, "free": True,
+        "prompt": ("This document may contain personal data (PII). Re-emit the document text "
+                   "with PII REDACTED: replace each personal item with a placeholder like "
+                   "[NAME], [ID], [PHONE], [EMAIL], [ADDRESS], [DATE], or [AMOUNT]. Keep "
+                   "everything else verbatim so the structure stays readable. Reply in the "
+                   "document's original language. Return ONLY the redacted text."),
+    },
 
     # ---------------- Document parsers ----------------
     "invoice": {

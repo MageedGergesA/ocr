@@ -1,0 +1,36 @@
+{# Polished business card — minimal, premium feel. #}
+<!DOCTYPE html>
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ name or 'Contact' }}</title>
+  <style>
+    @page { size: 90mm 55mm landscape; margin: 0; }
+    body { font-family: 'Cairo', 'Helvetica', sans-serif; color: #1b1813; margin: 0; padding: 0; }
+    .card { width: 90mm; height: 55mm; padding: 6mm; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%); border-inline-start: 4px solid #0f766e; position: relative; overflow: hidden; }
+    .bc-logo-mark { position: absolute; top: -10mm; inset-inline-end: -10mm; font-size: 60mm; font-weight: 900; color: rgba(15, 118, 110, 0.06); line-height: 1; font-family: 'Times', serif; }
+    .bc-name { font-size: 18pt; font-weight: 800; color: #0a564f; margin: 0; line-height: 1.1; }
+    .bc-title { font-size: 9pt; color: #7a7165; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2mm; font-weight: 600; }
+    .bc-company { font-size: 11pt; color: #1b1813; font-weight: 700; margin-top: 1.5mm; }
+    .bc-contact { font-size: 8.5pt; color: #4a3f33; line-height: 1.6; }
+    .bc-contact div { display: flex; align-items: center; gap: 6px; }
+    .bc-contact .icn { display: inline-block; width: 8pt; height: 8pt; background: #0f766e; border-radius: 50%; flex: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="bc-logo-mark">M</div>
+    <div>
+      <h1 class="bc-name">{{ name }}</h1>
+      {% if title %}<div class="bc-title">{{ title }}</div>{% endif %}
+      {% if company %}<div class="bc-company">{{ company }}</div>{% endif %}
+    </div>
+    <div class="bc-contact">
+      {% if phone %}<div><span class="icn"></span>{{ phone }}</div>{% endif %}
+      {% if email %}<div><span class="icn"></span>{{ email }}</div>{% endif %}
+      {% if website %}<div><span class="icn"></span>{{ website }}</div>{% endif %}
+      {% if address %}<div><span class="icn"></span>{{ address }}</div>{% endif %}
+    </div>
+  </div>
+</body>
+</html>

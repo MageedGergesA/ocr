@@ -110,12 +110,12 @@
 </header>
 
 <!-- Lucide icons loaded once, site-wide (this nav is on every page) -->
-<script src="https://unpkg.com/lucide@0.456.0/dist/umd/lucide.min.js"></script>
-<script>document.addEventListener('DOMContentLoaded', function () { if (window.lucide) lucide.createIcons(); });</script>
+<script nonce="{{ csp_nonce }}" src="https://unpkg.com/lucide@0.456.0/dist/umd/lucide.min.js"></script>
+<script nonce="{{ csp_nonce }}">document.addEventListener('DOMContentLoaded', function () { if (window.lucide) lucide.createIcons(); });</script>
 
 <!-- Apply current language direction to <html> on every page without editing each
      page template. dir + lang attributes are what CSS RTL selectors + screen readers key off of. -->
-<script>
+<script nonce="{{ csp_nonce }}">
 (function () {
   var lang = "{{ lang or 'ar' }}";
   var dir = "{{ dir or 'rtl' }}";
@@ -130,7 +130,7 @@
      The backend's _resolve_caller rejects cookie-authed /v1/* without it,
      protecting against cross-origin XHR attacks under credentialed CORS. -->
 <meta name="csrf-token" content="{{ csrf_token }}">
-<script>
+<script nonce="{{ csp_nonce }}">
 (function () {
   var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
   var origFetch = window.fetch;

@@ -67,10 +67,19 @@ _FONT_READY = False
 
 
 def _ar(text):
-    """Shape + reorder Arabic so it renders correctly in PDF."""
+    """Shape + reorder Arabic + escape XML-special chars so the reportlab
+    Paragraph parser (which interprets <b>/<i> tags) doesn't crash on raw
+    `<`, `&`, or unbalanced tags coming from extracted document text
+    (very common: MRZ codes contain `<<<<`, tax IDs contain `<`, etc.)."""
     import arabic_reshaper
     from bidi.algorithm import get_display
-    return get_display(arabic_reshaper.reshape("" if text is None else str(text)))
+    raw = "" if text is None else str(text)
+    shaped = get_display(arabic_reshaper.reshape(raw))
+    # Escape AFTER shaping so the BiDi reorder works on the original glyphs.
+    return (shaped
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;"))
 
 
 def to_pdf(rows, title="extraction"):
@@ -131,6 +140,267 @@ def to_xml(rows, title="extraction"):
 
 
 EXPORTERS = {"csv": to_csv, "xlsx": to_xlsx, "docx": to_docx, "pdf": to_pdf, "xml": to_xml}
+
+
+# ---- "Fields-as-columns" exports (one document per row) ----
+# Better for downstream accounting / CRM imports than the legacy row-per-field
+# shape: the field names become column headers, values fill a single data row.
+# Multi-document results (auto_multi mode) produce one row per document.
+
+def _flatten_for_columns(rows):
+    """Turn legacy [{page, field, value, confidence}] rows into a {field: value}
+    dict (one row per document) or list-of-dicts (multi-document)."""
+    if not rows:
+        return [{}]
+    # Detect multi-document by looking for repeated field names with different pages.
+    pages = {r.get("page") for r in rows if r.get("page") is not None}
+    if len(pages) > 1:
+        grouped: dict = {}
+        for r in rows:
+            grouped.setdefault(r.get("page"), {})[str(r.get("field"))] = r.get("value")
+        return [{"_doc": p, **fields} for p, fields in grouped.items()]
+    return [{str(r.get("field")): r.get("value") for r in rows}]
+
+
+def to_csv_columns(rows, title="extraction"):
+    """CSV with field names as column headers, values as a single data row."""
+    docs = _flatten_for_columns(rows)
+    all_fields: list[str] = []
+    for d in docs:
+        for k in d.keys():
+            if k not in all_fields:
+                all_fields.append(k)
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(all_fields)
+    for d in docs:
+        w.writerow([("" if d.get(k) is None else str(d.get(k))) for k in all_fields])
+    data = ("﻿" + buf.getvalue()).encode("utf-8")
+    return data, "text/csv; charset=utf-8", f"{title}.csv"
+
+
+def to_xlsx_columns(rows, title="extraction"):
+    """Excel with field names as column headers, values as data rows."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill
+    docs = _flatten_for_columns(rows)
+    all_fields: list[str] = []
+    for d in docs:
+        for k in d.keys():
+            if k not in all_fields:
+                all_fields.append(k)
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Extraction"
+    ws.sheet_view.rightToLeft = True
+    # Header row
+    hdr_font = Font(bold=True)
+    hdr_fill = PatternFill("solid", fgColor="D1FAE5")
+    for c, name in enumerate(all_fields, start=1):
+        cell = ws.cell(row=1, column=c, value=str(name))
+        cell.font = hdr_font
+        cell.fill = hdr_fill
+    # Data rows
+    for r, d in enumerate(docs, start=2):
+        for c, name in enumerate(all_fields, start=1):
+            v = d.get(name)
+            ws.cell(row=r, column=c, value=("" if v is None else str(v)))
+    # Auto-size columns to ~20 chars each (good default for Arabic).
+    for c in range(1, len(all_fields) + 1):
+        ws.column_dimensions[chr(64 + c) if c <= 26 else "AA"].width = 22
+    buf = io.BytesIO()
+    wb.save(buf)
+    return (buf.getvalue(),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            f"{title}.xlsx")
+
+
+# Register the column-shape variants so the API can offer both.
+EXPORTERS["csv_columns"] = to_csv_columns
+EXPORTERS["xlsx_columns"] = to_xlsx_columns
+
+
+# ---- Layout-aware Excel ----
+# Take a rich extraction result (with `layout` and per-layout fields) and render
+# an Excel that matches the document's shape, instead of one flat row-per-field
+# table. Falls back to `to_xlsx` for unknown layouts.
+
+def _val(node):
+    """Read either a plain value or a {value, confidence} cell."""
+    if isinstance(node, dict) and "value" in node:
+        return node.get("value")
+    return node
+
+
+def _conf(node):
+    if isinstance(node, dict) and "confidence" in node:
+        return _conf_str(node.get("confidence"))
+    return ""
+
+
+def to_xlsx_layout_aware(result: dict, title: str = "extraction"):
+    """Render a layout-shaped Excel based on result.layout.
+
+    Supported layouts:
+      - prescription: patient header + medications table + as-needed + validations
+      - mixed (invoice/receipt): header + line items + totals
+      - table: a single table sheet
+      - everything else: falls back to flat rows.
+    """
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+
+    layout = (result or {}).get("layout") or ""
+    doc_type = (result or {}).get("document_type") or "extraction"
+
+    if layout == "prescription":
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Prescription"
+        ws.sheet_view.rightToLeft = True
+        title_font = Font(bold=True, size=13)
+        hdr_font = Font(bold=True)
+        hdr_fill = PatternFill("solid", fgColor="D1FAE5")
+
+        ws["A1"] = "روشتة / Prescription"
+        ws["A1"].font = title_font
+
+        # Patient section
+        row = 3
+        ws.cell(row=row, column=1, value="بيانات المريض / Patient").font = hdr_font
+        row += 1
+        patient = result.get("patient") or {}
+        for key, node in patient.items():
+            ws.cell(row=row, column=1, value=str(key))
+            ws.cell(row=row, column=2, value=str(_val(node) or ""))
+            ws.cell(row=row, column=3, value=_conf(node))
+            row += 1
+
+        # Medications table
+        row += 1
+        meds = result.get("medications") or []
+        if meds:
+            ws.cell(row=row, column=1, value="الأدوية / Medications").font = hdr_font
+            row += 1
+            cols = ["name", "drug_class", "form", "dosage", "duration", "confidence"]
+            for c, col in enumerate(cols, start=1):
+                cell = ws.cell(row=row, column=c, value=col)
+                cell.font = hdr_font
+                cell.fill = hdr_fill
+            row += 1
+            for m in meds:
+                for c, col in enumerate(cols, start=1):
+                    v = m.get(col)
+                    if col == "confidence":
+                        v = _conf_str(v)
+                    ws.cell(row=row, column=c, value=str(v) if v is not None else "")
+                row += 1
+
+        # As-needed
+        prn = result.get("as_needed") or []
+        if prn:
+            row += 1
+            ws.cell(row=row, column=1, value="حسب الحاجة / As-needed").font = hdr_font
+            row += 1
+            for p in prn:
+                ws.cell(row=row, column=1, value=str(p.get("name", "")))
+                ws.cell(row=row, column=2, value=_conf_str(p.get("confidence")))
+                row += 1
+
+        # Validations
+        vals = result.get("validations") or []
+        if vals:
+            row += 1
+            ws.cell(row=row, column=1, value="فحوصات / Validations").font = hdr_font
+            row += 1
+            for v in vals:
+                mark = "✓" if v.get("ok") else "⚠"
+                ws.cell(row=row, column=1, value=mark)
+                ws.cell(row=row, column=2, value=str(v.get("check", "")))
+                ws.cell(row=row, column=3, value=str(v.get("detail", "")))
+                row += 1
+
+        for col_letter in ("A", "B", "C", "D", "E", "F"):
+            ws.column_dimensions[col_letter].width = 22
+
+        buf = io.BytesIO(); wb.save(buf)
+        return (buf.getvalue(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                f"{title}.xlsx")
+
+    if layout == "mixed":
+        # Header + line items + totals (invoice / receipt shape)
+        wb = Workbook(); ws = wb.active
+        ws.title = "Invoice"
+        ws.sheet_view.rightToLeft = True
+        hdr_font = Font(bold=True)
+        hdr_fill = PatternFill("solid", fgColor="DBEAFE")
+
+        ws["A1"] = doc_type.replace("_", " ").title()
+        ws["A1"].font = Font(bold=True, size=13)
+
+        row = 3
+        header = result.get("header") or {}
+        if header:
+            ws.cell(row=row, column=1, value="Header").font = hdr_font
+            row += 1
+            for k, node in header.items():
+                ws.cell(row=row, column=1, value=str(k))
+                ws.cell(row=row, column=2, value=str(_val(node) or ""))
+                ws.cell(row=row, column=3, value=_conf(node))
+                row += 1
+
+        items = result.get("line_items") or {}
+        cols = items.get("columns") or []
+        rows_ = items.get("rows") or []
+        if cols and rows_:
+            row += 1
+            ws.cell(row=row, column=1, value="Line items").font = hdr_font
+            row += 1
+            for c, col in enumerate(cols, start=1):
+                cell = ws.cell(row=row, column=c, value=str(col))
+                cell.font = hdr_font; cell.fill = hdr_fill
+            row += 1
+            for r_ in rows_:
+                for c, val in enumerate(r_, start=1):
+                    ws.cell(row=row, column=c, value=("" if val is None else str(val)))
+                row += 1
+
+        totals = result.get("totals") or {}
+        if totals:
+            row += 1
+            ws.cell(row=row, column=1, value="Totals").font = hdr_font
+            row += 1
+            for k, node in totals.items():
+                ws.cell(row=row, column=1, value=str(k))
+                ws.cell(row=row, column=2, value=str(_val(node) or ""))
+                ws.cell(row=row, column=3, value=_conf(node))
+                row += 1
+
+        for col_letter in ("A", "B", "C", "D", "E", "F"):
+            ws.column_dimensions[col_letter].width = 22
+
+        buf = io.BytesIO(); wb.save(buf)
+        return (buf.getvalue(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                f"{title}.xlsx")
+
+    if layout == "table":
+        tbl = result.get("table") or {}
+        return table_to_xlsx(tbl.get("columns") or [], tbl.get("rows") or [], title)
+
+    # Unknown layout — flatten fields and use generic exporter.
+    fields = result.get("fields") if isinstance(result, dict) else None
+    rows = []
+    if isinstance(fields, dict):
+        for k, node in fields.items():
+            rows.append({
+                "page": "",
+                "field": str(k),
+                "value": _val(node),
+                "confidence": (node or {}).get("confidence") if isinstance(node, dict) else None,
+            })
+    return to_xlsx(rows, title)
 
 
 # ---- Table exports (columns + rows) ----

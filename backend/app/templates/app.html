@@ -3,21 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
   <title>{{ t('extract.title') }} — مُستخلِص</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="has-shell">
 
-  {% include "_nav.html" %}
+  {% set active_nav = 'upload' %}
+  <div class="shell-wrap">
+    {% include "_appshell.html" %}
 
-  <section class="app-wrap">
-    <div class="container">
-      <h1 class="app-title">{{ t('extract.title') }}</h1>
-      <p class="app-sub">{{ 'ارفع مستندًا، حدّد الحقول التي تريدها، واحصل على النتائج' if lang=='ar' else 'Upload a document, choose your fields, and get clean structured results.' }}</p>
+    <main class="shell-main" id="shellMain">
+      <div class="shell-main-head">
+        <div class="shell-crumb">
+          <a href="/dashboard">{{ 'Documents' if lang == 'en' else 'المستندات' }}</a>
+          <span class="sep">/</span>
+          <span id="crumbCurrent">{{ 'New extraction' if lang == 'en' else 'استخراج جديد' }}</span>
+        </div>
+      </div>
 
-      <div class="app-grid">
+      <!-- Top action bar (shown after result) -->
+      <div class="app-actionbar" id="resultActionBar" hidden>
+        <a href="/app" class="ab-back"><i data-lucide="arrow-right"></i><span>{{ 'Back' if lang == 'en' else 'رجوع' }}</span></a>
+        <div class="ab-title" id="resultTitle"></div>
+        <div class="ab-actions">
+          <div class="export-menu" id="exportMenu">
+            <button class="ab-btn" type="button" id="exportMenuBtn">
+              <i data-lucide="download"></i><span>{{ 'Export' if lang == 'en' else 'تصدير' }}</span>
+            </button>
+            <div class="em-pop" id="exportMenuPop"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wizard-collapsed strip (replaces full wizard once result shows) -->
+      <div class="wizard-strip" id="wizardStrip">
+        <div class="ws-thumb" id="wsThumb">📄</div>
+        <div>
+          <div class="ws-name" id="wsName">document.pdf</div>
+          <small id="wsMeta"></small>
+        </div>
+        <button class="ws-action" type="button" onclick="location.href='/app'">
+          {{ 'Upload new' if lang == 'en' else 'رفع جديد' }}
+        </button>
+      </div>
+
+      <div class="app-grid wizard-full" id="wizardFull">
 
         <!-- LEFT: input -->
         <div class="panel panel-clean">
@@ -71,10 +113,6 @@
                 <i data-lucide="sparkles"></i>
                 <span>{{ 'تلقائي' if lang=='ar' else 'Auto-detect' }}</span>
               </button>
-              <button class="seg-btn" data-mode="pick" role="tab" aria-selected="false">
-                <i data-lucide="layout-grid"></i>
-                <span>{{ 'اختر نوعًا' if lang=='ar' else 'Pick a type' }}</span>
-              </button>
               <button class="seg-btn" data-mode="template" role="tab" aria-selected="false">
                 <i data-lucide="file-text"></i>
                 <span>{{ 'قالبي' if lang=='ar' else 'My template' }}</span>
@@ -85,56 +123,7 @@
             <div class="mode-panel" data-panel="auto">
               <div class="mode-help">
                 <i data-lucide="wand-2"></i>
-                <span>{{ 'سنكتشف نوع المستند تلقائيًا ونستخرج كل الحقول المرئية' if lang=='ar' else 'We\'ll detect the document type automatically and extract every visible field.' }}</span>
-              </div>
-            </div>
-
-            <div class="mode-panel" data-panel="pick" hidden>
-              <div class="type-grid">
-                <button type="button" class="type-card" data-slug="invoice">
-                  <div class="tc-thumb gth-invoice"><div class="gth-rows"><span></span><span></span><span></span></div><div class="gth-total"></div></div>
-                  <span>{{ 'فاتورة' if lang=='ar' else 'Invoice' }}</span>
-                </button>
-                <button type="button" class="type-card" data-slug="egyptian-id">
-                  <div class="tc-thumb gth-id"><div class="gth-id-photo"></div><div class="gth-id-lines"><span></span><span></span><span></span></div></div>
-                  <span>{{ 'بطاقة الرقم القومي' if lang=='ar' else 'National ID' }}</span>
-                </button>
-                <button type="button" class="type-card" data-slug="passport">
-                  <div class="tc-thumb gth-passport">📘</div>
-                  <span>{{ 'جواز سفر' if lang=='ar' else 'Passport' }}</span>
-                </button>
-                <button type="button" class="type-card" data-slug="prescription">
-                  <div class="tc-thumb gth-rx">℞</div>
-                  <span>{{ 'روشتة' if lang=='ar' else 'Prescription' }}</span>
-                </button>
-                <button type="button" class="type-card" data-slug="tax-card">
-                  <div class="tc-thumb gth-tax">%</div>
-                  <span>{{ 'بطاقة ضريبية' if lang=='ar' else 'Tax card' }}</span>
-                </button>
-                <button type="button" class="type-card" data-slug="bank-statement">
-                  <div class="tc-thumb gth-bank">🏦</div>
-                  <span>{{ 'كشف حساب' if lang=='ar' else 'Bank statement' }}</span>
-                </button>
-                <button type="button" class="type-card" data-slug="utility-bill">
-                  <div class="tc-thumb gth-utility">💡</div>
-                  <span>{{ 'فاتورة مرافق' if lang=='ar' else 'Utility bill' }}</span>
-                </button>
-                <button type="button" class="type-card" data-slug="business-card">
-                  <div class="tc-thumb gth-bcard">📇</div>
-                  <span>{{ 'بطاقة عمل' if lang=='ar' else 'Business card' }}</span>
-                </button>
-                <button type="button" class="type-card" data-slug="commercial-register">
-                  <div class="tc-thumb gth-cr">🏢</div>
-                  <span>{{ 'سجل تجاري' if lang=='ar' else 'Commercial reg.' }}</span>
-                </button>
-                <button type="button" class="type-card" data-slug="sale-contract">
-                  <div class="tc-thumb gth-contract">📄</div>
-                  <span>{{ 'عقد بيع' if lang=='ar' else 'Sale contract' }}</span>
-                </button>
-                <button type="button" class="type-card" data-slug="lease-contract">
-                  <div class="tc-thumb gth-contract">🔑</div>
-                  <span>{{ 'عقد إيجار' if lang=='ar' else 'Lease' }}</span>
-                </button>
+                <span>{{ 'سنكتشف نوع المستند تلقائيًا ونستخرج كل الحقول. لفرض نوع معيّن، اختر أداة من القائمة الجانبية.' if lang=='ar' else 'We\'ll detect the document type and extract every field. To force a specific type, pick a tool from the sidebar.' }}</span>
               </div>
             </div>
 
@@ -201,14 +190,21 @@
               <span class="step-title">{{ 'دقّة الاستخراج' if lang=='ar' else 'Accuracy' }}</span>
             </div>
             <div class="opt-row">
-              <button type="button" class="opt-pill" data-hard="false">
+              <button type="button" class="opt-pill active" data-routing="auto" data-hard="true">
+                <i data-lucide="sparkles"></i>
+                <div class="opt-pill-stack">
+                  <span>{{ 'تلقائي' if lang=='ar' else 'Auto' }}</span>
+                  <small>{{ 'نختار التيار المناسب · 1–8 نقاط/صفحة' if lang=='ar' else 'We pick the right tier · 1–8 credits/page' }}</small>
+                </div>
+              </button>
+              <button type="button" class="opt-pill" data-routing="fast" data-hard="false">
                 <i data-lucide="zap"></i>
                 <div class="opt-pill-stack">
                   <span>{{ 'سريع' if lang=='ar' else 'Fast' }}</span>
                   <small>{{ '1 نقطة/صفحة' if lang=='ar' else '1 credit/page' }}</small>
                 </div>
               </button>
-              <button type="button" class="opt-pill active" data-hard="true">
+              <button type="button" class="opt-pill" data-routing="hard" data-hard="true">
                 <i data-lucide="award"></i>
                 <div class="opt-pill-stack">
                   <span>{{ 'دقّة عالية' if lang=='ar' else 'High accuracy' }}</span>
@@ -216,8 +212,21 @@
                 </div>
               </button>
             </div>
-            <!-- Hidden checkbox driven by buttons; existing JS reads .checked. -->
+            <!-- Hidden inputs driven by buttons; existing JS reads .checked / .value. -->
             <input type="checkbox" id="hard" checked hidden>
+            <input type="hidden" id="routing" value="auto">
+
+            <!-- Path B: AI-rendered visual reproduction toggle (+3 credits, hard tier) -->
+            <label class="visual-toggle" for="visualToggle">
+              <input type="checkbox" id="visualToggle">
+              <span class="visual-toggle-track"></span>
+              <span class="visual-toggle-body">
+                <strong>{{ 'إعادة إنتاج بصرية بالذكاء الاصطناعي' if lang=='ar' else 'AI visual reproduction' }}
+                  <span class="visual-toggle-tag">+3 {{ 'نقاط' if lang=='ar' else 'credits' }}</span>
+                </strong>
+                <small>{{ 'ينتج HTML يشبه مستندك الأصلي بصريًا. يتطلب التيار العالي.' if lang=='ar' else 'Outputs an HTML that visually mirrors your source. Forces high accuracy.' }}</small>
+              </span>
+            </label>
           </div>
 
           <!-- ════ ACTION BAR ════ -->
@@ -230,37 +239,69 @@
           </div>
         </div>
 
-        <!-- RIGHT: output -->
-        <div class="panel">
-          <label class="step">3 · النتائج</label>
+        <!-- RIGHT: holder for in-wizard quota (kept for compat with credits/usage JS) -->
+        <div class="panel" id="quotaPanel">
+          <label class="step">{{ 'Quota' if lang == 'en' else 'الرصيد' }}</label>
           <div id="quota" class="quota-line"></div>
-          <div id="results" class="results">
-            <div class="results-empty">ستظهر الحقول المستخرجة هنا.</div>
-          </div>
-          <div id="exportBar" class="export-bar" hidden>
-            <span class="export-label">تصدير:</span>
-            <button class="btn btn-ghost" type="button" onclick="exportAs('xlsx')">Excel</button>
-            <button class="btn btn-ghost" type="button" onclick="exportAs('docx')">Word</button>
-            <button class="btn btn-ghost" type="button" onclick="exportAs('pdf')">PDF</button>
-            <button class="btn btn-ghost" type="button" onclick="exportAs('csv')">CSV</button>
-            <button class="btn btn-ghost" type="button" onclick="exportAs('xml')">XML</button>
-          </div>
-
-          <div id="askWrap" class="ask-wrap" hidden>
-            <label class="step">💬 اسأل عن هذا المستند</label>
-            <div id="askBox" class="chat-box ask-box"></div>
-            <form id="askForm" class="chat-form">
-              <input id="askQ" type="text" placeholder="مثال: ما الإجمالي؟ لخّص لي المحتوى…" autocomplete="off">
-              <button class="btn btn-primary" type="submit">إرسال</button>
-            </form>
-          </div>
+          <div class="results-empty">{{ 'Extracted fields will appear in the result page once you click Extract.' if lang == 'en' else 'ستظهر الحقول المستخرجة في صفحة النتيجة بعد الضغط على «استخراج».' }}</div>
         </div>
 
       </div>
-    </div>
-  </section>
 
-  <script>
+      <!-- ─────────────── RESULT VIEW (replaces wizard once data lands) ────────── -->
+      <div id="resultView" hidden>
+        <div class="result-tabs">
+          <button class="result-tab active" data-tab="transcript" type="button">
+            <i data-lucide="layout-list"></i>{{ 'Transcript' if lang == 'en' else 'النتيجة' }}
+          </button>
+          <button class="result-tab" data-tab="cognitive" type="button" id="tabCognitive" hidden>
+            <i data-lucide="sparkles"></i>{{ 'Insights' if lang == 'en' else 'تحليل ذكي' }}
+          </button>
+          <button class="result-tab" data-tab="ask" type="button">
+            <i data-lucide="message-square"></i>{{ 'Ask' if lang == 'en' else 'اسأل' }}
+          </button>
+        </div>
+
+        <div class="result-pane active" data-pane="transcript">
+          <div class="result-split">
+            <div class="result-doc" id="resultDocPane">
+              <div class="rdh">{{ 'Source' if lang == 'en' else 'المصدر' }}</div>
+              <div id="resultDocBody"></div>
+            </div>
+            <div class="result-body" id="results">
+              <div class="results-empty">…</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-pane" data-pane="cognitive">
+          <div class="result-body">
+            <div id="cognitivePane">
+              <div class="results-empty">{{ 'No insights returned for this document.' if lang == 'en' else 'لا توجد رؤى متاحة لهذا المستند.' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-pane" data-pane="ask">
+          <div class="result-body">
+            <div id="askWrap" class="ask-wrap">
+              <div id="askBox" class="chat-box ask-box"></div>
+              <form id="askForm" class="chat-form">
+                <input id="askQ" type="text" placeholder="{{ 'e.g. What is the total? Summarize this document...' if lang == 'en' else 'مثال: ما الإجمالي؟ لخّص لي المحتوى…' }}" autocomplete="off">
+                <button class="btn btn-primary" type="submit">{{ 'Send' if lang == 'en' else 'إرسال' }}</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden export bar holder (kept so setExport() can toggle .hidden) -->
+        <div id="exportBar" hidden></div>
+      </div>
+
+    </main>
+  </div>
+
+  <script nonce="{{ csp_nonce }}">
     const fileInput = document.getElementById('fileInput');
     const dropzone  = document.getElementById('dropzone');
     const dzEmpty   = document.getElementById('dzEmpty');
@@ -279,6 +320,7 @@
     function renderCredits() {
       const box = document.getElementById('credits');
       const hard = document.getElementById('hard').checked;
+      const routing = (document.getElementById('routing') || {}).value || 'explicit';
       const isAr = I18N.lang === 'ar';
       let html = isAr
         ? `💳 رصيدك: <b>${curRemaining}</b> من ${curLimit} نقطة`
@@ -286,28 +328,59 @@
       // Total "pages" = PDF pages from first file + (number of additional image files)
       const totalUnits = curPages + Math.max(0, currentFiles.length - 1);
       if (totalUnits > 0) {
-        const active = totalUnits * (hard ? STRONG : FAST);
-        const other = totalUnits * (hard ? FAST : STRONG);
-        const pgLbl = currentFiles.length > 1
-          ? (isAr ? ` · ${currentFiles.length} ملفات` : ` · ${currentFiles.length} files`)
-          : (totalUnits > 1 ? (isAr ? ` · ${totalUnits} صفحة` : ` · ${totalUnits} pages`) : '');
-        const accuracy = hard
-          ? (isAr ? '(دقة عالية)' : '(high accuracy)')
-          : (isAr ? '(سريع)' : '(fast)');
-        const alt = hard
-          ? (isAr ? `— بالوضع السريع: ${other} نقطة` : `— in fast mode: ${other} credits`)
-          : (isAr ? `— بالوضع الدقيق: ${other} نقطة` : `— in accurate mode: ${other} credits`);
-        html += isAr
-          ? `<br>هذه العملية${pgLbl}: <b>${active} نقطة</b> ${accuracy} <span class="credits-alt">${alt}</span>`
-          : `<br>This run${pgLbl}: <b>${active} credits</b> ${accuracy} <span class="credits-alt">${alt}</span>`;
-        if (active > curRemaining) {
-          const warn = isAr
-            ? '⚠️ رصيدك غير كافٍ — بدّل للوضع السريع أو رقّ خطتك'
-            : '⚠️ Not enough credits — switch to fast mode or upgrade';
-          html += `<br><span class="credits-warn">${warn}</span>`;
-          extractBtn.disabled = true;
-        } else if (currentFiles.length > 0) {
-          extractBtn.disabled = false;
+        if (routing === 'auto') {
+          // Auto mode: cost is undecidable upfront, show range.
+          const lo = totalUnits * FAST;
+          const hi = totalUnits * STRONG;
+          const pgLbl = currentFiles.length > 1
+            ? (isAr ? ` · ${currentFiles.length} ملفات` : ` · ${currentFiles.length} files`)
+            : (totalUnits > 1 ? (isAr ? ` · ${totalUnits} صفحة` : ` · ${totalUnits} pages`) : '');
+          html += isAr
+            ? `<br>هذه العملية${pgLbl}: <b>${lo}–${hi} نقطة</b> (تلقائي) <span class="credits-alt">— سنختار التيار المناسب</span>`
+            : `<br>This run${pgLbl}: <b>${lo}–${hi} credits</b> (auto) <span class="credits-alt">— we'll pick the right tier</span>`;
+          // In Auto mode the actual cost depends on Gemini's routing decision.
+          // Only block extraction if even the FAST-tier cost exceeds credits;
+          // otherwise show a soft warning but keep the button enabled so the
+          // user can decide. The server will reject mid-extract if needed.
+          if (lo > curRemaining) {
+            const warn = isAr
+              ? '⚠️ رصيدك غير كافٍ حتى للوضع السريع — رقّ خطتك'
+              : '⚠️ Not enough credits even at fast tier — upgrade';
+            html += `<br><span class="credits-warn">${warn}</span>`;
+            extractBtn.disabled = true;
+          } else {
+            if (hi > curRemaining) {
+              const warn = isAr
+                ? `⚠️ قد تتجاوز رصيدك إذا اخترنا الدقّة العالية (${hi} نقطة كحد أقصى)`
+                : `⚠️ May exceed credits if high-accuracy is chosen (${hi} credits max)`;
+              html += `<br><span class="credits-warn">${warn}</span>`;
+            }
+            if (currentFiles.length > 0) extractBtn.disabled = false;
+          }
+        } else {
+          const active = totalUnits * (hard ? STRONG : FAST);
+          const other = totalUnits * (hard ? FAST : STRONG);
+          const pgLbl = currentFiles.length > 1
+            ? (isAr ? ` · ${currentFiles.length} ملفات` : ` · ${currentFiles.length} files`)
+            : (totalUnits > 1 ? (isAr ? ` · ${totalUnits} صفحة` : ` · ${totalUnits} pages`) : '');
+          const accuracy = hard
+            ? (isAr ? '(دقة عالية)' : '(high accuracy)')
+            : (isAr ? '(سريع)' : '(fast)');
+          const alt = hard
+            ? (isAr ? `— بالوضع السريع: ${other} نقطة` : `— in fast mode: ${other} credits`)
+            : (isAr ? `— بالوضع الدقيق: ${other} نقطة` : `— in accurate mode: ${other} credits`);
+          html += isAr
+            ? `<br>هذه العملية${pgLbl}: <b>${active} نقطة</b> ${accuracy} <span class="credits-alt">${alt}</span>`
+            : `<br>This run${pgLbl}: <b>${active} credits</b> ${accuracy} <span class="credits-alt">${alt}</span>`;
+          if (active > curRemaining) {
+            const warn = isAr
+              ? '⚠️ رصيدك غير كافٍ — بدّل للوضع السريع أو رقّ خطتك'
+              : '⚠️ Not enough credits — switch to fast mode or upgrade';
+            html += `<br><span class="credits-warn">${warn}</span>`;
+            extractBtn.disabled = true;
+          } else if (currentFiles.length > 0) {
+            extractBtn.disabled = false;
+          }
         }
       }
       box.innerHTML = html;
@@ -421,7 +494,11 @@
     const fieldsWrap = document.getElementById('fieldsWrap');
 
     function setMode(mode) {
-      // Visual segmented state
+      // Visual segmented state. Only two tabs exist now (auto + template) but
+      // sidebar deep-links may pass mode='pick' from history — fold it into auto
+      // since we no longer expose a separate Pick UI; the doctype hint still flows
+      // through docTypePickHidden when set by appSwitchTool/?tool=.
+      if (mode === 'pick') mode = 'auto';
       document.querySelectorAll('.seg-btn').forEach(b => {
         const active = b.dataset.mode === mode;
         b.classList.toggle('active', active);
@@ -430,29 +507,17 @@
       document.querySelectorAll('.mode-panel').forEach(p => {
         p.hidden = p.dataset.panel !== mode;
       });
-      // Drive the original hidden radios + fieldsWrap so the existing extract JS
-      // keeps working without changes downstream.
       if (mode === 'auto') {
         modeAutoRadio.checked = true; modeCustomRadio.checked = false;
         fieldsWrap.hidden = true;
-        docTypePickHidden.value = '';
-        clearTypeCardSelection();
-        uploadedTplId = null; uploadedTplKind = null;
-      } else if (mode === 'pick') {
-        modeAutoRadio.checked = true; modeCustomRadio.checked = false;
-        fieldsWrap.hidden = true;
-        // docTypePickHidden filled by type-card click
+        // Don't clear docTypePickHidden here — sidebar /?tool=passport sets it
+        // BEFORE setMode runs, and we want to preserve that hint.
         uploadedTplId = null; uploadedTplKind = null;
       } else if (mode === 'template') {
         modeCustomRadio.checked = true; modeAutoRadio.checked = false;
-        // fieldsWrap shown after a template is uploaded (the upload handler does it)
         docTypePickHidden.value = '';
-        clearTypeCardSelection();
       }
       renderCredits();
-    }
-    function clearTypeCardSelection() {
-      document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
     }
 
     document.querySelectorAll('.seg-btn').forEach(btn => {
@@ -469,23 +534,16 @@
       });
     });
 
-    // ---- Accuracy pills (replaces toggle — both modes visible with cost) ----
+    // ---- Accuracy pills (Auto + Fast + Hard — Auto is the default) ----
     const hardHidden = document.getElementById('hard');
-    document.querySelectorAll('.opt-pill[data-hard]').forEach(btn => {
+    const routingHidden = document.getElementById('routing');
+    document.querySelectorAll('.opt-pill[data-routing]').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.opt-pill[data-hard]').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.opt-pill[data-routing]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        hardHidden.checked = btn.dataset.hard === 'true';
+        routingHidden.value = btn.dataset.routing;
+        hardHidden.checked = btn.dataset.hard === 'true';  // back-compat for existing JS
         renderCredits();
-      });
-    });
-
-    // Type-card grid (Pick tab) — clicking a card sets the docTypePick value
-    document.querySelectorAll('.type-card').forEach(card => {
-      card.addEventListener('click', () => {
-        document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        docTypePickHidden.value = card.dataset.slug;
       });
     });
 
@@ -740,19 +798,73 @@
     }
 
     function prescriptionHtml(data) {
-      // Rich shape: patient + medications + as_needed + phone_numbers
+      // Doctor's-pad layout — mirrors how a prescription is actually written,
+      // not a JSON dump. Header (doctor) → patient strip → Rx list → footer.
+      const EN = I18N.lang === 'en';
       const patient = data.patient || {};
       const meds = data.medications || [];
-      const asNeeded = data.as_needed || [];
       const phones = data.phone_numbers || [];
       const notes = data.notes || [];
-      return [
-        sectionCard('patient', I18N.lang === 'ar' ? 'بيانات المريض' : 'Patient', patient),
-        medicationsTable(meds),
-        chipsList('أدوية عند اللزوم', 'As needed', asNeeded),
-        chipsList('أرقام الهاتف', 'Phone numbers', phones),
-        chipsList('ملاحظات', 'Notes', notes),
-      ].filter(Boolean).join('');
+      const doctor = data.doctor || data.prescriber || {};
+      const docName = _v(doctor.name) || _v(patient.doctor) || (EN ? '' : '');
+      const docSpec = _v(doctor.specialty) || _v(patient.specialty) || '';
+
+      const pName = _v(patient.name) || _v(patient['الاسم']) || '—';
+      const pDate = _v(patient.date) || _v(patient['التاريخ']) || '—';
+      const pAge  = _v(patient.age)  || _v(patient['العمر'])  || '—';
+      const pWt   = _v(patient.weight) || _v(patient['الوزن']) || '—';
+      const pTemp = _v(patient.temperature) || _v(patient['الحرارة']) || '—';
+
+      const head = (docName || docSpec) ? `
+        <div class="rx-doctor">
+          ${docName ? `<div class="rx-doc-name">${esc(docName)}</div>` : ''}
+          ${docSpec ? `<div class="rx-doc-spec">${esc(docSpec)}</div>` : ''}
+        </div>` : '';
+
+      const patientStrip = `
+        <div class="rx-patient">
+          <div class="rx-chip"><span class="rx-chip-l">${EN ? 'Patient' : 'المريض'}</span><span class="rx-chip-v">${esc(pName)}</span></div>
+          <div class="rx-chip"><span class="rx-chip-l">${EN ? 'Date' : 'التاريخ'}</span><span class="rx-chip-v">${esc(pDate)}</span></div>
+          <div class="rx-chip"><span class="rx-chip-l">${EN ? 'Age' : 'العمر'}</span><span class="rx-chip-v">${esc(pAge)}</span></div>
+          <div class="rx-chip"><span class="rx-chip-l">${EN ? 'Weight' : 'الوزن'}</span><span class="rx-chip-v">${esc(pWt)}</span></div>
+          <div class="rx-chip"><span class="rx-chip-l">${EN ? 'Temp' : 'الحرارة'}</span><span class="rx-chip-v">${esc(pTemp)}</span></div>
+        </div>`;
+
+      const pill = (label, value, missLabel) => {
+        if (!value || value === '—') return `<span class="rx-pill miss">${esc(missLabel)}</span>`;
+        return `<span class="rx-pill" title="${esc(label)}">${esc(value)}</span>`;
+      };
+
+      const drugRows = meds.map((m, i) => {
+        const dose = m.dosage || m.dose || '';
+        const freq = m.frequency || m.times || '';
+        const dur  = m.duration || m.period || '';
+        return `
+          <div class="rx-drug">
+            <span class="rx-num">${i + 1}</span>
+            <div class="rx-name">${esc(m.name || (EN ? 'Unknown' : 'دواء'))}</div>
+            ${pill(EN ? 'Dose' : 'الجرعة',      dose, EN ? '· dose missing' : '· جرعة غير محددة')}
+            ${pill(EN ? 'Frequency' : 'التكرار', freq, EN ? '· freq missing' : '· التكرار غير محدد')}
+            ${pill(EN ? 'Duration' : 'المدة',    dur,  EN ? '· duration missing' : '· المدة غير محددة')}
+          </div>`;
+      }).join('');
+
+      const rxBody = meds.length ? `
+        <div class="rx-script">R/</div>
+        <div class="rx-list">${drugRows}</div>` : '';
+
+      const footerBits = [];
+      if (phones.length) {
+        const tels = phones.map(p => `<a href="tel:${esc(p)}">${esc(p)}</a>`).join(' · ');
+        footerBits.push(`<div><b>${EN ? '☎ Phone' : '☎ هاتف'}:</b>${tels}</div>`);
+      }
+      if (notes.length) {
+        const lines = notes.map(n => esc(typeof n === 'string' ? n : (n.text || JSON.stringify(n)))).join('<br>');
+        footerBits.push(`<div><b>${EN ? '⚠ Notes' : '⚠ ملاحظات'}:</b>${lines}</div>`);
+      }
+      const footer = footerBits.length ? `<div class="rx-foot">${footerBits.join('')}</div>` : '';
+
+      return `<div class="rx-pad">${head}${patientStrip}${rxBody}${footer}</div>`;
     }
 
     function invoiceHtml(data) {
@@ -860,36 +972,32 @@
         }).join('');
       }
 
-      // Cognitive banner first (when expert extraction surfaces summary /
-      // validations / derived — invisible for legacy thin extraction).
-      const cog = cognitiveBanner(data);
+      // Cognitive content (summary / validations / derived) is now routed to
+      // the "Insights" tab — the Transcript stays clean. The Cognitive banner
+      // is rendered separately by populateCognitivePane() in render().
 
       // Expert envelope: nest the fields/line_items/totals/clauses keys.
-      // The cognitive banner already shows the smart layer; below it we still
-      // render the body shape that matches what's present.
       if (data && data.fields && (data.line_items || data.totals || data.clauses)) {
-        // mixed expert envelope — render as invoice-ish or contract-ish below the banner
         const bodyData = { header: data.fields, line_items: data.line_items, totals: data.totals, clauses: data.clauses };
-        if (Array.isArray(data.clauses)) return cog + contractHtml(bodyData);
-        return cog + invoiceHtml(bodyData);
+        if (Array.isArray(data.clauses)) return contractHtml(bodyData);
+        return invoiceHtml(bodyData);
       }
       if (data && data.fields && !data.line_items && !data.clauses) {
-        // expert form envelope — just render the fields below the banner
-        return cog + rowsHtml(data.fields);
+        return rowsHtml(data.fields);
       }
 
       // Detect rich shapes first by their characteristic keys, regardless of layout label.
-      if (data && (data.patient || data.medications)) return cog + prescriptionHtml(data);
-      if (data && (data.header && (data.line_items || data.totals))) return cog + invoiceHtml(data);
-      if (data && (data.header && Array.isArray(data.clauses))) return cog + contractHtml(data);
-      if (data && data.table) return cog + tableShape(data.table);
+      if (data && (data.patient || data.medications)) return prescriptionHtml(data);
+      if (data && (data.header && (data.line_items || data.totals))) return invoiceHtml(data);
+      if (data && (data.header && Array.isArray(data.clauses))) return contractHtml(data);
+      if (data && data.table) return tableShape(data.table);
       switch (layout) {
-        case 'narrative': return cog + narrativeHtml(data);
-        case 'prescription': return cog + prescriptionHtml(data);
+        case 'narrative': return narrativeHtml(data);
+        case 'prescription': return prescriptionHtml(data);
         case 'table':
         case 'form':
         case 'mixed':
-        default: return cog + rowsHtml(data);
+        default: return rowsHtml(data);
       }
     }
 
@@ -918,16 +1026,51 @@
       return rows;
     }
 
+    // Map an export format slug to the actual file extension. Server-side variants
+    // like `xlsx_columns` still produce a real `.xlsx` file — using `_columns` as
+    // the extension breaks Excel/LibreOffice on open.
+    const FMT_EXT = {
+      xlsx: 'xlsx', xlsx_columns: 'xlsx',
+      csv:  'csv',  csv_columns:  'csv',
+      docx: 'docx', pdf: 'pdf', xml: 'xml',
+      'repro:html': 'html', 'repro:pdf': 'pdf', 'repro:docx': 'docx',
+    };
+    function filenameFromHeader(headerValue, fallback) {
+      if (!headerValue) return fallback;
+      // RFC 6266: filename="…" or filename*=UTF-8''…
+      const m = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(headerValue);
+      return m ? decodeURIComponent(m[1]) : fallback;
+    }
+
     async function exportAs(fmt) {
-      if (!lastRows.length) return;
+      if (!lastRows.length && !fmt.startsWith('repro:')) return;
       try {
-        const res = await fetch('/v1/export', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ format: fmt, rows: lastRows }),
-        });
+        let res, ext = FMT_EXT[fmt] || fmt;
+        if (fmt.startsWith('repro:')) {
+          // Polished reproduction — render through the per-doctype template.
+          const reproFmt = fmt.split(':')[1]; // html / pdf / docx
+          ext = reproFmt;
+          const docType = (lastJSON && lastJSON.document_type) || '';
+          res = await fetch('/v1/reproduce', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              document_type: docType,
+              data: (lastJSON && lastJSON.data) || lastJSON || {},
+              format: reproFmt,
+              lang: I18N.lang || 'ar',
+            }),
+          });
+        } else {
+          res = await fetch('/v1/export', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ format: fmt, rows: lastRows }),
+          });
+        }
         if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || res.status); }
         const blob = await res.blob();
-        triggerDownload(blob, 'extraction.' + fmt);
+        const fallback = 'extraction.' + ext;
+        const fname = filenameFromHeader(res.headers.get('Content-Disposition'), fallback);
+        triggerDownload(blob, fname);
       } catch (err) {
         alert('تعذّر التصدير: ' + err.message);
       }
@@ -945,10 +1088,51 @@
       const layoutText = layout ? `<span class="layout-tag">${labelLayout} ${esc(layout)}</span>` : '';
       const badge = docType
         ? `<div class="doctype">${labelDetected} <b>${esc(docType)}</b> ${layoutText}</div>` : '';
-      results.innerHTML = badge + renderByLayout(data, layout);
+      results.innerHTML = badge + cognitiveBanner(data) + renderByLayout(data, layout);
       setExport({ document_type: docType, layout, data }, flattenSingle(data));
       enableAsk(flattenSingle(data).map(r => `${r.field}: ${r.value ?? ''}`).join('\n'));
       bindInlineEdits(data);
+    }
+
+    // Walk the extracted result, collect every {value, confidence} cell, and
+    // emit a "cognitive overlay" banner above the field list: how many fields
+    // are high / medium / low confidence. Helps users decide where to manually
+    // verify without scanning the whole result.
+    function cognitiveBanner(data) {
+      if (!data || typeof data !== 'object') return '';
+      let high = 0, med = 0, low = 0, total = 0;
+      function walk(node) {
+        if (!node) return;
+        if (Array.isArray(node)) { node.forEach(walk); return; }
+        if (typeof node === 'object') {
+          if ('confidence' in node && typeof node.confidence === 'number') {
+            total += 1;
+            if (node.confidence >= 0.85) high += 1;
+            else if (node.confidence >= 0.6) med += 1;
+            else low += 1;
+          }
+          for (const k in node) {
+            if (k === 'confidence') continue;
+            walk(node[k]);
+          }
+        }
+      }
+      walk(data);
+      if (!total) return '';
+      const isAr = I18N.lang === 'ar';
+      const hLbl = isAr ? 'عالية الثقة' : 'high confidence';
+      const mLbl = isAr ? 'بحاجة لمراجعة' : 'review recommended';
+      const lLbl = isAr ? 'منخفضة الثقة' : 'low confidence';
+      const intro = isAr
+        ? `استخرجنا <b>${total}</b> حقلًا.`
+        : `Extracted <b>${total}</b> fields.`;
+      return `
+        <div class="cognitive-banner">
+          <span class="cog-intro">${intro}</span>
+          <span class="cog-pill cog-high">${high} ${hLbl}</span>
+          ${med ? `<span class="cog-pill cog-med">${med} ${mLbl}</span>` : ''}
+          ${low ? `<span class="cog-pill cog-low">${low} ${lLbl}</span>` : ''}
+        </div>`;
     }
 
     // Inline edit on .ed-val spans — click to edit, Enter to save, Esc to cancel.
@@ -1081,6 +1265,8 @@
           results.innerHTML = renderPages(j.pages) || '<div class="results-empty">لا نتائج</div>';
           setExport({ pages: j.pages }, flattenPages(j.pages));
           enableAsk(flattenPages(j.pages).map(r => `[ص${r.page}] ${r.field}: ${r.value ?? ''}`).join('\n'));
+          populateCognitivePane({});
+          enterResultView('batch', 'pages');
           fetch('/v1/usage').then(r => r.json()).then(updateQuota).catch(() => {});
           resetButton();
         } else {
@@ -1106,25 +1292,38 @@
       const docTypePick = document.getElementById('docTypePick').value;
       const outputLang = document.getElementById('outputLang').value;
       const hard = document.getElementById('hard').checked;
+      const routing = document.getElementById('routing').value;
+      const visual = !!(document.getElementById('visualToggle') || {}).checked;
 
       let batching = false;
       lastExtractedData = null;
       try {
         // /v1/tool/{slug} only supports single-file today; for multi-file the
-        // generic /v1/extract path handles batching via files[].
-        if (docTypePick && mode === 'auto' && currentFiles.length === 1) {
+        // generic /v1/extract path handles batching via files[]. Pick mode
+        // keeps the mode radio at 'auto' (see setMode), so the explicit slug
+        // check is what determines this branch — never gate it on the mode
+        // value itself, or pick mode falls back to generic auto-detect.
+        if (docTypePick && currentFiles.length === 1) {
           const fd = new FormData();
           fd.append('file', currentFiles[0]);
           fd.append('hard', hard);
+          fd.append('routing', routing);
           fd.append('output_lang', outputLang);
           const res = await fetch('/v1/tool/' + docTypePick, { method: 'POST', body: fd });
-          const body = await res.json();
-          if (!res.ok) throw new Error(body.detail || ('HTTP ' + res.status));
-          const data = body.data || (body.text ? { text: body.text } : body);
-          render(data, docTypePick, body.kind === 'text' ? 'narrative' : 'form');
-          lastExtractedData = data;
-          updateQuota(body.usage);
-          return;
+          if (res.ok) {
+            const body = await res.json();
+            const data = body.data || (body.text ? { text: body.text } : body);
+            lastEnvelope = body;
+            render(data, docTypePick, body.kind === 'text' ? 'narrative' : (body.layout || 'form'));
+            lastExtractedData = data;
+            updateQuota(body.usage);
+            return;
+          }
+          // Failed — fall through to generic /v1/extract instead of erroring out.
+          // Common causes: docTypePick is a slug without a card (general tool),
+          // unknown service, or server-side rate-limit. Auto-detect still works.
+          const errBody = await res.json().catch(() => ({}));
+          console.warn('[mostakhles] /v1/tool/' + docTypePick + ' failed (' + res.status + '), falling back to /v1/extract:', errBody);
         }
 
         const fd = new FormData();
@@ -1134,6 +1333,8 @@
         if (currentFiles.length === 1) fd.append('file', currentFiles[0]);
         fd.append('target_schema', mode === 'custom' ? JSON.stringify(parseFields()) : '');
         fd.append('hard', hard);
+        fd.append('routing', routing);
+        if (visual) fd.append('visual', 'true');
         fd.append('output_lang', outputLang);
 
         const res = await fetch('/v1/extract', { method: 'POST', body: fd });
@@ -1147,11 +1348,13 @@
           pollBatch(body.job_id, body.total_pages);
           return;
         }
+        lastEnvelope = body;
         render(body.data, body.document_type, body.layout);
         lastExtractedData = body.data;
         updateQuota(body.usage);
       } catch (err) {
         results.innerHTML = `<div class="results-error">⚠️ ${err.message}</div>`;
+        console.error('[mostakhles] extract failed:', err);
       } finally {
         if (!batching) resetButton();
         // If an uploaded template is selected and we got data, surface the
@@ -1210,18 +1413,304 @@
     document.getElementById('hard').addEventListener('change', renderCredits);
     fetch('/v1/usage').then(r => r.json()).then(updateQuota).catch(() => {});
 
+    // ─── Result-view shell: tabs, source preview, smart export, wizard collapse ──
+    const shellMain = document.getElementById('shellMain');
+    const resultView = document.getElementById('resultView');
+    const resultActionBar = document.getElementById('resultActionBar');
+    const wizardStrip = document.getElementById('wizardStrip');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultDocBody = document.getElementById('resultDocBody');
+    const cognitivePane = document.getElementById('cognitivePane');
+    const tabCognitive = document.getElementById('tabCognitive');
+    const crumbCurrent = document.getElementById('crumbCurrent');
+
+    // Map document-kind → curated exports (no more 5-button row).
+    const EXPORTS_FOR_KIND = {
+      'prescription':       [{fmt:'repro:html', tag:'NEW', label:'Polished HTML (looks like Rx)', labelAr:'HTML منسّق (يشبه الروشتة)', repro: true},
+                             {fmt:'repro:pdf',  tag:'NEW', label:'Polished PDF (looks like Rx)',   labelAr:'PDF منسّق (يشبه الروشتة)',  repro: true},
+                             {fmt:'docx', tag:'DOCX', label:'Word', labelAr:'Word'}],
+      'invoice':            [{fmt:'repro:html', tag:'NEW', label:'Polished HTML (looks like original)', labelAr:'HTML منسّق (يشبه الأصلي)', repro: true},
+                             {fmt:'repro:pdf',  tag:'NEW', label:'Polished PDF (looks like original)', labelAr:'PDF منسّق (يشبه الأصلي)', repro: true},
+                             {fmt:'xlsx_columns', tag:'XLSX', label:'Excel (fields as columns)', labelAr:'Excel (حقول كأعمدة)'}],
+      'bank-statement':     [{fmt:'repro:html', tag:'NEW', label:'Polished HTML (statement)', labelAr:'HTML منسّق (كشف حساب)', repro: true},
+                             {fmt:'repro:pdf',  tag:'NEW', label:'Polished PDF (statement)',  labelAr:'PDF منسّق (كشف حساب)', repro: true},
+                             {fmt:'xlsx_columns', tag:'XLSX', label:'Excel (fields as columns)', labelAr:'Excel (حقول كأعمدة)'}],
+      'business-card':      [{fmt:'repro:html', tag:'NEW', label:'Polished HTML (card)', labelAr:'HTML منسّق (بطاقة)', repro: true},
+                             {fmt:'repro:pdf',  tag:'NEW', label:'Polished PDF (card)',  labelAr:'PDF منسّق (بطاقة)', repro: true}],
+      'contract-clauses':   [{fmt:'docx', tag:'DOCX', label:'Word',  labelAr:'Word'},
+                             {fmt:'pdf',  tag:'PDF',  label:'PDF',   labelAr:'PDF'}],
+      'sale-contract':      [{fmt:'docx', tag:'DOCX', label:'Word',  labelAr:'Word'},
+                             {fmt:'pdf',  tag:'PDF',  label:'PDF',   labelAr:'PDF'}],
+      'lease-contract':     [{fmt:'docx', tag:'DOCX', label:'Word',  labelAr:'Word'},
+                             {fmt:'pdf',  tag:'PDF',  label:'PDF',   labelAr:'PDF'}],
+      'egyptian-id':        [{fmt:'repro:html', tag:'NEW', label:'Polished HTML (ID card)', labelAr:'HTML منسّق (بطاقة)', repro: true},
+                             {fmt:'repro:pdf',  tag:'NEW', label:'Polished PDF (ID card)',  labelAr:'PDF منسّق (بطاقة)',  repro: true},
+                             {fmt:'xlsx_columns', tag:'XLSX', label:'Excel (fields as columns)', labelAr:'Excel (حقول كأعمدة)'}],
+      'passport':           [{fmt:'pdf',  tag:'PDF',  label:'PDF',   labelAr:'PDF'},
+                             {fmt:'xlsx_columns', tag:'XLSX', label:'Excel (fields as columns)', labelAr:'Excel (حقول كأعمدة)'}],
+      'tax-card':           [{fmt:'pdf',  tag:'PDF',  label:'PDF',   labelAr:'PDF'},
+                             {fmt:'xlsx_columns', tag:'XLSX', label:'Excel (fields as columns)', labelAr:'Excel (حقول كأعمدة)'}],
+      '_default':           [{fmt:'repro:pdf',  tag:'NEW', label:'Polished PDF (branded layout)',  labelAr:'PDF منسّق (تصميم احترافي)',  repro: true},
+                             {fmt:'repro:html', tag:'NEW', label:'Polished HTML (branded layout)', labelAr:'HTML منسّق (تصميم احترافي)', repro: true},
+                             {fmt:'xlsx_columns', tag:'XLSX', label:'Excel (fields as columns)', labelAr:'Excel (حقول كأعمدة)'}],
+    };
+    const ALL_EXPORTS = [
+      // Polished reproduction (Path A) — only available when document_type
+      // matches a SUPPORTED template; filtered out otherwise by buildExportMenu.
+      {fmt:'repro:html', tag:'NEW', label:'Polished HTML (looks like original)', labelAr:'HTML منسّق (يشبه الأصلي)', repro: true},
+      {fmt:'repro:pdf',  tag:'NEW', label:'Polished PDF (looks like original)',   labelAr:'PDF منسّق (يشبه الأصلي)',   repro: true},
+      {fmt:'repro:docx', tag:'NEW', label:'Polished Word (looks like original)',  labelAr:'Word منسّق (يشبه الأصلي)',  repro: true},
+      {fmt:'xlsx_columns', tag:'XLSX', label:'Excel — fields as columns', labelAr:'Excel — حقول كأعمدة'},
+      {fmt:'csv_columns',  tag:'CSV',  label:'CSV — fields as columns',   labelAr:'CSV — حقول كأعمدة'},
+      {fmt:'xlsx',         tag:'XLSX', label:'Excel — row per field',      labelAr:'Excel — صف لكل حقل'},
+      {fmt:'docx',         tag:'DOCX', label:'Word',                       labelAr:'Word'},
+      {fmt:'pdf',          tag:'PDF',  label:'PDF',                        labelAr:'PDF'},
+      {fmt:'csv',          tag:'CSV',  label:'CSV — row per field',        labelAr:'CSV — صف لكل حقل'},
+      {fmt:'xml',          tag:'XML',  label:'XML',                        labelAr:'XML'},
+    ];
+    // Document types we currently have a polished template for. Keep in sync
+    // with app.services.repro.SUPPORTED.
+    const REPRO_SUPPORTED = new Set([
+      'invoice', 'prescription', 'business_card', 'national_id', 'bank_statement',
+      'business-card', 'national-id', 'bank-statement', 'egyptian-id', 'egyptian_id',
+    ]);
+
+    function buildExportMenu(kind) {
+      const EN = I18N.lang === 'en';
+      // Polished reproduction (Path A) is available for EVERY doctype now —
+      // unknown types fall through to a clean generic template on the server.
+      const main = EXPORTS_FOR_KIND[kind] || EXPORTS_FOR_KIND._default;
+      const others = ALL_EXPORTS.filter(x => !main.find(m => m.fmt === x.fmt));
+      const headMain = `<div class="em-head">${EN ? 'Recommended' : 'مقترح'}</div>`;
+      const mainHtml = main.map(x => `
+        <button class="em-item" type="button" data-fmt="${x.fmt}">
+          <i data-lucide="file"></i>
+          <span>${EN ? x.label : x.labelAr}</span>
+          <span class="em-tag">${x.tag}</span>
+        </button>`).join('');
+      const headOther = others.length ? `<div class="em-sep"></div><div class="em-head">${EN ? 'Other' : 'تنسيقات أخرى'}</div>` : '';
+      const otherHtml = others.map(x => `
+        <button class="em-item" type="button" data-fmt="${x.fmt}">
+          <i data-lucide="file"></i>
+          <span>${EN ? x.label : x.labelAr}</span>
+          <span class="em-tag">${x.tag}</span>
+        </button>`).join('');
+      const pop = document.getElementById('exportMenuPop');
+      pop.innerHTML = headMain + mainHtml + headOther + otherHtml;
+      pop.querySelectorAll('.em-item').forEach(b =>
+        b.addEventListener('click', () => {
+          exportAs(b.dataset.fmt);
+          document.getElementById('exportMenu').classList.remove('open');
+        }));
+      if (window.lucide) lucide.createIcons();
+    }
+    document.getElementById('exportMenuBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('exportMenu').classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+      const m = document.getElementById('exportMenu');
+      if (!m.contains(e.target)) m.classList.remove('open');
+    });
+
+    // Tab switcher
+    document.querySelectorAll('.result-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.result-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.dataset.tab;
+        document.querySelectorAll('.result-pane').forEach(p => {
+          p.classList.toggle('active', p.dataset.pane === target);
+        });
+      });
+    });
+
+    // Holds the full enveloped response (validations, summary, language, etc.)
+    // so the Insights tab can render the rich content beyond just the banner.
+    let lastEnvelope = null;
+
+    function populateCognitivePane(data) {
+      const isAr = I18N.lang === 'ar';
+      const env  = lastEnvelope || {};
+      let html = cognitiveBanner(data) || '';
+
+      // ── Summary (one-line model insight) ──
+      const summary = env.summary;
+      if (summary) {
+        html += `<section class="cog-section">
+                   <h4>${isAr ? 'ملخّص المستند' : 'Document summary'}</h4>
+                   <p class="cog-summary">${esc(summary)}</p>
+                 </section>`;
+      }
+
+      // ── Language detection ──
+      const lang = env.language;
+      if (lang && (lang.primary || lang.code || lang.name)) {
+        const label = lang.name || lang.primary || lang.code;
+        const conf = (lang.confidence != null)
+          ? ` <span class="cog-pill cog-high">${Math.round(lang.confidence * 100)}%</span>`
+          : '';
+        html += `<section class="cog-section">
+                   <h4>${isAr ? 'اللغة المكتشفة' : 'Detected language'}</h4>
+                   <p>${esc(String(label))}${conf}</p>
+                 </section>`;
+      }
+
+      // ── Validations (TIN / IBAN / national-ID / MRZ checksums) ──
+      const checks = Array.isArray(env.validations) ? env.validations : [];
+      if (checks.length) {
+        const items = checks.map(c => {
+          const okPill = c.ok
+            ? `<span class="cog-pill cog-high">${isAr ? 'صحيح ✓' : 'OK ✓'}</span>`
+            : `<span class="cog-pill cog-low">${isAr ? 'فشل ✗' : 'FAIL ✗'}</span>`;
+          let decoded = '';
+          if (c.decoded && typeof c.decoded === 'object') {
+            decoded = '<dl class="cog-decoded">' +
+              Object.entries(c.decoded).map(([k, v]) =>
+                `<dt>${esc(k.replace(/_/g, ' '))}</dt><dd>${esc(String(v))}</dd>`
+              ).join('') + '</dl>';
+          }
+          return `<div class="cog-check">
+                    <div class="cog-check-head">
+                      <strong>${esc(c.check || '')}</strong>${okPill}
+                    </div>
+                    <p class="cog-check-detail">${esc(c.detail || '')}</p>
+                    ${decoded}
+                  </div>`;
+        }).join('');
+        html += `<section class="cog-section">
+                   <h4>${isAr ? 'فحوصات التحقق' : 'Validation checks'}</h4>
+                   ${items}
+                 </section>`;
+      }
+
+      // ── Field-level confidence list (sorted lowest → highest) ──
+      const flatFields = [];
+      (function walkFields(node, parentKey) {
+        if (!node) return;
+        if (Array.isArray(node)) { node.forEach((n, i) => walkFields(n, `${parentKey}[${i}]`)); return; }
+        if (typeof node === 'object') {
+          if ('value' in node && 'confidence' in node && typeof node.confidence === 'number') {
+            flatFields.push({ field: parentKey, value: node.value, confidence: node.confidence });
+          }
+          for (const k of Object.keys(node)) {
+            if (k === 'confidence') continue;
+            const path = parentKey ? `${parentKey}.${k}` : k;
+            walkFields(node[k], path);
+          }
+        }
+      })(data, '');
+      if (flatFields.length) {
+        flatFields.sort((a, b) => a.confidence - b.confidence);
+        const rows = flatFields.slice(0, 20).map(f => {
+          const c = Math.round(f.confidence * 100);
+          const cls = f.confidence >= 0.85 ? 'cog-high' : f.confidence >= 0.6 ? 'cog-med' : 'cog-low';
+          return `<tr>
+                    <td>${esc(f.field)}</td>
+                    <td>${esc(String(f.value == null ? '' : f.value))}</td>
+                    <td><span class="cog-pill ${cls}">${c}%</span></td>
+                  </tr>`;
+        }).join('');
+        html += `<section class="cog-section">
+                   <h4>${isAr ? 'الحقول الأقل ثقة (أعلى 20)' : 'Lowest-confidence fields (top 20)'}</h4>
+                   <table class="cog-table"><thead><tr>
+                     <th>${isAr ? 'الحقل' : 'Field'}</th>
+                     <th>${isAr ? 'القيمة' : 'Value'}</th>
+                     <th>${isAr ? 'الثقة' : 'Confidence'}</th>
+                   </tr></thead><tbody>${rows}</tbody></table>
+                 </section>`;
+      }
+
+      if (html.trim()) {
+        cognitivePane.innerHTML = html;
+        tabCognitive.hidden = false;
+        if (window.lucide) lucide.createIcons();
+      } else {
+        cognitivePane.innerHTML = `<div class="results-empty">${isAr ? 'لا توجد رؤى متاحة لهذا المستند.' : 'No insights returned for this document.'}</div>`;
+        tabCognitive.hidden = true;
+      }
+    }
+
+    function populateSourcePreview() {
+      if (!currentFiles.length) { resultDocBody.innerHTML = ''; return; }
+      const f = currentFiles[0];
+      if (f.type.startsWith('image/')) {
+        const url = URL.createObjectURL(f);
+        resultDocBody.innerHTML = `<img src="${url}" alt="">`;
+      } else if (f.type === 'application/pdf') {
+        resultDocBody.innerHTML = `<div class="results-empty" style="padding:32px 12px;text-align:center"><i data-lucide="file-text" style="width:32px;height:32px;color:var(--muted)"></i><br>${esc(f.name)}</div>`;
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function enterResultView(docType, layout) {
+      shellMain.classList.add('has-result');
+      resultView.hidden = false;
+      resultActionBar.hidden = false;
+      // Wizard strip thumb + name
+      if (currentFiles.length) {
+        const f = currentFiles[0];
+        document.getElementById('wsThumb').textContent = f.type === 'application/pdf' ? '📄' : '🖼';
+        document.getElementById('wsName').textContent = f.name + (currentFiles.length > 1 ? ` +${currentFiles.length - 1}` : '');
+      }
+      // Title + crumb
+      const niceType = docType ? docType.replace(/-/g, ' ') : (I18N.lang === 'en' ? 'Document' : 'مستند');
+      resultTitle.textContent = niceType + (currentFiles.length ? ' · ' + currentFiles[0].name : '');
+      crumbCurrent.textContent = niceType;
+      populateSourcePreview();
+      buildExportMenu(docType);
+    }
+
+    // ─── Patch render() so it enters the result view + populates cognitive ─────
+    const _origRender = render;
+    render = function (data, docType, layout) {
+      _origRender(data, docType, layout);
+      populateCognitivePane(data);
+      enterResultView(docType, layout);
+    };
+
+    // Exposed for the sidebar Tools submenu: switch the picked type-card
+    // in-place without a navigation. Returns true if the slug was applied,
+    // false if the slug doesn't match any type-card (caller decides what to do).
+    // Critical: NEVER redirect from here — the caller is responsible. A redirect
+    // back to /app?tool=X when X isn't a card causes an infinite reload loop
+    // because the URL still has the param next time around.
+    // Doctype slugs we recognize as parser hints. Sidebar-clicked tools whose
+    // slug isn't in this set (arabic-ocr, handwriting, translate, summarize…)
+    // fall through silently and use auto-detect.
+    const PARSER_SLUGS = new Set([
+      'invoice', 'egyptian-id', 'national-id', 'passport', 'prescription',
+      'tax-card', 'bank-statement', 'utility-bill', 'business-card',
+      'commercial-register', 'sale-contract', 'lease-contract',
+      'ownership-doc', 'tenant-data', 'unit-data', 'payment-schedule',
+      'contract-clauses', 'shipping-label',
+    ]);
+    window.appSwitchTool = function (slug) {
+      if (!PARSER_SLUGS.has(slug)) return false;
+      if (shellMain.classList.contains('has-result')) {
+        shellMain.classList.remove('has-result');
+        resultView.hidden = true;
+        resultActionBar.hidden = true;
+      }
+      // Pre-fill the doctype hint that the extract handler reads. The wizard
+      // stays in Auto mode visually — the hint just routes the extract through
+      // /v1/tool/{slug} for type-specific parsing.
+      docTypePickHidden.value = slug;
+      setMode('auto');
+      return true;
+    };
+
     // ?tool=X pre-selects a type card so deep links from /tools/{slug} land
     // on the upgraded UI with the right document type already chosen.
     (function applyToolQueryParam() {
       const params = new URLSearchParams(location.search);
       const toolSlug = params.get('tool');
       if (!toolSlug) return;
-      const card = document.querySelector(`.type-card[data-slug="${toolSlug}"]`);
-      if (!card) return;
-      setMode('pick');
-      card.click();
-      // Scroll the selection into view for clarity
-      try { card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch {}
+      // appSwitchTool returns false for slugs without a matching type-card
+      // (arabic-ocr, handwriting, translate, etc. — those are general-purpose
+      // tools, not doc-type extractors). Just ignore them — the wizard's auto
+      // mode handles them fine.
+      window.appSwitchTool(toolSlug);
     })();
   </script>
 

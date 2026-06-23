@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <title>{{ 'About — Mostakhles' if lang == 'en' else 'عنّا — مُستخلِص' }}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="lp-body">
+
+  <div class="lp-top-stripe"></div>
+  <header class="lp-header" id="lpHeader">
+    <div class="lp-container">
+      <div class="lp-nav">
+        <a class="lp-brand" href="/"><span class="lp-brand-mark">M</span><span class="lp-brand-text">{{ 'Mostakhles' if lang == 'en' else 'مُستخلِص' }}<small>.ai</small></span></a>
+        <nav class="lp-nav-links">
+          <a href="/#problem">{{ 'Why' if lang == 'en' else 'لماذا' }}</a>
+          <a href="/#features">{{ 'Features' if lang == 'en' else 'المميزات' }}</a>
+          <a href="/pricing">{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</a>
+          <a href="/docs">{{ 'API' if lang == 'en' else 'الـ API' }}</a>
+          <a href="/about" class="active">{{ 'About' if lang == 'en' else 'عنّا' }}</a>
+          <a href="/contact">{{ 'Contact' if lang == 'en' else 'تواصل' }}</a>
+        </nav>
+        <div class="lp-nav-cta">
+          {% set other_lang = 'en' if lang == 'ar' else 'ar' %}
+          <a class="lp-lang" href="/set-language?lang={{ other_lang }}&next=/about">{{ 'العربية' if lang == 'en' else 'English' }}</a>
+          <a class="lp-btn lp-btn-primary" href="/signup">{{ 'Try free →' if lang == 'en' else 'جرّب مجانًا ←' }}</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="lp-shell">
+
+    {# Hero — kicker + h1 + story intro + small last-updated #}
+    <section class="lp-section">
+      <div class="lp-about-hero">
+        <div>
+          <p class="lp-kicker"><span class="lp-dot"></span>{{ 'About' if lang == 'en' else 'عنّا' }}</p>
+          <h1 class="lp-h1">{{ 'Built in MENA, for MENA businesses' if lang == 'en' else 'صُنع في المنطقة، لشركات المنطقة' }}</h1>
+          <p class="lp-lead">
+            {% if lang == 'en' %}
+            We process Arabic documents — invoices, contracts, prescriptions, national IDs, bank statements, real-estate deeds — into clean structured data. Every model is trained for Arabic-first reality: cursive scripts, mixed Arabic-Latin lines, dialectal handwriting, ink fade, faded carbon copies. The things every global OCR gets wrong.
+            {% else %}
+            نحوّل المستندات العربية — الفواتير، العقود، الروشتات، البطاقات القومية، كشوف الحسابات، عقود العقارات — إلى بيانات منظّمة. كل نموذج مُدرَّب على واقع عربي أولًا: الكتابة المتّصلة، السطور المختلطة عربي-لاتيني، خط اليد العامي، الحبر الباهت، النسخ الكربونية. الأشياء التي تخطئ فيها كل OCR عالمية.
+            {% endif %}
+          </p>
+          <p class="lp-about-meta">{{ 'Last updated' if lang == 'en' else 'آخر تحديث' }}: 2026-06-13</p>
+        </div>
+        <aside class="lp-about-image">
+          <div class="lp-about-pad">
+            {% if lang == 'en' %}
+            <div class="lp-about-line lp-l1">Invoice #4,521</div>
+            <div class="lp-about-line lp-l2">Date: 15 Mar 2026</div>
+            <div class="lp-about-line lp-l3">Client: Pyramid Trading Co.</div>
+            <div class="lp-about-line lp-l4">Total: $12,450</div>
+            <div class="lp-about-line lp-l5">Signature ✓</div>
+            <div class="lp-about-line lp-l6">Mohamed Sami — Sales Director</div>
+            {% else %}
+            <div class="lp-about-line lp-l1">الفاتورة رقم 4,521</div>
+            <div class="lp-about-line lp-l2">التاريخ: 2026/3/15</div>
+            <div class="lp-about-line lp-l3">العميل: شركة الأهرام للتجارة</div>
+            <div class="lp-about-line lp-l4">الإجمالي: 12,450 جنيه</div>
+            <div class="lp-about-line lp-l5">التوقيع ✓</div>
+            <div class="lp-about-line lp-l6">محمد سامي — مدير المبيعات</div>
+            {% endif %}
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# What we do — body text + customer quote #}
+    <section class="lp-section">
+      <div class="lp-section-grid">
+        <header class="lp-section-head">
+          <p class="lp-kicker"><span class="lp-dot"></span>{{ 'What we do' if lang == 'en' else 'ما نقوم به' }}</p>
+          <h2 class="lp-h2">{{ 'Document AI that thinks in Arabic' if lang == 'en' else 'ذكاء مستندات يفكّر بالعربية' }}</h2>
+        </header>
+        <div class="lp-problem-grid">
+          <div class="lp-problem-text">
+            {% if lang == 'en' %}
+            <p>We started because every "global" document AI we tested failed on the docs we deal with daily — Egyptian Tahsel IDs, Saudi commercial registers, Arabic prescriptions, Tahweel-style bank statements. They were built for English receipts. We were forced to read the documents ourselves, then enter them by hand.</p>
+            <p>So we built our own. Mostakhles is trained specifically on Egyptian, Saudi, Emirati, and Levantine Arabic — print, handwriting, and the messy in-between. We don't just transcribe — we <b>derive totals</b>, <b>validate against the document's own rules</b>, and <b>flag what's missing</b> before you see it.</p>
+            <p>Behind the platform: a small team trained on hundreds of thousands of public-domain documents. We are committed to delivering accuracy beyond traditional OCR — at a scalable, reliable price built for high-volume processing, without compromising privacy.</p>
+            {% else %}
+            <p>بدأنا لأن كل "ذكاء مستندات عالمي" جرّبناه فشل على المستندات التي نتعامل معها يوميًا — البطاقات المصرية، السجلات السعودية، الروشتات العربية، كشوف البنوك المصرية. صُمّمت للإيصالات الإنجليزية. اضطُررنا لقراءة المستندات بأنفسنا، ثم إدخالها يدويًا.</p>
+            <p>فبنينا منصّتنا. مُستخلِص مدرّب تحديدًا على العربية المصرية والسعودية والإماراتية والشامية — المطبوع، خط اليد، والمختلط. لا نكتفي بنسخ النص — نحن <b>نستنتج الإجماليات</b>، و<b>نتحقّق من قواعد المستند نفسه</b>، و<b>نُشير إلى الناقص</b> قبل أن تراه.</p>
+            <p>خلف المنصّة: فريق صغير مدرّب على مئات الآلاف من المستندات المتاحة عامةً. نلتزم بدقّة تتجاوز OCR التقليدية — بسعر قابل للتوسّع، موثوق، مصمّم لمعالجة كميات كبيرة دون المساس بالخصوصية.</p>
+            {% endif %}
+          </div>
+          <aside class="lp-quote-card">
+            <blockquote>
+              {% if lang == 'en' %}
+              "Three years of paper contracts I couldn't digitize. Mostakhles processed everything in 18 minutes."
+              {% else %}
+              "ثلاث سنوات من العقود الورقية لم أستطع رقمنتها. مُستخلِص أنهى المهمّة في 18 دقيقة."
+              {% endif %}
+            </blockquote>
+            <figcaption>
+              <strong>{{ 'Mariam B.' if lang == 'en' else 'مريم ب.' }}</strong>
+              <small>{{ 'Real-estate lawyer · Alexandria' if lang == 'en' else 'محامية عقارات · الإسكندرية' }}</small>
+            </figcaption>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# Stats #}
+    <section class="lp-section">
+      <header class="lp-section-head lp-center">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'By the numbers' if lang == 'en' else 'بالأرقام' }}</p>
+      </header>
+      <div class="lp-stats">
+        <div class="lp-stat"><b>28</b><small>{{ 'document types' if lang == 'en' else 'نوع مستند' }}</small></div>
+        <div class="lp-stat"><b>4</b><small>{{ 'MENA dialects trained' if lang == 'en' else 'لهجة عربية' }}</small></div>
+        <div class="lp-stat"><b>99%</b><small>{{ 'accuracy on print Arabic' if lang == 'en' else 'دقّة على العربي المطبوع' }}</small></div>
+        <div class="lp-stat"><b>0</b><small>{{ 'docs used for training' if lang == 'en' else 'مستند للتدريب من بياناتك' }}</small></div>
+      </div>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# Principles #}
+    <section class="lp-section">
+      <header class="lp-section-head lp-center">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'What we believe' if lang == 'en' else 'ما نؤمن به' }}</p>
+        <h2 class="lp-h2">{{ 'Four principles that shape every decision' if lang == 'en' else 'أربعة مبادئ تحدّد كل قرار' }}</h2>
+      </header>
+      <div class="lp-principles">
+        <article>
+          <h3>{{ 'Arabic-first, not Arabic-also' if lang == 'en' else 'عربي أولًا، لا عربي أيضًا' }}</h3>
+          <p>{{ 'Every model trained on MENA documents from day one. No "afterthought" support added later.' if lang == 'en' else 'كل نموذج مُدرَّب على مستندات المنطقة من اليوم الأول. ليس دعمًا مضافًا لاحقًا.' }}</p>
+        </article>
+        <article>
+          <h3>{{ 'Your data stays yours' if lang == 'en' else 'بياناتك تظلّ ملكك' }}</h3>
+          <p>{{ "We never train on customer documents. Encrypted at rest, auto-deleted on a retention window you control." if lang == 'en' else 'لا ندرّب أبدًا على مستندات العملاء. مشفّرة في التخزين، تُحذف تلقائيًا في فترة احتفاظ تتحكّم بها.' }}</p>
+        </article>
+        <article>
+          <h3>{{ 'Cognitive over copy-paste' if lang == 'en' else 'استنتاج لا نسخ' }}</h3>
+          <p>{{ 'We do not just transcribe. We derive totals, validate fields, summarize content — and flag what is missing.' if lang == 'en' else 'لا نكتفي بنسخ النصوص. نستنتج الإجماليات، نتحقّق من الحقول، نلخّص المحتوى — ونُشير إلى الناقص.' }}</p>
+        </article>
+        <article>
+          <h3>{{ 'Priced for MENA reality' if lang == 'en' else 'تسعير يناسب الواقع' }}</h3>
+          <p>{{ 'Tiers in USD AND local currency. PAYG credits for small jobs. Volume pricing scales.' if lang == 'en' else 'خطط بالدولار والعملات المحلية. نقاط ادفع-كما-تستهلك للمشاريع الصغيرة. تسعير حجمي يتوسّع.' }}</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# CTA #}
+    <section class="lp-section lp-final-cta">
+      <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Get started' if lang == 'en' else 'ابدأ الآن' }}</p>
+      <h2 class="lp-h2">{{ 'Try it on your own documents — 30 free credits' if lang == 'en' else 'جرّبه على مستنداتك — 30 نقطة مجانية' }}</h2>
+      <div class="lp-hero-cta">
+        <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">{{ 'Start free →' if lang == 'en' else 'ابدأ مجانًا ←' }}</a>
+        <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/contact">{{ 'Talk to us' if lang == 'en' else 'تواصل معنا' }}</a>
+      </div>
+    </section>
+
+  </div>
+
+  {# Footer #}
+  <footer class="lp-footer">
+    <div class="lp-container">
+      <div class="lp-footer-grid">
+        <div class="lp-footer-brand">
+          <div class="lp-brand"><span class="lp-brand-mark">M</span><span class="lp-brand-text">{{ 'Mostakhles' if lang == 'en' else 'مُستخلِص' }}<small>.ai</small></span></div>
+          <p>{{ 'Arabic document AI. Built in MENA for MENA businesses.' if lang == 'en' else 'ذكاء اصطناعي عربي للمستندات. صُنع في المنطقة لشركات المنطقة.' }}</p>
+        </div>
+        <nav>
+          <h4>{{ 'Product' if lang == 'en' else 'المنتج' }}</h4>
+          <a href="/app">{{ 'Web app' if lang == 'en' else 'تطبيق الويب' }}</a>
+          <a href="/tools">{{ 'All tools' if lang == 'en' else 'كل الأدوات' }}</a>
+          <a href="/docs">{{ 'API docs' if lang == 'en' else 'وثائق API' }}</a>
+          <a href="/#pricing">{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</a>
+        </nav>
+        <nav>
+          <h4>{{ 'Company' if lang == 'en' else 'الشركة' }}</h4>
+          <a href="/about">{{ 'About' if lang == 'en' else 'عنّا' }}</a>
+          <a href="/contact">{{ 'Contact' if lang == 'en' else 'تواصل' }}</a>
+          <a href="/privacy">{{ 'Privacy' if lang == 'en' else 'الخصوصية' }}</a>
+          <a href="/terms">{{ 'Terms' if lang == 'en' else 'الشروط' }}</a>
+        </nav>
+      </div>
+      <div class="lp-footer-bar">© 2026 Mostakhles · {{ 'All rights reserved' if lang == 'en' else 'جميع الحقوق محفوظة' }}</div>
+    </div>
+  </footer>
+</body>
+</html>

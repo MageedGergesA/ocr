@@ -1,0 +1,338 @@
+{# _appshell.html — persistent left sidebar for authenticated app pages.
+   Replaces _nav.html on /app, /dashboard, /account, /tools, /tool/{slug}, /billing/*.
+   Marketing pages (/, /docs, /legal, signup, login) keep _nav.html.
+   The page sets {% set active_nav = 'docs|upload|tools|credits|plan|settings|support' %}
+   before including this partial so the right item highlights. #}
+{% set _active = active_nav | default('upload') %}
+<aside class="shell-aside">
+  <a class="shell-brand" href="/">
+    <span class="shell-mark">M</span>
+    <span class="shell-brand-text">{{ 'Mostakhles' if lang == 'en' else 'مُستخلِص' }}<small>.ai</small></span>
+  </a>
+
+  <nav class="shell-nav">
+    <a class="shell-link {{ 'active' if _active == 'docs' }}" href="/dashboard">
+      <i data-lucide="file-text"></i>
+      <span>{{ 'Documents' if lang == 'en' else 'المستندات' }}</span>
+    </a>
+    <a class="shell-link {{ 'active' if _active == 'upload' }}" href="/app">
+      <i data-lucide="upload-cloud"></i>
+      <span>{{ 'Upload' if lang == 'en' else 'رفع جديد' }}</span>
+    </a>
+    {# Tools — expandable submenu (does NOT navigate). Sub-links that target
+       /app switch the document-type card in-place when already on /app; on other
+       pages they navigate to /app?tool=… so the wizard opens pre-picked. #}
+    <button type="button" class="shell-link shell-link-toggle {{ 'active' if _active == 'tools' }}" id="toolsToggle" aria-expanded="false">
+      <i data-lucide="layout-grid"></i>
+      <span>{{ 'Tools' if lang == 'en' else 'الأدوات' }}</span>
+      <i data-lucide="chevron-down" class="shell-caret"></i>
+    </button>
+    <div class="shell-submenu" id="toolsSubmenu" hidden>
+      {# Workspace — multi-doc actions, not single-doc extractors #}
+      <div class="shell-sub-h">{{ 'Workspace' if lang == 'en' else 'مساحة العمل' }}</div>
+      <a class="shell-sublink" href="/chat"><i data-lucide="message-square"></i><span>{{ 'Chat with doc' if lang == 'en' else 'اسأل مستندك' }}</span></a>
+      <a class="shell-sublink" href="/compare"><i data-lucide="git-compare"></i><span>{{ 'Compare docs' if lang == 'en' else 'مقارنة مستندات' }}</span></a>
+
+      {# General OCR / text tools — open as standalone /tools/{slug} pages #}
+      <div class="shell-sub-h">{{ 'General OCR' if lang == 'en' else 'OCR عامة' }}</div>
+      <a class="shell-sublink" href="/tools/arabic-ocr"><i data-lucide="scan-text"></i><span>{{ 'Arabic OCR' if lang == 'en' else 'استخراج النص العربي' }}</span></a>
+      <a class="shell-sublink" href="/tools/handwriting"><i data-lucide="pen-line"></i><span>{{ 'Handwriting' if lang == 'en' else 'الخط اليدوي' }}</span></a>
+      <a class="shell-sublink" href="/tools/translate"><i data-lucide="languages"></i><span>{{ 'Translation' if lang == 'en' else 'الترجمة' }}</span></a>
+      <a class="shell-sublink" href="/tools/summarize"><i data-lucide="align-left"></i><span>{{ 'Summarize' if lang == 'en' else 'تلخيص' }}</span></a>
+      <a class="shell-sublink" href="/tools/table-excel"><i data-lucide="table"></i><span>{{ 'Tables → Excel' if lang == 'en' else 'جداول إلى Excel' }}</span></a>
+      <a class="shell-sublink" href="/tools/searchable-pdf"><i data-lucide="file-search"></i><span>{{ 'Searchable PDF' if lang == 'en' else 'PDF قابل للبحث' }}</span></a>
+      <a class="shell-sublink" href="/tools/entity-detection"><i data-lucide="scan-search"></i><span>{{ 'Entity detection' if lang == 'en' else 'كشف الكيانات' }}</span></a>
+      <a class="shell-sublink" href="/tools/auto-classify"><i data-lucide="tags"></i><span>{{ 'Auto-classify' if lang == 'en' else 'تصنيف تلقائي' }}</span></a>
+      <a class="shell-sublink" href="/tools/validate"><i data-lucide="badge-check"></i><span>{{ 'Validate data' if lang == 'en' else 'تحقّق من البيانات' }}</span></a>
+
+      {# Document parsers — open in the new /app shell via type-card #}
+      <div class="shell-sub-h">{{ 'Document parsers' if lang == 'en' else 'قوارئ المستندات' }}</div>
+      <a class="shell-sublink" href="/app?tool=invoice"             data-tool="invoice"><i data-lucide="receipt-text"></i><span>{{ 'Invoice' if lang == 'en' else 'فاتورة' }}</span></a>
+      <a class="shell-sublink" href="/app?tool=egyptian-id"         data-tool="egyptian-id"><i data-lucide="id-card"></i><span>{{ 'National ID' if lang == 'en' else 'الرقم القومي' }}</span></a>
+      <a class="shell-sublink" href="/app?tool=passport"            data-tool="passport"><i data-lucide="book-user"></i><span>{{ 'Passport' if lang == 'en' else 'جواز سفر' }}</span></a>
+      <a class="shell-sublink" href="/app?tool=tax-card"            data-tool="tax-card"><i data-lucide="badge-percent"></i><span>{{ 'Tax card' if lang == 'en' else 'بطاقة ضريبية' }}</span></a>
+      <a class="shell-sublink" href="/app?tool=commercial-register" data-tool="commercial-register"><i data-lucide="building-2"></i><span>{{ 'Commercial reg.' if lang == 'en' else 'سجل تجاري' }}</span></a>
+      <a class="shell-sublink" href="/app?tool=business-card"       data-tool="business-card"><i data-lucide="contact-round"></i><span>{{ 'Business card' if lang == 'en' else 'بطاقة عمل' }}</span></a>
+      <a class="shell-sublink" href="/app?tool=utility-bill"        data-tool="utility-bill"><i data-lucide="lightbulb"></i><span>{{ 'Utility bill' if lang == 'en' else 'فاتورة مرافق' }}</span></a>
+      <a class="shell-sublink" href="/app?tool=bank-statement"      data-tool="bank-statement"><i data-lucide="landmark"></i><span>{{ 'Bank statement' if lang == 'en' else 'كشف حساب' }}</span></a>
+      <a class="shell-sublink" href="/app?tool=prescription"        data-tool="prescription"><i data-lucide="pill"></i><span>{{ 'Prescription' if lang == 'en' else 'روشتة' }}</span></a>
+      <a class="shell-sublink" href="/app?tool=shipping-label"      data-tool="shipping-label"><i data-lucide="package"></i><span>{{ 'Shipping label' if lang == 'en' else 'بوليصة شحن' }}</span></a>
+
+      {# Real-estate pack #}
+      <div class="shell-sub-h">{{ 'Real estate' if lang == 'en' else 'العقارات' }}</div>
+      <a class="shell-sublink" href="/app?tool=sale-contract"     data-tool="sale-contract"><i data-lucide="home"></i><span>{{ 'Sale contract' if lang == 'en' else 'عقد بيع' }}</span></a>
+      <a class="shell-sublink" href="/app?tool=lease-contract"    data-tool="lease-contract"><i data-lucide="scroll-text"></i><span>{{ 'Lease contract' if lang == 'en' else 'عقد إيجار' }}</span></a>
+      <a class="shell-sublink" href="/tools/ownership-doc"><i data-lucide="scroll"></i><span>{{ 'Ownership doc' if lang == 'en' else 'وثيقة ملكية' }}</span></a>
+      <a class="shell-sublink" href="/tools/tenant-data"><i data-lucide="user"></i><span>{{ 'Tenant data' if lang == 'en' else 'بيانات المستأجر' }}</span></a>
+      <a class="shell-sublink" href="/tools/unit-data"><i data-lucide="building"></i><span>{{ 'Unit data' if lang == 'en' else 'بيانات الوحدة' }}</span></a>
+      <a class="shell-sublink" href="/tools/payment-schedule"><i data-lucide="calendar-clock"></i><span>{{ 'Payment schedule' if lang == 'en' else 'جدول السداد' }}</span></a>
+      <a class="shell-sublink" href="/tools/contract-clauses"><i data-lucide="scale"></i><span>{{ 'Clause analysis' if lang == 'en' else 'تحليل البنود' }}</span></a>
+
+      <a class="shell-sublink shell-sublink-all" href="/tools">
+        <i data-lucide="grid-3x3"></i><span>{{ 'Tool gallery' if lang == 'en' else 'معرض الأدوات' }}</span><span class="shell-sub-count">28</span>
+      </a>
+    </div>
+
+    <div class="shell-sep">{{ 'Account' if lang == 'en' else 'الحساب' }}</div>
+
+    {# Credits — inline expandable panel: monthly usage bar + upgrade CTA #}
+    <button type="button" class="shell-link shell-link-toggle {{ 'active' if _active == 'credits' }}" id="creditsToggle" aria-expanded="false">
+      <i data-lucide="zap"></i>
+      <span>{{ 'Credits' if lang == 'en' else 'الرصيد' }}</span>
+      <i data-lucide="chevron-down" class="shell-caret"></i>
+    </button>
+    <div class="shell-submenu" id="creditsSubmenu" hidden>
+      <div class="shell-credits" id="creditsPanelBody">
+        <div class="shell-credits-top">
+          <b id="creditsRemaining">—</b>
+          <small>{{ 'remaining' if lang == 'en' else 'متبقّي' }}</small>
+        </div>
+        <div class="shell-credit-bar"><div class="shell-credit-bar-fill" id="creditsBarFill" style="width:0%"></div></div>
+        <div class="shell-credits-meta" id="creditsMeta">{{ 'Loading…' if lang == 'en' else 'جارٍ التحميل…' }}</div>
+        <a class="shell-cta-btn" href="/#pricing">
+          <i data-lucide="arrow-up-circle"></i>
+          <span>{{ 'Get more credits' if lang == 'en' else 'احصل على رصيد أكبر' }}</span>
+        </a>
+        <a class="shell-cta-btn ghost" href="/dashboard#usage">
+          {{ 'View usage details' if lang == 'en' else 'تفاصيل الاستخدام' }}
+        </a>
+      </div>
+    </div>
+
+    {# Plan — inline expandable panel: current plan + upgrade options #}
+    <button type="button" class="shell-link shell-link-toggle {{ 'active' if _active == 'plan' }}" id="planToggle" aria-expanded="false">
+      <i data-lucide="gem"></i>
+      <span>{{ 'Plan' if lang == 'en' else 'الخطة' }}</span>
+      <i data-lucide="chevron-down" class="shell-caret"></i>
+    </button>
+    <div class="shell-submenu" id="planSubmenu" hidden>
+      <div class="shell-plan">
+        <div class="shell-plan-current">
+          <span class="shell-plan-badge">{{ (user.plan if user else 'free')|upper }}</span>
+          <span class="shell-plan-name">{{ 'Current plan' if lang == 'en' else 'خطتك الحالية' }}</span>
+        </div>
+        <div class="shell-sub-h" style="padding-top:2px">{{ 'Upgrade to' if lang == 'en' else 'الترقية إلى' }}</div>
+        <div class="shell-plan-options">
+          {% set _plan = (user.plan if user else 'free') %}
+          {% if _plan != 'lite' and _plan not in ['starter','pro','business'] %}
+          <a class="shell-plan-opt" href="/#pricing"><b>Lite</b><span>· 1,200/mo</span><span class="pp">$9</span></a>
+          {% endif %}
+          {% if _plan not in ['starter','pro','business'] %}
+          <a class="shell-plan-opt" href="/#pricing"><b>Starter</b><span>· 3,500/mo</span><span class="pp">$29</span></a>
+          {% endif %}
+          {% if _plan not in ['pro','business'] %}
+          <a class="shell-plan-opt" href="/#pricing"><b>Pro</b><span>· 8,500/mo</span><span class="pp">$69</span></a>
+          {% endif %}
+          {% if _plan != 'business' %}
+          <a class="shell-plan-opt" href="/#pricing"><b>Business</b><span>· 28,000/mo</span><span class="pp">$199</span></a>
+          {% endif %}
+        </div>
+        <a class="shell-cta-btn ghost" href="/account">
+          {{ 'Manage subscription' if lang == 'en' else 'إدارة الاشتراك' }}
+        </a>
+      </div>
+    </div>
+    <a class="shell-link {{ 'active' if _active == 'settings' }}" href="/account">
+      <i data-lucide="settings"></i>
+      <span>{{ 'Settings' if lang == 'en' else 'الإعدادات' }}</span>
+    </a>
+    <a class="shell-link" href="mailto:mageed.gerges28@gmail.com">
+      <i data-lucide="life-buoy"></i>
+      <span>{{ 'Support' if lang == 'en' else 'الدعم' }}</span>
+    </a>
+    {% if user and user.is_admin %}
+    <a class="shell-link {{ 'active' if _active == 'admin' }}" href="/admin">
+      <i data-lucide="shield"></i>
+      <span>{{ 'Admin' if lang == 'en' else 'الإدارة' }}</span>
+    </a>
+    {% endif %}
+  </nav>
+
+  <div class="shell-foot">
+    {% if user %}
+    <div class="shell-user">
+      <span class="shell-avatar">{{ user.email[0]|upper }}</span>
+      <div class="shell-user-meta">
+        <div class="shell-user-mail" title="{{ user.email }}">{{ user.email }}</div>
+        <div class="shell-user-plan">{{ user.plan|capitalize }}</div>
+      </div>
+    </div>
+    <button type="button" class="shell-foot-link" id="appThemeToggle" style="background:none;border:0;cursor:pointer;font-family:inherit;font-size:13px;width:100%;text-align:start">
+      <svg class="sun" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <span class="t-light">{{ 'Dark mode' if lang == 'en' else 'الوضع الداكن' }}</span>
+      <span class="t-dark" style="display:none">{{ 'Light mode' if lang == 'en' else 'الوضع الفاتح' }}</span>
+    </button>
+    <a class="shell-foot-link" href="/logout"><i data-lucide="log-out"></i>{{ 'Log out' if lang == 'en' else 'خروج' }}</a>
+    {% set other_lang = 'en' if lang == 'ar' else 'ar' %}
+    <a class="shell-foot-link" href="/set-language?lang={{ other_lang }}&next={{ request.url.path }}">
+      <i data-lucide="languages"></i>{{ 'العربية' if lang == 'en' else 'English' }}
+    </a>
+    {% else %}
+    <a class="btn btn-primary full" href="/login">{{ 'Log in' if lang == 'en' else 'تسجيل الدخول' }}</a>
+    {% endif %}
+  </div>
+
+<script nonce="{{ csp_nonce }}">
+// Theme: no-flash init + toggle. Same key as landing page so they share state.
+(function () {
+  var root = document.documentElement;
+  if (!root.hasAttribute('data-theme')) {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    root.setAttribute('data-theme', t);
+  }
+  function syncToggle() {
+    var dark = root.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('#appThemeToggle .sun').forEach(function (e) { e.style.display = dark ? 'none' : ''; });
+    document.querySelectorAll('#appThemeToggle .moon').forEach(function (e) { e.style.display = dark ? '' : 'none'; });
+    document.querySelectorAll('#appThemeToggle .t-light').forEach(function (e) { e.style.display = dark ? 'none' : ''; });
+    document.querySelectorAll('#appThemeToggle .t-dark').forEach(function (e) { e.style.display = dark ? '' : 'none'; });
+  }
+  syncToggle();
+  var btn = document.getElementById('appThemeToggle');
+  if (btn) btn.addEventListener('click', function () {
+    var cur = root.getAttribute('data-theme') || 'light';
+    var next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('mostakhles.theme', next); } catch (e) {}
+    syncToggle();
+  });
+})();
+</script>
+</aside>
+
+<script nonce="{{ csp_nonce }}" src="https://unpkg.com/lucide@0.456.0/dist/umd/lucide.min.js"></script>
+<script nonce="{{ csp_nonce }}">document.addEventListener('DOMContentLoaded', function () { if (window.lucide) lucide.createIcons(); });</script>
+<script nonce="{{ csp_nonce }}">
+(function () {
+  var lang = "{{ lang or 'ar' }}";
+  var dir = "{{ dir or 'rtl' }}";
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('dir', dir);
+})();
+</script>
+
+<script nonce="{{ csp_nonce }}">
+// Generic shell-link expand/collapse — persists state in localStorage.
+function _shellToggle(toggleId, menuId, key, onOpen) {
+  var toggle = document.getElementById(toggleId);
+  var menu = document.getElementById(menuId);
+  if (!toggle || !menu) return;
+  function setOpen(open) {
+    menu.hidden = !open;
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.classList.toggle('open', open);
+    try { localStorage.setItem(key, open ? '1' : '0'); } catch (e) {}
+    if (open && typeof onOpen === 'function') onOpen();
+  }
+  var remembered = (function () { try { return localStorage.getItem(key) === '1'; } catch (e) { return false; } })();
+  setOpen(remembered);
+  toggle.addEventListener('click', function () { setOpen(menu.hidden); });
+  return setOpen;
+}
+
+// Credits panel — fetches /v1/usage and populates progress bar + remaining count.
+(function () {
+  var loaded = false;
+  function loadCredits() {
+    if (loaded) return;
+    fetch('/v1/usage').then(function (r) { return r.json(); }).then(function (u) {
+      loaded = true;
+      var rem = u.remaining != null ? u.remaining : 0;
+      var lim = u.limit != null ? u.limit : 0;
+      var pct = lim > 0 ? Math.max(2, Math.round((rem / lim) * 100)) : 0;
+      var EN = "{{ 'true' if lang == 'en' else 'false' }}" === 'true';
+      document.getElementById('creditsRemaining').textContent = rem.toLocaleString();
+      document.getElementById('creditsBarFill').style.width = pct + '%';
+      document.getElementById('creditsMeta').textContent =
+        EN ? (rem + ' of ' + lim + ' credits this month') : ('من ' + lim + ' نقطة هذا الشهر');
+    }).catch(function () {
+      document.getElementById('creditsMeta').textContent = '—';
+    });
+  }
+  _shellToggle('creditsToggle', 'creditsSubmenu', 'mostakhles.creditsOpen', loadCredits);
+})();
+
+// Plan panel — static markup, just expand.
+_shellToggle('planToggle', 'planSubmenu', 'mostakhles.planOpen');
+
+// Tools submenu — expand/collapse + auto-open on /app?tool=X.
+(function () {
+  var KEY = 'mostakhles.toolsOpen';
+  var toggle = document.getElementById('toolsToggle');
+  var menu = document.getElementById('toolsSubmenu');
+  if (!toggle || !menu) return;
+  function setOpen(open) {
+    menu.hidden = !open;
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.classList.toggle('open', open);
+    try { localStorage.setItem(KEY, open ? '1' : '0'); } catch (e) {}
+  }
+  // Initial state: open if remembered, OR if we're on any tool page so the
+  // sidebar lands with the active tool visible.
+  var remembered = (function () { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; } })();
+  var path = location.pathname;
+  var onApp = path === '/app';
+  var hasTool = new URLSearchParams(location.search).get('tool');
+  var onToolPage = /^\/(chat|compare|tools\/[^/]+)$/.test(path);
+  setOpen(remembered || (onApp && hasTool) || onToolPage);
+  toggle.addEventListener('click', function () { setOpen(menu.hidden); });
+
+  // Highlight active sub-tool — covers all four routing modes:
+  //   1) /app?tool=X      → data-tool match
+  //   2) /tools/<slug>    → href match
+  //   3) /chat            → href="/chat" match
+  //   4) /compare         → href="/compare" match
+  if (onApp && hasTool) {
+    menu.querySelectorAll('.shell-sublink[data-tool="' + hasTool + '"]').forEach(function (a) {
+      a.classList.add('active');
+    });
+  } else if (onToolPage) {
+    menu.querySelectorAll('.shell-sublink').forEach(function (a) {
+      if (a.getAttribute('href') === path) a.classList.add('active');
+    });
+  }
+
+  // When already on /app, intercept data-tool clicks to switch the type card
+  // in-place instead of triggering a full navigation. The /app page exposes
+  // window.appSwitchTool(slug); fallback to navigation if it's not loaded yet.
+  if (onApp) {
+    menu.querySelectorAll('.shell-sublink[data-tool]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        var slug = a.getAttribute('data-tool');
+        if (typeof window.appSwitchTool === 'function') {
+          e.preventDefault();
+          window.appSwitchTool(slug);
+          menu.querySelectorAll('.shell-sublink.active').forEach(function (x) { x.classList.remove('active'); });
+          a.classList.add('active');
+          // Reflect in URL without reload
+          history.replaceState(null, '', '/app?tool=' + encodeURIComponent(slug));
+        }
+      });
+    });
+  }
+})();
+</script>
+
+{% if csrf_token %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<script nonce="{{ csp_nonce }}">
+(function () {
+  var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  var origFetch = window.fetch;
+  window.fetch = function (input, init) {
+    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    if (url.indexOf('/v1/') === 0 || url.indexOf('/v1/') > 0) {
+      init = init || {};
+      init.headers = new Headers(init.headers || {});
+      if (!init.headers.has('X-CSRF-Token')) init.headers.set('X-CSRF-Token', token);
+    }
+    return origFetch(input, init);
+  };
+})();
+</script>
+{% endif %}

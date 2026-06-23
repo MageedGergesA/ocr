@@ -1,0 +1,88 @@
+{# Polished bank statement — multi-page friendly. #}
+<!DOCTYPE html>
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ 'كشف حساب' if dir == 'rtl' else 'Bank Statement' }} — {{ holder_name }}</title>
+  <style>
+    @page { size: A4 portrait; margin: 16mm 14mm; }
+    body { font-family: 'Cairo', 'Helvetica', sans-serif; color: #1b1813; margin: 0; padding: 24px; max-width: 800px; margin-inline: auto; line-height: 1.5; }
+    .bs-head { padding-bottom: 14px; border-bottom: 3px solid #0f766e; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .bs-bank { font-size: 20px; font-weight: 800; color: #0a564f; margin: 0; }
+    .bs-period { font-size: 12px; color: #7a7165; }
+    .bs-account-strip { background: #f0fdfa; border-radius: 8px; padding: 14px 18px; margin-bottom: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 13px; }
+    .bs-account-strip .lbl { display: block; font-size: 10px; color: #7a7165; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: 700; }
+    .bs-account-strip .val { font-weight: 600; color: #0a564f; }
+    .bs-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+    .bs-summary .box { padding: 12px; border: 1px solid #e5e0d4; border-radius: 8px; text-align: center; }
+    .bs-summary .lbl { display: block; font-size: 10px; color: #7a7165; text-transform: uppercase; margin-bottom: 4px; font-weight: 700; }
+    .bs-summary .val { font-size: 14px; font-weight: 800; color: #0a564f; font-variant-numeric: tabular-nums; }
+    table.bs-txn { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    table.bs-txn thead { background: #d1fae5; }
+    table.bs-txn th { padding: 8px 10px; text-align: start; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #0a564f; border-bottom: 2px solid #0f766e; }
+    table.bs-txn td { padding: 7px 10px; border-bottom: 1px solid #e5e0d4; }
+    table.bs-txn td.num { text-align: end; font-variant-numeric: tabular-nums; }
+    table.bs-txn td.dr { color: #be123c; }
+    table.bs-txn td.cr { color: #047857; }
+    .bs-recon { margin-top: 18px; padding: 10px 14px; background: #d1fae5; border-radius: 6px; font-size: 12px; color: #065f46; }
+    .bs-recon.fail { background: #fee2e2; color: #991b1b; }
+    .bs-foot { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e5e0d4; display: flex; justify-content: space-between; font-size: 10px; color: #7a7165; }
+  </style>
+</head>
+<body>
+  <header class="bs-head">
+    <h1 class="bs-bank">{{ 'كشف حساب بنكي' if dir == 'rtl' else 'Bank Statement' }}</h1>
+    {% if period %}<div class="bs-period">{{ period }}</div>{% endif %}
+  </header>
+
+  <div class="bs-account-strip">
+    {% if holder_name %}<div><span class="lbl">{{ 'صاحب الحساب' if dir == 'rtl' else 'Account Holder' }}</span><span class="val">{{ holder_name }}</span></div>{% endif %}
+    {% if iban %}<div><span class="lbl">IBAN</span><span class="val" style="direction:ltr">{{ iban }}</span></div>{% endif %}
+    {% if currency %}<div><span class="lbl">{{ 'العملة' if dir == 'rtl' else 'Currency' }}</span><span class="val">{{ currency }}</span></div>{% endif %}
+    {% if branch %}<div><span class="lbl">{{ 'الفرع' if dir == 'rtl' else 'Branch' }}</span><span class="val">{{ branch }}</span></div>{% endif %}
+  </div>
+
+  <div class="bs-summary">
+    <div class="box"><span class="lbl">{{ 'رصيد الافتتاح' if dir == 'rtl' else 'Opening' }}</span><span class="val">{{ opening_balance }}</span></div>
+    <div class="box"><span class="lbl">{{ 'إجمالي الدائن' if dir == 'rtl' else 'Credits' }}</span><span class="val">{{ total_credits }}</span></div>
+    <div class="box"><span class="lbl">{{ 'إجمالي المدين' if dir == 'rtl' else 'Debits' }}</span><span class="val">{{ total_debits }}</span></div>
+    <div class="box"><span class="lbl">{{ 'رصيد الإقفال' if dir == 'rtl' else 'Closing' }}</span><span class="val">{{ closing_balance }}</span></div>
+  </div>
+
+  {% if transactions %}
+  <table class="bs-txn">
+    <thead>
+      <tr>
+        <th>{{ 'التاريخ' if dir == 'rtl' else 'Date' }}</th>
+        <th>{{ 'الوصف' if dir == 'rtl' else 'Description' }}</th>
+        <th class="num">{{ 'مدين' if dir == 'rtl' else 'Debit' }}</th>
+        <th class="num">{{ 'دائن' if dir == 'rtl' else 'Credit' }}</th>
+        <th class="num">{{ 'الرصيد' if dir == 'rtl' else 'Balance' }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr>
+        <td>{{ t.date }}</td>
+        <td>{{ t.description }}</td>
+        <td class="num dr">{{ t.debit }}</td>
+        <td class="num cr">{{ t.credit }}</td>
+        <td class="num">{{ t.balance }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if reconciliation %}
+  <div class="bs-recon {{ 'fail' if not reconciliation.ok else '' }}">
+    {% if reconciliation.ok %}✓ {{ 'تم التحقق من جميع الأرصدة الجارية' if dir == 'rtl' else 'All running balances reconciled' }}{% else %}⚠ {{ reconciliation.detail }}{% endif %}
+  </div>
+  {% endif %}
+
+  <footer class="bs-foot">
+    <span>{{ 'مُستخلِص — Mostakhles' }}</span>
+    <span>{{ extracted_at }}</span>
+  </footer>
+</body>
+</html>

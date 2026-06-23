@@ -1,0 +1,167 @@
+{# Shared template for per-doc-type SEO landing pages. Driven by `page` (SeoPage). #}
+<!DOCTYPE html>
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <title>{{ page.title_en if lang == 'en' else page.title_ar }}</title>
+  <meta name="description" content="{{ page.subtitle_en if lang == 'en' else page.subtitle_ar }}">
+  <meta property="og:title" content="{{ page.title_en if lang == 'en' else page.title_ar }}">
+  <meta property="og:description" content="{{ page.subtitle_en if lang == 'en' else page.subtitle_ar }}">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="canonical" href="{{ request.url.scheme }}://{{ request.url.netloc }}/{{ page.slug }}">
+  <link rel="alternate" hreflang="ar" href="{{ request.url.scheme }}://{{ request.url.netloc }}/{{ page.slug }}?lang=ar">
+  <link rel="alternate" hreflang="en" href="{{ request.url.scheme }}://{{ request.url.netloc }}/{{ page.slug }}?lang=en">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  {# Schema.org/FAQPage for rich snippets in SERP. #}
+  <script nonce="{{ csp_nonce }}" type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {% set faqs = page.faqs_en if lang == 'en' else page.faqs_ar %}
+      {% for q, a in faqs %}
+      {
+        "@type": "Question",
+        "name": {{ q | tojson }},
+        "acceptedAnswer": { "@type": "Answer", "text": {{ a | tojson }} }
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+  </script>
+</head>
+<body class="lp-body">
+  {% include "_lpheader.html" %}
+
+  <div class="lp-shell">
+
+    {# Hero #}
+    <section class="lp-section">
+      <div class="lp-about-hero">
+        <div>
+          <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Document AI' if lang == 'en' else 'ذكاء المستندات' }}</p>
+          <h1 class="lp-h1">{{ page.h1_en if lang == 'en' else page.h1_ar }}</h1>
+          <p class="lp-lead">{{ page.subtitle_en if lang == 'en' else page.subtitle_ar }}</p>
+          <div class="lp-hero-cta">
+            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app?tool={{ page.target_tool }}">
+              {{ 'Try free →' if lang == 'en' else 'جرّب مجانًا ←' }}
+            </a>
+            <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/docs">
+              {{ 'See API' if lang == 'en' else 'انظر الـ API' }}
+            </a>
+          </div>
+        </div>
+        <aside class="lp-about-image">
+          <div class="lp-about-pad">
+            <div class="lp-about-line lp-l1">{{ '✓ Cursive Arabic OK' if lang == 'en' else '✓ خط متّصل عربي' }}</div>
+            <div class="lp-about-line lp-l2">{{ '✓ Mixed Arabic/Latin' if lang == 'en' else '✓ مختلط عربي/لاتيني' }}</div>
+            <div class="lp-about-line lp-l3">{{ '✓ Confidence per field' if lang == 'en' else '✓ ثقة لكل حقل' }}</div>
+            <div class="lp-about-line lp-l4">{{ '✓ REST API + Odoo' if lang == 'en' else '✓ REST API + Odoo' }}</div>
+            <div class="lp-about-line lp-l5">{{ '✓ EG / SA / AE / GCC' if lang == 'en' else '✓ مصر / السعودية / الإمارات / الخليج' }}</div>
+            <div class="lp-about-line lp-l6">{{ '✓ No setup. 30 free credits.' if lang == 'en' else '✓ بدون إعداد. 30 نقطة مجانية.' }}</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# Problems #}
+    <section class="lp-section">
+      <header class="lp-section-head">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Why generic OCR fails' if lang == 'en' else 'لماذا تفشل OCR العامة' }}</p>
+        <h2 class="lp-h2">{{ 'Four things break on Arabic documents' if lang == 'en' else 'أربعة أشياء تكسر على المستندات العربية' }}</h2>
+      </header>
+      <ul class="lp-feature-list">
+        {% set probs = page.problems_en if lang == 'en' else page.problems_ar %}
+        {% for p in probs %}
+        <li><span class="lp-feature-num">{{ loop.index }}</span>{{ p }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# Features #}
+    <section class="lp-section">
+      <header class="lp-section-head">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'How Mostakhles handles it' if lang == 'en' else 'كيف يتعامل مُستخلِص' }}</p>
+        <h2 class="lp-h2">{{ 'Specialized models, structured output' if lang == 'en' else 'نماذج متخصّصة، مخرجات مُهيكلة' }}</h2>
+      </header>
+      <ul class="lp-feature-list">
+        {% set feats = page.features_en if lang == 'en' else page.features_ar %}
+        {% for f in feats %}
+        <li><span class="lp-feature-check">✓</span>{{ f }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# Sample output #}
+    <section class="lp-section">
+      <header class="lp-section-head">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Output shape' if lang == 'en' else 'شكل المخرجات' }}</p>
+        <h2 class="lp-h2">{{ page.sample_label_en if lang == 'en' else page.sample_label_ar }}</h2>
+      </header>
+      <div class="lp-sample-box">
+        <ul class="lp-sample-list">
+          {% set fields = page.sample_fields_en if lang == 'en' else page.sample_fields_ar %}
+          {% for f in fields %}
+          <li><code>{{ f }}</code></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# FAQ #}
+    <section class="lp-section">
+      <header class="lp-section-head">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'FAQ' if lang == 'en' else 'الأسئلة الشائعة' }}</p>
+        <h2 class="lp-h2">{{ 'Questions before you try it' if lang == 'en' else 'أسئلة قبل أن تجرّب' }}</h2>
+      </header>
+      <div class="lp-faq-list">
+        {% set faqs = page.faqs_en if lang == 'en' else page.faqs_ar %}
+        {% for q, a in faqs %}
+        <details class="lp-faq-item">
+          <summary>{{ q }}</summary>
+          <p>{{ a }}</p>
+        </details>
+        {% endfor %}
+      </div>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# Final CTA #}
+    <section class="lp-section lp-final-cta">
+      <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Get started' if lang == 'en' else 'ابدأ الآن' }}</p>
+      <h2 class="lp-h2">{{ 'Try it on your own documents — 30 free credits' if lang == 'en' else 'جرّبه على مستنداتك — 30 نقطة مجانية' }}</h2>
+      <div class="lp-hero-cta">
+        <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">{{ 'Start free →' if lang == 'en' else 'ابدأ مجانًا ←' }}</a>
+        <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/contact">{{ 'Talk to us' if lang == 'en' else 'تواصل معنا' }}</a>
+      </div>
+    </section>
+
+  </div>
+
+  {% include "_lpfooter.html" ignore missing %}
+</body>
+</html>

@@ -1,0 +1,62 @@
+{# Note: pages should also include <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+   in their <head>. The /favicon.ico route in main.py also redirects browsers automatically. #}
+{# Slim public-page header (used by index, about, contact, privacy, docs, tools, legal, terms).
+   For authenticated app pages (`/app`, `/dashboard`, `/chat`, `/compare`, `/tools/<slug>`),
+   use `_appshell.html` instead — that one has the persistent left sidebar.
+
+   Caller can set `active_lp_nav` to one of: pricing, api, about, contact, privacy
+   to mark the active link. #}
+{% set _active = active_lp_nav | default('') %}
+{% set _next = request.url.path %}
+<div class="lp-top-stripe"></div>
+<header class="lp-header" id="lpHeader">
+  <div class="lp-container">
+    <div class="lp-nav">
+      <a class="lp-brand" href="/">
+        <span class="lp-brand-mark">M</span>
+        <span class="lp-brand-text">{{ 'Mostakhles' if lang == 'en' else 'مُستخلِص' }}<small>.ai</small></span>
+      </a>
+      <nav class="lp-nav-links">
+        <a href="/#problem">{{ 'Why' if lang == 'en' else 'لماذا' }}</a>
+        <a href="/#features">{{ 'Features' if lang == 'en' else 'المميزات' }}</a>
+        <a href="/pricing" class="{{ 'active' if _active == 'pricing' }}">{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</a>
+        <a href="/docs" class="{{ 'active' if _active == 'api' }}">{{ 'API' if lang == 'en' else 'الـ API' }}</a>
+        <a href="/about" class="{{ 'active' if _active == 'about' }}">{{ 'About' if lang == 'en' else 'عنّا' }}</a>
+        <a href="/contact" class="{{ 'active' if _active == 'contact' }}">{{ 'Contact' if lang == 'en' else 'تواصل' }}</a>
+      </nav>
+      <div class="lp-nav-cta">
+        <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+          <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        {% set other_lang = 'en' if lang == 'ar' else 'ar' %}
+        <a class="lp-lang" href="/set-language?lang={{ other_lang }}&next={{ _next }}">{{ 'العربية' if lang == 'en' else 'English' }}</a>
+        {% if user %}
+        <a class="lp-btn lp-btn-ghost lp-hide-sm" href="/dashboard">{{ 'Dashboard' if lang == 'en' else 'لوحة التحكم' }}</a>
+        <a class="lp-btn lp-btn-primary" href="/app">{{ 'Start now →' if lang == 'en' else 'ابدأ الآن ←' }}</a>
+        {% else %}
+        <a class="lp-btn lp-btn-ghost lp-hide-sm" href="/login">{{ 'Log in' if lang == 'en' else 'دخول' }}</a>
+        <a class="lp-btn lp-btn-primary" href="/signup">{{ 'Try free →' if lang == 'en' else 'جرّب مجانًا ←' }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</header>
+
+<script nonce="{{ csp_nonce }}">
+(function () {
+  // Sticky header style on scroll
+  var hd = document.getElementById('lpHeader');
+  if (hd) addEventListener('scroll', function () {
+    if (window.scrollY > 8) hd.classList.add('scrolled'); else hd.classList.remove('scrolled');
+  }, { passive: true });
+  // Theme toggle (same key as the rest of the app)
+  var btn = document.getElementById('themeToggle');
+  if (btn) btn.addEventListener('click', function () {
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
+    var next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('mostakhles.theme', next); } catch (e) {}
+  });
+})();
+</script>

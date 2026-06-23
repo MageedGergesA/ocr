@@ -1,20 +1,38 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
   <title>{{ svc.title }} — مُستخلِص</title>
   <meta name="description" content="{{ svc.desc }}">
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-  {% include "_nav.html" %}
+<body class="has-shell">
 
-  <section class="app-wrap">
-    <div class="container">
-      <p style="text-align:center"><a href="/tools" class="back-link">← كل الأدوات</a></p>
+  {% set active_nav = 'tools' %}
+  <div class="shell-wrap">
+    {% include "_appshell.html" %}
+
+    <main class="shell-main">
+      <div class="shell-main-head">
+        <div class="shell-crumb">
+          <a href="/tools">{{ 'All tools' if lang == 'en' else 'كل الأدوات' }}</a>
+          <span class="sep">/</span>
+          <span>{{ svc.title }}</span>
+        </div>
+      </div>
       <h1 class="app-title"><i data-lucide="{{ svc.icon }}"></i> {{ svc.title }}</h1>
       <p class="app-sub">{{ svc.desc }}</p>
 
@@ -55,10 +73,10 @@
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </main>
+  </div>
 
-  <script>
+  <script nonce="{{ csp_nonce }}">
     const SLUG = "{{ slug }}", KIND = "{{ svc.kind }}";
     const fileInput = document.getElementById('fileInput');
     const dropzone = document.getElementById('dropzone');

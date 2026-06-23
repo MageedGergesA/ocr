@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <title>{{ 'Privacy Policy — Mostakhles' if lang == 'en' else 'سياسة الخصوصية — مُستخلِص' }}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="lp-body">
+
+  <div class="lp-top-stripe"></div>
+  <header class="lp-header" id="lpHeader">
+    <div class="lp-container">
+      <div class="lp-nav">
+        <a class="lp-brand" href="/"><span class="lp-brand-mark">M</span><span class="lp-brand-text">{{ 'Mostakhles' if lang == 'en' else 'مُستخلِص' }}<small>.ai</small></span></a>
+        <nav class="lp-nav-links">
+          <a href="/#problem">{{ 'Why' if lang == 'en' else 'لماذا' }}</a>
+          <a href="/#features">{{ 'Features' if lang == 'en' else 'المميزات' }}</a>
+          <a href="/pricing">{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</a>
+          <a href="/docs">{{ 'API' if lang == 'en' else 'الـ API' }}</a>
+          <a href="/about">{{ 'About' if lang == 'en' else 'عنّا' }}</a>
+          <a href="/contact">{{ 'Contact' if lang == 'en' else 'تواصل' }}</a>
+        </nav>
+        <div class="lp-nav-cta">
+          {% set other_lang = 'en' if lang == 'ar' else 'ar' %}
+          <a class="lp-lang" href="/set-language?lang={{ other_lang }}&next=/privacy">{{ 'العربية' if lang == 'en' else 'English' }}</a>
+          <a class="lp-btn lp-btn-primary" href="/signup">{{ 'Try free →' if lang == 'en' else 'جرّب مجانًا ←' }}</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="lp-shell">
+
+    {# Hero #}
+    <section class="lp-section">
+      <div class="lp-about-hero">
+        <div>
+          <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Privacy Policy' if lang == 'en' else 'سياسة الخصوصية' }}</p>
+          <h1 class="lp-h1">{{ 'Your documents stay yours' if lang == 'en' else 'مستنداتك تظلّ ملكك' }}</h1>
+          <p class="lp-lead">
+            {% if lang == 'en' %}
+            We want you to feel secure using Mostakhles. We never train on your documents, never sell your data, and host inside the MENA region by default. This page is what we promise, in plain language.
+            {% else %}
+            نريدك أن تشعر بالأمان عند استخدام مُستخلِص. نحن لا ندرّب نماذجنا على مستنداتك، لا نبيع بياناتك، ونستضيف داخل منطقة الشرق الأوسط افتراضيًا. هذه الصفحة هي ما نعد به، بلغة بسيطة.
+            {% endif %}
+          </p>
+          <p class="lp-about-meta">{{ 'Last updated' if lang == 'en' else 'آخر تحديث' }}: 2026-06-13</p>
+
+          {# Compliance badges — handwritingocr only does GDPR; we cover the MENA frameworks too #}
+          <div class="lp-comp-badges">
+            <span class="lp-comp-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> KSA PDPL</span>
+            <span class="lp-comp-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> UAE PDPL</span>
+            <span class="lp-comp-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Egypt PDPL Law 151</span>
+            <span class="lp-comp-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> GDPR-aligned</span>
+          </div>
+        </div>
+        <aside class="lp-about-image">
+          <div class="lp-priv-pad">
+            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'Encrypted in transit (TLS 1.3)' if lang == 'en' else 'تشفير أثناء النقل (TLS 1.3)' }}</div>
+            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'Encrypted at rest (AES-256)' if lang == 'en' else 'تشفير في التخزين (AES-256)' }}</div>
+            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'No training on your data' if lang == 'en' else 'لا تدريب على بياناتك' }}</div>
+            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'Auto-delete after retention window' if lang == 'en' else 'حذف تلقائي بعد فترة الاحتفاظ' }}</div>
+            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'MENA data residency' if lang == 'en' else 'استضافة داخل المنطقة' }}</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# Two-column: body + ToC #}
+    <section class="lp-section">
+      <div class="lp-docs-grid">
+
+        <article class="lp-docs-body">
+
+          <h2 id="commitment">{{ 'Our commitment to you' if lang == 'en' else 'التزامنا تجاهك' }}</h2>
+          <ul>
+            <li><b>{{ 'Your data is yours.' if lang == 'en' else 'بياناتك ملكك.' }}</b> {{ 'Any data you provide is used only to deliver Mostakhles services.' if lang == 'en' else 'أي بيانات تقدّمها تُستخدم فقط لتقديم خدمات مُستخلِص.' }}</li>
+            <li><b>{{ 'Limited use.' if lang == 'en' else 'استخدام محدود.' }}</b> {{ 'We do not use your data to train AI models, ever.' if lang == 'en' else 'لا نستخدم بياناتك لتدريب نماذج الذكاء الاصطناعي، أبدًا.' }}</li>
+            <li><b>{{ 'No data resale.' if lang == 'en' else 'لا بيع للبيانات.' }}</b> {{ 'We do not sell or distribute your data to third parties.' if lang == 'en' else 'لا نبيع أو ندعّ بياناتك لأطراف ثالثة.' }}</li>
+            <li><b>{{ 'Limited access.' if lang == 'en' else 'وصول محدود.' }}</b> {{ 'Only the smallest team needed to support and improve the service can access documents, and only with your explicit request (e.g. you ask for support).' if lang == 'en' else 'فقط أقل فريق ممكن لدعم الخدمة يمكنه الوصول للمستندات، وفقط بطلب صريح منك (مثل طلب دعم فني).' }}</li>
+          </ul>
+
+          <h2 id="data-collect">{{ 'Data we collect' if lang == 'en' else 'البيانات التي نجمعها' }}</h2>
+          <p>{{ 'When you use Mostakhles, we collect the following:' if lang == 'en' else 'عند استخدام مُستخلِص، نجمع ما يلي:' }}</p>
+          <ul>
+            <li><b>{{ 'Account info' if lang == 'en' else 'بيانات الحساب' }}</b> — {{ 'name, email, billing address, hashed password.' if lang == 'en' else 'الاسم، البريد، عنوان الفوترة، كلمة مرور مُجزَّأة.' }}</li>
+            <li><b>{{ 'Documents you upload' if lang == 'en' else 'المستندات التي ترفعها' }}</b> — {{ 'stored encrypted; auto-deleted on your retention window (default 30 days, configurable per account).' if lang == 'en' else 'مخزّنة مشفّرة، تُحذف تلقائيًا حسب فترة الاحتفاظ (الافتراضي 30 يومًا، قابل للضبط لكل حساب).' }}</li>
+            <li><b>{{ 'Extracted output' if lang == 'en' else 'البيانات المُستخرَجة' }}</b> — {{ 'retained for the same window as the source document, so you can review and re-export.' if lang == 'en' else 'محفوظة لنفس فترة المستند الأصلي، لتتمكّن من المراجعة والتصدير مجدّدًا.' }}</li>
+            <li><b>{{ 'Usage analytics' if lang == 'en' else 'إحصاءات الاستخدام' }}</b> — {{ 'aggregated request counts, error rates, performance metrics. No document content.' if lang == 'en' else 'أعداد الطلبات الكلية، معدلات الأخطاء، مقاييس الأداء. لا يشمل محتوى المستندات.' }}</li>
+          </ul>
+
+          <h2 id="residency">{{ 'Where your data lives' if lang == 'en' else 'أين تُخزَّن بياناتك' }}</h2>
+          <p>{{ 'Mostakhles operates from data centers inside the MENA region by default: Saudi Arabia (Riyadh) and UAE (Dubai). Egypt (Cairo) hosting is available on request for customers with Egypt-only data-residency requirements.' if lang == 'en' else 'يعمل مُستخلِص من مراكز بيانات داخل المنطقة افتراضيًا: السعودية (الرياض) والإمارات (دبي). استضافة مصر (القاهرة) متاحة عند الطلب للعملاء الذين يحتاجون إلى استضافة مصر فقط.' }}</p>
+          <p>{{ 'No customer data leaves the MENA region unless you explicitly request export. We do not use US/EU data centers for document storage.' if lang == 'en' else 'لا تخرج بيانات أي عميل من منطقة الشرق الأوسط إلا بطلب صريح منك للتصدير. نحن لا نستخدم مراكز بيانات أمريكية أو أوروبية لتخزين المستندات.' }}</p>
+
+          <h2 id="retention">{{ 'Retention and deletion' if lang == 'en' else 'الاحتفاظ والحذف' }}</h2>
+          <p>{{ 'You control the retention window from your account settings. Defaults:' if lang == 'en' else 'تتحكّم في فترة الاحتفاظ من إعدادات حسابك. القيم الافتراضية:' }}</p>
+          <ul>
+            <li>{{ 'Free / Lite: 30 days' if lang == 'en' else 'مجاني / Lite: 30 يومًا' }}</li>
+            <li>{{ 'Pro: 90 days' if lang == 'en' else 'Pro: 90 يومًا' }}</li>
+            <li>{{ 'Business: configurable up to 365 days' if lang == 'en' else 'Business: قابل للضبط حتى 365 يومًا' }}</li>
+          </ul>
+          <p>{{ 'You can delete any document immediately from the dashboard. Account deletion removes all associated data within 7 days.' if lang == 'en' else 'يمكنك حذف أي مستند فورًا من لوحة التحكم. حذف الحساب يزيل جميع البيانات المرتبطة خلال 7 أيام.' }}</p>
+
+          <h2 id="rights">{{ 'Your rights' if lang == 'en' else 'حقوقك' }}</h2>
+          <p>{{ 'You have the right to:' if lang == 'en' else 'لديك الحق في:' }}</p>
+          <ul>
+            <li>{{ 'Access all data we hold about you' if lang == 'en' else 'الوصول إلى جميع البيانات التي نحتفظ بها عنك' }}</li>
+            <li>{{ 'Export your data in machine-readable form' if lang == 'en' else 'تصدير بياناتك بصيغة قابلة للقراءة آليًا' }}</li>
+            <li>{{ 'Request correction of inaccurate data' if lang == 'en' else 'طلب تصحيح البيانات غير الدقيقة' }}</li>
+            <li>{{ 'Request deletion (with a 7-day execution window)' if lang == 'en' else 'طلب الحذف (بفترة تنفيذ 7 أيام)' }}</li>
+            <li>{{ 'Object to specific processing activities' if lang == 'en' else 'الاعتراض على أنشطة معالجة محدّدة' }}</li>
+            <li>{{ 'File a complaint with your national data protection authority' if lang == 'en' else 'تقديم شكوى لهيئة حماية البيانات في بلدك' }}</li>
+          </ul>
+
+          <h2 id="contact">{{ 'Contact us about privacy' if lang == 'en' else 'تواصل معنا بشأن الخصوصية' }}</h2>
+          <p>{{ 'For data requests, send a message to' if lang == 'en' else 'لطلبات البيانات، أرسل رسالة إلى' }} <a href="mailto:privacy@mostakhles.ai" class="lp-link">privacy@mostakhles.ai</a> {{ 'or use the' if lang == 'en' else 'أو استخدم' }} <a href="/contact" class="lp-link">{{ 'contact form' if lang == 'en' else 'نموذج التواصل' }}</a>. {{ 'We reply within one business day.' if lang == 'en' else 'نردّ خلال يوم عمل واحد.' }}</p>
+
+        </article>
+
+        {# Right-side ToC like handwritingocr #}
+        <aside class="lp-docs-toc">
+          <p class="lp-docs-toc-h">{{ 'On this page' if lang == 'en' else 'في هذه الصفحة' }}</p>
+          <a href="#commitment">{{ 'Our commitment' if lang == 'en' else 'التزامنا' }}</a>
+          <a href="#data-collect">{{ 'Data we collect' if lang == 'en' else 'البيانات التي نجمعها' }}</a>
+          <a href="#residency">{{ 'Where data lives' if lang == 'en' else 'أين تُخزَّن البيانات' }}</a>
+          <a href="#retention">{{ 'Retention' if lang == 'en' else 'الاحتفاظ' }}</a>
+          <a href="#rights">{{ 'Your rights' if lang == 'en' else 'حقوقك' }}</a>
+          <a href="#contact">{{ 'Contact' if lang == 'en' else 'التواصل' }}</a>
+        </aside>
+
+      </div>
+    </section>
+
+  </div>
+
+  {# Footer #}
+  <footer class="lp-footer">
+    <div class="lp-container">
+      <div class="lp-footer-grid">
+        <div class="lp-footer-brand">
+          <div class="lp-brand"><span class="lp-brand-mark">M</span><span class="lp-brand-text">{{ 'Mostakhles' if lang == 'en' else 'مُستخلِص' }}<small>.ai</small></span></div>
+          <p>{{ 'Arabic document AI. Built in MENA for MENA businesses.' if lang == 'en' else 'ذكاء اصطناعي عربي للمستندات. صُنع في المنطقة لشركات المنطقة.' }}</p>
+        </div>
+        <nav>
+          <h4>{{ 'Product' if lang == 'en' else 'المنتج' }}</h4>
+          <a href="/app">{{ 'Web app' if lang == 'en' else 'تطبيق الويب' }}</a>
+          <a href="/tools">{{ 'All tools' if lang == 'en' else 'كل الأدوات' }}</a>
+          <a href="/docs">{{ 'API docs' if lang == 'en' else 'وثائق API' }}</a>
+          <a href="/#pricing">{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</a>
+        </nav>
+        <nav>
+          <h4>{{ 'Company' if lang == 'en' else 'الشركة' }}</h4>
+          <a href="/about">{{ 'About' if lang == 'en' else 'عنّا' }}</a>
+          <a href="/contact">{{ 'Contact' if lang == 'en' else 'تواصل' }}</a>
+          <a href="/privacy">{{ 'Privacy' if lang == 'en' else 'الخصوصية' }}</a>
+          <a href="/terms">{{ 'Terms' if lang == 'en' else 'الشروط' }}</a>
+        </nav>
+      </div>
+      <div class="lp-footer-bar">© 2026 Mostakhles · {{ 'All rights reserved' if lang == 'en' else 'جميع الحقوق محفوظة' }}</div>
+    </div>
+  </footer>
+</body>
+</html>

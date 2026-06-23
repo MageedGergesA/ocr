@@ -1,58 +1,75 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>المحادثة مع المستندات — مُستخلِص</title>
-  <meta name="description" content="ارفع مستندًا واسأل عنه: ما الإجمالي؟ لخّص العقد؟ من وقّع؟ مساعد ذكي يقرأ مستنداتك العربية.">
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <title>{{ 'Chat with documents — Mostakhles' if lang == 'en' else 'المحادثة مع المستندات — مُستخلِص' }}</title>
+  <meta name="description" content="{{ 'Upload a document and ask anything about it: totals, summaries, signatures.' if lang == 'en' else 'ارفع مستندًا واسأل عنه: ما الإجمالي؟ لخّص العقد؟ من وقّع؟' }}">
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-  {% include "_nav.html" %}
+<body class="has-shell">
 
-  <section class="app-wrap">
-    <div class="container">
-      <h1 class="app-title"><i data-lucide="message-square"></i> المحادثة مع المستندات</h1>
-      <p class="app-sub">ارفع مستندًا، ثم اسأل عنه أي سؤال — "ما الإجمالي؟"، "لخّص العقد"، "من وقّع؟".</p>
+  {% set active_nav = 'tools' %}
+  <div class="shell-wrap">
+    {% include "_appshell.html" %}
+
+    <main class="shell-main">
+      <div class="shell-main-head">
+        <div class="shell-crumb">
+          <a href="/dashboard">{{ 'Documents' if lang == 'en' else 'المستندات' }}</a>
+          <span class="sep">/</span>
+          <span>{{ 'Chat with documents' if lang == 'en' else 'المحادثة مع المستندات' }}</span>
+        </div>
+      </div>
+
+      <h1 class="app-title"><i data-lucide="message-square"></i> {{ 'Chat with documents' if lang == 'en' else 'المحادثة مع المستندات' }}</h1>
+      <p class="app-sub">{{ 'Upload a document, then ask anything — "What\'s the total?", "Summarize the contract", "Who signed?".' if lang == 'en' else 'ارفع مستندًا، ثم اسأل عنه أي سؤال — «ما الإجمالي؟»، «لخّص العقد»، «من وقّع؟».' }}</p>
 
       <div class="app-grid">
-        <!-- LEFT: document -->
         <div class="panel">
-          <label class="step">1 · المستند</label>
+          <label class="step">1 · {{ 'Document' if lang == 'en' else 'المستند' }}</label>
           <div id="dropzone" class="dropzone">
-            <input type="file" id="fileInput" hidden
-              accept="image/png,image/jpeg,image/webp,image/gif,application/pdf">
+            <input type="file" id="fileInput" hidden accept="image/png,image/jpeg,image/webp,image/gif,application/pdf">
             <div id="dzEmpty" class="dz-empty">
               <div class="dz-ico"><i data-lucide="file-up"></i></div>
-              <p>اسحب المستند هنا أو <span class="link">اختر ملفًا</span></p>
+              <p>{{ 'Drop a document or' if lang == 'en' else 'اسحب المستند هنا أو' }} <span class="link">{{ 'browse' if lang == 'en' else 'اختر ملفًا' }}</span></p>
               <small>PNG · JPG · WEBP · PDF</small>
             </div>
-            <img id="preview" class="preview" alt="معاينة" hidden>
+            <img id="preview" class="preview" alt="" hidden>
             <div id="pdfInfo" class="pdf-info" hidden></div>
           </div>
-          <label class="toggle"><input type="checkbox" id="hard" checked> دقة أعلى (للعربي والخط اليدوي)</label>
+          <label class="toggle"><input type="checkbox" id="hard" checked> {{ 'High accuracy (Arabic + handwriting)' if lang == 'en' else 'دقة أعلى (للعربي والخط اليدوي)' }}</label>
           <div id="credits" class="credits-box">💳 …</div>
-          <button id="analyzeBtn" class="btn btn-primary btn-lg full" disabled>حلّل المستند</button>
+          <button id="analyzeBtn" class="btn btn-primary btn-lg full" disabled>{{ 'Analyze document' if lang == 'en' else 'حلّل المستند' }}</button>
         </div>
 
-        <!-- RIGHT: chat -->
         <div class="panel chat-panel">
-          <label class="step">2 · اسأل عن المستند</label>
+          <label class="step">2 · {{ 'Ask about it' if lang == 'en' else 'اسأل عن المستند' }}</label>
           <div id="chatBox" class="chat-box">
-            <div class="results-empty">حلّل مستندًا أولًا، ثم ابدأ بطرح الأسئلة.</div>
+            <div class="results-empty">{{ 'Analyze a document first, then start asking.' if lang == 'en' else 'حلّل مستندًا أولًا، ثم ابدأ بطرح الأسئلة.' }}</div>
           </div>
           <form id="chatForm" class="chat-form">
-            <input id="q" type="text" placeholder="اكتب سؤالك هنا…" autocomplete="off" disabled>
-            <button class="btn btn-primary" type="submit" disabled id="sendBtn">إرسال</button>
+            <input id="q" type="text" placeholder="{{ 'Type your question…' if lang == 'en' else 'اكتب سؤالك هنا…' }}" autocomplete="off" disabled>
+            <button class="btn btn-primary" type="submit" disabled id="sendBtn">{{ 'Send' if lang == 'en' else 'إرسال' }}</button>
           </form>
         </div>
       </div>
-    </div>
-  </section>
+    </main>
+  </div>
 
-  <script>
+  <script nonce="{{ csp_nonce }}">
     const fileInput = document.getElementById('fileInput');
     const dropzone = document.getElementById('dropzone');
     const dzEmpty = document.getElementById('dzEmpty');
@@ -66,18 +83,27 @@
     let currentFile = null, docText = null, history = [];
     let curPages = 0, curRemaining = 0, curLimit = 0;
     const STRONG = 8, FAST = 1;
+    const EN = "{{ 'true' if lang == 'en' else 'false' }}" === 'true';
 
     function renderCredits() {
       const box = document.getElementById('credits');
       const hard = document.getElementById('hard').checked;
-      let html = `💳 رصيدك: <b>${curRemaining}</b> من ${curLimit} نقطة`;
+      let html = EN
+        ? `💳 Credits: <b>${curRemaining}</b> of ${curLimit}`
+        : `💳 رصيدك: <b>${curRemaining}</b> من ${curLimit} نقطة`;
       if (curPages > 0) {
-        const active = curPages * (hard ? STRONG : FAST), other = curPages * (hard ? FAST : STRONG);
-        const pg = curPages > 1 ? ` · ${curPages} صفحة` : '';
-        html += `<br>التحليل${pg}: <b>${active} نقطة</b> ${hard ? '(دقة عالية)' : '(سريع)'}`
-              + ` <span class="credits-alt">— كل سؤال = 1 نقطة</span>`;
-        if (active > curRemaining) { html += `<br><span class="credits-warn">⚠️ رصيدك غير كافٍ</span>`; analyzeBtn.disabled = true; }
-        else if (currentFile) analyzeBtn.disabled = false;
+        const active = curPages * (hard ? STRONG : FAST);
+        const pg = curPages > 1 ? (EN ? ` · ${curPages} pages` : ` · ${curPages} صفحة`) : '';
+        const acc = hard ? (EN ? '(high accuracy)' : '(دقة عالية)') : (EN ? '(fast)' : '(سريع)');
+        html += EN
+          ? `<br>Analyze${pg}: <b>${active} credits</b> ${acc} <span class="credits-alt">— each question = 1 credit</span>`
+          : `<br>التحليل${pg}: <b>${active} نقطة</b> ${acc} <span class="credits-alt">— كل سؤال = 1 نقطة</span>`;
+        if (active > curRemaining) {
+          html += EN
+            ? `<br><span class="credits-warn">⚠️ Not enough credits</span>`
+            : `<br><span class="credits-warn">⚠️ رصيدك غير كافٍ</span>`;
+          analyzeBtn.disabled = true;
+        } else if (currentFile) analyzeBtn.disabled = false;
       }
       box.innerHTML = html;
     }
@@ -99,7 +125,7 @@
       const isPdf = f.type === 'application/pdf';
       if (!f.type.startsWith('image/') && !isPdf) return;
       currentFile = f; docText = null; history = [];
-      chatBox.innerHTML = '<div class="results-empty">اضغط "حلّل المستند" ثم اسأل.</div>';
+      chatBox.innerHTML = `<div class="results-empty">${EN ? 'Click "Analyze document", then ask.' : 'اضغط «حلّل المستند» ثم اسأل.'}</div>`;
       qInput.disabled = true; sendBtn.disabled = true;
       if (isPdf) { preview.hidden = true; pdfInfo.hidden = false; pdfInfo.textContent = '📄 ' + f.name; }
       else { preview.src = URL.createObjectURL(f); preview.hidden = false; pdfInfo.hidden = true; }
@@ -117,14 +143,13 @@
       const d = document.createElement('div');
       d.className = 'bubble ' + role;
       d.textContent = text;
-      chatBox.appendChild(d);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      return d;
+      chatBox.appendChild(d); chatBox.scrollTop = chatBox.scrollHeight; return d;
     }
 
     analyzeBtn.addEventListener('click', async () => {
       if (!currentFile) return;
-      analyzeBtn.disabled = true; analyzeBtn.textContent = 'جارٍ التحليل…';
+      analyzeBtn.disabled = true;
+      analyzeBtn.textContent = EN ? 'Analyzing…' : 'جارٍ التحليل…';
       try {
         const fd = new FormData();
         fd.append('file', currentFile);
@@ -134,12 +159,13 @@
         if (!r.ok) throw new Error(j.detail || r.status);
         docText = j.text; history = [];
         updateBal(j.usage);
-        chatBox.innerHTML = '<div class="results-empty">✅ تم تحليل المستند. اسأل أي سؤال عنه.</div>';
+        chatBox.innerHTML = `<div class="results-empty">${EN ? '✅ Document analyzed. Ask anything.' : '✅ تم تحليل المستند. اسأل أي سؤال عنه.'}</div>`;
         qInput.disabled = false; sendBtn.disabled = false; qInput.focus();
       } catch (e) {
         chatBox.innerHTML = `<div class="results-error">⚠️ ${e.message}</div>`;
       } finally {
-        analyzeBtn.disabled = false; analyzeBtn.textContent = 'حلّل المستند';
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = EN ? 'Analyze document' : 'حلّل المستند';
       }
     });
 

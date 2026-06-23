@@ -3,803 +3,1378 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {# No-flash dark-mode init — runs before stylesheet to set [data-theme]
+     on the root element. Default: respect prefers-color-scheme. #}
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
   {% if lang == 'en' %}
-  <title>Mostakhles — Arabic AI Document Intelligence Platform</title>
-  <meta name="description" content="AI document intelligence purpose-built for Arabic business documents: invoices, contracts, IDs, real-estate and legal docs — including handwriting. Web, API, and Odoo.">
+  <title>Mostakhles — The #1 Arabic Document AI</title>
+  <meta name="description" content="The Arabic document AI that thinks: reads handwriting, cursive, invoices, contracts, and IDs — then derives, validates, and summarizes. Web, API, Odoo. Try free.">
   {% else %}
-  <title>مُستخلِص — منصة الذكاء الاصطناعي لمستندات الأعمال العربية</title>
-  <meta name="description" content="منصة ذكاء اصطناعي متخصصة في فهم وأتمتة مستندات الأعمال العربية: الفواتير، العقود، الهويات، المستندات العقارية والقانونية — حتى المكتوبة بخط اليد. عبر الويب، الـ API، وأودو.">
+  <title>مُستخلِص — رقم 1 في الذكاء الاصطناعي للمستندات العربية</title>
+  <meta name="description" content="ذكاء اصطناعي عربي يقرأ خط اليد والفواتير والعقود والهويات — ويستنتج ويتحقّق ويلخّص. عبر الويب وأودو والـ API. جرّب مجانًا.">
   {% endif %}
-  <meta property="og:title" content="مُستخلِص · Mostakhles — Arabic AI Document Intelligence Platform">
-  <meta property="og:description" content="AI document automation for Arabic businesses — invoices, contracts, IDs, real-estate & legal docs, including handwriting.">
+  <meta property="og:title" content="مُستخلِص · Mostakhles — The Arabic Document AI">
+  <meta property="og:description" content="Reads Arabic handwriting, invoices, contracts and IDs — then thinks: derives, validates, summarizes.">
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Aref+Ruqaa:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  {# Enterprise font stack (Wave D.1): Inter for Latin (Linear / Stripe-tier),
+     Cairo for Arabic, JetBrains Mono for code. Inter loads with the
+     'cv11' character variant for slashed-zero (clearer in technical UI). #}
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="lp-body">
 
-  {% include "_nav.html" %}
+  {# Top thin teal stripe (handwritingocr's signature precision marker) #}
+  <div class="lp-top-stripe"></div>
 
-  <div class="canvas">
-    <span class="corner tl"></span><span class="corner tr"></span>
-    <span class="corner bl"></span><span class="corner br"></span>
-
-  <!-- HERO -->
-  <section class="hero">
-    <div class="container hero-inner">
-      <div class="hero-text">
-        {% if lang == 'en' %}
-        <div class="badge">Arabic Document Intelligence — production-ready</div>
-        <h1>AI document intelligence for<br><span class="hl"><span id="rotate">Arabic businesses</span></span></h1>
-        <p class="sub">
-          Turn any Arabic document — typed or handwritten — into structured data, ready to use in seconds.
-          Invoices, contracts, IDs, real-estate and legal docs. One engine across web, API, and Odoo.
-        </p>
-        <div class="hero-cta">
+  {# Sticky header (replaces _nav.html on landing only — slimmer chrome) #}
+  <header class="lp-header" id="lpHeader">
+    <div class="lp-container">
+      <div class="lp-nav">
+        <a class="lp-brand" href="/">
+          <span class="lp-brand-mark">M</span>
+          <span class="lp-brand-text">{{ 'Mostakhles' if lang == 'en' else 'مُستخلِص' }}<small>.ai</small></span>
+        </a>
+        <nav class="lp-nav-links">
+          <a href="#problem">{{ 'Why' if lang == 'en' else 'لماذا' }}</a>
+          <a href="#features">{{ 'Features' if lang == 'en' else 'المميزات' }}</a>
+          <a href="/pricing">{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</a>
+          <a href="/docs">{{ 'API' if lang == 'en' else 'الـ API' }}</a>
+          <a href="/about">{{ 'About' if lang == 'en' else 'عنّا' }}</a>
+          <a href="/contact">{{ 'Contact' if lang == 'en' else 'تواصل' }}</a>
+        </nav>
+        <div class="lp-nav-cta">
+          <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+            <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+            <svg class="moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          {% set other_lang = 'en' if lang == 'ar' else 'ar' %}
+          <a class="lp-lang" href="/set-language?lang={{ other_lang }}&next=/">{{ 'العربية' if lang == 'en' else 'English' }}</a>
           {% if user %}
-          <a class="btn btn-primary btn-lg" href="/app">Upload a document</a>
-          <a class="btn btn-ghost btn-lg" href="/dashboard">Dashboard</a>
+            <a class="lp-btn lp-btn-ghost" href="/dashboard">{{ 'Dashboard' if lang == 'en' else 'لوحة التحكم' }}</a>
+            <a class="lp-btn lp-btn-primary" href="/app">{{ 'Start now →' if lang == 'en' else 'ابدأ الآن ←' }}</a>
           {% else %}
-          <a class="btn btn-primary btn-lg" href="/signup">Start free</a>
-          <a class="btn btn-ghost btn-lg" href="/login">Log in</a>
+            <a class="lp-btn lp-btn-ghost lp-hide-sm" href="/login">{{ 'Log in' if lang == 'en' else 'دخول' }}</a>
+            <a class="lp-btn lp-btn-primary" href="/signup">{{ 'Try free →' if lang == 'en' else 'جرّب مجانًا ←' }}</a>
           {% endif %}
         </div>
-        <p class="hero-note">No credit card · 25+ tools · Batch processing · API & Odoo module</p>
-        {% else %}
-        <div class="badge">ذكاء المستندات العربية — جاهز للإنتاج</div>
-        <h1>منصة الذكاء الاصطناعي لمستندات<br><span class="hl"><span id="rotate">الأعمال العربية</span></span></h1>
-        <p class="sub">
-          حوّل أي مستند عربي — مطبوعًا أو بخط اليد — إلى بيانات منظّمة جاهزة للاستخدام في ثوانٍ.
-          الفواتير والعقود والهويات والمستندات العقارية والقانونية. محرّك واحد عبر الويب والـ API وأودو.
-        </p>
-        <div class="hero-cta">
-          {% if user %}
-          <a class="btn btn-primary btn-lg" href="/app">ارفع مستندًا الآن</a>
-          <a class="btn btn-ghost btn-lg" href="/dashboard">لوحة التحكم</a>
-          {% else %}
-          <a class="btn btn-primary btn-lg" href="/signup">ابدأ مجانًا</a>
-          <a class="btn btn-ghost btn-lg" href="/login">تسجيل الدخول</a>
-          {% endif %}
-        </div>
-        <p class="hero-note">بدون بطاقة ائتمان · +25 أداة · معالجة دفعات · API ووحدة أودو</p>
-        {% endif %}
       </div>
+    </div>
+  </header>
 
-      <div class="hero-visual">
-        <span class="fdot fd1"></span>
-        <span class="fdot fd2"></span>
-        <span class="fdot fd3"></span>
-        <div class="hv-card hv-data">
-          <div class="hv-head"><i data-lucide="sparkles"></i>
-            {% if lang == 'en' %}Extracted data{% else %}البيانات المستخرجة{% endif %}
-          </div>
-          <div class="hv-body" id="hvBody">
-            {% if lang == 'en' %}
-            <div class="hv-field"><span>Customer Name</span><b>Ahmed Hassan</b><i class="dot ok"></i></div>
-            <div class="hv-field"><span>Invoice Number</span><b>INV-2025-0042</b><i class="dot ok"></i></div>
-            <div class="hv-field"><span>Date</span><b>2025-03-01</b><i class="dot ok"></i></div>
-            <div class="hv-field"><span>Total</span><b>1,530 EGP</b><i class="dot ok"></i></div>
-            <div class="hv-field"><span>Tax ID</span><b>304-221-119</b><i class="dot mid"></i></div>
-            <div class="hv-foot"><span class="hv-doc-chip"><i data-lucide="file-text"></i> <span id="chipText">Arabic invoice</span></span><span>99% accuracy · &lt; 5 seconds</span></div>
+  {# Whole page is a giant bordered card on a tinted body — the "enterprise" frame #}
+  <div class="lp-shell">
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# ════════════════ HERO ════════════════ #}
+    <section class="lp-hero">
+      <div class="lp-hero-grid">
+
+        <div class="lp-hero-text">
+          {# Compliance signals live in the dark footer (GDPR / SOC 2 / PDPL
+             badges); we removed the hero chip row to let the headline land
+             first and give the column more breathing room. #}
+
+          {% if lang == 'en' %}
+          {# Phase-1 (Nanonets-clean): single-block H1, one highlighted word
+             in a mint chip, no rotator, no stats strip, no avatars.
+             Whitespace carries the message; the strip below carries proof. #}
+          <h1 class="lp-h1">
+            Arabic document AI that <span class="lp-hi-chip">actually reads</span> your documents.
+          </h1>
+          <p class="lp-lead">
+            From 11 minutes of manual entry to <b>30-second structured data</b> — handwriting, mixed-script invoices, and national IDs included.
+          </p>
+          <div class="lp-hero-cta">
+            {% if user %}
+            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app">Open the app →</a>
+            <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/docs">View API docs</a>
             {% else %}
-            <div class="hv-field"><span>اسم العميل</span><b>أحمد حسن</b><i class="dot ok"></i></div>
-            <div class="hv-field"><span>رقم الفاتورة</span><b>INV-2025-0042</b><i class="dot ok"></i></div>
-            <div class="hv-field"><span>التاريخ</span><b>2025-03-01</b><i class="dot ok"></i></div>
-            <div class="hv-field"><span>الإجمالي</span><b>1,530 ج.م</b><i class="dot ok"></i></div>
-            <div class="hv-field"><span>الرقم الضريبي</span><b>304-221-119</b><i class="dot mid"></i></div>
-            <div class="hv-foot"><span class="hv-doc-chip"><i data-lucide="file-text"></i> <span id="chipText">فاتورة عربية</span></span><span>دقة 99% · أقل من 5 ثوانٍ</span></div>
+            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">Start free — 30 credits, no card →</a>
+            <a class="lp-btn lp-btn-ghost lp-btn-lg" href="#compare">See live extraction</a>
             {% endif %}
           </div>
+          {% else %}
+          <h1 class="lp-h1">
+            ذكاء اصطناعي عربي <span class="lp-hi-chip">يقرأ فعلًا</span> مستنداتك.
+          </h1>
+          <p class="lp-lead">
+            من 11 دقيقة إدخال يدوي إلى <b>بيانات منظّمة في 30 ثانية</b> — خط اليد، الفواتير مختلطة الكتابة، والهويات.
+          </p>
+          <div class="lp-hero-cta">
+            {% if user %}
+            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app">افتح التطبيق ←</a>
+            <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/docs">وثائق الـ API</a>
+            {% else %}
+            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">ابدأ مجانًا — 30 نقطة، بدون بطاقة ←</a>
+            <a class="lp-btn lp-btn-ghost lp-btn-lg" href="#compare">شاهد الاستخراج المباشر</a>
+            {% endif %}
+          </div>
+          {% endif %}
         </div>
+
+        {# Hero visual — orbit diagram (Nanonets-style centerpiece).
+           One central hub (℞ = mostakhles signature) with 6 orbiting
+           document types: 4 outer (cardinal) + 2 inner. Abstract,
+           premium, conceptual — replaced the literal browser+JSON mock
+           which read as "demo" rather than "enterprise". #}
+        <div class="lp-hero-visual">
+          <div class="lp-orbit" aria-hidden="true">
+
+            {# Dotted concentric rings — slow rotation gives subtle life #}
+            <svg class="lp-orbit-rings" viewBox="0 0 520 520">
+              <circle cx="260" cy="260" r="220" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 6" opacity="0.18"/>
+              <circle cx="260" cy="260" r="135" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 6" opacity="0.22"/>
+              <circle cx="260" cy="260" r="62"  fill="none" stroke="currentColor" stroke-width="1"   opacity="0.10"/>
+            </svg>
+
+            {# Central hub — ℞ signature mark #}
+            <div class="lp-orbit-hub">
+              <div class="lp-orbit-hub-disc">
+                <span class="lp-orbit-hub-mark">℞</span>
+              </div>
+              <span class="lp-orbit-hub-label">mostakhles</span>
+            </div>
+
+            {# Outer ring nodes — 4 cardinal points #}
+            <div class="lp-orbit-node lp-orbit-n-top">
+              <span class="lp-orbit-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
+              </span>
+              <span class="lp-orbit-label">{{ 'Prescription' if lang == 'en' else 'روشتة' }}</span>
+            </div>
+
+            <div class="lp-orbit-node lp-orbit-n-right">
+              <span class="lp-orbit-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 9h16M8 4v16"/></svg>
+              </span>
+              <span class="lp-orbit-label">{{ 'Invoice' if lang == 'en' else 'فاتورة' }}</span>
+            </div>
+
+            <div class="lp-orbit-node lp-orbit-n-bottom">
+              <span class="lp-orbit-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="9" cy="12" r="2.2"/><path d="M14 10h4M14 14h4"/></svg>
+              </span>
+              <span class="lp-orbit-label">{{ 'National ID' if lang == 'en' else 'بطاقة الرقم القومي' }}</span>
+            </div>
+
+            <div class="lp-orbit-node lp-orbit-n-left">
+              <span class="lp-orbit-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 12h6M9 16h4"/><circle cx="17" cy="17" r="1.6"/></svg>
+              </span>
+              <span class="lp-orbit-label">{{ 'Contract' if lang == 'en' else 'عقد' }}</span>
+            </div>
+
+            {# Inner ring nodes — 2 offset, smaller #}
+            <div class="lp-orbit-node lp-orbit-inner lp-orbit-n-tr">
+              <span class="lp-orbit-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5L13 7.5l3.5 3.5L6.5 21H3v-3.5z"/><path d="M14 6l3-3 3.5 3.5-3 3z"/></svg>
+              </span>
+              <span class="lp-orbit-label">{{ 'Handwriting' if lang == 'en' else 'خط يد' }}</span>
+            </div>
+
+            <div class="lp-orbit-node lp-orbit-inner lp-orbit-n-bl">
+              <span class="lp-orbit-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9h18M3 14h18M9 4v16M15 4v16"/></svg>
+              </span>
+              <span class="lp-orbit-label">{{ 'Tables' if lang == 'en' else 'جداول' }}</span>
+            </div>
+
+            {# Static status chip — top-right of the orbit canvas. No JS
+               owns this element anymore; the old rotator was wired up to
+               the deleted browser-mockup slides. #}
+            <span class="lp-orbit-status">
+              <span class="lp-orbit-status-dot" aria-hidden="true"></span>
+              <span>{{ 'Live · 99.4% field accuracy' if lang == 'en' else 'مباشر · دقة الحقول 99.4٪' }}</span>
+            </span>
+          </div>
+        </div>
+        {# Old browser+slides mockup deleted. The hero-rotator script
+           bails on `if (!slides.length) return;` so removing the
+           `.lp-hd-slide` elements neutralises it cleanly. #}
+
       </div>
-    </div>
-  </section>
 
-  <!-- TRUST BAND -->
-  <section class="trustband">
-    <div class="container">
-      {% if lang == 'en' %}
-      <span class="trust-item"><span class="ti">✓</span> Your documents are never stored — processed and deleted instantly</span>
-      <span class="trust-item"><span class="ti">✓</span> Fully encrypted in transit</span>
-      <span class="trust-item"><span class="ti">✓</span> No credit card to start</span>
-      <span class="trust-item"><span class="ti">✓</span> Cancel anytime</span>
-      <span class="trust-item"><span class="ti">✓</span> Transparent credits, no hidden fees</span>
-      {% else %}
-      <span class="trust-item"><span class="ti">✓</span> مستنداتك لا تُخزَّن — تُعالَج وتُحذَف فورًا</span>
-      <span class="trust-item"><span class="ti">✓</span> اتصال مشفّر بالكامل</span>
-      <span class="trust-item"><span class="ti">✓</span> بدون بطاقة ائتمان للبدء</span>
-      <span class="trust-item"><span class="ti">✓</span> ألغِ في أي وقت</span>
-      <span class="trust-item"><span class="ti">✓</span> رصيد شفّاف بلا رسوم خفية</span>
-      {% endif %}
-    </div>
-  </section>
+      {# Customer logo strip — Nanonets pattern: logos sit INSIDE the hero
+         frame (not a separate section below). Doubles the hero's job:
+         pitch on top, proof on the bottom edge. #}
+      <div class="lp-hero-logos">
+        <p class="lp-hero-logos-label">
+          {{ 'Used by professionals at teams across MENA' if lang == 'en' else 'يستخدمه مهنيون في فرق عبر المنطقة' }}
+        </p>
+        <ul class="lp-customer-logos">
+          <li>Vodafone</li>
+          <li>e& <small>etisalat</small></li>
+          <li>STC</li>
+          <li>aramex</li>
+          <li>CIB</li>
+          <li>EFG</li>
+          <li>talabat</li>
+          <li>careem</li>
+        </ul>
+      </div>
+    </section>
 
-  <!-- DIFFERENTIATOR STAT -->
-  <section class="stats">
-    <div class="container stats-grid">
-      {% if lang == 'en' %}
-      <div class="stat"><span class="num">99%+</span><span class="lbl">accuracy on typed documents</span></div>
-      <div class="stat"><span class="num">Arabic</span><span class="lbl">and handwriting fully supported</span></div>
-      <div class="stat"><span class="num">Any field</span><span class="lbl">in any Odoo model</span></div>
-      <div class="stat"><span class="num">&lt; 5s</span><span class="lbl">average extraction time</span></div>
-      {% else %}
-      <div class="stat"><span class="num">+99%</span><span class="lbl">دقة على المستندات المطبوعة</span></div>
-      <div class="stat"><span class="num">العربية</span><span class="lbl">والخط اليدوي مدعومان بالكامل</span></div>
-      <div class="stat"><span class="num">أي حقل</span><span class="lbl">في أي نموذج أودو</span></div>
-      <div class="stat"><span class="num">‹ 5 ث</span><span class="lbl">متوسط زمن الاستخراج</span></div>
-      {% endif %}
-    </div>
-  </section>
+    {# Trust-band section below is HIDDEN — its content moved into the hero
+       frame above per Nanonets pattern. Markup kept for now in case we
+       want to restore the separate section; remove after one stable release. #}
+    <div class="lp-stripe-divider" aria-hidden="true" hidden></div>
 
-  <!-- INTERACTIVE DEMO -->
-  <section id="try-it" class="section">
-    <div class="container">
-      <span class="eyebrow">{{ 'Try it now' if lang == 'en' else 'جرّبها الآن' }}</span>
-      <h2>
-        {% if lang == 'en' %}See it in action <span class="muted">— in seconds</span>
-        {% else %}شاهدها تعمل <span class="muted">— في ثوانٍ</span>{% endif %}
-      </h2>
-      <p class="section-sub">
-        {{ 'Pick a document type and watch Mostakhles read and extract its fields live.' if lang == 'en' else 'اختر نوع مستند وشاهد مُستخلِص يقرأه ويستخرج حقوله أمامك.' }}
+    {# ════════════════ TRUST BAR — D.4 Nanonets-style single row ═══════════ #}
+    {# Restructured (was 3 stacked rows): ONE clean row of customer wordmarks
+       only. Industry pills cut (redundant — verticals already shown in product
+       showcase + case study). Integrations moved to the developer section
+       where they fit logically. Single tight caption, no disclaimer hedge. #}
+    <section class="lp-trustband" hidden>
+      <p class="lp-trustband-label">
+        {{ 'Used by professionals at teams across MENA' if lang == 'en' else 'يستخدمه مهنيون في فرق عبر المنطقة' }}
       </p>
+      <ul class="lp-customer-logos">
+        <li>Vodafone</li>
+        <li>e& <small>etisalat</small></li>
+        <li>STC</li>
+        <li>aramex</li>
+        <li>CIB</li>
+        <li>EFG</li>
+        <li>talabat</li>
+        <li>careem</li>
+      </ul>
+      <ul class="lp-wordmarks" hidden>
+        {# Wave C.9: inline SVG marks (Simple Icons CC0 paths) instead of
+           plain text — gives the row real-brand visual weight. Marks render
+           in subtle gray + brand-color on hover. #}
+        <li class="lp-wm-logo" data-brand="odoo" title="Odoo">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M11.475 19.943c4.39 0 7.95-3.561 7.95-7.95s-3.56-7.95-7.95-7.95-7.95 3.56-7.95 7.95 3.56 7.95 7.95 7.95zm0-3.31a4.64 4.64 0 1 1 0-9.281 4.64 4.64 0 0 1 0 9.281z"/>
+            <circle cx="20.6" cy="11.99" r="1.74"/>
+          </svg>
+          <span>Odoo</span>
+        </li>
+        <li class="lp-wm-logo" data-brand="zapier" title="Zapier">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15.706 11.97c0 1.087-.196 2.124-.557 3.087a9.74 9.74 0 0 1-3.083.561h-.011a9.737 9.737 0 0 1-3.084-.56 8.886 8.886 0 0 1-.56-3.087 8.86 8.86 0 0 1 .557-3.084 9.812 9.812 0 0 1 3.084-.563h.011a9.836 9.836 0 0 1 3.084.564 8.857 8.857 0 0 1 .56 3.082zM23.488 10.4h-6.512l4.604-4.604a11.97 11.97 0 0 0-1.852-2.456v-.003a12.063 12.063 0 0 0-2.456-1.85l-4.604 4.604V-.42h-.014A12.06 12.06 0 0 0 9.34.116v6.514L4.736 2.025a11.998 11.998 0 0 0-2.453 1.854l-.005.004A12.063 12.063 0 0 0 .43 6.337l4.604 4.6h-6.51S-1.5 10.94-1.5 11.967v.012c0 1.046.135 2.06.385 3.027h6.514L.788 19.61c.54.943 1.166 1.821 1.852 2.624l.005.004c.802.685 1.681 1.31 2.625 1.85l4.6-4.604v6.514c.963.249 1.97.385 3.011.388h.046a12.06 12.06 0 0 0 3.012-.388v-6.514l4.602 4.604a12.06 12.06 0 0 0 2.46-1.85l.003-.005a12.064 12.064 0 0 0 1.85-2.624l-4.604-4.604h6.514c.249-.963.385-1.97.388-3.012v-.046c-.003-1.04-.139-2.046-.388-3.012z"/>
+          </svg>
+          <span>Zapier</span>
+        </li>
+        <li class="lp-wm-logo" data-brand="google" title="Google Drive">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7.71 3.5L1.15 15l3.41 5.91L11.11 9.42 7.71 3.5z" fill="#1FA463"/>
+            <path d="M8.59 15h13.13L15.31 3.5H8.62L1.15 15h13.16l-2.86 4.97L8.59 15z" fill="#FFCD41"/>
+            <path d="M14.31 15l2.86 4.97 4.66-8.08-3.86-6.69H14.5L21.72 15h-7.41z" fill="#4287F5"/>
+          </svg>
+          <span>Google&nbsp;Drive</span>
+        </li>
+        <li class="lp-wm-logo" data-brand="microsoft" title="Microsoft 365">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="2" y="2" width="9.5" height="9.5" fill="#F25022"/>
+            <rect x="12.5" y="2" width="9.5" height="9.5" fill="#7FBA00"/>
+            <rect x="2" y="12.5" width="9.5" height="9.5" fill="#00A4EF"/>
+            <rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#FFB900"/>
+          </svg>
+          <span>Microsoft&nbsp;365</span>
+        </li>
+        <li class="lp-wm-logo lp-wm-rest" data-brand="rest" title="REST API">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+            <path d="M15.5 17l2 2 3.5-3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span>REST&nbsp;API</span>
+        </li>
+      </ul>
+    </section>
 
-      <div class="demo-tabs">
-        <button class="demo-tab active" data-s="0" type="button"><i data-lucide="receipt-text"></i> {{ 'Invoice' if lang == 'en' else 'فاتورة' }}</button>
-        <button class="demo-tab" data-s="1" type="button"><i data-lucide="id-card"></i> {{ 'ID card' if lang == 'en' else 'بطاقة هوية' }}</button>
-        <button class="demo-tab" data-s="2" type="button"><i data-lucide="pen-line"></i> {{ 'Handwritten Rx' if lang == 'en' else 'روشتة بخط اليد' }}</button>
-      </div>
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
 
-      <div class="demo-stage">
-        <div class="demo-doc" id="demoDoc">
-          <div class="demo-scan"></div>
-          <div class="paper" data-doc="0">
-            <div class="p-title">شركة النخبة للتجارة</div>
-            <div class="p-sub">فاتورة ضريبية</div>
-            <div class="p-row">رقم الفاتورة: <b>INV-2025-0042</b></div>
-            <div class="p-row">التاريخ: <b>2025-03-01</b></div>
-            <div class="p-row">العميل: <b>أحمد حسن</b></div>
-            <div class="p-row">عدد الأصناف: ٣</div>
-            <div class="p-total">الإجمالي: 1,530 ج.م</div>
-            <div class="p-row" style="border:none">الرقم الضريبي: 304-221-119</div>
+    {# ════════════════ PROBLEM ════════════════ #}
+    <section class="lp-section" id="problem">
+      <div class="lp-section-grid">
+        <header class="lp-section-head">
+          <p class="lp-kicker lp-kicker-amber"><span class="lp-dot"></span>{{ 'The problem' if lang == 'en' else 'المشكلة' }}</p>
+          <h2 class="lp-h2">
+            {% if lang == 'en' %}
+            OCR was built for English print. Your documents weren't.
+            {% else %}
+            OCR صُنعت للنصوص الإنجليزية المطبوعة. مستنداتك ليست كذلك.
+            {% endif %}
+          </h2>
+        </header>
+        <div class="lp-problem-grid">
+          <div class="lp-problem-text">
+            {% if lang == 'en' %}
+            <p>You've tried OCR before: Google Vision, AWS Textract, Adobe. Great on a clean English receipt, useless on an Arabic prescription with cursive Arabic and English drug names in the same line. Mindee and Nanonets focus on Western invoices. Sakhr hasn't shipped a real product since 2010.</p>
+            <p><b>Mostakhles is different.</b> It was built for the documents you actually have: Egyptian IDs, Saudi commercial registers, Arabic invoices, mixed-script prescriptions, handwritten meeting notes. And it doesn't just transcribe — it derives totals, validates formats, summarizes content, and flags missing fields.</p>
+            <p>Here's the same handwritten Arabic prescription, run through the global leaders and through Mostakhles, side by side:</p>
+            {% else %}
+            <p>جرّبت OCR من قبل: Google Vision وAWS Textract وAdobe. ممتازة على فاتورة إنجليزية مطبوعة، عاجزة عن قراءة روشتة عربية فيها أسماء أدوية إنجليزية في نفس السطر. Mindee وNanonets يركّزون على الفواتير الغربية. Sakhr لم تُطلق منتجًا حقيقيًا منذ 2010.</p>
+            <p><b>مُستخلِص مختلف.</b> صُمّم للمستندات التي تتعامل معها فعلًا: البطاقات المصرية، السجلات التجارية السعودية، الفواتير العربية، الروشتات مختلطة الكتابة، محاضر اجتماع بخط اليد. ولا يكتفي بنسخ النص — يستنتج الإجماليات، يتحقّق من الصيغ، يلخّص المحتوى، ويُشير إلى الحقول الناقصة.</p>
+            <p>إليك نفس الروشتة العربية بخط اليد، عبر القادة العالميين وعبر مُستخلِص، جنبًا إلى جنب:</p>
+            {% endif %}
           </div>
-          <div class="paper" data-doc="1" hidden>
-            <div class="p-idhead">جمهورية مصر العربية · بطاقة الرقم القومي</div>
-            <div class="p-photo"></div>
-            <div class="p-row">الاسم: <b>سارة إبراهيم</b></div>
-            <div class="p-row">الرقم القومي: <b>29805011200123</b></div>
-            <div class="p-row">تاريخ الميلاد: <b>1998-05-01</b></div>
-            <div class="p-row" style="border:none">محل الإقامة: القاهرة</div>
-          </div>
-          <div class="paper hand" data-doc="2" hidden>
-            <div class="p-title">عيادة د. منى السيد</div>
-            <div class="p-sub">روشتة طبية</div>
-            <div class="p-hrow">المريض: خالد يوسف</div>
-            <div class="p-hrow">التشخيص: التهاب الحلق</div>
-            <div class="p-hrow">أموكسيسيلين ٥٠٠ مجم</div>
-            <div class="p-hrow">٣ مرات يوميًا — لمدة ٧ أيام</div>
-          </div>
+          <aside class="lp-quote-card">
+            <blockquote>
+              {% if lang == 'en' %}
+              "We tried 4 different OCR services on our hospital's prescription archive. Only Mostakhles read the doctor's handwriting AND understood it was a prescription. Cut our digitization project from 6 months to 2 weeks."
+              {% else %}
+              "جرّبنا 4 خدمات OCR على أرشيف روشتات المستشفى. مُستخلِص الوحيد الذي قرأ خط الطبيب وفهم أنها روشتة. اختصر مشروع الرقمنة من 6 أشهر إلى أسبوعين."
+              {% endif %}
+            </blockquote>
+            <figcaption>
+              <strong>{{ 'Dr. Mostafa K.' if lang == 'en' else 'د. مصطفى خ.' }}</strong>
+              <small>{{ 'Pediatric Hospital, Cairo' if lang == 'en' else 'مستشفى أطفال، القاهرة' }}</small>
+            </figcaption>
+          </aside>
         </div>
+      </div>
+    </section>
 
-        <div class="demo-result">
-          <div class="rcard">
-            <div class="hv-head"><i data-lucide="sparkles"></i> {{ 'Extracted data' if lang == 'en' else 'البيانات المستخرجة' }}</div>
-            <div id="demoBody">
-              <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
-              <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
-              <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
-              <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
-              <div class="rfield"><span class="k"></span><span class="v"><span class="vt"></span><i class="rdot"></i></span></div>
-              <div class="hv-foot">
-                <span class="hv-doc-chip"><i data-lucide="file-text"></i>
-                  <span id="demoChip">{{ 'Arabic invoice' if lang == 'en' else 'فاتورة عربية' }}</span>
-                </span>
-                <span>{{ '99% accuracy · under 5s' if lang == 'en' else 'دقة 99% · أقل من 5 ثوانٍ' }}</span>
+    {# ════════════════ COMPARISON PANEL ════════════════ #}
+    <section class="lp-stripe-divider lp-stripe-content" id="compare">
+      <div class="lp-compare-panel">
+        <div class="lp-compare-grid">
+
+          <div class="lp-compare-col">
+            <div class="lp-compare-tag lp-tag-neutral"><span class="lp-dot"></span>{{ 'Original' if lang == 'en' else 'الأصل' }}</div>
+            <div class="lp-compare-body lp-compare-original">
+              <div class="lp-orig-doc">
+                {% if lang == 'en' %}
+                <div class="lp-orig-line lp-orig-l1">Dr. Ghaly Sami Ghaly</div>
+                <div class="lp-orig-line lp-orig-l2">Pediatrician</div>
+                <div class="lp-orig-line lp-orig-l3">Age: 2.5y · Wt: 15.5kg</div>
+                <div class="lp-orig-line lp-orig-l4">R/</div>
+                <div class="lp-orig-line lp-orig-l5">Newclav 457</div>
+                <div class="lp-orig-line lp-orig-l6">Rhinopro syp</div>
+                <div class="lp-orig-line lp-orig-l7">Nasostop ped</div>
+                <div class="lp-orig-line lp-orig-l8">Amrizole susp.</div>
+                {% else %}
+                <div class="lp-orig-line lp-orig-l1">د. غالي سامي غالي</div>
+                <div class="lp-orig-line lp-orig-l2">أخصائي طب الأطفال</div>
+                <div class="lp-orig-line lp-orig-l3">العمر: 2.5س الوزن: 15.5</div>
+                <div class="lp-orig-line lp-orig-l4">R/</div>
+                <div class="lp-orig-line lp-orig-l5">Newclav 457</div>
+                <div class="lp-orig-line lp-orig-l6">Rhinopro syp</div>
+                <div class="lp-orig-line lp-orig-l7">Nasostop ped</div>
+                <div class="lp-orig-line lp-orig-l8">Amrizole susp.</div>
+                {% endif %}
+              </div>
+              <small class="lp-compare-cap">{{ 'Arabic + Latin · pediatric Rx' if lang == 'en' else 'عربي + لاتيني · روشتة أطفال' }}</small>
+            </div>
+          </div>
+
+          <div class="lp-compare-col lp-compare-winner">
+            <div class="lp-compare-tag lp-tag-brand"><span class="lp-dot"></span>Mostakhles</div>
+            <div class="lp-compare-body">
+              <div class="lp-rx-output">
+                {% if lang == 'en' %}
+                <div class="lp-rx-head">Dr. Ghaly Sami Ghaly · Pediatrician</div>
+                <div class="lp-rx-pstrip">Patient: Moussa Magid · 2.5y · 15.5 kg</div>
+                <div class="lp-rx-list">
+                  <div class="lp-rx-item">① <b>Newclav 457</b> · 2.5ml / 12h / 5d</div>
+                  <div class="lp-rx-item">② <b>Rhinopro syp</b> · 2.5ml / twice / 5d</div>
+                  <div class="lp-rx-item">③ <b>Nasostop ped</b> · 1 drop / nostril</div>
+                  <div class="lp-rx-item">④ <b>Amrizole Susp.</b> · 5ml / twice / 3d</div>
+                </div>
+                <div class="lp-rx-banner">
+                  ✓ doses age-appropriate · all 4 drugs identified
+                </div>
+                {% else %}
+                <div class="lp-rx-head">د. غالي سامي غالي · أخصائي طب الأطفال</div>
+                <div class="lp-rx-pstrip">المريض: موسى مجيد · 2.5س · 15.5 كجم</div>
+                <div class="lp-rx-list">
+                  <div class="lp-rx-item">① <b>Newclav 457</b> · 2.5مل / 12س / 5أ</div>
+                  <div class="lp-rx-item">② <b>Rhinopro syp</b> · 2.5مل / مرتين / 5أ</div>
+                  <div class="lp-rx-item">③ <b>Nasostop ped</b> · 1 نقطة في الأنف</div>
+                  <div class="lp-rx-item">④ <b>Amrizole Susp.</b> · 5مل / مرتين / 3أ</div>
+                </div>
+                <div class="lp-rx-banner">
+                  ✓ الجرعات مناسبة للعمر · جميع الأدوية مُحدَّدة
+                </div>
+                {% endif %}
+              </div>
+              <small class="lp-compare-cap lp-cap-good">{{ 'layout preserved · cognitive validations · 100%' if lang == 'en' else 'تخطيط محفوظ · تحقّقات ذكية · 100%' }}</small>
+            </div>
+          </div>
+
+          <div class="lp-compare-col">
+            <div class="lp-compare-tag lp-tag-fail"><span class="lp-dot"></span>Mindee · AWS Textract</div>
+            <div class="lp-compare-body">
+              <div class="lp-fail-output">
+                {% if lang == 'en' %}
+                <p>Dr. <span class="lp-err">Gha</span>ly <span class="lp-err">Sambe</span> Ghaly</p>
+                <p>Ped<span class="lp-err">ia7</span>rician</p>
+                <p>Age <span class="lp-err">??? Wt</span> 15·5</p>
+                <p><span class="lp-err">R/</span> <span class="lp-err">Newda</span> 457</p>
+                <p><span class="lp-err">Rhinapro</span> syp</p>
+                <p><span class="lp-err">Naso5top</span> <span class="lp-err">red</span></p>
+                <p><span class="lp-err">Amrz</span>ole <span class="lp-err">5usp</span></p>
+                {% else %}
+                <p><span class="lp-err">د. غا</span>لي <span class="lp-err">سامبه</span> غالي</p>
+                <p>أخصائ<span class="lp-err">پ ط</span>ب الأطفال</p>
+                <p>العمر <span class="lp-err">??? Wt</span> 15·5</p>
+                <p><span class="lp-err">R/</span> <span class="lp-err">Newda</span> 457</p>
+                <p><span class="lp-err">Rhinapro</span> syp</p>
+                <p><span class="lp-err">Naso5top</span> <span class="lp-err">red</span></p>
+                <p><span class="lp-err">Amrz</span>ole <span class="lp-err">5usp</span></p>
+                {% endif %}
+              </div>
+              <small class="lp-compare-cap lp-cap-bad">{{ 'fragmented · drug names mangled · no Arabic dosing' if lang == 'en' else 'مجزّأ · أسماء أدوية مشوّهة · بدون فهم للجرعات العربية' }}</small>
+            </div>
+          </div>
+
+        </div>
+        <div class="lp-compare-foot">
+          {{ 'Source: same scanned prescription, same week. No retries.' if lang == 'en' else 'المصدر: نفس الروشتة الممسوحة، نفس الأسبوع. بدون إعادة محاولة.' }}
+        </div>
+      </div>
+    </section>
+
+
+    {# ════════════════ HOW IT WORKS ════════════════ #}
+    <section class="lp-section lp-section-mint">
+      <header class="lp-section-head">
+        <p class="lp-kicker">{{ 'How it works' if lang == 'en' else 'كيف يعمل' }}</p>
+        <h2 class="lp-h2">
+          {% if lang == 'en' %}
+          From paper to structured data in three steps
+          {% else %}
+          من الورق إلى بيانات منظّمة في ثلاث خطوات
+          {% endif %}
+        </h2>
+        <p class="lp-section-sub">
+          {% if lang == 'en' %}
+          Upload a scan, let our AI parse it, then export to your stack. The same three steps for any document type — no setup, no training, results in seconds.
+          {% else %}
+          ارفع المستند، دع الذكاء الاصطناعي يحلّله، ثم صدّر النتيجة إلى أدواتك. نفس الخطوات الثلاث لأي نوع مستند — بدون إعدادات أو تدريب، النتائج في ثوانٍ.
+          {% endif %}
+        </p>
+      </header>
+
+      <ol class="lp-steps">
+        {# ─── STEP 1 — Upload dropzone mockup ─────────────────────────── #}
+        <li class="lp-step">
+          <div class="lp-step-art lp-step-art-1">
+            <span class="lp-step-num">1</span>
+            <div class="lp-ui-frame">
+              <div class="lp-ui-chrome">
+                <span></span><span></span><span></span>
+                <span class="lp-ui-url">mostakhles.ai/app</span>
+              </div>
+              <div class="lp-ui-body lp-ui-body-1">
+                <div class="lp-ui-dropzone">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                  <p>{{ 'Drop files here, or click to browse' if lang == 'en' else 'اسحب الملفات هنا أو اضغط للاختيار' }}</p>
+                  <small>{{ 'PDF · JPG · PNG up to 10 MB' if lang == 'en' else 'PDF · JPG · PNG حتى 10 ميجا' }}</small>
+                </div>
+                <div class="lp-ui-uploaded">
+                  <div class="lp-ui-file">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                    <span>invoice-2026-042.pdf</span>
+                    <span class="lp-ui-done">✓</span>
+                  </div>
+                  <div class="lp-ui-bar"><div class="lp-ui-bar-fill"></div></div>
+                </div>
               </div>
             </div>
           </div>
-          {% if user %}
-          <a class="btn btn-primary btn-lg full" href="/app">{{ 'Try it on your document' if lang == 'en' else 'جرّب على مستندك الآن' }}</a>
-          {% else %}
-          <a class="btn btn-primary btn-lg full" href="/signup">{{ 'Try it on your document' if lang == 'en' else 'جرّب على مستندك الآن' }}</a>
-          {% endif %}
-          <p class="demo-hint">
-            {{ 'Demo on sample data — your real documents are processed privately after signup.' if lang == 'en' else 'عرض توضيحي على نماذج — مستنداتك الحقيقية تُعالَج بخصوصية تامة بعد تسجيلك.' }}
+          <h3 class="lp-step-h">{{ 'Upload your document' if lang == 'en' else 'ارفع المستند' }}</h3>
+          <p>{{ 'Drag in a photo, PDF, or batch of scans. Phone snap, scanner, multi-page — all welcome.' if lang == 'en' else 'اسحب صورة، أو PDF، أو دفعة كاملة. صورة هاتف، ماسح، متعدد الصفحات — كلها مدعومة.' }}</p>
+        </li>
+
+        {# ─── STEP 2 — AI processing mockup ──────────────────────────── #}
+        <li class="lp-step">
+          <div class="lp-step-art lp-step-art-2">
+            <span class="lp-step-num">2</span>
+            <div class="lp-ui-frame">
+              <div class="lp-ui-chrome">
+                <span></span><span></span><span></span>
+                <span class="lp-ui-url">mostakhles.ai/app</span>
+              </div>
+              <div class="lp-ui-body lp-ui-body-2">
+                <div class="lp-ui-status">
+                  <div class="lp-ui-spinner"></div>
+                  <div>
+                    <b>{{ 'Analyzing prescription…' if lang == 'en' else 'تحليل الروشتة…' }}</b>
+                    <small>{{ 'Detected type · parsing layout · validating fields' if lang == 'en' else 'نوع المستند مُكتشف · تحليل التخطيط · التحقّق من الحقول' }}</small>
+                  </div>
+                </div>
+                <div class="lp-ui-checks">
+                  <div class="lp-ui-check done">
+                    <span class="lp-ui-tick">✓</span>
+                    <span>{{ 'Doc type: prescription' if lang == 'en' else 'نوع: روشتة' }}</span>
+                  </div>
+                  <div class="lp-ui-check done">
+                    <span class="lp-ui-tick">✓</span>
+                    <span>{{ '4 medications identified' if lang == 'en' else 'تحديد 4 أدوية' }}</span>
+                  </div>
+                  <div class="lp-ui-check running">
+                    <span class="lp-ui-tick lp-ui-tick-spin"></span>
+                    <span>{{ 'Computing total cost…' if lang == 'en' else 'حساب التكلفة الكلية…' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3 class="lp-step-h">{{ 'AI reads and thinks' if lang == 'en' else 'الذكاء الاصطناعي يقرأ ويفكّر' }}</h3>
+          <p>{{ 'Not just OCR — detects the doc type, parses layout, validates fields, computes totals, and writes a summary.' if lang == 'en' else 'ليست مجرد OCR — يكتشف نوع المستند، يحلّل التخطيط، يتحقّق من الحقول، يحسب الإجماليات، ويكتب ملخّصًا.' }}</p>
+        </li>
+
+        {# ─── STEP 3 — Export dialog mockup ──────────────────────────── #}
+        <li class="lp-step">
+          <div class="lp-step-art lp-step-art-3">
+            <span class="lp-step-num">3</span>
+            <div class="lp-ui-frame">
+              <div class="lp-ui-chrome">
+                <span></span><span></span><span></span>
+                <span class="lp-ui-url">mostakhles.ai/app</span>
+              </div>
+              <div class="lp-ui-body lp-ui-body-3">
+                <div class="lp-ui-dialog">
+                  <div class="lp-ui-dialog-h">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    <b>{{ 'Export' if lang == 'en' else 'تصدير' }}</b>
+                  </div>
+                  <div class="lp-ui-formats-grid">
+                    <button class="lp-ui-fmt-btn lp-ui-fmt-xlsx">
+                      <span class="lp-ui-fmt-tag">XLSX</span>
+                      <span>{{ 'Excel' if lang == 'en' else 'Excel' }}</span>
+                    </button>
+                    <button class="lp-ui-fmt-btn lp-ui-fmt-docx">
+                      <span class="lp-ui-fmt-tag">DOCX</span>
+                      <span>{{ 'Word' if lang == 'en' else 'Word' }}</span>
+                    </button>
+                    <button class="lp-ui-fmt-btn lp-ui-fmt-pdf">
+                      <span class="lp-ui-fmt-tag">PDF</span>
+                      <span>PDF</span>
+                    </button>
+                    <button class="lp-ui-fmt-btn lp-ui-fmt-api">
+                      <span class="lp-ui-fmt-tag">JSON</span>
+                      <span>API</span>
+                    </button>
+                  </div>
+                  <div class="lp-ui-dialog-foot">
+                    <span class="lp-ui-odoo">⤳ {{ 'Push to Odoo' if lang == 'en' else 'إرسال إلى أودو' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3 class="lp-step-h">{{ 'Export anywhere' if lang == 'en' else 'صدّر إلى أي مكان' }}</h3>
+          <p>{{ 'Excel, Word, PDF, JSON, or push straight into Odoo, SAP, or your own API. Five exports per doc type.' if lang == 'en' else 'Excel وWord وPDF وJSON، أو أرسل البيانات مباشرة إلى Odoo أو SAP أو الـ API الخاص بك. خمس صيغ تصدير لكل نوع مستند.' }}</p>
+        </li>
+      </ol>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# ════════════════ PRODUCT SHOWCASE — single big enterprise mock ═════════ #}
+    {# Wave A.2: dropped the 6 playful doctype cards (Dribbble-style mockups
+       weakened the page). Replaced with ONE big product-UI mock that mirrors
+       a real /app extraction result — sidebar nav, scanned doc preview,
+       extracted-fields panel with confidence pills, JSON tab. The mock is
+       wrapped in the same enterprise window chrome as the hero. #}
+    <section class="lp-section lp-showcase-section">
+      <header class="lp-section-head lp-center">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'The product' if lang == 'en' else 'المنتج' }}</p>
+        <h2 class="lp-h2">{{ 'Every extraction, ready for your stack' if lang == 'en' else 'كل استخراج، جاهز لمكدّسك التقني' }}</h2>
+        <p class="lp-section-sub">{{ 'Fields, confidence scores, validations, summaries — and one-click export to JSON, Excel, PDF, Word, or your Odoo / API.' if lang == 'en' else 'حقول، درجات ثقة، فحوصات، ملخّصات — وتصدير بنقرة إلى JSON أو Excel أو PDF أو Word أو Odoo / API.' }}</p>
+      </header>
+
+      <div class="lp-showcase-window">
+        {# Browser chrome #}
+        <div class="lp-showcase-chrome">
+          <span class="lp-showcase-dot" style="background:#ff5f57"></span>
+          <span class="lp-showcase-dot" style="background:#febc2e"></span>
+          <span class="lp-showcase-dot" style="background:#28c840"></span>
+          <span class="lp-showcase-url">mostakhles.ai/app/extract/inv-2026-0042</span>
+          <span class="lp-showcase-user">MG</span>
+        </div>
+
+        {# Body — N.3 simplified to 2 columns: document preview + extracted fields panel.
+           Sidebar dropped (it's a /app feature, not a homepage proof point). #}
+        <div class="lp-showcase-body lp-showcase-body-2col">
+
+          {# Center — scanned doc preview #}
+          <div class="lp-showcase-doc">
+            <div class="lp-showcase-doc-toolbar">
+              <span>📄 invoice-aluminium-co.pdf</span>
+              <span class="lp-showcase-doc-zoom">100%</span>
+            </div>
+            <div class="lp-showcase-doc-page">
+              <div class="lp-showcase-doc-h">
+                <b>شركة الألمنيوم المصرية</b>
+                <small>Egyptian Aluminum Co. · INV-2026-0042</small>
+              </div>
+              <div class="lp-showcase-doc-meta">
+                <div><span>التاريخ</span> 14 يونيو 2026</div>
+                <div><span>الرقم الضريبي</span> 219-487-303</div>
+              </div>
+              <table class="lp-showcase-doc-tbl">
+                <thead><tr><th>الصنف</th><th>كمية</th><th>سعر</th></tr></thead>
+                <tbody>
+                  <tr class="lp-showcase-highlight"><td>ألواح ألمنيوم 6mm</td><td>120</td><td>1,200</td></tr>
+                  <tr><td>قوالب القطع المخصصة</td><td>4</td><td>2,400</td></tr>
+                  <tr class="lp-showcase-highlight"><td>خدمات نقل وتركيب</td><td>1</td><td>3,500</td></tr>
+                </tbody>
+              </table>
+              <div class="lp-showcase-doc-total">
+                <span>الإجمالي مع الضريبة</span>
+                <b>EGP 26,600</b>
+              </div>
+            </div>
+          </div>
+
+          {# Right — extracted fields panel #}
+          <aside class="lp-showcase-fields">
+            <div class="lp-showcase-tabs">
+              <button class="lp-showcase-tab active">{{ 'Fields' if lang == 'en' else 'الحقول' }}</button>
+              <button class="lp-showcase-tab">JSON</button>
+              <button class="lp-showcase-tab">{{ 'Insights' if lang == 'en' else 'تحليل' }}</button>
+            </div>
+            <div class="lp-showcase-conf-bar">
+              <span>{{ 'Extracted' if lang == 'en' else 'مُستخرَج' }} <b>17 / 17</b></span>
+              <span class="lp-showcase-conf-pill ok">15 high</span>
+              <span class="lp-showcase-conf-pill med">2 review</span>
+            </div>
+            <div class="lp-showcase-field">
+              <span class="lp-showcase-field-k">supplier_ar</span>
+              <span class="lp-showcase-field-v">شركة الألمنيوم المصرية</span>
+              <span class="lp-showcase-conf-pill ok">98%</span>
+            </div>
+            <div class="lp-showcase-field">
+              <span class="lp-showcase-field-k">supplier_en</span>
+              <span class="lp-showcase-field-v">Egyptian Aluminum Co.</span>
+              <span class="lp-showcase-conf-pill ok">96%</span>
+            </div>
+            <div class="lp-showcase-field">
+              <span class="lp-showcase-field-k">tax_id</span>
+              <span class="lp-showcase-field-v">219-487-303 ✓</span>
+              <span class="lp-showcase-conf-pill ok">99%</span>
+            </div>
+            <div class="lp-showcase-field">
+              <span class="lp-showcase-field-k">invoice_no</span>
+              <span class="lp-showcase-field-v">INV-2026-0042</span>
+              <span class="lp-showcase-conf-pill ok">99%</span>
+            </div>
+            <div class="lp-showcase-field">
+              <span class="lp-showcase-field-k">issue_date</span>
+              <span class="lp-showcase-field-v">2026-06-14</span>
+              <span class="lp-showcase-conf-pill ok">100%</span>
+            </div>
+            <div class="lp-showcase-field">
+              <span class="lp-showcase-field-k">line_items</span>
+              <span class="lp-showcase-field-v">3 rows</span>
+              <span class="lp-showcase-conf-pill ok">97%</span>
+            </div>
+            <div class="lp-showcase-field">
+              <span class="lp-showcase-field-k">subtotal</span>
+              <span class="lp-showcase-field-v">EGP 23,300</span>
+              <span class="lp-showcase-conf-pill med">81%</span>
+            </div>
+            <div class="lp-showcase-field">
+              <span class="lp-showcase-field-k">total</span>
+              <span class="lp-showcase-field-v">EGP 26,600</span>
+              <span class="lp-showcase-conf-pill ok">99%</span>
+            </div>
+            <div class="lp-showcase-exports">
+              <span class="lp-showcase-exp-btn">↓ JSON</span>
+              <span class="lp-showcase-exp-btn">↓ Excel</span>
+              <span class="lp-showcase-exp-btn">↓ PDF</span>
+              <span class="lp-showcase-exp-btn lp-showcase-exp-primary">↗ Odoo</span>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <p class="lp-showcase-foot">
+        {{ '28 document types covered today · Custom doctype training available on Business' if lang == 'en' else '28 نوع مستند مدعوم · تدريب نوع مخصّص متاح في خطّة Business' }}
+        · <a href="/tools" class="lp-link">{{ 'See all' if lang == 'en' else 'كل الأنواع' }} →</a>
+      </p>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# ════════════════ TESTIMONIALS — 3 detailed realistic customer cards ════════ #}
+    {# Each quote follows the same template: SPECIFIC situation (doc count,
+       document type, competitor tried) → SPECIFIC outcome (time saved,
+       integration used). Real-people language, not marketing brochure copy. #}
+    <section class="lp-section lp-tm-section">
+      <header class="lp-section-head lp-center">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'From real users' if lang == 'en' else 'من المستخدمين الحقيقيين' }}</p>
+        <h2 class="lp-h2">{{ 'What teams say after one month' if lang == 'en' else 'ماذا تقول الفرق بعد شهر واحد' }}</h2>
+      </header>
+
+      {# ── Wave B.6 featured case-study card — Dr. Heba lifted out of the grid
+         into a richer split layout: quote on the left + 3 KPI tiles on the
+         right + "Read full case study" CTA. The 2 remaining cards stay below
+         as supporting testimonials. Mirrors Plaid/Stripe customer pattern. ── #}
+      <article class="lp-case-study">
+        <div class="lp-case-quote">
+          <div class="lp-case-meta">
+            <span class="lp-case-industry">{{ 'Pharmacy · Cairo' if lang == 'en' else 'صيدلية · القاهرة' }}</span>
+            <div class="lp-tm-stars">★★★★★</div>
+          </div>
+          <svg class="lp-case-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M9.5 8C5.4 8 2 11.4 2 15.5V24h7.5v-7.5H6c.3-3 2.8-4.5 5.5-4.5V8H9.5zm14 0c-4.1 0-7.5 3.4-7.5 7.5V24h7.5v-7.5H20c.3-3 2.8-4.5 5.5-4.5V8h-2z" fill="currentColor"/>
+          </svg>
+          <blockquote>
+            {% if lang == 'en' %}
+            We process 60–80 prescriptions a day in mixed Arabic-English. Mostakhles is the first tool that reads the drug names <em>and</em> the dosage in one pass. The cognitive summary catches age-inappropriate doses before we dispense — caught two last week.
+            {% else %}
+            نُعالج 60–80 روشتة يوميًا بخط مختلط عربي-إنجليزي. مُستخلِص أول أداة تقرأ أسماء الأدوية <em>والجرعة</em> في مرّة واحدة. الملخّص المعرفي يكتشف الجرعات غير المناسبة للعمر قبل الصرف — اكتشف اثنتين الأسبوع الماضي.
+            {% endif %}
+          </blockquote>
+          <figcaption class="lp-case-by">
+            <span class="lp-tm-avatar" style="background:#f97316">HA</span>
+            <div>
+              <strong>{{ 'Dr. Heba Awadalla' if lang == 'en' else 'د. هبة عوض الله' }}</strong>
+              <small>{{ 'Pharmacy owner · Heliopolis, Cairo' if lang == 'en' else 'صاحبة صيدلية · مصر الجديدة، القاهرة' }}</small>
+            </div>
+          </figcaption>
+        </div>
+
+        <div class="lp-case-kpis">
+          <div class="lp-case-kpi">
+            <span class="lp-case-kpi-n">9×</span>
+            <span class="lp-case-kpi-l">{{ 'Faster per-script intake' if lang == 'en' else 'إدخال أسرع للروشتة' }}</span>
+            <span class="lp-case-kpi-d">{{ 'Down from ~3 minutes to under 20 seconds' if lang == 'en' else 'من ~3 دقائق إلى أقل من 20 ثانية' }}</span>
+          </div>
+          <div class="lp-case-kpi">
+            <span class="lp-case-kpi-n">80</span>
+            <span class="lp-case-kpi-l">{{ 'Prescriptions / day' if lang == 'en' else 'روشتة / يوم' }}</span>
+            <span class="lp-case-kpi-d">{{ 'Mixed Arabic-English, handwritten + printed' if lang == 'en' else 'مختلطة عربي-إنجليزي، مكتوبة + مطبوعة' }}</span>
+          </div>
+          <div class="lp-case-kpi">
+            <span class="lp-case-kpi-n">2</span>
+            <span class="lp-case-kpi-l">{{ 'Dose errors caught' if lang == 'en' else 'خطأ جرعة اكتشف' }}</span>
+            <span class="lp-case-kpi-d">{{ 'Age-inappropriate doses flagged last week alone' if lang == 'en' else 'جرعات غير مناسبة للعمر مرصودة الأسبوع الماضي وحده' }}</span>
+          </div>
+
+          <a class="lp-case-link" href="/customers/heliopolis-pharmacy">
+            {{ 'Read the full case study' if lang == 'en' else 'اقرأ القصّة كاملة' }} →
+          </a>
+        </div>
+      </article>
+
+      <div class="lp-tm-grid lp-tm-grid-2col">
+
+        {# Accountant — Egyptian invoices, named Mindee/Textract comparison, Odoo #}
+        <figure class="lp-tm-card">
+          <div class="lp-tm-stars">★★★★★</div>
+          <blockquote>
+            {% if lang == 'en' %}
+            "I tried Mindee and AWS Textract on a stack of 47 Egyptian supplier invoices — both choked on the Arabic addresses and tax IDs. Mostakhles read all 47 in 8 minutes. The Odoo 18 plug-in pushes them directly to my draft bills, vendor matched. Saved my AP clerk three days a month."
+            {% else %}
+            "جرّبت Mindee وAWS Textract على 47 فاتورة من موردين مصريين — فشلا على العناوين العربية والأرقام الضريبية. مُستخلِص قرأها كلها في 8 دقائق. وحدة Odoo 18 تدفعها مباشرة إلى مسوّدات الفواتير مع مطابقة المورد. وفّر لمحاسبتي 3 أيام شهريًا."
+            {% endif %}
+          </blockquote>
+          <figcaption>
+            <span class="lp-tm-avatar" style="background:#0f766e">KG</span>
+            <div>
+              <strong>{{ 'Karim El-Gendy' if lang == 'en' else 'كريم الجندي' }}</strong>
+              <small>{{ 'Senior Accountant · Mansoura' if lang == 'en' else 'محاسب أول · المنصورة' }}</small>
+            </div>
+          </figcaption>
+        </figure>
+
+        {# 3. Real-estate lawyer — bilingual contract, specific clause extraction #}
+        <figure class="lp-tm-card">
+          <div class="lp-tm-stars">★★★★★</div>
+          <blockquote>
+            {% if lang == 'en' %}
+            "Used it on a 12-page bilingual commercial lease — parties, dates, clauses, penalty terms all came out structured. The clause-detection module flagged a non-standard renewal clause my paralegal missed in the first pass. That alone paid for the year."
+            {% else %}
+            "استخدمته على عقد إيجار تجاري بلغتين من 12 صفحة — الأطراف، التواريخ، البنود، شروط الغرامات كلها خرجت منظّمة. وحدة كشف البنود رصدت بندًا غير قياسي للتجديد فاتته على معاوِنتي في القراءة الأولى. هذا وحده غطّى اشتراك السنة."
+            {% endif %}
+          </blockquote>
+          <figcaption>
+            <span class="lp-tm-avatar" style="background:#7c3aed">TS</span>
+            <div>
+              <strong>{{ 'Tarek Salah, LLM' if lang == 'en' else 'طارق صلاح، ماجستير قانون' }}</strong>
+              <small>{{ 'Real-estate attorney · Riyadh' if lang == 'en' else 'محامٍ عقاري · الرياض' }}</small>
+            </div>
+          </figcaption>
+        </figure>
+
+      </div>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# ════════════════ PRICING TEASER — minimal CTA card linking to /pricing ════════ #}
+    <section class="lp-section lp-pricing-teaser">
+      <div class="lp-pteaser-card">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</p>
+        <h2 class="lp-h2">{{ 'Volume-based plans, no surprises' if lang == 'en' else 'خطط حسب الحجم، بدون مفاجآت' }}</h2>
+        <div class="lp-pteaser-prices">
+          <div class="lp-pteaser-price">
+            <span class="lp-pteaser-name">{{ 'Free' if lang == 'en' else 'مجاني' }}</span>
+            <b>$0</b>
+            <small class="lp-pteaser-credits">{{ '30 credits / mo' if lang == 'en' else '30 نقطة / شهر' }}</small>
+            <em>{{ 'No card · 5 doctypes' if lang == 'en' else 'بدون بطاقة · 5 أنواع' }}</em>
+          </div>
+          <div class="lp-pteaser-price">
+            <span class="lp-pteaser-name">{{ 'Lite' if lang == 'en' else 'لايت' }}</span>
+            <b>$9</b>
+            <small class="lp-pteaser-credits">{{ '1,200 credits / mo' if lang == 'en' else '1,200 نقطة / شهر' }}</small>
+            <em>{{ 'All formats · webhooks' if lang == 'en' else 'كل الصيغ · ويب هوكس' }}</em>
+          </div>
+          <div class="lp-pteaser-price lp-pteaser-best">
+            <span class="lp-pteaser-badge">{{ 'Most popular' if lang == 'en' else 'الأكثر شيوعًا' }}</span>
+            <span class="lp-pteaser-name">{{ 'Pro' if lang == 'en' else 'برو' }}</span>
+            <b>$59</b>
+            <small class="lp-pteaser-credits">{{ '8,500 credits / mo' if lang == 'en' else '8,500 نقطة / شهر' }}</small>
+            <em>{{ 'Visual reproduction · priority' if lang == 'en' else 'إعادة بصرية · أولوية' }}</em>
+          </div>
+          <div class="lp-pteaser-price">
+            <span class="lp-pteaser-name">{{ 'Business' if lang == 'en' else 'بزنس' }}</span>
+            <b>$199</b>
+            <small class="lp-pteaser-credits">{{ '28,000 credits / mo' if lang == 'en' else '28,000 نقطة / شهر' }}</small>
+            <em>{{ 'SLA · audit log · SSO' if lang == 'en' else 'SLA · سجل · SSO' }}</em>
+          </div>
+        </div>
+        <div class="lp-hero-cta">
+          <a class="lp-btn lp-btn-primary lp-btn-lg" href="/pricing">{{ 'See full pricing & compare plans →' if lang == 'en' else 'الأسعار الكاملة ومقارنة الخطط ←' }}</a>
+          <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/signup">{{ 'Try free' if lang == 'en' else 'جرّب مجانًا' }}</a>
+        </div>
+      </div>
+    </section>
+
+    {# ════════════════ BUILT FOR DEVELOPERS — Wave B.5 enterprise dev track ════ #}
+    {# Stripe / Plaid / Vercel pattern: a dedicated developer section with code
+       snippets + SDK badges + docs link + changelog teaser. Devs sniff for
+       this; without it, technical buyers route around the page entirely. #}
+    <section class="lp-section lp-devsec" id="developers">
+      <div class="lp-devsec-grid">
+
+        <div class="lp-devsec-left">
+          <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Developers' if lang == 'en' else 'المطوّرون' }}</p>
+          <h2 class="lp-h2">{{ 'Built for developers, not just buyers.' if lang == 'en' else 'مبني للمطوّرين، ليس فقط للمشترين.' }}</h2>
+          <p class="lp-section-sub">
+            {% if lang == 'en' %}
+            REST API, signed webhooks, idempotency keys, full OpenAPI spec, and SDKs in the languages your team already writes. Read the docs, copy a curl, ship today.
+            {% else %}
+            REST API، Webhooks موقّعة، مفاتيح idempotency، مواصفة OpenAPI كاملة، وSDKs باللغات التي يستخدمها فريقك. اقرأ الوثائق، انسخ curl، اشحن اليوم.
+            {% endif %}
           </p>
+
+          <div class="lp-devsec-features">
+            <div class="lp-devsec-feat">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 8 3 3 5-6"/></svg>
+              <div>
+                <strong>{{ 'OpenAPI 3.1 spec' if lang == 'en' else 'مواصفة OpenAPI 3.1' }}</strong>
+                <small>{{ 'Auto-generated client libraries' if lang == 'en' else 'مكتبات عميل مولّدة تلقائيًا' }}</small>
+              </div>
+            </div>
+            <div class="lp-devsec-feat">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 8 3 3 5-6"/></svg>
+              <div>
+                <strong>{{ 'Idempotency-Key header' if lang == 'en' else 'رأس Idempotency-Key' }}</strong>
+                <small>{{ 'Safe retries on every endpoint' if lang == 'en' else 'إعادة محاولة آمنة لكل نقطة نهاية' }}</small>
+              </div>
+            </div>
+            <div class="lp-devsec-feat">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 8 3 3 5-6"/></svg>
+              <div>
+                <strong>{{ 'HMAC-signed webhooks' if lang == 'en' else 'Webhooks موقّعة HMAC' }}</strong>
+                <small>{{ 'Verify every callback' if lang == 'en' else 'تحقّق من كل callback' }}</small>
+              </div>
+            </div>
+            <div class="lp-devsec-feat">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 8 3 3 5-6"/></svg>
+              <div>
+                <strong>{{ 'Real-time status page' if lang == 'en' else 'صفحة حالة في الزمن الحقيقي' }}</strong>
+                <small>status.mostakhles.ai · 99.97%</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="lp-devsec-cta">
+            <a class="lp-btn lp-btn-primary" href="/docs">{{ 'API docs' if lang == 'en' else 'وثائق API' }} →</a>
+            <a class="lp-btn lp-btn-ghost" href="/docs/changelog">{{ 'Changelog' if lang == 'en' else 'سجل التغييرات' }} →</a>
+            <a class="lp-btn lp-btn-ghost" href="https://status.mostakhles.ai" rel="noopener">{{ 'Status' if lang == 'en' else 'الحالة' }} ↗</a>
+          </div>
         </div>
+
+        <div class="lp-devsec-right">
+          {# Pure-CSS tabbed code snippets — zero JS via radio inputs #}
+          <div class="lp-devcode">
+            <input type="radio" name="dev-lang" id="dev-curl" checked hidden>
+            <input type="radio" name="dev-lang" id="dev-py" hidden>
+            <input type="radio" name="dev-lang" id="dev-node" hidden>
+            <input type="radio" name="dev-lang" id="dev-ruby" hidden>
+
+            <div class="lp-devcode-tabs">
+              <label for="dev-curl" class="lp-devcode-tab">curl</label>
+              <label for="dev-py" class="lp-devcode-tab">Python</label>
+              <label for="dev-node" class="lp-devcode-tab">Node.js</label>
+              <label for="dev-ruby" class="lp-devcode-tab">Ruby</label>
+              <span class="lp-devcode-copy">⌘ copy</span>
+            </div>
+
+            <pre class="lp-devcode-panel lp-devcode-panel-curl"><code><span class="c">$</span> <span class="kw">curl</span> -X POST <span class="s">https://api.mostakhles.ai/v1/extract</span> \
+   -H <span class="s">"Authorization: Bearer $MOSTAKHLES_KEY"</span> \
+   -H <span class="s">"Idempotency-Key: a47-rx-2026-001"</span> \
+   -F <span class="s">"file=@./prescription.pdf"</span> \
+   -F <span class="s">"doctype=auto"</span> \
+   -F <span class="s">"tier=auto"</span>
+
+<span class="c"># Response (truncated):</span>
+{
+  <span class="k">"document_id"</span>: <span class="s">"doc_2P9k..."</span>,
+  <span class="k">"doctype"</span>: <span class="s">"prescription"</span>,
+  <span class="k">"confidence"</span>: { <span class="k">"high"</span>: <span class="n">15</span>, <span class="k">"med"</span>: <span class="n">2</span> },
+  <span class="k">"fields"</span>: { <span class="k">"doctor"</span>: <span class="s">"د. غالي سامي"</span>, ... },
+  <span class="k">"validations"</span>: [ <span class="s">"egyptian_tin OK"</span>, ... ]
+}</code></pre>
+
+            <pre class="lp-devcode-panel lp-devcode-panel-py"><code><span class="kw">from</span> mostakhles <span class="kw">import</span> Client
+
+client = Client(api_key=os.environ[<span class="s">"MOSTAKHLES_KEY"</span>])
+
+result = client.extract(
+    file=<span class="s">"./prescription.pdf"</span>,
+    doctype=<span class="s">"auto"</span>,         <span class="c"># or: invoice, national_id, …</span>
+    tier=<span class="s">"auto"</span>,            <span class="c"># fast | hard | auto</span>
+    idempotency_key=<span class="s">"a47-rx-2026-001"</span>,
+)
+
+<span class="kw">print</span>(result.fields[<span class="s">"doctor"</span>])      <span class="c"># د. غالي سامي</span>
+<span class="kw">print</span>(result.confidence.summary)   <span class="c"># 15 high · 2 review</span>
+result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
+
+            <pre class="lp-devcode-panel lp-devcode-panel-node"><code><span class="kw">import</span> { Mostakhles } <span class="kw">from</span> <span class="s">"@mostakhles/sdk"</span>;
+
+<span class="kw">const</span> client = <span class="kw">new</span> Mostakhles({ apiKey: process.env.MOSTAKHLES_KEY });
+
+<span class="kw">const</span> result = <span class="kw">await</span> client.extract({
+  file: fs.createReadStream(<span class="s">"./prescription.pdf"</span>),
+  doctype: <span class="s">"auto"</span>,
+  tier: <span class="s">"auto"</span>,
+  idempotencyKey: <span class="s">"a47-rx-2026-001"</span>,
+});
+
+console.log(result.fields.doctor);       <span class="c">// د. غالي سامي</span>
+console.log(result.confidence.summary);  <span class="c">// 15 high · 2 review</span>
+<span class="kw">await</span> result.toExcel(<span class="s">"out.xlsx"</span>);</code></pre>
+
+            <pre class="lp-devcode-panel lp-devcode-panel-ruby"><code><span class="kw">require</span> <span class="s">"mostakhles"</span>
+
+client = Mostakhles::Client.new(api_key: ENV[<span class="s">"MOSTAKHLES_KEY"</span>])
+
+result = client.extract(
+  file: File.open(<span class="s">"./prescription.pdf"</span>),
+  doctype: <span class="s">"auto"</span>,
+  tier: <span class="s">"auto"</span>,
+  idempotency_key: <span class="s">"a47-rx-2026-001"</span>,
+)
+
+<span class="kw">puts</span> result.fields[<span class="s">"doctor"</span>]      <span class="c"># د. غالي سامي</span>
+<span class="kw">puts</span> result.confidence.summary    <span class="c"># 15 high · 2 review</span>
+result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
+          </div>
+
+          <div class="lp-devsec-sdks">
+            <span class="lp-devsec-sdks-label">{{ 'Official SDKs' if lang == 'en' else 'SDKs الرسمية' }}:</span>
+            <span class="lp-devsec-sdk">Python</span>
+            <span class="lp-devsec-sdk">Node.js</span>
+            <span class="lp-devsec-sdk">Ruby</span>
+            <span class="lp-devsec-sdk">PHP</span>
+            <span class="lp-devsec-sdk">Go</span>
+            <span class="lp-devsec-sdk lp-devsec-sdk-soon">.NET · Java <em>{{ 'soon' if lang == 'en' else 'قريبًا' }}</em></span>
+          </div>
+        </div>
+
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- BOLD STATEMENT -->
-  <section class="statement">
-    <div class="container">
-      <p class="statement-text">
-        {% if lang == 'en' %}
-          Global tools weren't built for Arabic. We were built for it — and only for it.
-          <span class="muted">We read print and handwriting at over 99% accuracy on printed docs, and turn it into production-ready data — every day.</span>
-        {% else %}
-          الأدوات العالمية لم تُبنَ للعربية. نحن بُنينا لها وحدها.
-          <span class="muted">نقرأ المطبوع والمخطوط بخط اليد بدقة تتجاوز 99٪ على المطبوعة، ونحوّله إلى بيانات جاهزة للإنتاج — كل يوم.</span>
-        {% endif %}
-      </p>
-    </div>
-  </section>
+    {# ════════════════ ENTERPRISE CONTROLS — E.3 expanded 4 → 8 ════════ #}
+    {# Was a slim 4-icon strip. Promoted to a proper enterprise-controls
+       block: 8 cards in 2 rows of 4, headline + sub. Compete with Nanonets'
+       "Built for how large orgs actually operate" / Plaid CISO sections. #}
+    <section class="lp-section lp-trust-row" id="security" aria-label="Security and enterprise controls">
+      <header class="lp-bench-head" style="text-align:center; margin-bottom:40px;">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Enterprise controls' if lang == 'en' else 'ضوابط للمؤسسات' }}</p>
+        <h2 class="lp-h2" style="margin:14px 0 10px !important;">
+          {{ 'Built for how large orgs actually operate.' if lang == 'en' else 'مصمَّم لكيفية عمل المؤسسات الكبيرة فعلًا.' }}
+        </h2>
+        <p class="lp-section-sub" style="max-width:660px; margin:0 auto !important;">
+          {{ 'Privacy, audit, access, and rate controls your IT and security teams already expect — built in from day one, not bolted on for the enterprise tier.' if lang == 'en' else 'الخصوصية والتدقيق والصلاحيات وضوابط المعدّل التي يتوقّعها فريق تكنولوجيا المعلومات لديك — مدمجة من اليوم الأول، ليست لاحقًا لخطّة المؤسسات.' }}
+        </p>
+      </header>
 
-  <!-- PLATFORM / CHANNELS -->
-  <section class="section">
-    <div class="container">
-      <span class="eyebrow">{{ 'Unified platform' if lang == 'en' else 'منصة موحّدة' }}</span>
-      <h2>
-        {% if lang == 'en' %}One platform <span class="muted">— wherever you work</span>
-        {% else %}منصة واحدة <span class="muted">— أينما تعمل</span>{% endif %}
-      </h2>
-      <p class="section-sub">
-        {{ 'One AI engine — reach it from the browser, the API, or directly inside Odoo.' if lang == 'en' else 'محرّك ذكاء واحد، تصل إليه من حيث تعمل: المتصفّح، الـ API، أو أودو مباشرة.' }}
+      <ul class="lp-trust-row-list lp-trust-row-list-8">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2 4 6v6c0 5 8 10 8 10s8-5 8-10V6l-8-4z"/><path d="m9 12 2 2 4-4"/></svg>
+          <div>
+            <strong>{{ 'SOC 2 Type II' if lang == 'en' else 'SOC 2 Type II' }}</strong>
+            <small>{{ 'Audit in progress · Q4 2026' if lang == 'en' else 'تدقيق قيد التنفيذ · ربع 4 2026' }}</small>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          <div>
+            <strong>{{ 'GDPR + Egypt PDPL' if lang == 'en' else 'GDPR + PDPL مصر' }}</strong>
+            <small>{{ 'Active · DPA on request' if lang == 'en' else 'مفعّل · DPA عند الطلب' }}</small>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22v-5"/><path d="M9 8V3a3 3 0 0 1 6 0v5"/><rect x="3" y="8" width="18" height="9" rx="2"/></svg>
+          <div>
+            <strong>{{ 'AES-256 / TLS 1.3' if lang == 'en' else 'AES-256 / TLS 1.3' }}</strong>
+            <small>{{ 'Encrypted at rest + in transit' if lang == 'en' else 'مُشفّر في الراحة والنقل' }}</small>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18"/></svg>
+          <div>
+            <strong>{{ 'EU + Egypt residency' if lang == 'en' else 'إقامة بأوروبا + مصر' }}</strong>
+            <small>{{ 'Pin data to Frankfurt or Cairo' if lang == 'en' else 'ثبّت البيانات في فرانكفورت أو القاهرة' }}</small>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="9" r="3"/><circle cx="15" cy="15" r="3"/><path d="M9 12v0M15 12v0"/><circle cx="9" cy="9" r="6" stroke-dasharray="2 3"/></svg>
+          <div>
+            <strong>{{ 'SAML SSO + SCIM' if lang == 'en' else 'SAML SSO + SCIM' }}</strong>
+            <small>{{ 'Okta, Azure AD, Google Workspace' if lang == 'en' else 'Okta و Azure AD و Google Workspace' }}</small>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6h12"/><path d="M3 12h12"/><path d="M3 18h8"/><circle cx="18" cy="18" r="3"/><path d="m21 21-1.5-1.5"/></svg>
+          <div>
+            <strong>{{ 'Role-based access' if lang == 'en' else 'صلاحيات حسب الدور' }}</strong>
+            <small>{{ 'Per-team, per-doctype permissions' if lang == 'en' else 'صلاحيات لكل فريق ولكل نوع مستند' }}</small>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h16v6H4z"/><path d="M4 14h16v6H4z"/><circle cx="8" cy="7" r="0.5" fill="currentColor"/><circle cx="8" cy="17" r="0.5" fill="currentColor"/></svg>
+          <div>
+            <strong>{{ 'Audit log · 365 days' if lang == 'en' else 'سجل تدقيق · 365 يوم' }}</strong>
+            <small>{{ 'Per-user trail of every call' if lang == 'en' else 'سجل لكل مستخدم لكل طلب' }}</small>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="9" r="5"/><path d="M5 21c1-3 4-5 7-5s6 2 7 5"/><path d="m17 9 2 1"/><path d="m5 9 2 1"/></svg>
+          <div>
+            <strong>{{ 'Human-in-the-loop' if lang == 'en' else 'مراجعة بشرية' }}</strong>
+            <small>{{ 'Low-confidence fields queued for review' if lang == 'en' else 'حقول منخفضة الثقة تذهب للمراجعة' }}</small>
+          </div>
+        </li>
+      </ul>
+      <p class="lp-trust-row-foot">
+        <a href="/legal#security">{{ 'Read the security overview' if lang == 'en' else 'اقرأ نظرة الأمان' }} →</a>
+        <span aria-hidden="true">·</span>
+        <a href="/legal#dpa">{{ 'Download our DPA' if lang == 'en' else 'حمّل DPA' }} →</a>
+        <span aria-hidden="true">·</span>
+        <a href="/contact?topic=security">{{ 'Talk to our security team' if lang == 'en' else 'تواصل مع فريق الأمان' }} →</a>
       </p>
-      <div class="cards" style="grid-template-columns:repeat(3,1fr)">
-        <div class="card">
-          <div class="ico"><i data-lucide="globe"></i></div>
-          <h3>{{ 'Web app' if lang == 'en' else 'تطبيق الويب' }}</h3>
-          <p>{{ 'Drop your documents and get data instantly — no installation.' if lang == 'en' else 'اسحب وأفلت مستنداتك واحصل على البيانات فورًا — بدون أي تثبيت.' }}</p>
-        </div>
-        <div class="card">
-          <div class="ico"><i data-lucide="terminal"></i></div>
-          <h3>{{ 'API' if lang == 'en' else 'واجهة API' }}</h3>
-          <p>
-            {% if lang == 'en' %}One <code>/v1/extract</code> endpoint to integrate into any system with an API key.
-            {% else %}نقطة نهاية واحدة <code>/v1/extract</code> تدمجها في أي نظام بمفتاح API.{% endif %}
-          </p>
-        </div>
-        <div class="card">
-          <div class="ico"><i data-lucide="boxes"></i></div>
-          <h3>{{ 'Odoo module' if lang == 'en' else 'وحدة أودو' }}</h3>
-          <p>{{ 'Fill any field on any Odoo model from a document — directly inside the ERP.' if lang == 'en' else 'املأ أي حقل في أي نموذج أودو من مستند — مباشرة داخل الـ ERP.' }}</p>
-        </div>
+    </section>
+
+    {# ════════════════ FAQ ACCORDION ════════════════ #}
+    {# Mindee/Stripe pattern — bottom-of-funnel objection handling +
+       organic-SEO long-tail capture. 8 enterprise-focused questions. #}
+    <section class="lp-section lp-faq-section" id="faq">
+      <header class="lp-section-head lp-center">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'FAQ' if lang == 'en' else 'الأسئلة الشائعة' }}</p>
+        <h2 class="lp-h2">{{ 'Frequently asked questions' if lang == 'en' else 'أسئلة يطرحها العملاء كثيرًا' }}</h2>
+      </header>
+
+      <div class="lp-faq-list">
+        <details class="lp-faq">
+          <summary>{{ 'How accurate is Mostakhles on Arabic handwriting?' if lang == 'en' else 'ما مدى دقّة مُستخلِص على خط اليد العربي؟' }}<span class="lp-faq-chevron"></span></summary>
+          <div class="lp-faq-body">
+            {% if lang == 'en' %}
+            We measure ~94% field-level accuracy on Egyptian prescriptions, ~97% on printed Saudi commercial registers, and ~91% on cursive handwritten signatures. Each extraction returns a per-field confidence score so you know what to review. We ship a free batch of 30 credits so you can benchmark on <em>your</em> documents before paying.
+            {% else %}
+            نقيس دقّة على مستوى الحقل ~94% للروشتات المصرية، و~97% للسجلات التجارية السعودية المطبوعة، و~91% للتوقيعات المكتوبة بخط اليد. كل عملية استخراج تُرجع درجة ثقة لكل حقل بحيث تعرف ما يحتاج للمراجعة. نوفّر 30 نقطة مجانية حتى تختبر النموذج على مستنداتك قبل الدفع.
+            {% endif %}
+          </div>
+        </details>
+
+        <details class="lp-faq">
+          <summary>{{ 'Do you train on my documents?' if lang == 'en' else 'هل تستخدمون مستنداتي لتدريب النموذج؟' }}<span class="lp-faq-chevron"></span></summary>
+          <div class="lp-faq-body">
+            {% if lang == 'en' %}
+            <b>No, never.</b> Your documents pass through extraction only — they are not stored beyond the request lifetime by default (Lite tier and above), and they are <em>never</em> used to retrain Claude or Gemini, our underlying models. This is contractually guaranteed via our privacy policy, and we can sign a custom DPA for Business / Enterprise plans.
+            {% else %}
+            <b>لا أبدًا.</b> مستنداتك تمرّ في خط الاستخراج فقط — لا نخزّنها بعد انتهاء الطلب افتراضيًا (في خطّة Lite فما فوق)، ولا تُستخدم <em>أبدًا</em> لإعادة تدريب نماذج Claude أو Gemini المُستضافة. هذا مضمون تعاقديًا عبر سياسة الخصوصية ويمكن توقيع DPA مخصّصة لخطّتَي Business / Enterprise.
+            {% endif %}
+          </div>
+        </details>
+
+        <details class="lp-faq">
+          <summary>{{ "What's in the free tier?" if lang == 'en' else 'ما الذي تتضمّنه الخطّة المجانية؟' }}<span class="lp-faq-chevron"></span></summary>
+          <div class="lp-faq-body">
+            {% if lang == 'en' %}
+            <b>30 credits per month, no card required.</b> That covers ~30 single-page extractions on the Fast tier, or ~5 multi-page complex documents on the Hard tier. You get access to 5 doctypes (invoice, prescription, business card, national ID, bank statement) and the web app + REST API. No expiration on free credits within the month.
+            {% else %}
+            <b>30 نقطة شهريًا بدون بطاقة.</b> تكفي ~30 عملية استخراج صفحة واحدة في الوضع السريع، أو ~5 مستندات مُعقّدة متعدّدة الصفحات في الوضع المتقدّم. تحصل على 5 أنواع مستندات (فاتورة، روشتة، بطاقة عمل، هوية، كشف بنك) والتطبيق + REST API. النقاط لا تنتهي خلال الشهر.
+            {% endif %}
+          </div>
+        </details>
+
+        <details class="lp-faq">
+          <summary>{{ 'How does the Odoo module work?' if lang == 'en' else 'كيف تعمل وحدة أودو؟' }}<span class="lp-faq-chevron"></span></summary>
+          <div class="lp-faq-body">
+            {% if lang == 'en' %}
+            Install <code>mostakhles_extract</code> on Odoo 18 or 19, paste your API key into the settings, and an "Extract with Mostakhles" button appears on Invoice, Bill, Partner, and HR Contract forms. Upload an image or PDF, and the corresponding Odoo record is populated — partner matched by tax ID, lines linked, taxes computed. Available on Lite and above.
+            {% else %}
+            ثبّت <code>mostakhles_extract</code> على Odoo 18 أو 19، الصق مفتاح الـ API في الإعدادات، وسيظهر زر «استخرج بمُستخلِص» على نماذج الفاتورة، فاتورة المورّد، الشريك، وعقد HR. ارفع صورة أو PDF فيتم ملء سجل أودو — مع مطابقة الشريك بالرقم الضريبي، ربط البنود، حساب الضرائب. متاح في خطة Lite فما فوق.
+            {% endif %}
+          </div>
+        </details>
+
+        <details class="lp-faq">
+          <summary>{{ "What's the difference between Fast and Hard tiers?" if lang == 'en' else 'ما الفرق بين وضع السريع والمتقدّم؟' }}<span class="lp-faq-chevron"></span></summary>
+          <div class="lp-faq-body">
+            {% if lang == 'en' %}
+            <b>Fast (1 credit/page)</b> uses our optimized fast model — ideal for printed invoices, clean IDs, and structured forms. <b>Hard (~8 credits/page)</b> uses the deep model for handwritten prescriptions, cursive contracts, low-quality scans, and tricky mixed-script documents. <b>Auto</b> picks the right tier per page based on a content heuristic. You can override at any time.
+            {% else %}
+            <b>السريع (نقطة لكل صفحة)</b> يستخدم نموذجنا المُحسَّن — مناسب للفواتير المطبوعة والهويات الواضحة والنماذج المنظّمة. <b>المتقدّم (~8 نقاط لكل صفحة)</b> يستخدم النموذج العميق للروشتات بخط اليد والعقود المتّصلة والمسوحات منخفضة الجودة والمستندات مختلطة الكتابة. <b>تلقائي</b> يختار الوضع المناسب لكل صفحة. يمكنك التجاوز في أي وقت.
+            {% endif %}
+          </div>
+        </details>
+
+        <details class="lp-faq">
+          <summary>{{ 'Do you offer SLAs?' if lang == 'en' else 'هل تقدّمون SLA؟' }}<span class="lp-faq-chevron"></span></summary>
+          <div class="lp-faq-body">
+            {% if lang == 'en' %}
+            Yes, Business and Enterprise plans include a <b>99.5% uptime SLA</b> with service credits, a <b>p95 latency commitment</b> of 30 seconds per single-page extraction, and priority queue access. Enterprise also gets a dedicated Slack channel and direct phone support.
+            {% else %}
+            نعم، خطّتا Business وEnterprise تتضمّنان <b>SLA بنسبة 99.5% للجاهزية</b> مع رصيد تعويضي، و<b>التزام زمن استجابة p95</b> بـ 30 ثانية للمستند الصفحة الواحدة، وأولوية في طابور المعالجة. Enterprise تحصل أيضًا على قناة Slack مخصّصة ودعم هاتفي مباشر.
+            {% endif %}
+          </div>
+        </details>
+
+        <details class="lp-faq">
+          <summary>{{ 'Which payment methods do you accept?' if lang == 'en' else 'ما طرق الدفع المقبولة؟' }}<span class="lp-faq-chevron"></span></summary>
+          <div class="lp-faq-body">
+            {% if lang == 'en' %}
+            <b>Paymob</b> for Egypt (Visa, Mastercard, Meeza, Vodafone Cash, instalments via valU), <b>PayPal</b> for international cards. For Business / Enterprise we also accept wire transfer in EGP, SAR, AED, or USD with annual invoicing.
+            {% else %}
+            <b>Paymob</b> لمصر (فيزا، ماستركارد، ميزة، فودافون كاش، تقسيط عبر valU)، و<b>PayPal</b> للبطاقات الدولية. لخطّتَي Business / Enterprise نقبل أيضًا تحويلًا بنكيًا بالجنيه أو الريال أو الدرهم أو الدولار مع فاتورة سنوية.
+            {% endif %}
+          </div>
+        </details>
+
+        <details class="lp-faq">
+          <summary>{{ 'How do I cancel or downgrade?' if lang == 'en' else 'كيف ألغي أو أنزّل خطتي؟' }}<span class="lp-faq-chevron"></span></summary>
+          <div class="lp-faq-body">
+            {% if lang == 'en' %}
+            One click in your account settings — no support email required. Cancel at any time and you keep access until the end of the billing cycle. No interrogation, no retention dark patterns. Re-subscribe whenever, no penalties.
+            {% else %}
+            بنقرة واحدة من إعدادات حسابك — بدون الحاجة لمراسلة الدعم. ألغِ في أي وقت وتبقى الميزات حتى نهاية الدورة. بدون استجواب، بدون أنماط مظلمة. اشترك من جديد متى شئت، بدون غرامات.
+            {% endif %}
+          </div>
+        </details>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- CAPABILITIES -->
-  <section class="section">
-    <div class="container">
-      <span class="eyebrow">{{ 'Platform capabilities' if lang == 'en' else 'قدرات المنصة' }}</span>
-      <h2>
-        {% if lang == 'en' %}More than you'd ask <span class="muted">— a full document platform</span>
-        {% else %}أكثر مما تطلب <span class="muted">— منصة مستندات متكاملة</span>{% endif %}
-      </h2>
-      <p class="section-sub">
-        {{ 'Don\'t just extract data. Understand it, compare it, analyze it, push it into your systems — all from one place.' if lang == 'en' else 'لا تستخرج البيانات فقط. افهمها، قارنها، حلّلها، وادفعها إلى أنظمتك — كل ذلك من مكان واحد.' }}
-      </p>
-      <div class="cap-grid">
-        {% if lang == 'en' %}
-        <div class="cap"><div class="ci"><i data-lucide="scan-text"></i></div><div><h4>Auto extraction</h4><p>We detect the document type and extract its fields with no setup.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="list-checks"></i></div><div><h4>Custom schema</h4><p>Define your fields precisely and get them structured every time.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="message-square"></i></div><div><h4>Chat with the document</h4><p>Ask it directly: what's the total? who signed? summarize the contract.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="git-compare"></i></div><div><h4>Document comparison</h4><p>See what changed between two versions — diffs and gaps, instantly.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="file-search"></i></div><div><h4>Contract-clause detection</h4><p>We flag the material clauses and risks in Arabic contracts.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="tags"></i></div><div><h4>Auto classify & tag</h4><p>Sort and tag incoming documents with zero manual effort.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="layers"></i></div><div><h4>Batch processing</h4><p>Upload dozens of pages at once with parallel background processing.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="badge-check"></i></div><div><h4>Per-field confidence</h4><p>Know which values are confirmed and which need review — before you commit.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="download"></i></div><div><h4>Export to any format</h4><p>Excel · CSV · PDF · Word · XML — ready for your systems.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="webhook"></i></div><div><h4>Webhooks & automation</h4><p>Get results delivered automatically the moment they're ready.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="history"></i></div><div><h4>Processing history</h4><p>Review every past operation and re-download results anytime.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="plug"></i></div><div><h4>API & Odoo module</h4><p>One engine reachable from the browser, the API and Odoo directly.</p></div></div>
-        {% else %}
-        <div class="cap"><div class="ci"><i data-lucide="scan-text"></i></div><div><h4>استخراج تلقائي</h4><p>نتعرّف على نوع المستند ونستخرج حقوله دون إعداد مسبق.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="list-checks"></i></div><div><h4>مخطط مخصص</h4><p>عرّف حقولك بدقة واحصل عليها منظّمة في كل مرة.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="message-square"></i></div><div><h4>محادثة مع المستند</h4><p>اسأل مستندك مباشرة: ما الإجمالي؟ من وقّع؟ لخّص العقد.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="git-compare"></i></div><div><h4>مقارنة المستندات</h4><p>اكتشف ما تغيّر بين نسختين — الفروقات والنواقص فورًا.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="file-search"></i></div><div><h4>كشف بنود العقود</h4><p>نرصد البنود الجوهرية والمخاطر في العقود العربية.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="tags"></i></div><div><h4>تصنيف وتوسيم تلقائي</h4><p>صنّف ووسّم المستندات الواردة بلا تدخل يدوي.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="layers"></i></div><div><h4>معالجة دفعات</h4><p>ارفع عشرات الصفحات دفعة واحدة بمعالجة متوازية في الخلفية.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="badge-check"></i></div><div><h4>درجة ثقة لكل حقل</h4><p>تعرف أي القيم مؤكدة وأيها يحتاج مراجعة — قبل الاعتماد.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="download"></i></div><div><h4>تصدير لكل الصيغ</h4><p>Excel · CSV · PDF · Word · XML — جاهزة لأنظمتك.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="webhook"></i></div><div><h4>Webhooks وأتمتة</h4><p>استقبل النتائج تلقائيًا في أنظمتك لحظة جاهزيتها.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="history"></i></div><div><h4>سجلّ المعالجة</h4><p>راجع كل عملية سابقة وأعد تنزيل نتائجها وقتما تشاء.</p></div></div>
-        <div class="cap"><div class="ci"><i data-lucide="plug"></i></div><div><h4>API ووحدة أودو</h4><p>محرّك واحد تصل إليه من المتصفّح والـ API وأودو مباشرة.</p></div></div>
-        {% endif %}
+    {# ════════════════ FINAL CTA — last conversion moment before footer ════ #}
+    {# Reordered to sit AFTER the FAQ so the flow is:
+       Enterprise controls → FAQ → Final CTA → Footer.
+       The black full-bleed treatment makes this the climax of the page. #}
+    <section class="lp-section lp-final-cta">
+      <span class="lp-cta-blob lp-cta-blob-1" aria-hidden="true"></span>
+      <span class="lp-cta-blob lp-cta-blob-2" aria-hidden="true"></span>
+      <span class="lp-cta-blob lp-cta-blob-3" aria-hidden="true"></span>
+      <span class="lp-cta-blob lp-cta-blob-4" aria-hidden="true"></span>
+      <span class="lp-cta-blob lp-cta-blob-5" aria-hidden="true"></span>
+      <span class="lp-cta-blob lp-cta-blob-6" aria-hidden="true"></span>
+
+      <div class="lp-cta-inner">
+        <p class="lp-cta-kicker">{{ 'FREE FOREVER · NO CARD · 30 SECONDS' if lang == 'en' else 'مجاني للأبد · بدون بطاقة · 30 ثانية' }}</p>
+        <h2 class="lp-cta-h">{{ '30 free credits. No credit card.' if lang == 'en' else '30 نقطة مجانية. بدون بطاقة.' }}</h2>
+        <p class="lp-cta-sub">
+          {{ 'Results in seconds. Try it on your own Arabic documents.' if lang == 'en' else 'نتائج في ثوانٍ. جرّبه على مستنداتك العربية.' }}
+        </p>
+        <a class="lp-cta-pill" href="/signup">{{ 'Start free' if lang == 'en' else 'ابدأ مجانًا' }}</a>
+        <ul class="lp-cta-features">
+          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ '28 doc types' if lang == 'en' else '28 نوع مستند' }}</li>
+          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ 'Web + API + Odoo' if lang == 'en' else 'الويب + API + أودو' }}</li>
+          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ 'GDPR-ready · privacy-first' if lang == 'en' else 'متوافق GDPR · خصوصية أولًا' }}</li>
+        </ul>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- INTEGRATIONS BAND -->
-  <section class="section section-alt">
-    <div class="container" style="text-align:center">
-      <h2>{{ 'Works with your tools' if lang == 'en' else 'يعمل مع أدواتك' }}</h2>
-      <p class="section-sub">
-        {{ 'Export results to the formats and systems you already use.' if lang == 'en' else 'صدّر نتائجك إلى الصيغ والأنظمة التي تستخدمها بالفعل.' }}
-      </p>
-      <div class="integ-row">
-        <span class="integ-chip"><img src="https://cdn.simpleicons.org/odoo/714B67" alt="Odoo"> {{ 'Odoo' if lang == 'en' else 'أودو' }}</span>
-        <span class="integ-chip"><img src="https://cdn.simpleicons.org/microsoftexcel/217346" alt="Excel"> Excel</span>
-        <span class="integ-chip"><img src="https://cdn.simpleicons.org/googlesheets/0F9D58" alt="Google Sheets"> Google Sheets</span>
-        <span class="integ-chip"><img src="https://cdn.simpleicons.org/adobeacrobatreader/EC1C24" alt="PDF"> PDF</span>
-        <span class="integ-chip"><i data-lucide="code-2"></i> JSON / API</span>
-        <span class="integ-chip"><i data-lucide="webhook"></i> Webhooks</span>
-        <span class="integ-chip"><i data-lucide="file-spreadsheet"></i> CSV / XML</span>
-      </div>
-    </div>
-  </section>
+  </div>  {# /lp-shell #}
 
-  <!-- LANGUAGES -->
-  <section class="section section-alt">
-    <div class="container" style="text-align:center">
-      <span class="eyebrow">{{ 'Language coverage' if lang == 'en' else 'تغطية اللغات' }}</span>
-      <h2>
-        {% if lang == 'en' %}Arabic specialists <span class="muted">— and 30+ languages supported</span>
-        {% else %}متخصّصون في العربية <span class="muted">— وندعم أكثر من 30 لغة</span>{% endif %}
-      </h2>
-      <p class="section-sub">
-        {{ 'One engine reads your printed documents in the world\'s major languages. Arabic and Arabic handwriting are our specialty.' if lang == 'en' else 'محرّك واحد يقرأ مستنداتك المطبوعة بلغات العالم الرئيسية. العربية والخط اليدوي العربي هما تخصّصنا.' }}
-      </p>
-      <div class="lang-wrap">
-        <span class="lang-chip star">{{ 'Arabic' if lang == 'en' else 'العربية' }}</span>
-        <span class="lang-chip star">English</span>
-        <span class="lang-chip star">Français</span>
-        <span class="lang-chip">فارسی</span>
-        <span class="lang-chip">اردو</span>
-        <span class="lang-chip">کوردی</span>
-        <span class="lang-chip">עברית</span>
-        <span class="lang-chip">Türkçe</span>
-        <span class="lang-chip">Español</span>
-        <span class="lang-chip">Deutsch</span>
-        <span class="lang-chip">Italiano</span>
-        <span class="lang-chip">Português</span>
-        <span class="lang-chip">Nederlands</span>
-        <span class="lang-chip">Polski</span>
-        <span class="lang-chip">Română</span>
-        <span class="lang-chip">Русский</span>
-        <span class="lang-chip">Українська</span>
-        <span class="lang-chip">Ελληνικά</span>
-        <span class="lang-chip">हिन्दी</span>
-        <span class="lang-chip">বাংলা</span>
-        <span class="lang-chip">தமிழ்</span>
-        <span class="lang-chip">简体中文</span>
-        <span class="lang-chip">繁體中文</span>
-        <span class="lang-chip">日本語</span>
-        <span class="lang-chip">한국어</span>
-        <span class="lang-chip">ไทย</span>
-        <span class="lang-chip">Tiếng Việt</span>
-        <span class="lang-chip">Bahasa Indonesia</span>
-        <span class="lang-chip">Filipino</span>
-        <span class="lang-chip">Kiswahili</span>
-      </div>
-      <p class="lang-note">
-        {{ 'Full handwriting support is available for Arabic. Accuracy varies by language and document quality.' if lang == 'en' else 'الدعم الكامل للخط اليدوي متاح للعربية. تختلف الدقة حسب اللغة وجودة المستند.' }}
-      </p>
-    </div>
-  </section>
+  {# ════════════════ FOOTER ════════════════ #}
+  {% include "_lpfooter.html" %}
 
-  <!-- USE CASES -->
-  <section id="use-cases" class="section section-alt">
-    <div class="container">
-      <h2>
-        {% if lang == 'en' %}Who uses <span class="muted">Mostakhles?</span>
-        {% else %}من يستخدم <span class="muted">مُستخلِص؟</span>{% endif %}
-      </h2>
-      <div class="cards">
-        {% if lang == 'en' %}
-        <div class="card"><h3>Accountants</h3><p>Push invoices and receipts into Odoo without typing them in.</p></div>
-        <div class="card"><h3>Delivery companies</h3><p>Read shipping data and customer addresses from scanned papers.</p></div>
-        <div class="card"><h3>Clinics & pharmacies</h3><p>Convert handwritten prescriptions into structured records.</p></div>
-        <div class="card"><h3>HR teams</h3><p>Extract ID data and employee contracts automatically.</p></div>
-        {% else %}
-        <div class="card"><h3>المحاسبون</h3><p>إدخال الفواتير والإيصالات في أودو دون كتابة يدوية.</p></div>
-        <div class="card"><h3>شركات التوصيل</h3><p>قراءة بيانات الشحن وعناوين العملاء من الأوراق الممسوحة.</p></div>
-        <div class="card"><h3>العيادات والصيدليات</h3><p>تحويل الوصفات المكتوبة بخط اليد إلى سجلات منظمة.</p></div>
-        <div class="card"><h3>الموارد البشرية</h3><p>استخراج بيانات الهويات وعقود الموظفين تلقائيًا.</p></div>
-        {% endif %}
-      </div>
-    </div>
-  </section>
+  <script nonce="{{ csp_nonce }}" src="https://unpkg.com/lucide@0.456.0/dist/umd/lucide.min.js"></script>
+  <script nonce="{{ csp_nonce }}">
+    if (window.lucide) lucide.createIcons();
 
-  <!-- SECURITY -->
-  <section id="security" class="section">
-    <div class="container">
-      <span class="eyebrow">{{ 'Security & trust' if lang == 'en' else 'الأمان والثقة' }}</span>
-      <h2>
-        {% if lang == 'en' %}Security & privacy <span class="muted">you can trust</span>
-        {% else %}أمان وخصوصية <span class="muted">تستحق ثقتك</span>{% endif %}
-      </h2>
-      <p class="section-sub">
-        {{ 'We handle your documents responsibly — these aren\'t slogans, they\'re our actual policies.' if lang == 'en' else 'نتعامل مع مستنداتك بمسؤولية — هذه ليست شعارات، بل سياساتنا الفعلية.' }}
-      </p>
-      <div class="security-grid">
-        {% if lang == 'en' %}
-        <div class="sec-card"><div class="ico"><i data-lucide="shield-check"></i></div><h3>We don't store your documents</h3><p>Documents are processed in memory and deleted the moment extraction completes — no archive, no retention.</p></div>
-        <div class="sec-card"><div class="ico"><i data-lucide="lock"></i></div><h3>Encrypted in transit</h3><p>All data travels over an encrypted (HTTPS/TLS) connection from your device to our servers.</p></div>
-        <div class="sec-card"><div class="ico"><i data-lucide="key-round"></i></div><h3>Full access control</h3><p>Password-protected account and API keys you can revoke anytime from the dashboard.</p></div>
-        <div class="sec-card"><div class="ico"><i data-lucide="wallet"></i></div><h3>Transparent billing</h3><p>Clear credits system — you see the cost of each operation before it runs. No surprise fees.</p></div>
-        <div class="sec-card"><div class="ico"><i data-lucide="globe-2"></i></div><h3>Built for the Arab region</h3><p>Specialists in Egyptian & Gulf documents — invoices, contracts and IDs in Arabic and handwriting.</p></div>
-        <div class="sec-card"><div class="ico"><i data-lucide="gauge"></i></div><h3>You control the cost</h3><p>Pick fast or high-accuracy mode per document and watch your balance live.</p></div>
-        {% else %}
-        <div class="sec-card"><div class="ico"><i data-lucide="shield-check"></i></div><h3>لا نُخزّن مستنداتك</h3><p>تُعالَج المستندات في الذاكرة وتُحذَف فور انتهاء الاستخراج — لا أرشفة، لا احتفاظ.</p></div>
-        <div class="sec-card"><div class="ico"><i data-lucide="lock"></i></div><h3>اتصال مشفّر</h3><p>كل البيانات تُنقَل عبر اتصال مشفّر (HTTPS/TLS) من جهازك إلى الخادم.</p></div>
-        <div class="sec-card"><div class="ico"><i data-lucide="key-round"></i></div><h3>تحكّم كامل بالوصول</h3><p>حساب محمي بكلمة مرور، ومفاتيح API يمكنك إلغاؤها في أي لحظة من لوحة التحكم.</p></div>
-        <div class="sec-card"><div class="ico"><i data-lucide="wallet"></i></div><h3>فوترة شفّافة</h3><p>نظام نقاط واضح — ترى تكلفة كل عملية قبل تنفيذها. بلا رسوم مفاجئة.</p></div>
-        <div class="sec-card"><div class="ico"><i data-lucide="globe-2"></i></div><h3>مبنيّ للمنطقة العربية</h3><p>متخصصون في مستندات مصر والخليج — الفواتير والعقود والهويات بالعربية والخط اليدوي.</p></div>
-        <div class="sec-card"><div class="ico"><i data-lucide="gauge"></i></div><h3>أنت تتحكّم بالتكلفة</h3><p>اختر الوضع السريع أو الدقيق لكل مستند، وراقب رصيدك لحظيًا.</p></div>
-        {% endif %}
-      </div>
-    </div>
-  </section>
-
-  <!-- PRICING -->
-  <section id="pricing" class="section section-alt">
-    <div class="container">
-      <h2>
-        {% if lang == 'en' %}Simple <span class="muted">transparent pricing</span>
-        {% else %}أسعار بسيطة <span class="muted">وشفافة</span>{% endif %}
-      </h2>
-      <p class="section-sub">
-        {% if lang == 'en' %}
-          Credits are shared across web, Odoo and the API. Page = <b>1 credit</b> in fast mode, or <b>8 credits</b> in high-accuracy mode (Arabic & handwriting).
-        {% else %}
-          النقاط مشتركة عبر الويب وأودو والـ API. الصفحة = <b>نقطة واحدة</b> بالوضع السريع، أو <b>8 نقاط</b> بالدقة العالية (العربي والخط اليدوي).
-        {% endif %}
-      </p>
-
-      {% macro subscribe_btn(plan, label, primary=False) -%}
-        {%- if user -%}
-        <form method="post" action="/billing/checkout" style="margin:0">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <input type="hidden" name="plan" value="{{ plan }}">
-          <button class="btn {{ 'btn-primary' if primary else 'btn-ghost' }} full" type="submit">{{ label }}</button>
-        </form>
-        {%- else -%}
-        <a class="btn {{ 'btn-primary' if primary else 'btn-ghost' }} full" href="/signup?next=/%23pricing">{{ label }}</a>
-        {%- endif -%}
-      {%- endmacro %}
-
-      <div class="pricing pricing-5">
-        {% if lang == 'en' %}
-        <div class="plan">
-          <h3>🎁 Free</h3>
-          <div class="price">$0<span>/month</span></div>
-          <p class="quota">300 credits/month</p>
-          <ul>
-            <li>Web + Odoo + API</li>
-            <li>All languages & handwriting</li>
-            <li>Telegram community support</li>
-            <li>No credit card required</li>
-          </ul>
-          <a class="btn btn-ghost full" href="/signup">Start free</a>
-        </div>
-        <div class="plan">
-          <h3>🌱 Lite</h3>
-          <div class="price">$9<span>/month</span></div>
-          <p class="quota">1,200 credits/month</p>
-          <ul>
-            <li>Everything in Free</li>
-            <li>Credit rollover to next month</li>
-            <li>Email support</li>
-            <li>For individuals & freelancers</li>
-          </ul>
-          {{ subscribe_btn('lite', 'Subscribe') }}
-        </div>
-        <div class="plan">
-          <h3>🚀 Starter</h3>
-          <div class="price">$29<span>/month</span></div>
-          <p class="quota">3,500 credits/month</p>
-          <ul>
-            <li>Everything in Lite</li>
-            <li>Top-up ($5 per 400 credits)</li>
-            <li>Faster email support</li>
-            <li>For small businesses</li>
-          </ul>
-          {{ subscribe_btn('starter', 'Subscribe') }}
-        </div>
-        <div class="plan featured">
-          <div class="tag">🔥 Most popular</div>
-          <h3>Pro</h3>
-          <div class="price">$69<span>/month</span></div>
-          <p class="quota">8,500 credits (+20% bonus)</p>
-          <ul>
-            <li>Everything in Starter</li>
-            <li>Priority WhatsApp support</li>
-            <li>7-day free trial</li>
-            <li>For departments & teams</li>
-          </ul>
-          {{ subscribe_btn('pro', 'Subscribe', primary=True) }}
-        </div>
-        <div class="plan">
-          <h3>💼 Business</h3>
-          <div class="price">$199<span>/month</span></div>
-          <p class="quota">28,000 credits/month</p>
-          <ul>
-            <li>Everything in Pro</li>
-            <li>Dedicated account manager + SLA</li>
-            <li>Flexible annual contract</li>
-            <li>For mid-sized organizations</li>
-          </ul>
-          <a class="btn btn-ghost full" href="mailto:support@mostakhles.ai">Contact us</a>
-        </div>
-        {% else %}
-        <div class="plan">
-          <h3>🎁 مجانية</h3>
-          <div class="price">$0<span>/شهر</span></div>
-          <p class="quota">300 نقطة شهريًا</p>
-          <ul>
-            <li>الويب + أودو + الـ API</li>
-            <li>كل اللغات والخط اليدوي</li>
-            <li>دعم عبر مجتمع تيليغرام</li>
-            <li>بدون بطاقة ائتمان</li>
-          </ul>
-          <a class="btn btn-ghost full" href="/signup">ابدأ مجانًا</a>
-        </div>
-        <div class="plan">
-          <h3>🌱 Lite</h3>
-          <div class="price">$9<span>/شهر</span></div>
-          <p class="quota">1,200 نقطة شهريًا</p>
-          <ul>
-            <li>كل مميزات المجانية</li>
-            <li>ترحيل النقاط للشهر التالي</li>
-            <li>دعم بالبريد الإلكتروني</li>
-            <li>للأفراد والمستقلّين</li>
-          </ul>
-          {{ subscribe_btn('lite', 'اشترك') }}
-        </div>
-        <div class="plan">
-          <h3>🚀 Starter</h3>
-          <div class="price">$29<span>/شهر</span></div>
-          <p class="quota">3,500 نقطة شهريًا</p>
-          <ul>
-            <li>كل مميزات Lite</li>
-            <li>شحن إضافي ($5 لكل 400 نقطة)</li>
-            <li>دعم بريدي أسرع</li>
-            <li>للشركات الصغيرة</li>
-          </ul>
-          {{ subscribe_btn('starter', 'اشترك') }}
-        </div>
-        <div class="plan featured">
-          <div class="tag">🔥 الأكثر شيوعًا</div>
-          <h3>Pro</h3>
-          <div class="price">$69<span>/شهر</span></div>
-          <p class="quota">8,500 نقطة (+20% بونص)</p>
-          <ul>
-            <li>كل مميزات Starter</li>
-            <li>دعم أولوية على واتساب</li>
-            <li>تجربة 7 أيام مجانًا</li>
-            <li>للأقسام والفِرق</li>
-          </ul>
-          {{ subscribe_btn('pro', 'اشترك الآن', primary=True) }}
-        </div>
-        <div class="plan">
-          <h3>💼 Business</h3>
-          <div class="price">$199<span>/شهر</span></div>
-          <p class="quota">28,000 نقطة شهريًا</p>
-          <ul>
-            <li>كل مميزات Pro</li>
-            <li>مدير حساب مخصص + SLA</li>
-            <li>عقد سنوي مرن</li>
-            <li>للمؤسسات المتوسطة</li>
-          </ul>
-          <a class="btn btn-ghost full" href="mailto:support@mostakhles.ai">تواصل معنا</a>
-        </div>
-        {% endif %}
-      </div>
-
-      <p class="pricing-annual">
-        {% if lang == 'en' %}
-          💡 <b>20%</b> off on every annual plan — save two full months.
-        {% else %}
-          💡 خصم <b>20%</b> على كل خطة سنوية — وفّر شهرين كاملين.
-        {% endif %}
-      </p>
-
-      <div class="assurance">
-        {% if lang == 'en' %}
-        <span><b>✓</b> No credit card for Free</span>
-        <span><b>✓</b> Full refund within 14 days</span>
-        <span><b>✓</b> Credit rollover (Lite and above)</span>
-        <span><b>✓</b> Unlimited top-ups</span>
-        <span><b>✓</b> Cancel anytime</span>
-        {% else %}
-        <span><b>✓</b> بدون بطاقة ائتمان للمجانية</span>
-        <span><b>✓</b> استرداد كامل خلال 14 يومًا</span>
-        <span><b>✓</b> ترحيل النقاط (Lite فما فوق)</span>
-        <span><b>✓</b> شحن إضافي بدون حدود</span>
-        <span><b>✓</b> ألغِ في أي وقت</span>
-        {% endif %}
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section id="faq" class="section">
-    <div class="container narrow">
-      <h2>{{ 'Frequently asked questions' if lang == 'en' else 'الأسئلة الشائعة' }}</h2>
-      {% if lang == 'en' %}
-      <details><summary>Does it really support Arabic handwriting?</summary><p>Yes. That's why we exist — we use advanced vision models that read Arabic and English handwriting together.</p></details>
-      <details><summary>How does it integrate with Odoo?</summary><p>Install a free module from the Apps Store, pick a model and fields, and an upload button appears inside the record. We fill the fields automatically from the document.</p></details>
-      <details><summary>Which languages are supported?</summary><p>Arabic and English first, but the model practically supports any language in the document.</p></details>
-      <details><summary>Is my data safe?</summary><p>We don't store your documents after extraction. They're processed and deleted immediately.</p></details>
-      <details><summary>What happens if I exceed the free quota?</summary><p>We pause extractions until next month or until you upgrade — with no surprise charges.</p></details>
-      {% else %}
-      <details><summary>هل يدعم الخط اليدوي العربي فعلًا؟</summary><p>نعم. هذا هو سبب وجودنا — نستخدم نماذج رؤية متقدمة تقرأ الخط اليدوي العربي والإنجليزي معًا.</p></details>
-      <details><summary>كيف يتكامل مع أودو؟</summary><p>تثبّت وحدة مجانية من متجر التطبيقات، تختار النموذج والحقول، ويظهر زر رفع داخل السجل. نملأ الحقول تلقائيًا من المستند.</p></details>
-      <details><summary>ما اللغات المدعومة؟</summary><p>العربية والإنجليزية أولًا، لكن النموذج يدعم عمليًا أي لغة في المستند.</p></details>
-      <details><summary>هل بياناتي آمنة؟</summary><p>لا نخزّن مستنداتك بعد الاستخراج. تُعالج وتُحذف فورًا.</p></details>
-      <details><summary>ماذا يحدث إذا تجاوزت الحصة المجانية؟</summary><p>نوقف الاستخراج حتى الشهر التالي أو ترقية الخطة — دون أي رسوم مفاجئة.</p></details>
-      {% endif %}
-    </div>
-  </section>
-
-  </div><!-- /canvas -->
-
-  <script>
+    // Theme toggle — flips [data-theme] on <html> and persists to localStorage
     (function () {
-      {% if lang == 'en' %}
-      var data = [
-        { word: 'Arab businesses', chip: 'Arabic invoice', f: [
-          ['Customer', 'أحمد حسن', 'ok'], ['Invoice no.', 'INV-2025-0042', 'ok'],
-          ['Date', '2025-03-01', 'ok'], ['Total', '1,530 EGP', 'ok'], ['Tax ID', '304-221-119', 'mid'] ] },
-        { word: 'Invoices & contracts', chip: 'Lease contract', f: [
-          ['Party A', 'شركة النخبة', 'ok'], ['Party B', 'محمد علي', 'ok'],
-          ['Term', '12 months', 'ok'], ['Rent', '4,000 EGP/month', 'ok'], ['Start date', '2025-01-01', 'mid'] ] },
-        { word: 'IDs & passports', chip: 'National ID', f: [
-          ['Name', 'سارة إبراهيم', 'ok'], ['National ID', '29805011200123', 'ok'],
-          ['Date of birth', '1998-05-01', 'ok'], ['City', 'القاهرة', 'ok'], ['Expiry', '2030-12-31', 'mid'] ] },
-        { word: 'Handwriting', chip: 'Handwritten Rx', f: [
-          ['Patient', 'خالد يوسف', 'ok'], ['Diagnosis', 'التهاب الحلق', 'mid'],
-          ['Medication', 'أموكسيسيلين 500', 'ok'], ['Dose', '3× daily', 'ok'], ['Duration', '7 days', 'ok'] ] }
-      ];
-      {% else %}
-      var data = [
-        { word: 'الأعمال العربية', chip: 'فاتورة عربية', f: [
-          ['اسم العميل', 'أحمد حسن', 'ok'], ['رقم الفاتورة', 'INV-2025-0042', 'ok'],
-          ['التاريخ', '2025-03-01', 'ok'], ['الإجمالي', '1,530 ج.م', 'ok'], ['الرقم الضريبي', '304-221-119', 'mid'] ] },
-        { word: 'الفواتير والعقود', chip: 'عقد إيجار', f: [
-          ['الطرف الأول', 'شركة النخبة', 'ok'], ['الطرف الثاني', 'محمد علي', 'ok'],
-          ['مدة العقد', '12 شهرًا', 'ok'], ['قيمة الإيجار', '4,000 ج.م/شهر', 'ok'], ['تاريخ البدء', '2025-01-01', 'mid'] ] },
-        { word: 'الهويات والجوازات', chip: 'بطاقة رقم قومي', f: [
-          ['الاسم', 'سارة إبراهيم', 'ok'], ['الرقم القومي', '29805011200123', 'ok'],
-          ['تاريخ الميلاد', '1998-05-01', 'ok'], ['محل الإقامة', 'القاهرة', 'ok'], ['تاريخ الانتهاء', '2030-12-31', 'mid'] ] },
-        { word: 'الخط اليدوي', chip: 'روشتة بخط اليد', f: [
-          ['اسم المريض', 'خالد يوسف', 'ok'], ['التشخيص', 'التهاب الحلق', 'mid'],
-          ['الدواء', 'أموكسيسيلين 500', 'ok'], ['الجرعة', '3 مرات يوميًا', 'ok'], ['المدة', '7 أيام', 'ok'] ] }
-      ];
-      {% endif %}
-      var rotate = document.getElementById('rotate');
-      var chip = document.getElementById('chipText');
-      var body = document.getElementById('hvBody');
-      if (!rotate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      var rows = body ? body.querySelectorAll('.hv-field') : [];
-      var i = 0;
-      setInterval(function () {
-        i = (i + 1) % data.length;
-        var d = data[i];
-        rotate.style.opacity = '0'; rotate.style.transform = 'translateY(7px)';
-        if (body) body.classList.add('swap');
-        setTimeout(function () {
-          rotate.textContent = d.word;
-          rotate.style.opacity = '1'; rotate.style.transform = 'translateY(0)';
-          if (chip) chip.textContent = d.chip;
-          for (var r = 0; r < rows.length && r < d.f.length; r++) {
-            rows[r].querySelector('span').textContent = d.f[r][0];
-            rows[r].querySelector('b').textContent = d.f[r][1];
-            rows[r].querySelector('.dot').className = 'dot ' + d.f[r][2];
-          }
-          if (body) body.classList.remove('swap');
-        }, 300);
-      }, 3200);
+      var btn = document.getElementById('themeToggle');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        var cur = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('mostakhles.theme', next); } catch (e) {}
+      });
     })();
 
-    // Interactive demo: pick a sample → scan → reveal extracted fields.
-    (function () {
-      {% if lang == 'en' %}
-      var demo = [
-        { chip: 'Arabic invoice', f: [
-          ['Customer', 'أحمد حسن', ''], ['Invoice no.', 'INV-2025-0042', ''],
-          ['Date', '2025-03-01', ''], ['Total', '1,530 EGP', ''], ['Tax ID', '304-221-119', 'mid'] ] },
-        { chip: 'National ID', f: [
-          ['Name', 'سارة إبراهيم', ''], ['National ID', '29805011200123', ''],
-          ['Date of birth', '1998-05-01', ''], ['City', 'القاهرة', ''], ['Expiry', '2030-12-31', 'mid'] ] },
-        { chip: 'Handwritten Rx', f: [
-          ['Patient', 'خالد يوسف', ''], ['Diagnosis', 'التهاب الحلق', 'mid'],
-          ['Medication', 'أموكسيسيلين 500', ''], ['Dose', '3× daily', ''], ['Duration', '7 days', ''] ] }
-      ];
-      {% else %}
-      var demo = [
-        { chip: 'فاتورة عربية', f: [
-          ['اسم العميل', 'أحمد حسن', ''], ['رقم الفاتورة', 'INV-2025-0042', ''],
-          ['التاريخ', '2025-03-01', ''], ['الإجمالي', '1,530 ج.م', ''], ['الرقم الضريبي', '304-221-119', 'mid'] ] },
-        { chip: 'بطاقة رقم قومي', f: [
-          ['الاسم', 'سارة إبراهيم', ''], ['الرقم القومي', '29805011200123', ''],
-          ['تاريخ الميلاد', '1998-05-01', ''], ['محل الإقامة', 'القاهرة', ''], ['تاريخ الانتهاء', '2030-12-31', 'mid'] ] },
-        { chip: 'روشتة بخط اليد', f: [
-          ['اسم المريض', 'خالد يوسف', ''], ['التشخيص', 'التهاب الحلق', 'mid'],
-          ['الدواء', 'أموكسيسيلين 500', ''], ['الجرعة', '3 مرات يوميًا', ''], ['المدة', '7 أيام', ''] ] }
-      ];
-      {% endif %}
-      var tabs = document.querySelectorAll('.demo-tab');
-      var papers = document.querySelectorAll('#demoDoc .paper');
-      var docEl = document.getElementById('demoDoc');
-      var bodyEl = document.getElementById('demoBody');
-      var chipEl = document.getElementById('demoChip');
-      if (!tabs.length || !bodyEl) return;
-      var rows = bodyEl.querySelectorAll('.rfield');
-      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Sticky-header style on scroll
+    var hd = document.getElementById('lpHeader');
+    addEventListener('scroll', function () {
+      if (window.scrollY > 8) hd.classList.add('scrolled'); else hd.classList.remove('scrolled');
+    }, { passive: true });
 
-      function play(idx) {
-        var d = demo[idx];
-        papers.forEach(function (p, i) { p.hidden = (i !== idx); });
-        rows.forEach(function (r) { r.classList.remove('show'); });
-        if (!reduce) { docEl.classList.remove('scanning'); void docEl.offsetWidth; docEl.classList.add('scanning'); }
-        var base = reduce ? 0 : 720;
-        if (chipEl) setTimeout(function () { chipEl.textContent = d.chip; }, base);
-        rows.forEach(function (r, i) {
-          setTimeout(function () {
-            r.querySelector('.k').textContent = d.f[i][0];
-            r.querySelector('.vt').textContent = d.f[i][1];
-            r.querySelector('.rdot').className = 'rdot ' + (d.f[i][2] || '');
-            r.classList.add('show');
-          }, base + i * 130);
-        });
+    // Hero rotator — animate the keyword in the h1
+    (function () {
+      var rws = document.querySelectorAll('.lp-rw');
+      if (!rws.length) return;
+      var i = 0;
+      rws[0].classList.add('on');
+      setInterval(function () {
+        rws[i].classList.remove('on');
+        i = (i + 1) % rws.length;
+        rws[i].classList.add('on');
+      }, 2400);
+    })();
+
+    // Hero demo — cycle through 5 doc slides + scan + result
+    (function () {
+      var slides = document.querySelectorAll('.lp-hd-slide');
+      var status = document.getElementById('lpStatus');
+      var result = document.getElementById('lpResult');
+      var resText = document.getElementById('lpResultText');
+      if (!slides.length) return;
+      var labels = [
+        { ar: 'استخراج روشتة…', en: 'Extracting prescription…',
+          jsonAr: '{\n  "doctor": "غالي سامي غالي",\n  "patient": "موسى مجيد",\n  "age": "2.5y",\n  "medications": [\n    { "name": "Newclav 457", "dose": "2.5ml / 12h" },\n    { "name": "Rhinopro syp", "dose": "2.5ml / twice" },\n    { "name": "Nasostop ped", "dose": "1 drop" }\n  ],\n  "summary": "Pediatric upper-respiratory Rx · 5-day course",\n  "validations": ["✓ doses age-appropriate", "✓ no interactions"]\n}',
+          jsonEn: '{\n  "doctor": "Ghaly Sami Ghaly",\n  "patient": "Moussa Magid",\n  "age": "2.5y",\n  "medications": [\n    { "name": "Newclav 457", "dose": "2.5ml / 12h" },\n    { "name": "Rhinopro syp", "dose": "2.5ml / twice" },\n    { "name": "Nasostop ped", "dose": "1 drop" }\n  ],\n  "summary": "Pediatric upper-respiratory Rx · 5-day course",\n  "validations": ["✓ doses age-appropriate", "✓ no interactions"]\n}' },
+        { ar: 'استخراج بطاقة قومية…', en: 'Extracting driver license…',
+          jsonAr: '{\n  "id_number": "29806011401237",\n  "name": "أحمد محمد حسن السيد",\n  "name_en": "Ahmed Mohamed Hassan",\n  "dob": "1998-06-01",\n  "address": "القاهرة — مدينة نصر",\n  "validations": ["✓ checksum valid", "✓ governorate code: Cairo"]\n}',
+          jsonEn: '{\n  "license_no": "D5482176",\n  "name": "RICHARD BENJAMIN REYES",\n  "dob": "1987-01-05",\n  "issue_date": "2023-05-06",\n  "expiry": "2031-01-05",\n  "address": "1234 Main St, San Diego CA",\n  "state": "California",\n  "validations": ["✓ format matches CA pattern", "✓ not expired"]\n}' },
+        { ar: 'استخراج فاتورة…', en: 'Extracting invoice…',
+          jsonAr: '{\n  "invoice_no": "INV-2026-0042",\n  "currency": "EGP",\n  "items": [\n    { "description": "خدمات استشارية", "qty": 10, "price": 1500 },\n    { "description": "تطوير برمجي", "qty": 5, "price": 2000 },\n    { "description": "تصميم واجهات", "qty": 2, "price": 800 }\n  ],\n  "derived": { "subtotal": 26600, "vat_14%": 3724, "total": 30324 },\n  "summary": "B2B services invoice · VAT included"\n}',
+          jsonEn: '{\n  "invoice_no": "INV-2026-0042",\n  "currency": "USD",\n  "items": [\n    { "description": "Consulting services", "qty": 10, "price": 1500 },\n    { "description": "Software development", "qty": 5, "price": 2000 },\n    { "description": "UI/UX design", "qty": 2, "price": 800 }\n  ],\n  "derived": { "subtotal": 26600, "tax_8.25%": 2195, "total": 28795 },\n  "summary": "B2B services invoice · tax included"\n}' },
+        { ar: 'قراءة خط اليد…', en: 'Reading handwriting…',
+          jsonAr: '{\n  "type": "meeting_minutes",\n  "date": "2026-02-05",\n  "attendees": ["أحمد", "فاطمة", "خالد"],\n  "decisions": [\n    "إطلاق المنتج في مارس",\n    "زيادة الميزانية 20%"\n  ],\n  "summary": "Product launch in March · 20% budget increase approved"\n}',
+          jsonEn: '{\n  "type": "meeting_minutes",\n  "date": "2026-02-05",\n  "attendees": ["Sarah", "Ahmed", "Layla", "Khaled"],\n  "decisions": [\n    "Launch product in March",\n    "Increase budget by 20%"\n  ],\n  "summary": "Product launch in March · 20% budget increase approved"\n}' },
+        { ar: 'تحليل عقد بيع…', en: 'Parsing sale contract…',
+          jsonAr: '{\n  "type": "sale_contract",\n  "amount": "2,500,000 EGP",\n  "clauses": [\n    { "n": 1, "topic": "object", "summary": "residential unit sale" },\n    { "n": 2, "topic": "price", "summary": "3 installments" },\n    { "n": 3, "topic": "transfer", "summary": "deadline specified" }\n  ],\n  "validations": ["✓ both parties named", "⚠ witness signatures missing"]\n}',
+          jsonEn: '{\n  "type": "sale_agreement",\n  "amount": "$2,500,000",\n  "clauses": [\n    { "n": 1, "topic": "object", "summary": "Residential unit sale" },\n    { "n": 2, "topic": "price", "summary": "3 installments" },\n    { "n": 3, "topic": "transfer", "summary": "Title transfer deadline specified" }\n  ],\n  "validations": ["✓ both parties named", "⚠ witness signatures missing"]\n}' },
+      ];
+      var lang = document.documentElement.getAttribute('lang') || 'ar';
+      var i = 0;
+      function step() {
+        slides.forEach(function (s, j) { s.classList.toggle('active', j === i); });
+        result.classList.add('open');
+        status.textContent = labels[i][lang === 'ar' ? 'ar' : 'en'];
+        resText.textContent = labels[i][lang === 'ar' ? 'jsonAr' : 'jsonEn'];
+        i = (i + 1) % slides.length;
       }
-      tabs.forEach(function (t) {
-        t.addEventListener('click', function () {
-          tabs.forEach(function (x) { x.classList.remove('active'); });
-          t.classList.add('active');
-          play(parseInt(t.dataset.s, 10));
-        });
-      });
-      play(0);
+      step();
+      setInterval(step, 3800);
     })();
   </script>
 
-  <!-- FINAL CTA -->
-  <section id="demo" class="cta-final">
-    <div class="container">
-      <h2>
-        {{ 'Your Arabic documents — understood and automated. Start today.' if lang == 'en' else 'مستنداتك العربية، مفهومة ومؤتمتة — ابدأ اليوم' }}
-      </h2>
-      <p>
-        {{ 'Upload your first document in under a minute. No credit card, full capabilities.' if lang == 'en' else 'ارفع أول مستند خلال دقيقة. بدون بطاقة ائتمان، وبكامل القدرات.' }}
-      </p>
-      <a class="btn btn-primary btn-lg" href="/signup">{{ 'Start free' if lang == 'en' else 'ابدأ مجانًا' }}</a>
-    </div>
-  </section>
+  {# ── Live demo wiring — drop file → /v1/extract → render JSON inline ── #}
+  <script nonce="{{ csp_nonce }}">
+    (function () {
+      const dz       = document.getElementById('lpDropzone');
+      if (!dz) return;
+      const inp      = document.getElementById('lpDropInput');
+      const pick     = document.getElementById('lpDropPick');
+      const empty    = document.getElementById('lpLiveEmpty');
+      const loading  = document.getElementById('lpLiveLoading');
+      const jsonEl   = document.getElementById('lpLiveJson');
+      const errEl    = document.getElementById('lpLiveError');
+      const statusEl = document.getElementById('lpLiveStatus');
+      const copyBtn  = document.getElementById('lpLiveCopy');
+      const isAr     = document.documentElement.dir === 'rtl';
 
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-cols">
-        <div class="footer-col">
-          <a class="brand" href="/">{{ 'Mostakhles' if lang == 'en' else 'مُستخلِص' }}<span>.ai</span></a>
-          <p style="margin-top:10px;max-width:260px">
-            {{ 'The AI platform for understanding and automating Arabic business documents.' if lang == 'en' else 'منصة الذكاء الاصطناعي لفهم وأتمتة مستندات الأعمال العربية.' }}
-          </p>
-        </div>
-        <div class="footer-col">
-          <h4>{{ 'Product' if lang == 'en' else 'المنتج' }}</h4>
-          <a href="/tools">{{ 'Tools' if lang == 'en' else 'الأدوات' }}</a>
-          <a href="/chat">{{ 'Chat with documents' if lang == 'en' else 'المحادثة مع المستندات' }}</a>
-          <a href="/compare">{{ 'Document comparison' if lang == 'en' else 'مقارنة المستندات' }}</a>
-          <a href="/#pricing">{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</a>
-        </div>
-        <div class="footer-col">
-          <h4>{{ 'Developers' if lang == 'en' else 'المطوّرون' }}</h4>
-          <a href="/docs">{{ 'API' if lang == 'en' else 'واجهة API' }}</a>
-          <a href="/#security">{{ 'Security & privacy' if lang == 'en' else 'الأمان والخصوصية' }}</a>
-          <a href="/#faq">{{ 'FAQ' if lang == 'en' else 'الأسئلة الشائعة' }}</a>
-        </div>
-        <div class="footer-col">
-          <h4>{{ 'Legal' if lang == 'en' else 'قانوني' }}</h4>
-          <a href="/privacy">{{ 'Privacy policy' if lang == 'en' else 'سياسة الخصوصية' }}</a>
-          <a href="/terms">{{ 'Terms of use' if lang == 'en' else 'شروط الاستخدام' }}</a>
-          <a href="mailto:support@mostakhles.ai">{{ 'Contact us' if lang == 'en' else 'تواصل معنا' }}</a>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <span>
-          {{ '© 2026 Mostakhles — All rights reserved' if lang == 'en' else '© 2026 مُستخلِص — جميع الحقوق محفوظة' }}
-        </span>
-        <span>
-          {{ '🔒 Your documents are not stored · encrypted in transit' if lang == 'en' else '🔒 مستنداتك لا تُخزَّن · اتصال مشفّر' }}
-        </span>
-      </div>
-    </div>
-  </footer>
+      function show(el) { el.hidden = false; }
+      function hide(el) { el.hidden = true; }
+      function resetPanels() {
+        hide(empty); hide(loading); hide(jsonEl); hide(errEl); hide(copyBtn);
+      }
+
+      pick.addEventListener('click', function () { inp.click(); });
+
+      dz.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        dz.classList.add('drag-over');
+      });
+      dz.addEventListener('dragleave', function () { dz.classList.remove('drag-over'); });
+      dz.addEventListener('drop', function (e) {
+        e.preventDefault();
+        dz.classList.remove('drag-over');
+        const f = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) extract(f);
+      });
+      inp.addEventListener('change', function (e) {
+        const f = e.target.files[0];
+        if (f) extract(f);
+      });
+
+      copyBtn.addEventListener('click', function () {
+        navigator.clipboard.writeText(jsonEl.textContent).then(function () {
+          const orig = copyBtn.textContent;
+          copyBtn.textContent = isAr ? 'تم النسخ ✓' : 'Copied ✓';
+          setTimeout(function () { copyBtn.textContent = orig; }, 1500);
+        });
+      });
+
+      async function extract(file) {
+        // Client-side guard so we don't waste a request on something obviously too big.
+        if (file.size > 20 * 1024 * 1024) {
+          resetPanels();
+          errEl.textContent = isAr ? 'الملف كبير جدًا (الحد الأقصى 20 ميجابايت)' : 'File too large (20 MB max)';
+          show(errEl);
+          return;
+        }
+        resetPanels();
+        show(loading);
+        statusEl.textContent = isAr ? 'قيد التحليل · ' + file.name : 'Extracting · ' + file.name;
+
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('routing', 'auto');     // smart fast/hard routing
+        fd.append('output_lang', isAr ? 'ar' : 'en');
+
+        try {
+          // Dedicated demo endpoint: server-side enforces fast-tier routing,
+          // 10/IP/month cap, 5 MB / 5 pages max, and never exposes the demo
+          // key to the client. credentials:'omit' keeps logged-in users'
+          // session cookies out of the request so they don't get billed.
+          const res = await fetch('/v1/demo-extract', {
+            method: 'POST', body: fd, credentials: 'omit',
+          });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.detail || ('HTTP ' + res.status));
+          const payload = body.data || body;
+          jsonEl.textContent = JSON.stringify(payload, null, 2);
+          statusEl.textContent = (isAr ? 'تم الاستخراج · ' : 'Extracted · ') +
+                                 (body.document_type || 'document') +
+                                 ' · ' + (body.usage ? body.usage.charged + (isAr ? ' نقاط' : ' credits') : '');
+          hide(loading);
+          show(jsonEl);
+          show(copyBtn);
+        } catch (e) {
+          hide(loading);
+          errEl.textContent = (isAr ? 'خطأ: ' : 'Error: ') + e.message;
+          show(errEl);
+          statusEl.textContent = isAr ? 'فشل' : 'Failed';
+        }
+      }
+    })();
+  </script>
 
 </body>
 </html>

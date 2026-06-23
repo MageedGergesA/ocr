@@ -103,7 +103,7 @@ else:
     log.info("Sentry not configured (SENTRY_DSN unset) — errors only logged locally")
 
 from app import auth, db, emailer, exceptions as app_exceptions, exports, i18n, jobs, models  # noqa: E402
-from app.services import extractor, llm, template_filler, template_parser  # noqa: E402
+from app.services import envelope, extractor, llm, template_filler, template_parser  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.services_catalog import CATEGORIES, SERVICES, localized  # noqa: E402
 
@@ -193,6 +193,65 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
 
 
 app.add_middleware(RequestIDMiddleware)
+
+
+# ---- Security headers — every response gets these so we ship to prod safely ----
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add browser-side security headers to every response.
+    - X-Content-Type-Options:nosniff stops MIME-sniffing attacks.
+    - X-Frame-Options:DENY blocks clickjacking via iframe embed.
+    - Referrer-Policy:strict-origin-when-cross-origin keeps full URLs off external links.
+    - Permissions-Policy turns off browser APIs we don't use.
+    - HSTS is sent only when ENV=prod (locally HTTP is fine).
+    - CSP uses a per-request nonce: every <script> in our templates carries
+      nonce="{{ csp_nonce }}" so the strict 'self' 'nonce-...' rule lets them
+      run while blocking any injected inline script.
+    """
+    async def dispatch(self, request: Request, call_next):
+        # Per-request nonce — Jinja templates read it from request.state via _ctx().
+        nonce = secrets.token_urlsafe(16)
+        request.state.csp_nonce = nonce
+        resp = await call_next(request)
+        resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+        resp.headers.setdefault("X-Frame-Options", "DENY")
+        resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        resp.headers.setdefault(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+        )
+        # CSP — only emit for HTML responses (skip JSON/API responses to avoid
+        # accidentally blocking things in test pages, and to keep header sizes down).
+        ct = resp.headers.get("content-type", "")
+        if "text/html" in ct.lower():
+            resp.headers.setdefault(
+                "Content-Security-Policy",
+                # script-src: only inline scripts carrying our nonce + same-origin
+                # files run. 'strict-dynamic' lets nonce-carrying scripts load
+                # further scripts (we use this for lucide / theme bootstrap).
+                f"default-src 'self'; "
+                f"script-src 'self' 'nonce-{nonce}' 'strict-dynamic' https://unpkg.com; "
+                # style-src: inline style="..." is everywhere in our templates, so
+                # we keep 'unsafe-inline' for now. Tightening would require a major
+                # rewrite of inline styles into classes.
+                f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                f"img-src 'self' data: blob: https:; "
+                f"font-src 'self' data: https://fonts.gstatic.com; "
+                f"connect-src 'self'; "
+                f"frame-ancestors 'none'; "
+                f"base-uri 'self'; "
+                f"form-action 'self' https://accept.paymob.com; "
+                f"object-src 'none'; "
+                f"upgrade-insecure-requests",
+            )
+        if os.getenv("ENV") == "prod":
+            resp.headers.setdefault(
+                "Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains",
+            )
+        return resp
+
+
+app.add_middleware(SecurityHeadersMiddleware)
 app_exceptions.register_handlers(app)
 
 
@@ -204,7 +263,9 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 # (or similar) and the Paymob client treats it as the real API.
 if _env == "local":
     from app.services.paymob_mock import router as _paymob_mock_router  # noqa: E402
+    from app.services.paypal_mock import router as _paypal_mock_router  # noqa: E402
     app.include_router(_paymob_mock_router)
+    app.include_router(_paypal_mock_router)
 
 
 @app.get("/healthz")
@@ -234,8 +295,17 @@ def readyz():
     )
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon_ico():
+    """Browsers always request /favicon.ico — serve our SVG so it doesn't 404 forever.
+    Also exposed at /static/favicon.svg via the StaticFiles mount."""
+    return RedirectResponse(url="/static/favicon.svg", status_code=301)
+
+
 @app.get("/", response_class=HTMLResponse)
 def landing(request: Request):
+    # The hero demo posts to /v1/demo-extract which resolves the demo key
+    # server-side — we don't expose any API key in the HTML source.
     return templates.TemplateResponse(request, "index.html", _ctx(request, nav_links=True))
 
 
@@ -263,16 +333,21 @@ def chat_page(request: Request):
 
 @app.post("/v1/chat-extract")
 def chat_extract(request: Request, file: UploadFile = File(...),
-                 hard: bool = Form(True), x_api_key: str = Header(None)):
+                 hard: bool = Form(True), routing: str = Form("explicit"),
+                 x_api_key: str = Header(None)):
     """OCR a document to text so the user can then chat with it."""
     if not llm.is_configured():
         raise HTTPException(500, "GEMINI_API_KEY not configured on server")
+    if routing not in ("explicit", "auto", "fast", "hard"):
+        raise HTTPException(400, "routing must be one of: explicit, auto, fast, hard")
     allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
     if file.content_type not in allowed:
         raise HTTPException(415, "unsupported file type")
     data_bytes = file.file.read()
     if len(data_bytes) > 20 * 1024 * 1024:
         raise HTTPException(413, "file too large (max 20 MB)")
+    if routing != "explicit":
+        hard = extractor._resolve_hard(routing, hard, data_bytes, file.content_type)
     pages = (_count_pdf_pages(data_bytes) if file.content_type == "application/pdf" else 1) or 1
     session = db.SessionLocal()
     try:
@@ -332,7 +407,7 @@ _PRIVACY_HTML = """
 <p>يمكنك إلغاء مفاتيح الـ API أو حذف حسابك في أي وقت. للتواصل بخصوص بياناتك: support@mostakhles.ai</p>
 """
 
-_TERMS_HTML = """
+_TERMS_HTML_AR = """
 <h2>الخدمة</h2>
 <p>يوفّر «مُستخلِص» أدوات ذكاء اصطناعي لاستخراج وفهم بيانات المستندات عبر الويب والـ API وأودو.</p>
 <h2>الحساب</h2>
@@ -347,17 +422,171 @@ _TERMS_HTML = """
 <p>قد نحدّث هذه الشروط، وسننشر أي تغييرات على هذه الصفحة. للتواصل: support@mostakhles.ai</p>
 """
 
+_TERMS_HTML_EN = """
+<h2>The service</h2>
+<p>Mostakhles provides AI-powered tools to extract and understand document data via the web, API, and Odoo.</p>
+<h2>Your account</h2>
+<p>You are responsible for keeping your login credentials and API keys confidential.</p>
+<h2>Acceptable use</h2>
+<p>You agree not to upload illegal content or content you do not have the right to process, and not to misuse or attempt to disrupt the service.</p>
+<h2>Credits and billing</h2>
+<p>Each operation is charged in credits according to the mode you choose (fast / accurate), and the cost is shown to you before execution. Subscriptions are monthly and you can cancel at any time — consumed credits are non-refundable.</p>
+<h2>Disclaimer</h2>
+<p>Extraction is powered by AI and may not be 100% accurate, especially for handwritten documents. Please review important results before acting on them.</p>
+<h2>Changes</h2>
+<p>We may update these terms and will publish any changes on this page. Contact: support@mostakhles.ai</p>
+"""
+
 
 @app.get("/privacy", response_class=HTMLResponse)
 def privacy_page(request: Request):
-    return templates.TemplateResponse(request, "legal.html",
-                                      _ctx(request, title="سياسة الخصوصية", body=_PRIVACY_HTML))
+    return templates.TemplateResponse(request, "privacy.html", _ctx(request))
 
 
 @app.get("/terms", response_class=HTMLResponse)
 def terms_page(request: Request):
+    lang = i18n.resolve_lang(request, None)
+    title = "Terms of service" if lang == "en" else "شروط الاستخدام"
+    body = _TERMS_HTML_EN if lang == "en" else _TERMS_HTML_AR
     return templates.TemplateResponse(request, "legal.html",
-                                      _ctx(request, title="شروط الاستخدام", body=_TERMS_HTML))
+                                      _ctx(request, title=title, body=body))
+
+
+@app.get("/about", response_class=HTMLResponse)
+def about_page(request: Request):
+    return templates.TemplateResponse(request, "about.html", _ctx(request))
+
+
+@app.get("/pricing", response_class=HTMLResponse)
+def pricing_page(request: Request):
+    return templates.TemplateResponse(request, "pricing.html", _ctx(request))
+
+
+# ── SEO sub-landing pages — one Jinja template driven by app/seo_pages.py ─────
+# Routes are registered explicitly (not via /{slug}) so they don't shadow other
+# top-level paths like /contact, /login, /dashboard. SEO needs short URLs and
+# we'd rather list the 6 we serve than catch-all the world.
+from app import seo_pages as _seo_pages  # noqa: E402
+
+
+def _seo_response(slug: str, request: Request):
+    page = _seo_pages.get(slug)
+    if not page:
+        raise HTTPException(404, "not found")
+    return templates.TemplateResponse(request, "seo_landing.html", _ctx(request, page=page))
+
+
+@app.get("/arabic-prescription-ocr", response_class=HTMLResponse)
+def seo_prescription(request: Request): return _seo_response("arabic-prescription-ocr", request)
+
+@app.get("/arabic-invoice-extraction", response_class=HTMLResponse)
+def seo_invoice(request: Request): return _seo_response("arabic-invoice-extraction", request)
+
+@app.get("/arabic-id-card-ocr", response_class=HTMLResponse)
+def seo_id_card(request: Request): return _seo_response("arabic-id-card-ocr", request)
+
+@app.get("/arabic-handwriting-ocr", response_class=HTMLResponse)
+def seo_handwriting(request: Request): return _seo_response("arabic-handwriting-ocr", request)
+
+@app.get("/arabic-contract-extraction", response_class=HTMLResponse)
+def seo_contract(request: Request): return _seo_response("arabic-contract-extraction", request)
+
+@app.get("/arabic-bank-statement-ocr", response_class=HTMLResponse)
+def seo_bank_statement(request: Request): return _seo_response("arabic-bank-statement-ocr", request)
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml(request: Request):
+    """Sitemap of every indexable public URL — landing + SEO sub-landings."""
+    base = f"{request.url.scheme}://{request.url.netloc}"
+    urls = ["/", "/about", "/contact", "/privacy", "/docs", "/tools"]
+    urls += [f"/{p.slug}" for p in _seo_pages.all_pages()]
+    items = "".join(
+        f"<url><loc>{base}{u}</loc>"
+        f"<xhtml:link rel='alternate' hreflang='ar' href='{base}{u}?lang=ar'/>"
+        f"<xhtml:link rel='alternate' hreflang='en' href='{base}{u}?lang=en'/>"
+        f"<changefreq>weekly</changefreq></url>"
+        for u in urls
+    )
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:xhtml="http://www.w3.org/1999/xhtml">'
+        f"{items}</urlset>"
+    )
+    return Response(content=body, media_type="application/xml")
+
+
+@app.get("/robots.txt")
+def robots_txt(request: Request):
+    base = f"{request.url.scheme}://{request.url.netloc}"
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /admin\n"
+        "Disallow: /dashboard\n"
+        "Disallow: /account\n"
+        "Disallow: /v1/\n"
+        f"Sitemap: {base}/sitemap.xml\n"
+    )
+    return Response(content=body, media_type="text/plain")
+
+
+@app.get("/contact", response_class=HTMLResponse)
+def contact_page(request: Request):
+    return templates.TemplateResponse(request, "contact.html", _ctx(request))
+
+
+@app.post("/contact")
+def contact_submit(
+    request: Request,
+    name: str = Form(...),
+    email: str = Form(...),
+    company: str = Form(""),
+    topic: str = Form("other"),
+    message: str = Form(...),
+):
+    """Receive the contact-form submission, email it to admins, and re-render
+    the form with a friendly thanks message. Spam guard: cap body lengths,
+    reject obvious empty/bot submissions (zero-length message, no @ in email).
+    No DB write — keep it lightweight; if you want history, log it."""
+    lang = i18n.resolve_lang(request, None)
+    en = lang == "en"
+
+    # Cheap validation — let the heavy lifting happen at the email step
+    name = (name or "").strip()[:200]
+    email = (email or "").strip()[:200]
+    company = (company or "").strip()[:200]
+    topic = (topic or "other").strip()[:50]
+    message = (message or "").strip()[:5000]
+    if not name or "@" not in email or len(message) < 3:
+        err = "Please fill in all required fields." if en else "يرجى تعبئة الحقول المطلوبة."
+        return templates.TemplateResponse(request, "contact.html", _ctx(request, err=err))
+
+    # Forward to admin inbox — failures degrade gracefully (we still show success
+    # to the user) so a temporary SMTP outage doesn't break the funnel. Real
+    # error visibility comes from Sentry.
+    admins = list(auth.ADMIN_EMAILS) or ["support@mostakhles.ai"]
+    body_text = (
+        f"Topic: {topic}\nName: {name}\nEmail: {email}\nCompany: {company}\n\n"
+        f"---\n{message}\n"
+    )
+    for admin in admins:
+        try:
+            emailer.send_email(
+                to=admin,
+                subject=f"[Mostakhles contact · {topic}] {name}",
+                body_text=body_text,
+            )
+        except Exception as e:  # noqa: BLE001
+            log.warning("contact form email to %s failed: %s", admin, e)
+
+    msg = (
+        "Thanks — we got your message and will reply within one business day."
+        if en else
+        "شكرًا — وصلتنا رسالتك وسنردّ خلال يوم عمل واحد."
+    )
+    return templates.TemplateResponse(request, "contact.html", _ctx(request, msg=msg))
 
 
 @app.get("/docs", response_class=HTMLResponse)
@@ -449,6 +678,7 @@ def _ctx(request: Request, **extra):
     return {
         "user": user,
         "csrf_token": csrf,
+        "csp_nonce": getattr(request.state, "csp_nonce", ""),
         "lang": lang,
         "dir": "rtl" if i18n.is_rtl(lang) else "ltr",
         # Bind lang into the translator so templates can write `{{ t('nav.dashboard') }}`
@@ -778,7 +1008,7 @@ def dashboard(request: Request, q: str = "", paid: str = ""):
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
-        limit = auth.PLAN_LIMITS.get(user.plan, 50)
+        limit = auth.PLAN_LIMITS.get(user.plan, 30)
 
         keys = []
         for k in user.api_keys:
@@ -1130,6 +1360,22 @@ def admin_dashboard(request: Request):
         session.close()
 
 
+@app.post("/admin/run-utilization-check")
+def admin_run_utilization_check(request: Request):
+    """Trigger the high-utilization warning sweep. Wired to a daily cron
+    via a curl POST from systemd-timer / supervisor / external scheduler."""
+    from app.services import cost_alerts
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user or not auth.is_admin(user):
+            raise HTTPException(404, "not found")
+        result = cost_alerts.run_high_utilization_check(session)
+        return result
+    finally:
+        session.close()
+
+
 @app.get("/dashboard/history.csv")
 def history_csv(request: Request):
     import csv
@@ -1239,10 +1485,13 @@ def usage(request: Request, x_api_key: str = Header(None)):
 
 @app.post("/v1/tool/{slug}")
 def run_tool(slug: str, request: Request, file: UploadFile = File(...),
-             hard: bool = Form(True), output_lang: str = Form("preserve"),
+             hard: bool = Form(True), routing: str = Form("explicit"),
+             output_lang: str = Form("preserve"),
              x_api_key: str = Header(None)):
     """Run a catalog OCR service (text / fields / table / searchable PDF).
-    output_lang: 'preserve' | 'ar' | 'en' — controls language of extracted values."""
+    output_lang: 'preserve' | 'ar' | 'en' — controls language of extracted values.
+    routing: 'explicit' (default, back-compat — honour `hard`); 'auto' picks fast vs
+    hard via a cheap heuristic; 'fast'/'hard' force one tier."""
     svc = SERVICES.get(slug)
     if not svc:
         raise HTTPException(404, "unknown service")
@@ -1250,6 +1499,8 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
         raise HTTPException(500, "GEMINI_API_KEY not configured on server")
     if output_lang not in ("preserve", "ar", "en"):
         raise HTTPException(400, "output_lang must be one of: preserve, ar, en")
+    if routing not in ("explicit", "auto", "fast", "hard"):
+        raise HTTPException(400, "routing must be one of: explicit, auto, fast, hard")
     # Per-IP burst limit — defence-in-depth in front of the credit quota.
     # 30 calls / minute / IP catches both runaway clients and the shared demo key.
     client_ip = request.client.host if request.client else None
@@ -1268,6 +1519,9 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
     if kind == "searchable_pdf" and file.content_type == "application/pdf":
         raise HTTPException(400, "هذه الخدمة تعمل على الصور الممسوحة، وليس على ملفات PDF")
 
+    if routing != "explicit":
+        hard = extractor._resolve_hard(routing, hard, data_bytes, file.content_type,
+                                       doctype_hint=slug)
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
@@ -1371,9 +1625,55 @@ def export_text(request: Request, payload: dict = Body(...), x_api_key: str = He
                     headers={"Content-Disposition": f'attachment; filename="{fname}"'})
 
 
+@app.post("/v1/reproduce")
+def reproduce_endpoint(request: Request, payload: dict = Body(...),
+                       x_api_key: str = Header(None)):
+    """Render an extracted result as a polished HTML/PDF/DOCX (Path A).
+
+    Payload:
+      {document_type, data, format: 'html'|'pdf'|'docx', lang: 'ar'|'en',
+       extracted_at?}
+    """
+    session = db.SessionLocal()
+    try:
+        _resolve_caller(session, x_api_key, request)
+    finally:
+        session.close()
+    from app.services import repro as _repro
+    doctype = (payload.get("document_type") or "").strip()
+    data = payload.get("data") or {}
+    fmt = (payload.get("format") or "html").lower()
+    lang = payload.get("lang") or "ar"
+    extracted_at = payload.get("extracted_at") or ""
+    # No doctype gate — the renderer falls back to the generic template for
+    # any unknown type, so this endpoint accepts everything.
+    if not doctype:
+        doctype = "document"
+    try:
+        if fmt == "html":
+            body, mt, fn = _repro.render_html(doctype, data, lang=lang, extracted_at=extracted_at)
+        elif fmt == "pdf":
+            body, mt, fn = _repro.render_pdf(doctype, data, lang=lang, extracted_at=extracted_at)
+        elif fmt == "docx":
+            body, mt, fn = _repro.render_docx(doctype, data, lang=lang, extracted_at=extracted_at)
+        else:
+            raise HTTPException(400, "format must be one of: html, pdf, docx")
+    except ValueError as ve:
+        raise HTTPException(400, str(ve))
+    return Response(content=body, media_type=mt,
+                    headers={"Content-Disposition": f'attachment; filename="{fn}"'})
+
+
 @app.post("/v1/export")
 def export_data(request: Request, payload: dict = Body(...), x_api_key: str = Header(None)):
-    """Turn extracted rows into a downloadable file (csv/xlsx/docx/pdf)."""
+    """Turn extracted rows into a downloadable file (csv/xlsx/docx/pdf/xml).
+
+    Two payload shapes are accepted:
+      1. {format, rows: [...]} — generic flat export (legacy, all formats).
+      2. {format: 'xlsx', result: {layout, document_type, ...}} — layout-aware
+         Excel that renders prescription / invoice / table shapes natively.
+         Falls back to the flat row exporter if the layout is unrecognised.
+    """
     session = db.SessionLocal()
     try:
         _resolve_caller(session, x_api_key, request)  # auth gate
@@ -1381,10 +1681,18 @@ def export_data(request: Request, payload: dict = Body(...), x_api_key: str = He
         session.close()
     fmt = payload.get("format", "csv")
     rows = payload.get("rows", [])
+    result = payload.get("result")
     if fmt not in exports.EXPORTERS:
         raise HTTPException(400, f"unsupported format '{fmt}'. Use: {', '.join(exports.EXPORTERS)}")
+
+    # Layout-aware path: only xlsx for now; other formats stay flat.
+    if isinstance(result, dict) and fmt == "xlsx":
+        data, media_type, filename = exports.to_xlsx_layout_aware(result)
+        return Response(content=data, media_type=media_type,
+                        headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
     if not rows:
-        raise HTTPException(400, "no rows to export")
+        raise HTTPException(400, "no rows to export (pass `rows` or a rich `result` for xlsx)")
     data, media_type, filename = exports.EXPORTERS[fmt](rows)
     return Response(content=data, media_type=media_type,
                     headers={"Content-Disposition": f'attachment; filename="{filename}"'})
@@ -1545,8 +1853,17 @@ def account_page(request: Request):
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
+        # Active subscription (if any) drives the Manage Subscription card.
+        # We show ONE row — the most recent active or cancelled-pending sub.
+        # Past expired ones live in the PaymentEvent log; the UI cares only
+        # about what's billing the user right now.
+        sub = (session.query(models.Subscription)
+               .filter_by(user_id=user.id)
+               .filter(models.Subscription.status.in_(("active", "past_due", "cancelled")))
+               .order_by(models.Subscription.created_at.desc())
+               .first())
         return templates.TemplateResponse(request, "account.html",
-            _ctx(request, msg=None, err=None))
+            _ctx(request, msg=None, err=None, active_subscription=sub))
     finally:
         session.close()
 
@@ -1798,6 +2115,92 @@ def compare_docs(request: Request, file_a: UploadFile = File(...), file_b: Uploa
         session.close()
 
 
+DEMO_PER_IP_LIMIT = int(os.getenv("DEMO_PER_IP_LIMIT", "10"))
+DEMO_PER_IP_WINDOW_SEC = int(os.getenv("DEMO_PER_IP_WINDOW_SEC", str(30 * 86400)))
+
+
+@app.post("/v1/demo-extract")
+def demo_extract_endpoint(request: Request, file: UploadFile = File(...)):
+    """Anonymous landing-page hero demo.
+
+    Hardened for public exposure:
+      - Server-side resolves the demo API key (it is NEVER sent from the client,
+        so visitors can't scrape it and burn the shared quota from a script).
+      - Forces routing='fast' → 1 credit/page so a single visitor can't drain
+        the demo pool with a 100-page PDF on Hard tier.
+      - Per-IP monthly cap (DEMO_PER_IP_LIMIT, default 10) on top of the
+        existing 30-req/min/IP burst limit and the demo user's monthly quota.
+      - Returns 429 with a clear message when a visitor hits the cap, so the
+        landing JS can prompt them to sign up for their own 30 free credits.
+    """
+    if not llm.is_configured():
+        raise HTTPException(500, "GEMINI_API_KEY not configured on server")
+
+    client_ip = request.client.host if request.client else None
+    if not auth.rate_limit_check(f"demo:burst:{client_ip}", max_attempts=10, window_sec=60):
+        raise HTTPException(429, "too many demo requests from this IP — wait a minute")
+    if not auth.rate_limit_check(f"demo:month:{client_ip}",
+                                 max_attempts=DEMO_PER_IP_LIMIT,
+                                 window_sec=DEMO_PER_IP_WINDOW_SEC):
+        raise HTTPException(
+            429,
+            f"You've used the public demo {DEMO_PER_IP_LIMIT} times this month. "
+            "Sign up — you get 30 free credits on your own account.",
+        )
+
+    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
+    if file.content_type not in allowed:
+        raise HTTPException(415, "unsupported file type — use PNG, JPG, WEBP, GIF, or PDF.")
+    data_bytes = file.file.read()
+    # Demo path: tighter file-size ceiling than the paid API (5 MB vs 20 MB).
+    if len(data_bytes) > 5 * 1024 * 1024:
+        raise HTTPException(413, "demo file too large (max 5 MB). Sign up to upload larger files.")
+
+    session = db.SessionLocal()
+    try:
+        demo_key = session.query(models.ApiKey).filter_by(key=auth.DEMO_API_KEY, active=True).first()
+        if not demo_key:
+            raise HTTPException(503, "demo not available — please sign up to try it")
+
+        # Force fast tier (cost = 1 credit / page) — caps Gemini spend per demo.
+        n_pages = _count_pdf_pages(data_bytes) if file.content_type == "application/pdf" else 1
+        n_pages = n_pages or 1
+        if n_pages > 5:
+            raise HTTPException(413, "demo PDF too long (max 5 pages). Sign up for full extractions.")
+        cost = auth.credits_for(False) * n_pages  # False → fast tier
+        auth.enforce_limit(session, demo_key, needed=cost)
+
+        try:
+            result = extractor.extract_auto(data_bytes, file.content_type, hard=False,
+                                            output_lang="preserve")
+        except Exception as e:  # noqa: BLE001
+            raise _http_error_for(e, "extraction failed")
+
+        auth.increment_usage(session, demo_key, count=cost)
+        auth.rate_limit_record(f"demo:burst:{client_ip}")
+        auth.rate_limit_record(f"demo:month:{client_ip}")
+
+        # Strip the cognitive envelope to keep the response small for the hero.
+        data = result if any(k in result for k in ("patient", "medications", "header",
+                                                    "line_items", "clauses", "totals", "table"))\
+                     else result.get("fields", result)
+        from datetime import datetime as _dt
+        return envelope.wrap_extraction(
+            raw_data=data,
+            document_type=result.get("document_type"),
+            layout=result.get("layout"),
+            output_lang="preserve",
+            files_count=1,
+            usage={"charged": cost},
+            duration_ms=0,
+            model="gemini", tier="fast",
+            request_id=getattr(request.state, "request_id", None),
+            extracted_at_iso=_dt.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        )
+    finally:
+        session.close()
+
+
 @app.post("/v1/extract")
 def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slow
                        # (synchronous) model call never blocks the event loop.
@@ -1806,6 +2209,13 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
     files: list[UploadFile] = File([]),    # NEW: multi-file. Send the form field as `files` repeated.
     target_schema: str = Form(""),         # optional — empty/omitted means auto-detect
     hard: bool = Form(True),
+    # Smart routing: 'explicit' (default, back-compat — honour `hard`); 'auto'
+    # picks fast vs hard via a cheap heuristic; 'fast'/'hard' force one tier.
+    routing: str = Form("explicit"),
+    # Path B — visual reproduction. When True, ask Gemini to ALSO emit a
+    # `_layout_html` field containing a self-contained HTML that visually
+    # mirrors the source. Forces hard tier and charges 3 extra credits.
+    visual: bool = Form(False),
     output_lang: str = Form("preserve"),   # 'preserve' | 'ar' | 'en'
     x_api_key: str = Header(None),
 ):
@@ -1813,6 +2223,8 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
         raise HTTPException(500, "GEMINI_API_KEY not configured on server")
     if output_lang not in ("preserve", "ar", "en"):
         raise HTTPException(400, "output_lang must be one of: preserve, ar, en")
+    if routing not in ("explicit", "auto", "fast", "hard"):
+        raise HTTPException(400, "routing must be one of: explicit, auto, fast, hard")
     # Per-IP burst limit (see /v1/tool note). Defence-in-depth on top of credit quota.
     client_ip = request.client.host if request.client else None
     if not auth.rate_limit_check(f"extract:{client_ip}", max_attempts=30, window_sec=60):
@@ -1850,6 +2262,11 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
     image_bytes, image_ct = multi_files[0]
     n_files = len(multi_files)
 
+    # Smart routing: resolve to a concrete `hard` bool BEFORE billing so we
+    # don't charge for the wrong tier. Pure heuristic — no LLM call.
+    if routing != "explicit":
+        hard = extractor._resolve_hard(routing, hard, image_bytes, image_ct)
+
     n_pages = _count_pdf_pages(image_bytes) if image_ct == "application/pdf" else None
     native_max = int(os.getenv("PDF_NATIVE_MAX_PAGES", "5"))  # ≤ this → one merged call
     hard_max = int(os.getenv("MAX_PDF_PAGES", "100"))         # > this → rejected
@@ -1872,7 +2289,11 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
 
         # Single image OR multi-image batch → one synchronous call (Gemini handles
         # multiple images in a single request and bills per image).
-        cost = auth.credits_for(hard) * n_files
+        # Path B (visual=True) requires hard tier (needs the strong model to
+        # produce coherent HTML) and adds 3 credits to cover ~2-3k extra tokens.
+        if visual:
+            hard = True
+        cost = auth.credits_for(hard) * n_files + (3 if visual else 0)
         auth.enforce_limit(session, api_key, needed=cost)
         import time as _time
         _t0 = _time.time()
@@ -1899,14 +2320,20 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
                 mode = "auto_multi"
             else:
                 result = extractor.extract_auto(image_bytes, image_ct, hard=hard,
-                                                output_lang=output_lang)
+                                                output_lang=output_lang,
+                                                with_layout=visual)
                 document_type = result.get("document_type")
                 layout = result.get("layout")
+                # If Path B emitted `_layout_html`, hoist it onto the result
+                # envelope so the polished export can use it directly.
+                _layout_html = result.pop("_layout_html", None)
                 if any(k in result for k in ("patient", "medications", "header",
                                               "line_items", "clauses", "totals", "table")):
                     data = result
                 else:
                     data = result.get("fields", result)
+                if _layout_html and isinstance(data, dict):
+                    data["_layout_html"] = _layout_html
                 mode = "auto"
         except Exception as e:  # noqa: BLE001 — surface model/parse errors; don't bill failures
             raise _http_error_for(e, "extraction failed")
@@ -1918,15 +2345,23 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
                         duration_ms=_dur_ms, layout=layout,
                         output_lang=output_lang if output_lang != "preserve" else None)
         used, limit, _ = auth.get_usage(session, api_key)
-        return {
-            "mode": mode,
-            "document_type": document_type,
-            "layout": layout,
-            "output_lang": output_lang,
-            "files_count": n_files,
-            "data": data,
-            "usage": {"used": used, "limit": limit, "remaining": max(0, limit - used), "charged": cost},
-        }
+        usage = {"used": used, "limit": limit, "remaining": max(0, limit - used), "charged": cost}
+        from datetime import datetime as _dt
+        body = envelope.wrap_extraction(
+            raw_data=data,
+            document_type=document_type,
+            layout=layout,
+            output_lang=output_lang,
+            files_count=n_files,
+            usage=usage,
+            duration_ms=_dur_ms,
+            model="gemini",
+            tier=("hard" if hard else "fast"),
+            request_id=getattr(request.state, "request_id", None),
+            extracted_at_iso=_dt.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        )
+        body["mode"] = mode  # back-compat: extraction strategy ("auto"/"schema"/"auto_multi")
+        return body
     finally:
         session.close()
 
@@ -1969,9 +2404,46 @@ def _parse_merchant_order_id(mid: str) -> tuple[int, str] | None:
         return None
 
 
-@app.post("/billing/checkout")
-def billing_checkout(request: Request, plan: str = Form(...), csrf_token: str = Form("")):
-    """Mint a Paymob checkout for the requested plan. Auth'd users only."""
+@app.get("/billing/checkout", response_class=HTMLResponse)
+def billing_checkout_picker(request: Request, plan: str = Query(...)):
+    """Render the payment-method picker for `plan`. User picks Paymob (EGP)
+    or PayPal (USD), then the form on the picker page POSTs to the right
+    provider endpoint. This is the page the "Subscribe" button on /pricing
+    redirects to so we keep the pricing page itself uncluttered."""
+    plan_cfg = get_plan(plan)
+    if not plan_cfg:
+        raise HTTPException(status_code=400, detail=f"unknown plan: {plan}")
+
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse(
+                f"/login?next=/billing/checkout%3Fplan%3D{plan}",
+                status_code=303,
+            )
+        # Probe per-provider availability so the UI can grey out unconfigured
+        # methods instead of letting the user click and get a 502.
+        paypal_available = bool(plans.paypal_plan_id(plan)
+                                and settings.PAYPAL_CLIENT_ID
+                                and settings.PAYPAL_SECRET)
+        paymob_available = bool(settings.PAYMOB_API_KEY)
+        amount_egp = round(plan_cfg.usd * settings.EGP_PER_USD, 2)
+        ctx = _ctx(request,
+                   plan=plan_cfg,
+                   amount_egp=amount_egp,
+                   paypal_available=paypal_available,
+                   paymob_available=paymob_available)
+        return templates.TemplateResponse(request, "checkout.html", ctx)
+    finally:
+        session.close()
+
+
+@app.post("/billing/paymob/checkout")
+def billing_paymob_checkout(request: Request, plan: str = Form(...),
+                            csrf_token: str = Form("")):
+    """Mint a Paymob iframe for the requested plan. Auth'd users only.
+    Posted to from the Paymob tile on /billing/checkout."""
     _require_csrf(request, csrf_token)
     plan_cfg = get_plan(plan)
     if not plan_cfg:
@@ -1980,7 +2452,7 @@ def billing_checkout(request: Request, plan: str = Form(...), csrf_token: str = 
     try:
         user = _current_user(session, request)
         if not user:
-            return RedirectResponse("/login?next=/%23pricing", status_code=303)
+            return RedirectResponse("/login?next=/pricing", status_code=303)
         amount_egp = round(plan_cfg.usd * settings.EGP_PER_USD, 2)
         mid = _mint_merchant_order_id(user.id, plan_cfg.slug)
         billing = {
@@ -1995,7 +2467,11 @@ def billing_checkout(request: Request, plan: str = Form(...), csrf_token: str = 
             iframe, _order_id = _paymob.begin_checkout(amount_egp, mid, billing)
         except _paymob.PaymobError as exc:
             log.error("paymob checkout failed: %s", exc)
-            raise HTTPException(status_code=502, detail=f"payment provider error: {exc}")
+            # Friendly redirect rather than raw 502 JSON dump.
+            return RedirectResponse(
+                f"/billing/checkout?plan={plan}&error=paymob_unavailable",
+                status_code=303,
+            )
         return RedirectResponse(iframe, status_code=303)
     finally:
         session.close()
@@ -2108,3 +2584,479 @@ async def paymob_callback(request: Request, hmac_sig: str = Query("", alias="hma
         raise
     finally:
         session.close()
+
+
+# ============================================================================
+#   PayPal billing (Sitting PP-A)
+# ============================================================================
+#
+# Flow (mirrors the Paymob shape so the dashboard / renewal email / cancel UI
+# can stay provider-agnostic):
+#
+#   1. User on /pricing clicks "Subscribe Pro · PayPal"
+#      → POST /billing/paypal/checkout?plan=pro
+#   2. We mint a `custom_id` = mst_v1_{user_id}_{plan}_{nonce} (same format
+#      the Paymob flow uses) and call PayPal's Subscriptions API with it.
+#      PayPal returns a subscription_id + approval URL.
+#   3. We redirect the user to PayPal's approval URL. They consent on PayPal.
+#   4. PayPal sends them back to /billing/paypal/return?subscription_id=I-xxx.
+#      We GET the subscription, confirm status=ACTIVE, then flip user.plan and
+#      record the Subscription + PaymentEvent rows idempotently.
+#   5. PayPal also POSTs webhooks (BILLING.SUBSCRIPTION.ACTIVATED / CANCELLED /
+#      PAYMENT.SALE.COMPLETED) — handled in Sitting PP-B.
+#
+# The custom_id IS the channel for user→subscription mapping — same trick
+# Paymob uses with merchant_order_id, same decoder.
+
+from app.services import paypal as _paypal  # noqa: E402
+
+
+@app.post("/billing/paypal/checkout")
+def billing_paypal_checkout(request: Request, plan: str = Form(...),
+                            csrf_token: str = Form("")):
+    """Mint a PayPal subscription for the requested plan, redirect the user
+    to PayPal's approval URL. Auth'd users only."""
+    _require_csrf(request, csrf_token)
+    plan_cfg = plans.get_plan(plan)
+    if not plan_cfg:
+        raise HTTPException(status_code=400, detail=f"unknown plan: {plan}")
+    paypal_plan = plans.paypal_plan_id(plan)
+    if not paypal_plan:
+        # No PayPal plan ID configured for this tier — friendly redirect
+        # to the picker with an error flag instead of raw JSON.
+        log.warning("paypal checkout blocked: PAYPAL_PLAN_ID_%s not set", plan.upper())
+        return RedirectResponse(
+            f"/billing/checkout?plan={plan}&error=paypal_unavailable",
+            status_code=303,
+        )
+
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login?next=/pricing", status_code=303)
+
+        custom_id = _mint_merchant_order_id(user.id, plan_cfg.slug)
+        base = str(request.base_url).rstrip("/")
+        return_url = f"{base}/billing/paypal/return"
+        cancel_url = f"{base}/pricing?paypal=cancelled"
+
+        try:
+            approve, sub_id = _paypal.begin_checkout(
+                paypal_plan, custom_id,
+                return_url=return_url, cancel_url=cancel_url,
+                subscriber_email=user.email,
+            )
+        except _paypal.PayPalError as exc:
+            log.error("paypal checkout failed: %s", exc)
+            raise HTTPException(status_code=502,
+                                detail=f"payment provider error: {exc}")
+
+        log.info("paypal checkout: user=%s plan=%s sub_id=%s custom_id=%s",
+                 user.id, plan, sub_id, custom_id)
+        return RedirectResponse(approve, status_code=303)
+    finally:
+        session.close()
+
+
+@app.get("/billing/paypal/return")
+def billing_paypal_return(request: Request,
+                          subscription_id: str = Query("", alias="subscription_id")):
+    """User came back from PayPal's approval flow. Confirm the subscription is
+    ACTIVE, write the Subscription + PaymentEvent rows, flip user.plan, then
+    drop them on /billing/success.
+
+    Idempotent: if PayPal's webhook beat us to the punch (Sitting PP-B), the
+    PaymentEvent UNIQUE(provider, external_id) short-circuits the second
+    upgrade attempt."""
+    if not subscription_id:
+        return RedirectResponse("/pricing?paypal=missing_sub", status_code=303)
+
+    try:
+        sub_data = _paypal.get_subscription(subscription_id)
+    except _paypal.PayPalError as exc:
+        log.error("paypal return: get_subscription failed: %s", exc)
+        return RedirectResponse("/pricing?paypal=lookup_failed", status_code=303)
+
+    status = (sub_data.get("status") or "").upper()
+    custom_id = sub_data.get("custom_id") or ""
+    plan_id_external = sub_data.get("plan_id") or ""
+    decoded = _parse_merchant_order_id(custom_id)
+    log.info("paypal return: sub=%s status=%s custom_id=%s decoded=%s",
+             subscription_id, status, custom_id, decoded)
+
+    if status != "ACTIVE":
+        # APPROVAL_PENDING / SUSPENDED / CANCELLED / EXPIRED — let the webhook
+        # handle the eventual transition. We don't upgrade here.
+        return RedirectResponse(f"/pricing?paypal=status_{status.lower()}",
+                                status_code=303)
+
+    if not decoded:
+        log.warning("paypal return: custom_id not parseable: %s", custom_id)
+        return RedirectResponse("/pricing?paypal=bad_custom_id", status_code=303)
+
+    user_id, plan_slug = decoded
+    session = db.SessionLocal()
+    try:
+        # Idempotency: PayPal webhook may have already processed this.
+        existing = (session.query(models.PaymentEvent)
+                    .filter_by(provider="paypal", external_id=subscription_id)
+                    .first())
+        if existing:
+            log.info("paypal return: sub=%s already processed (event id=%s)",
+                     subscription_id, existing.id)
+            return RedirectResponse("/billing/success?already=1", status_code=303)
+
+        user = session.query(models.User).filter_by(id=user_id).first()
+        plan_cfg = plans.get_plan(plan_slug)
+        if not (user and plan_cfg):
+            log.warning("paypal return: unknown user or plan: user=%s plan=%s",
+                        user_id, plan_slug)
+            return RedirectResponse("/pricing?paypal=unknown_user_or_plan",
+                                    status_code=303)
+
+        now = datetime.utcnow()
+        # Close any active sub on this user — single-active-sub invariant.
+        (session.query(models.Subscription)
+                .filter_by(user_id=user.id, status="active")
+                .update({"status": "cancelled", "cancelled_at": now,
+                         "updated_at": now}, synchronize_session=False))
+
+        sub = models.Subscription(
+            user_id=user.id,
+            provider="paypal",
+            external_id=subscription_id,
+            plan=plan_slug,
+            status="active",
+            current_period_end=now + timedelta(days=30),
+            amount_usd=plan_cfg.usd,
+        )
+        session.add(sub)
+        session.flush()  # for sub.id
+
+        evt = models.PaymentEvent(
+            provider="paypal",
+            external_id=subscription_id,
+            event_type="paypal.subscription.activated",
+            subscription_id=sub.id,
+            user_id=user.id,
+            amount_usd=plan_cfg.usd,
+            raw_payload=json.dumps(sub_data)[:65535],
+            processed_at=now,
+        )
+        session.add(evt)
+        user.plan = plan_slug
+        session.commit()
+
+        log.info("paypal upgrade: user=%s plan=%s sub=%s external_id=%s",
+                 user.id, plan_slug, sub.id, subscription_id)
+        return RedirectResponse("/billing/success", status_code=303)
+    except Exception:
+        session.rollback()
+        log.exception("paypal return failed: sub=%s", subscription_id)
+        raise
+    finally:
+        session.close()
+
+
+# ----------------------------------------------------------------------------
+# PayPal webhook — Sitting PP-B.
+#
+# Events we handle:
+#   BILLING.SUBSCRIPTION.ACTIVATED     → write Subscription+Event, flip user.plan
+#   BILLING.SUBSCRIPTION.CANCELLED     → mark cancelled, keep access until period_end
+#   BILLING.SUBSCRIPTION.SUSPENDED     → mark past_due (billing failed at PayPal)
+#   BILLING.SUBSCRIPTION.EXPIRED       → mark cancelled, downgrade user.plan='free'
+#   PAYMENT.SALE.COMPLETED             → extend current_period_end +30d (renewal)
+#   BILLING.SUBSCRIPTION.PAYMENT.FAILED → mark past_due, log
+#
+# Idempotency: each PayPal event has a unique `id` (WH-xxx-xxx). We key
+# PaymentEvent on (provider='paypal', external_id=event_id) so retries
+# short-circuit. Subscription rows are keyed on (provider, external_id) where
+# external_id = the PayPal subscription_id (I-xxx) so the ACTIVATED handler
+# also short-circuits if /billing/paypal/return already wrote the row.
+#
+# We return 200 on every legitimate event (success OR no-op) so PayPal stops
+# retrying — we've already audited what happened. Signature failures return 403.
+# ----------------------------------------------------------------------------
+
+# Subscription event types we know how to handle. Anything else is logged
+# and 200'd without state changes (PayPal still considers it delivered).
+_PP_SUB_ACTIVATED = "BILLING.SUBSCRIPTION.ACTIVATED"
+_PP_SUB_CANCELLED = "BILLING.SUBSCRIPTION.CANCELLED"
+_PP_SUB_SUSPENDED = "BILLING.SUBSCRIPTION.SUSPENDED"
+_PP_SUB_EXPIRED   = "BILLING.SUBSCRIPTION.EXPIRED"
+_PP_PAY_COMPLETED = "PAYMENT.SALE.COMPLETED"
+_PP_PAY_FAILED    = "BILLING.SUBSCRIPTION.PAYMENT.FAILED"
+
+_PP_KNOWN_EVENTS = frozenset({
+    _PP_SUB_ACTIVATED, _PP_SUB_CANCELLED, _PP_SUB_SUSPENDED,
+    _PP_SUB_EXPIRED, _PP_PAY_COMPLETED, _PP_PAY_FAILED,
+})
+
+
+def _pp_find_active_sub(session, *, paypal_sub_id: str):
+    """Look up our Subscription row by PayPal subscription_id. None if missing."""
+    return (session.query(models.Subscription)
+            .filter_by(provider="paypal", external_id=paypal_sub_id).first())
+
+
+@app.post("/billing/paypal/webhook")
+async def paypal_webhook(request: Request):
+    """PayPal → Mostakhles webhook. Verifies signature, dispatches by event_type,
+    writes an idempotent PaymentEvent + applies state changes to Subscription /
+    user.plan as appropriate."""
+    raw = await request.body()
+    try:
+        event = json.loads(raw or b"{}")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="invalid JSON")
+
+    # Verify signature — bypassed in local mode where the mock points the
+    # verify endpoint at itself and returns SUCCESS. In prod this hits PayPal's
+    # /v1/notifications/verify-webhook-signature using PAYPAL_WEBHOOK_ID.
+    if not _paypal.verify_webhook_signature(dict(request.headers), event):
+        log.warning("paypal webhook rejected: signature invalid (event_id=%s)",
+                    event.get("id"))
+        raise HTTPException(status_code=403, detail="invalid signature")
+
+    event_id   = str(event.get("id") or "")
+    event_type = str(event.get("event_type") or "")
+    resource   = event.get("resource") or {}
+    log.info("paypal webhook: event=%s type=%s", event_id, event_type)
+
+    if not event_id:
+        return {"received": True, "ignored": "missing event id"}
+    if event_type not in _PP_KNOWN_EVENTS:
+        log.info("paypal webhook: type=%s not handled, ignoring", event_type)
+        return {"received": True, "ignored": f"unknown type {event_type}"}
+
+    session = db.SessionLocal()
+    try:
+        # Idempotency short-circuit on the event ID. PayPal retries up to ~25h.
+        existing = (session.query(models.PaymentEvent)
+                    .filter_by(provider="paypal", external_id=event_id).first())
+        if existing:
+            log.info("paypal webhook: event=%s already processed (id=%s), skipping",
+                     event_id, existing.id)
+            return {"received": True, "duplicate": True}
+
+        now = datetime.utcnow()
+        sub_row = None
+        user = None
+        amount_usd: float | None = None
+
+        # Find the affected subscription. For SALE events the sub_id is in
+        # `resource.billing_agreement_id`; for billing events it's `resource.id`.
+        paypal_sub_id = (resource.get("billing_agreement_id")
+                         or resource.get("id") or "")
+
+        if paypal_sub_id and paypal_sub_id.startswith("I-"):
+            sub_row = _pp_find_active_sub(session, paypal_sub_id=paypal_sub_id)
+            if sub_row:
+                user = session.query(models.User).filter_by(id=sub_row.user_id).first()
+
+        # ---- Per-event dispatch ----
+
+        if event_type == _PP_SUB_ACTIVATED:
+            # /billing/paypal/return may have already written this — if so,
+            # sub_row exists and we just record the PaymentEvent for audit.
+            if not sub_row:
+                # Webhook beat the return URL (rare but possible). Mirror what
+                # billing_paypal_return does: decode custom_id, write Sub.
+                custom_id = resource.get("custom_id") or ""
+                decoded = _parse_merchant_order_id(custom_id)
+                if decoded:
+                    user_id, plan_slug = decoded
+                    user = session.query(models.User).filter_by(id=user_id).first()
+                    plan_cfg = plans.get_plan(plan_slug)
+                    if user and plan_cfg and paypal_sub_id:
+                        # Close any other active sub before inserting the new one.
+                        (session.query(models.Subscription)
+                                .filter_by(user_id=user.id, status="active")
+                                .update({"status": "cancelled", "cancelled_at": now,
+                                         "updated_at": now}, synchronize_session=False))
+                        sub_row = models.Subscription(
+                            user_id=user.id, provider="paypal",
+                            external_id=paypal_sub_id, plan=plan_slug,
+                            status="active",
+                            current_period_end=now + timedelta(days=30),
+                            amount_usd=plan_cfg.usd,
+                        )
+                        session.add(sub_row)
+                        session.flush()
+                        user.plan = plan_slug
+                        amount_usd = float(plan_cfg.usd)
+                        log.info("paypal webhook ACTIVATED upgrade: user=%s plan=%s sub=%s",
+                                 user.id, plan_slug, sub_row.id)
+            # If sub_row already exists, no state change needed — return URL handled it.
+
+        elif event_type == _PP_SUB_CANCELLED:
+            if sub_row and sub_row.status != "cancelled":
+                sub_row.status = "cancelled"
+                sub_row.cancelled_at = now
+                sub_row.updated_at = now
+                log.info("paypal webhook CANCELLED: user=%s sub=%s (access until %s)",
+                         sub_row.user_id, sub_row.id, sub_row.current_period_end)
+                # NOTE: we DON'T flip user.plan here. They keep access until
+                # current_period_end. The renewal cron (PP-C) downgrades when
+                # the period elapses.
+
+        elif event_type == _PP_SUB_SUSPENDED:
+            if sub_row and sub_row.status != "past_due":
+                sub_row.status = "past_due"
+                sub_row.updated_at = now
+                log.warning("paypal webhook SUSPENDED: user=%s sub=%s — billing failed at PayPal",
+                            sub_row.user_id, sub_row.id)
+
+        elif event_type == _PP_SUB_EXPIRED:
+            if sub_row:
+                sub_row.status = "cancelled"
+                sub_row.cancelled_at = sub_row.cancelled_at or now
+                sub_row.updated_at = now
+                if user:
+                    user.plan = "free"
+                    log.info("paypal webhook EXPIRED: user=%s downgraded to free",
+                             user.id)
+
+        elif event_type == _PP_PAY_COMPLETED:
+            # Recurring renewal payment succeeded. Extend the period.
+            try:
+                amount_usd = float(((resource.get("amount") or {}).get("total"))
+                                   or resource.get("amount", {}).get("value")
+                                   or 0)
+            except (TypeError, ValueError):
+                amount_usd = None
+            if sub_row:
+                sub_row.current_period_end = (sub_row.current_period_end or now) + timedelta(days=30)
+                if sub_row.status in ("past_due", "trialing"):
+                    sub_row.status = "active"
+                sub_row.updated_at = now
+                log.info("paypal webhook PAYMENT.SALE.COMPLETED: user=%s sub=%s "
+                         "amount=%s extended to %s",
+                         sub_row.user_id, sub_row.id, amount_usd,
+                         sub_row.current_period_end)
+
+        elif event_type == _PP_PAY_FAILED:
+            if sub_row and sub_row.status == "active":
+                sub_row.status = "past_due"
+                sub_row.updated_at = now
+                log.warning("paypal webhook PAYMENT.FAILED: user=%s sub=%s -> past_due",
+                            sub_row.user_id, sub_row.id)
+
+        # ---- Always write the PaymentEvent for the audit trail ----
+        evt = models.PaymentEvent(
+            provider="paypal",
+            external_id=event_id,
+            event_type=event_type.lower().replace(".", "_"),
+            subscription_id=sub_row.id if sub_row else None,
+            user_id=user.id if user else None,
+            amount_usd=amount_usd,
+            raw_payload=json.dumps(event)[:65535],
+            processed_at=now,
+        )
+        session.add(evt)
+        session.commit()
+        return {"received": True, "event_id": event_id, "type": event_type}
+    except Exception:
+        session.rollback()
+        log.exception("paypal webhook failed: event=%s type=%s",
+                      event_id, event_type)
+        raise
+    finally:
+        session.close()
+
+
+# ============================================================================
+#   Cancel / downgrade (Sitting D)
+# ============================================================================
+#
+# One endpoint serves both providers — we look at sub.provider and route the
+# external cancellation accordingly:
+#   - PayPal: call cancel_subscription() to STOP recurring billing at PayPal.
+#   - Paymob: no external call (our model bills via one-time charges + cron
+#             extends current_period_end on PAYMENT.SALE.COMPLETED).
+#
+# In both cases the DB row goes to status='cancelled' with cancelled_at=now.
+# We DO NOT downgrade user.plan immediately — they keep access until
+# current_period_end (then cron_renewals.expire_cancelled() flips them to free).
+
+@app.post("/billing/cancel")
+def billing_cancel(request: Request, csrf_token: str = Form("")):
+    """Cancel the user's currently-active (or past-due) subscription. Keeps
+    access until the end of the current billing period.
+
+    Idempotent: re-running on an already-cancelled sub is a no-op."""
+    _require_csrf(request, csrf_token)
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login?next=/account%23subscription",
+                                    status_code=303)
+
+        sub = (session.query(models.Subscription)
+               .filter_by(user_id=user.id)
+               .filter(models.Subscription.status.in_(("active", "past_due")))
+               .order_by(models.Subscription.created_at.desc())
+               .first())
+
+        if not sub:
+            log.info("billing/cancel: user=%s has no active subscription", user.id)
+            return RedirectResponse("/account?cancel=no_active_sub#subscription",
+                                    status_code=303)
+
+        # External provider cancellation FIRST — if it fails we don't change
+        # local state, so the user can retry. (Reverse order would risk us
+        # showing "cancelled" while PayPal keeps billing them.)
+        if sub.provider == "paypal":
+            try:
+                _paypal.cancel_subscription(
+                    sub.external_id,
+                    reason=f"User cancelled via /account · {datetime.utcnow().isoformat()}",
+                )
+                log.info("paypal cancel: user=%s sub=%s external=%s",
+                         user.id, sub.id, sub.external_id)
+            except _paypal.PayPalError as exc:
+                # Already-cancelled at PayPal is fine — surface as success.
+                if "SUBSCRIPTION_STATUS_INVALID" in str(exc):
+                    log.info("paypal cancel: sub=%s already cancelled at PayPal",
+                             sub.id)
+                else:
+                    log.error("paypal cancel failed: %s", exc)
+                    return RedirectResponse(
+                        "/account?cancel=provider_error#subscription",
+                        status_code=303)
+
+        # Local state change + audit trail.
+        now = datetime.utcnow()
+        sub.status = "cancelled"
+        sub.cancelled_at = now
+        sub.updated_at = now
+
+        evt = models.PaymentEvent(
+            provider=sub.provider,
+            external_id=f"cancel-{sub.id}-{int(now.timestamp())}",
+            event_type=f"{sub.provider}.subscription.cancelled_by_user",
+            subscription_id=sub.id,
+            user_id=user.id,
+            amount_usd=sub.amount_usd,
+            raw_payload=(f'{{"cancelled_by": "user", '
+                         f'"at": "{now.isoformat()}", '
+                         f'"period_end": "{sub.current_period_end.isoformat() if sub.current_period_end else None}"}}'),
+            processed_at=now,
+        )
+        session.add(evt)
+        session.commit()
+        log.info("billing/cancel: user=%s sub=%s provider=%s -> cancelled",
+                 user.id, sub.id, sub.provider)
+        return RedirectResponse("/account?cancel=ok#subscription",
+                                status_code=303)
+    except Exception:
+        session.rollback()
+        log.exception("billing/cancel failed for user request")
+        raise
+    finally:
+        session.close()
+
+

@@ -8,6 +8,8 @@ The `free` plan is intentionally absent — it's the default and isn't sold.
 """
 from dataclasses import dataclass
 
+from app.config import settings
+
 
 @dataclass(frozen=True)
 class Plan:
@@ -21,7 +23,7 @@ class Plan:
 PAID_PLANS: dict[str, Plan] = {
     "lite":     Plan("lite",     "Lite",     "Lite",      9,  1200),
     "starter":  Plan("starter",  "Starter",  "Starter",  29,  3500),
-    "pro":      Plan("pro",      "Pro",      "Pro",      69,  8500),
+    "pro":      Plan("pro",      "Pro",      "Pro",      59,  8500),
     "business": Plan("business", "Business", "Business", 199, 28000),
 }
 
@@ -33,3 +35,20 @@ def get_plan(slug: str) -> Plan | None:
 
 def is_paid(slug: str) -> bool:
     return slug in PAID_PLANS
+
+
+# ----------------------------------------------------------------------------
+# Provider-specific lookups — keep external IDs out of the Plan dataclass so
+# adding a new provider doesn't churn the registry.
+# ----------------------------------------------------------------------------
+
+def paypal_plan_id(slug: str) -> str | None:
+    """Return the PayPal Plans-API plan_id (P-xxx) for `slug`, or None if the
+    tier isn't yet offered via PayPal. Reads from settings each call so a
+    config reload picks it up without restarting the import graph."""
+    return {
+        "lite":     settings.PAYPAL_PLAN_ID_LITE,
+        "starter":  settings.PAYPAL_PLAN_ID_STARTER,
+        "pro":      settings.PAYPAL_PLAN_ID_PRO,
+        "business": settings.PAYPAL_PLAN_ID_BUSINESS,
+    }.get(slug) or None

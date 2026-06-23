@@ -1,0 +1,105 @@
+{# Polished invoice template — renders the extracted result as a clean, branded
+   document. Designed to print well (A4) and to copy-paste into Word.
+   Works with the canonical Mostakhles extraction shape OR the legacy flat. #}
+<!DOCTYPE html>
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ data.invoice_number.value if data.invoice_number else 'Invoice' }} — {{ data.supplier.name.value if data.supplier and data.supplier.name else (data.supplier_name.value if data.supplier_name else 'Invoice') }}</title>
+  <style>
+    @page { size: A4; margin: 18mm 16mm; }
+    body { font-family: 'Cairo', 'Helvetica', sans-serif; color: #1b1813; margin: 0; padding: 24px; max-width: 800px; margin-inline: auto; line-height: 1.55; }
+    .ri-head { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 18px; border-bottom: 3px solid #0f766e; margin-bottom: 22px; }
+    .ri-brand { font-size: 24px; font-weight: 800; color: #0a564f; }
+    .ri-brand small { display: block; font-size: 11px; font-weight: 500; color: #7a7165; letter-spacing: 0.05em; text-transform: uppercase; }
+    .ri-meta { text-align: end; font-size: 13px; color: #4a3f33; }
+    .ri-meta .ri-number { font-size: 18px; font-weight: 700; color: #0a564f; margin-bottom: 4px; }
+    .ri-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    .ri-party h3 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #7a7165; font-weight: 700; }
+    .ri-party strong { display: block; font-size: 15px; margin-bottom: 4px; }
+    .ri-party div { font-size: 13px; color: #4a3f33; margin-bottom: 2px; }
+    table.ri-items { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    table.ri-items thead { background: #d1fae5; }
+    table.ri-items th { padding: 10px 12px; text-align: start; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: #0a564f; border-bottom: 2px solid #0f766e; }
+    table.ri-items td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #e5e0d4; }
+    table.ri-items td.num { text-align: end; font-variant-numeric: tabular-nums; }
+    .ri-totals { margin-inline-start: auto; width: 320px; }
+    .ri-totals .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+    .ri-totals .row.grand { border-top: 2px solid #0f766e; margin-top: 6px; padding-top: 10px; font-size: 17px; font-weight: 700; color: #0a564f; }
+    .ri-foot { margin-top: 36px; padding-top: 14px; border-top: 1px solid #e5e0d4; display: flex; justify-content: space-between; font-size: 11px; color: #7a7165; }
+    .ri-conf { display: inline-block; padding: 2px 7px; border-radius: 999px; background: #d1fae5; color: #065f46; font-size: 10px; font-weight: 700; margin-inline-start: 6px; vertical-align: middle; }
+    .ri-conf.med { background: #fef3c7; color: #92400e; }
+    .ri-conf.low { background: #fee2e2; color: #991b1b; }
+    .ri-note { font-size: 11px; color: #7a7165; margin-top: 14px; padding: 10px 12px; background: #fef3c7; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="ri-head">
+    <div>
+      <div class="ri-brand">{{ supplier_name }}<small>{{ supplier_tax_id_label }}: {{ supplier_tax_id }}</small></div>
+    </div>
+    <div class="ri-meta">
+      <div class="ri-number">{{ 'فاتورة' if dir == 'rtl' else 'INVOICE' }} #{{ invoice_number }}</div>
+      <div>{{ 'تاريخ' if dir == 'rtl' else 'Date' }}: {{ issue_date }}</div>
+      {% if due_date %}<div>{{ 'الاستحقاق' if dir == 'rtl' else 'Due' }}: {{ due_date }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="ri-parties">
+    <div class="ri-party">
+      <h3>{{ 'من' if dir == 'rtl' else 'From' }}</h3>
+      <strong>{{ supplier_name }}</strong>
+      {% if supplier_address %}<div>{{ supplier_address }}</div>{% endif %}
+      {% if supplier_phone %}<div>{{ supplier_phone }}</div>{% endif %}
+      {% if supplier_email %}<div>{{ supplier_email }}</div>{% endif %}
+    </div>
+    <div class="ri-party">
+      <h3>{{ 'إلى' if dir == 'rtl' else 'Bill to' }}</h3>
+      <strong>{{ customer_name }}</strong>
+      {% if customer_tax_id %}<div>{{ 'الرقم الضريبي' if dir == 'rtl' else 'Tax ID' }}: {{ customer_tax_id }}</div>{% endif %}
+      {% if customer_address %}<div>{{ customer_address }}</div>{% endif %}
+    </div>
+  </div>
+
+  {% if line_items %}
+  <table class="ri-items">
+    <thead>
+      <tr>
+        <th>{{ 'الوصف' if dir == 'rtl' else 'Description' }}</th>
+        <th class="num">{{ 'الكمية' if dir == 'rtl' else 'Qty' }}</th>
+        <th class="num">{{ 'سعر الوحدة' if dir == 'rtl' else 'Unit price' }}</th>
+        <th class="num">{{ 'الإجمالي' if dir == 'rtl' else 'Total' }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in line_items %}
+      <tr>
+        <td>{{ item.description }}</td>
+        <td class="num">{{ item.quantity }}</td>
+        <td class="num">{{ item.unit_price }}</td>
+        <td class="num">{{ item.line_total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <div class="ri-totals">
+    {% if subtotal %}<div class="row"><span>{{ 'الإجمالي الفرعي' if dir == 'rtl' else 'Subtotal' }}</span><span>{{ subtotal }}</span></div>{% endif %}
+    {% if tax %}<div class="row"><span>{{ 'الضريبة' if dir == 'rtl' else 'Tax' }}</span><span>{{ tax }}</span></div>{% endif %}
+    {% if discount %}<div class="row"><span>{{ 'الخصم' if dir == 'rtl' else 'Discount' }}</span><span>-{{ discount }}</span></div>{% endif %}
+    <div class="row grand"><span>{{ 'الإجمالي الكلي' if dir == 'rtl' else 'GRAND TOTAL' }}</span><span>{{ grand_total }}</span></div>
+  </div>
+
+  {% if payment_terms %}
+  <div class="ri-note">
+    <strong>{{ 'شروط الدفع' if dir == 'rtl' else 'Payment terms' }}:</strong> {{ payment_terms }}
+  </div>
+  {% endif %}
+
+  <div class="ri-foot">
+    <span>{{ 'تم استخراج البيانات بواسطة Mostakhles' if dir == 'rtl' else 'Generated by Mostakhles' }}</span>
+    <span>{{ extracted_at }}</span>
+  </div>
+</body>
+</html>

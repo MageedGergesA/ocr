@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ 'Checkout' if lang == 'en' else 'إتمام الاشتراك' }} — Mostakhles</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+</head>
+<body class="lp-body">
+  {% include "_lpheader.html" ignore missing %}
+
+  <main class="checkout-page">
+    <div class="checkout-shell">
+
+      {# ── Header ──────────────────────────────────────────────── #}
+      <header class="checkout-head">
+        <a class="checkout-back" href="/pricing">
+          ← {{ 'Back to plans' if lang == 'en' else 'الرجوع إلى الخطط' }}
+        </a>
+        <h1>{{ 'Checkout' if lang == 'en' else 'إتمام الاشتراك' }}</h1>
+        <p>{{ 'Pick how you want to pay. You can change or cancel any time from your account.' if lang == 'en' else 'اختر طريقة الدفع. يمكنك التغيير أو الإلغاء في أي وقت من حسابك.' }}</p>
+      </header>
+
+      {# ── Error banners (provider unavailable) ──────────────────── #}
+      {% if request.query_params.get('error') == 'paymob_unavailable' %}
+      <div class="checkout-alert">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="8"/><path d="M10 6v4M10 14v.01"/></svg>
+        <div>
+          <strong>{{ 'Paymob is unavailable right now' if lang == 'en' else 'Paymob غير متاح حاليًا' }}</strong>
+          <small>{{ 'Try PayPal below, or contact support.' if lang == 'en' else 'جرّب PayPal أدناه أو راسل الدعم.' }}</small>
+        </div>
+      </div>
+      {% elif request.query_params.get('error') == 'paypal_unavailable' %}
+      <div class="checkout-alert">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="8"/><path d="M10 6v4M10 14v.01"/></svg>
+        <div>
+          <strong>{{ 'PayPal is unavailable for this plan right now' if lang == 'en' else 'PayPal غير متاح لهذه الخطّة حاليًا' }}</strong>
+          <small>{{ 'Use Paymob below — supports all major cards + Vodafone Cash.' if lang == 'en' else 'استخدم Paymob أدناه — يدعم كل البطاقات الرئيسية + فودافون كاش.' }}</small>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="checkout-grid">
+
+        {# ── Left: order summary ────────────────────────────────── #}
+        <aside class="checkout-summary">
+          <h2>{{ 'Order summary' if lang == 'en' else 'ملخّص الطلب' }}</h2>
+          <div class="checkout-plan-row">
+            <span class="checkout-plan-name">{{ plan.name }}</span>
+            <span class="checkout-plan-cycle">{{ 'monthly' if lang == 'en' else 'شهري' }}</span>
+          </div>
+          <p class="checkout-plan-desc">
+            {{ '{:,} credits per month'.format(plan.credits) if lang == 'en' else '{:,} نقطة شهريًا'.format(plan.credits) }}
+          </p>
+
+          <dl class="checkout-totals">
+            <div>
+              <dt>{{ 'Subtotal' if lang == 'en' else 'المجموع' }}</dt>
+              <dd>${{ plan.usd }}.00</dd>
+            </div>
+            <div>
+              <dt>{{ 'VAT / Tax' if lang == 'en' else 'الضريبة' }}</dt>
+              <dd>{{ 'Included' if lang == 'en' else 'مشمولة' }}</dd>
+            </div>
+            <div class="checkout-totals-grand">
+              <dt>{{ 'Total today' if lang == 'en' else 'المستحق الآن' }}</dt>
+              <dd>
+                <strong>${{ plan.usd }}.00</strong>
+                <small>{{ '≈ EGP {:,.0f} via Paymob'.format(amount_egp) if lang == 'en' else '≈ {:,.0f} ج.م عبر Paymob'.format(amount_egp) }}</small>
+              </dd>
+            </div>
+          </dl>
+
+          <ul class="checkout-promises">
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ '14-day money-back guarantee' if lang == 'en' else 'استرداد 14 يومًا' }}</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ 'Cancel any time from your account' if lang == 'en' else 'إلغاء في أي وقت من حسابك' }}</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ 'Instant access after payment' if lang == 'en' else 'وصول فوري بعد الدفع' }}</li>
+          </ul>
+        </aside>
+
+        {# ── Right: payment method tiles ────────────────────────── #}
+        <section class="checkout-methods">
+          <h2>{{ 'Payment method' if lang == 'en' else 'طريقة الدفع' }}</h2>
+
+          {# ──── Paymob tile ──── #}
+          <form method="post" action="/billing/paymob/checkout" class="checkout-tile {% if not paymob_available %}is-disabled{% endif %}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="plan" value="{{ plan.slug }}">
+            <div class="checkout-tile-head">
+              <span class="checkout-tile-logo checkout-logo-paymob">Paymob</span>
+              {% if paymob_available %}
+              <span class="checkout-tile-recommended">{{ 'Recommended for Egypt' if lang == 'en' else 'موصى به لمصر' }}</span>
+              {% else %}
+              <span class="checkout-tile-unavailable">{{ 'Unavailable' if lang == 'en' else 'غير متاح' }}</span>
+              {% endif %}
+            </div>
+            <div class="checkout-tile-body">
+              <p>
+                {% if lang == 'en' %}
+                Pay in <strong>EGP {{ '{:,.0f}'.format(amount_egp) }}</strong> with Egyptian / regional payment methods.
+                {% else %}
+                ادفع <strong>{{ '{:,.0f}'.format(amount_egp) }} ج.م</strong> بطرق الدفع المصرية والإقليمية.
+                {% endif %}
+              </p>
+              <ul class="checkout-tile-methods">
+                <li>Visa</li><li>Mastercard</li><li>Meeza</li>
+                <li>Vodafone Cash</li><li>valU {{ 'instalments' if lang == 'en' else 'تقسيط' }}</li>
+              </ul>
+            </div>
+            <button type="submit" class="checkout-tile-cta" {% if not paymob_available %}disabled{% endif %}>
+              {{ 'Pay with Paymob — EGP {:,.0f}'.format(amount_egp) if lang == 'en' else 'ادفع عبر Paymob — {:,.0f} ج.م'.format(amount_egp) }} →
+            </button>
+          </form>
+
+          {# ──── PayPal tile ──── #}
+          <form method="post" action="/billing/paypal/checkout" class="checkout-tile {% if not paypal_available %}is-disabled{% endif %}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="plan" value="{{ plan.slug }}">
+            <div class="checkout-tile-head">
+              <span class="checkout-tile-logo checkout-logo-paypal">PayPal</span>
+              {% if paypal_available %}
+              <span class="checkout-tile-recommended">{{ 'Best for international' if lang == 'en' else 'الأنسب دوليًا' }}</span>
+              {% else %}
+              <span class="checkout-tile-unavailable">{{ 'Coming soon' if lang == 'en' else 'قريبًا' }}</span>
+              {% endif %}
+            </div>
+            <div class="checkout-tile-body">
+              <p>
+                {% if lang == 'en' %}
+                Pay <strong>${{ plan.usd }}.00 USD</strong> with PayPal balance, card, or bank.
+                {% else %}
+                ادفع <strong>{{ plan.usd }}$</strong> برصيد PayPal أو ببطاقتك أو حسابك البنكي.
+                {% endif %}
+              </p>
+              <ul class="checkout-tile-methods">
+                <li>PayPal balance</li><li>Visa</li><li>Mastercard</li>
+                <li>American Express</li><li>Bank</li>
+              </ul>
+            </div>
+            <button type="submit" class="checkout-tile-cta checkout-tile-cta-ghost" {% if not paypal_available %}disabled{% endif %}>
+              {{ 'Pay with PayPal — ${}.00 USD'.format(plan.usd) if lang == 'en' else 'ادفع عبر PayPal — {}$'.format(plan.usd) }} →
+            </button>
+          </form>
+
+          {# ──── Talk-to-sales escape hatch ──── #}
+          <a class="checkout-talk-sales" href="/contact?topic=sales&plan={{ plan.slug }}">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7l-3 2v-2H5a2 2 0 0 1-2-2V5z"/></svg>
+            {{ 'Need bank transfer, invoicing, or annual billing?' if lang == 'en' else 'تحتاج تحويلًا بنكيًا، فوترة، أو دفعًا سنويًا؟' }}
+            <strong>{{ 'Talk to sales →' if lang == 'en' else 'تواصل مع المبيعات ←' }}</strong>
+          </a>
+
+          {# ──── Trust line ──── #}
+          <p class="checkout-trust">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 1.5 2 4v4c0 3.3 4 6.5 6 6.5s6-3.2 6-6.5V4L8 1.5z"/></svg>
+            {{ 'Encrypted in transit (TLS 1.3). Card data never touches our servers.' if lang == 'en' else 'مُشفّر أثناء النقل (TLS 1.3). بيانات البطاقة لا تمرّ بخوادمنا.' }}
+          </p>
+        </section>
+      </div>
+
+    </div>
+  </main>
+
+  {% include "_lpfooter.html" ignore missing %}
+</body>
+</html>

@@ -1,0 +1,232 @@
+# Arabic translation for Mostakhles Connector.
+# Copyright 2026 Mageed Gerges
+# This file is distributed under the same license as the
+# mostakhles_connector module.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-21 00:00+0000\n"
+"PO-Revision-Date: 2026-06-21 00:00+0000\n"
+"Last-Translator: Mageed Gerges <mageed.gerges28@gmail.com>\n"
+"Language-Team: Arabic <ar@li.org>\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+
+# --- Field labels ---------------------------------------------------------
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_wizard__document
+msgid "Document"
+msgstr "المستند"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_wizard__file_name
+msgid "File Name"
+msgstr "اسم الملف"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_wizard__document_type
+msgid "Document Type"
+msgstr "نوع المستند"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_wizard__detected_type
+msgid "Detected Type"
+msgstr "النوع المكتشف"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_wizard__model
+msgid "Model"
+msgstr "النموذج"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_wizard__hard_mode
+msgid "High accuracy (Arabic & handwriting)"
+msgstr "دقة عالية (العربية وخط اليد)"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_line__field
+msgid "Field"
+msgstr "الحقل"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_line__value
+msgid "Value"
+msgstr "القيمة"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_line__confidence
+msgid "Confidence %"
+msgstr "نسبة الثقة %"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_fill_wizard__line_ids
+msgid "Extracted Fields"
+msgstr "الحقول المُستخرَجة"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_fill_line__field_name
+msgid "Extracted Field"
+msgstr "الحقل المستخرج"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_fill_line__proposed
+msgid "Proposed Values"
+msgstr "القيم المقترحة"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_fill_line__technical_name
+msgid "Technical Name"
+msgstr "الاسم التقني"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_fill_line__raw_result
+msgid "Raw Result"
+msgstr "النتيجة الخام"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_mapping__odoo_field
+msgid "Odoo Field"
+msgstr "حقل أودو"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_mapping__model_name
+msgid "Target Model"
+msgstr "النموذج المستهدف"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_mapping_line__field_name
+msgid "Field Mapping"
+msgstr "ربط الحقول"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_res_config_settings__mostakhles_api_key
+msgid "Mostakhles API Key"
+msgstr "مفتاح API لمُستخلِص"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_res_config_settings__mostakhles_base_url
+msgid "Mostakhles Base URL"
+msgstr "عنوان API لمُستخلِص"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_wizard__record_id
+msgid "Record ID"
+msgstr "معرّف السجل"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_wizard__record_ref
+msgid "Record"
+msgstr "السجل"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_mapping__record_action
+msgid "Record Action"
+msgstr "إجراء السجل"
+
+# --- Action labels --------------------------------------------------------
+
+#. module: mostakhles_connector
+#: model:ir.actions.act_window,name:mostakhles_connector.action_mostakhles_extract_wizard
+msgid "Extract with Mostakhles"
+msgstr "استخراج بمُستخلِص"
+
+#. module: mostakhles_connector
+#: model:ir.actions.act_window,name:mostakhles_connector.action_mostakhles_mapping
+msgid "Field Mappings"
+msgstr "روابط الحقول"
+
+#. module: mostakhles_connector
+#: model:ir.ui.menu,name:mostakhles_connector.menu_mostakhles_root
+msgid "Mostakhles"
+msgstr "مُستخلِص"
+
+#. module: mostakhles_connector
+#: model:ir.ui.menu,name:mostakhles_connector.menu_mostakhles_extract
+msgid "Extract"
+msgstr "استخرج"
+
+#. module: mostakhles_connector
+#: model:ir.ui.menu,name:mostakhles_connector.menu_mostakhles_mapping
+msgid "Mappings"
+msgstr "الروابط"
+
+#. module: mostakhles_connector
+#: model:ir.ui.menu,name:mostakhles_connector.menu_mostakhles_config
+msgid "Configuration"
+msgstr "الإعدادات"
+
+# --- Buttons --------------------------------------------------------------
+
+#. module: mostakhles_connector
+#: model_terms:ir.ui.view,arch_db:mostakhles_connector.view_mostakhles_extract_wizard_form
+msgid "Extracted"
+msgstr "مُستخرَج"
+
+#. module: mostakhles_connector
+#: model_terms:ir.ui.view,arch_db:mostakhles_connector.view_mostakhles_fill_wizard_form
+msgid "Apply"
+msgstr "تطبيق"
+
+# --- Error / info messages ------------------------------------------------
+
+#. module: mostakhles_connector
+#: code:addons/mostakhles_connector/models/mostakhles_api.py:0
+#, python-format
+msgid "No Mostakhles API key configured.\n"
+"Go to Settings → Mostakhles and paste the key from your dashboard."
+msgstr "لا يوجد مفتاح API لمُستخلِص.\n"
+"اذهب إلى الإعدادات ← مُستخلِص والصق المفتاح من لوحة التحكم لديك."
+
+#. module: mostakhles_connector
+#: code:addons/mostakhles_connector/models/mostakhles_api.py:0
+#, python-format
+msgid "Could not reach Mostakhles: %s"
+msgstr "تعذّر الوصول إلى مُستخلِص: %s"
+
+#. module: mostakhles_connector
+#: code:addons/mostakhles_connector/models/mostakhles_api.py:0
+#, python-format
+msgid "Mostakhles error (%(code)s): %(msg)s"
+msgstr "خطأ من مُستخلِص (%(code)s): %(msg)s"
+
+#. module: mostakhles_connector
+#: code:addons/mostakhles_connector/models/mostakhles_api.py:0
+#, python-format
+msgid "Mostakhles returned an unexpected (non-JSON) response."
+msgstr "أعاد مُستخلِص استجابة غير متوقّعة (ليست JSON)."
+
+#. module: mostakhles_connector
+#: code:addons/mostakhles_connector/wizard/mostakhles_extract_wizard.py:0
+#, python-format
+msgid "Please upload a document first."
+msgstr "الرجاء رفع مستند أولًا."
+
+#. module: mostakhles_connector
+#: code:addons/mostakhles_connector/wizard/mostakhles_extract_wizard.py:0
+#, python-format
+msgid "Large PDFs (batch processing) aren't supported here yet."
+msgstr "ملفات PDF الكبيرة (المعالجة على دُفعات) غير مدعومة هنا بعد."
+
+#. module: mostakhles_connector
+#: code:addons/mostakhles_connector/wizard/mostakhles_fill_wizard.py:0
+#, python-format
+msgid "No target record — open this from a record's Action menu."
+msgstr "لا يوجد سجل مستهدف — افتح هذا من قائمة «إجراءات» في سجلٍّ ما."
+
+#. module: mostakhles_connector
+#: code:addons/mostakhles_connector/wizard/mostakhles_fill_wizard.py:0
+#, python-format
+msgid "The target record no longer exists."
+msgstr "السجل المستهدف لم يعد موجودًا."
+
+#. module: mostakhles_connector
+#: code:addons/mostakhles_connector/wizard/mostakhles_fill_wizard.py:0
+#, python-format
+msgid "%d field(s) matched — review and apply."
+msgstr "تطابق %d حقل — راجع وطبّق."

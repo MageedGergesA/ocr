@@ -1,72 +1,91 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ lang or 'ar' }}" dir="{{ dir or 'rtl' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة الإدارة — مُستخلِص</title>
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var t;
+    try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') {
+      t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  </script>
+  <title>{{ 'Admin panel' if lang == 'en' else 'لوحة الإدارة' }} — مُستخلِص</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-  {% include "_nav.html" %}
+<body class="has-shell">
 
-  <section class="account-wrap">
-    <div class="account-page" style="max-width:1180px">
+  {% set active_nav = 'admin' %}
+  <div class="shell-wrap">
+    {% include "_appshell.html" %}
+
+    <main class="shell-main">
+      <div class="shell-main-head">
+        <div class="shell-crumb">
+          <span>{{ 'Admin panel' if lang == 'en' else 'لوحة الإدارة' }}</span>
+        </div>
+      </div>
+
+      <div class="account-page" style="max-width:1180px">
       <header class="account-head">
-        <h1>لوحة الإدارة <span class="chip chip-warn" style="font-size:11px;vertical-align:middle">ADMIN</span></h1>
-        <p>نظرة عامة على كل الحسابات والاستخدام والنمو.</p>
+        <h1>{{ 'Admin panel' if lang == 'en' else 'لوحة الإدارة' }} <span class="chip chip-warn" style="font-size:11px;vertical-align:middle">ADMIN</span></h1>
+        <p>{{ 'Overview of all accounts, usage, and growth.' if lang == 'en' else 'نظرة عامة على كل الحسابات والاستخدام والنمو.' }}</p>
       </header>
 
       <!-- Top KPI strip -->
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-label">المستخدمون</div>
-          <div class="kpi-big">{{ total_users }}<span> حساب</span></div>
-          <div class="kpi-meta">{{ verified }} مؤكَّد ({{ verify_rate }}%) · {{ paid_users }} مدفوع</div>
+          <div class="kpi-label">{{ 'Users' if lang == 'en' else 'المستخدمون' }}</div>
+          <div class="kpi-big">{{ total_users }}<span> {{ 'accounts' if lang == 'en' else 'حساب' }}</span></div>
+          <div class="kpi-meta">{{ verified }} {{ 'verified' if lang == 'en' else 'مؤكَّد' }} ({{ verify_rate }}%) · {{ paid_users }} {{ 'paid' if lang == 'en' else 'مدفوع' }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">اشتراكات هذا الأسبوع</div>
-          <div class="kpi-big">{{ signups_7d }}<span> جديد</span></div>
-          <div class="kpi-meta">اليوم: {{ signups_today }} · 30 يومًا: {{ signups_30d }}</div>
+          <div class="kpi-label">{{ 'Signups this week' if lang == 'en' else 'اشتراكات هذا الأسبوع' }}</div>
+          <div class="kpi-big">{{ signups_7d }}<span> {{ 'new' if lang == 'en' else 'جديد' }}</span></div>
+          <div class="kpi-meta">{{ 'Today' if lang == 'en' else 'اليوم' }}: {{ signups_today }} · {{ '30 days' if lang == 'en' else '30 يومًا' }}: {{ signups_30d }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">الاستخراجات هذا الشهر</div>
-          <div class="kpi-big">{{ month_extractions }}<span> عملية</span></div>
-          <div class="kpi-meta">{{ month_credits }} نقطة · اليوم {{ today_extractions }}</div>
+          <div class="kpi-label">{{ 'Extractions this month' if lang == 'en' else 'الاستخراجات هذا الشهر' }}</div>
+          <div class="kpi-big">{{ month_extractions }}<span> {{ 'ops' if lang == 'en' else 'عملية' }}</span></div>
+          <div class="kpi-meta">{{ month_credits }} {{ 'credits' if lang == 'en' else 'نقطة' }} · {{ 'today' if lang == 'en' else 'اليوم' }} {{ today_extractions }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">تكلفة Gemini (الشهر)</div>
+          <div class="kpi-label">{{ 'Gemini cost (month)' if lang == 'en' else 'تكلفة Gemini (الشهر)' }}</div>
           <div class="kpi-big">${{ est_cost_month }}<span></span></div>
-          <div class="kpi-meta">{{ hard_ops }} دقة عالية · {{ fast_ops }} سريع</div>
+          <div class="kpi-meta">{{ hard_ops }} {{ 'high-accuracy' if lang == 'en' else 'دقة عالية' }} · {{ fast_ops }} {{ 'fast' if lang == 'en' else 'سريع' }}</div>
         </div>
       </div>
 
       <!-- Funnel + growth KPIs -->
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-label">معدّل التفعيل</div>
+          <div class="kpi-label">{{ 'Activation rate' if lang == 'en' else 'معدّل التفعيل' }}</div>
           <div class="kpi-big">{{ activation_rate }}<span>%</span></div>
-          <div class="kpi-meta">{{ active_users }} مستخدم نشط (استخدم الخدمة)</div>
+          <div class="kpi-meta">{{ active_users }} {{ 'active users (used the service)' if lang == 'en' else 'مستخدم نشط (استخدم الخدمة)' }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">تحويل للمدفوع</div>
+          <div class="kpi-label">{{ 'Paid conversion' if lang == 'en' else 'تحويل للمدفوع' }}</div>
           <div class="kpi-big">{{ paid_conversion }}<span>%</span></div>
-          <div class="kpi-meta">{{ paid_users }} من {{ total_users }} حساب</div>
+          <div class="kpi-meta">{{ paid_users }} {{ 'of' if lang == 'en' else 'من' }} {{ total_users }} {{ 'accounts' if lang == 'en' else 'حساب' }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">نموّ يومي</div>
+          <div class="kpi-label">{{ 'Daily growth' if lang == 'en' else 'نموّ يومي' }}</div>
           <div class="kpi-big {% if dod_growth >= 0 %}up{% else %}down{% endif %}">
             {{ '+' if dod_growth >= 0 else '' }}{{ dod_growth }}<span>%</span>
           </div>
-          <div class="kpi-meta">اليوم {{ today_extractions }} مقابل أمس {{ '...' if false else '' }}</div>
+          <div class="kpi-meta">{{ 'Today' if lang == 'en' else 'اليوم' }} {{ today_extractions }} {{ 'vs yesterday' if lang == 'en' else 'مقابل أمس' }}</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">نموّ أسبوعي</div>
+          <div class="kpi-label">{{ 'Weekly growth' if lang == 'en' else 'نموّ أسبوعي' }}</div>
           <div class="kpi-big {% if wow_growth >= 0 %}up{% else %}down{% endif %}">
             {{ '+' if wow_growth >= 0 else '' }}{{ wow_growth }}<span>%</span>
           </div>
-          <div class="kpi-meta">{{ churn_candidates }} حساب غير نشط (>7 أيام)</div>
+          <div class="kpi-meta">{{ churn_candidates }} {{ 'inactive accounts (>7 days)' if lang == 'en' else 'حساب غير نشط (>7 أيام)' }}</div>
         </div>
       </div>
 
@@ -75,30 +94,30 @@
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="zap"></i></span>
           <div>
-            <h2>مؤشرات الأداء</h2>
-            <p>زمن الاستجابة + الإنتاجية. مبنية على {{ timed_ops }} عملية مقيسة.</p>
+            <h2>{{ 'Performance metrics' if lang == 'en' else 'مؤشرات الأداء' }}</h2>
+            <p>{{ 'Response time + throughput. Based on' if lang == 'en' else 'زمن الاستجابة + الإنتاجية. مبنية على' }} {{ timed_ops }} {{ 'measured ops.' if lang == 'en' else 'عملية مقيسة.' }}</p>
           </div>
         </div>
         <div class="kpi-grid" style="margin:0">
           <div class="kpi-card">
-            <div class="kpi-label">متوسط زمن المعالجة</div>
-            <div class="kpi-big">{{ (avg_ms or 0) // 1000 if avg_ms else '—' }}<span> ث</span></div>
-            <div class="kpi-meta">{{ avg_ms or '—' }} ميلي ثانية</div>
+            <div class="kpi-label">{{ 'Avg processing time' if lang == 'en' else 'متوسط زمن المعالجة' }}</div>
+            <div class="kpi-big">{{ (avg_ms or 0) // 1000 if avg_ms else '—' }}<span> {{ 's' if lang == 'en' else 'ث' }}</span></div>
+            <div class="kpi-meta">{{ avg_ms or '—' }} {{ 'milliseconds' if lang == 'en' else 'ميلي ثانية' }}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">الوسيط (P50)</div>
-            <div class="kpi-big">{{ (p50_ms or 0) // 1000 if p50_ms else '—' }}<span> ث</span></div>
-            <div class="kpi-meta">نصف الطلبات أسرع من هذا</div>
+            <div class="kpi-label">{{ 'Median (P50)' if lang == 'en' else 'الوسيط (P50)' }}</div>
+            <div class="kpi-big">{{ (p50_ms or 0) // 1000 if p50_ms else '—' }}<span> {{ 's' if lang == 'en' else 'ث' }}</span></div>
+            <div class="kpi-meta">{{ 'Half of requests faster than this' if lang == 'en' else 'نصف الطلبات أسرع من هذا' }}</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-label">P95</div>
-            <div class="kpi-big">{{ (p95_ms or 0) // 1000 if p95_ms else '—' }}<span> ث</span></div>
-            <div class="kpi-meta">95% من الطلبات أسرع</div>
+            <div class="kpi-big">{{ (p95_ms or 0) // 1000 if p95_ms else '—' }}<span> {{ 's' if lang == 'en' else 'ث' }}</span></div>
+            <div class="kpi-meta">{{ '95% of requests faster' if lang == 'en' else '95% من الطلبات أسرع' }}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">الإنتاجية اليومية</div>
-            <div class="kpi-big">{{ throughput_per_day }}<span> عملية</span></div>
-            <div class="kpi-meta">متوسط يومي · ذروة عند الساعة {{ peak_hour if peak_hour is not none else '—' }}</div>
+            <div class="kpi-label">{{ 'Daily throughput' if lang == 'en' else 'الإنتاجية اليومية' }}</div>
+            <div class="kpi-big">{{ throughput_per_day }}<span> {{ 'ops' if lang == 'en' else 'عملية' }}</span></div>
+            <div class="kpi-meta">{{ 'Daily avg · peak at hour' if lang == 'en' else 'متوسط يومي · ذروة عند الساعة' }} {{ peak_hour if peak_hour is not none else '—' }}</div>
           </div>
         </div>
       </div>
@@ -108,7 +127,7 @@
         <div class="acc-card">
           <div class="acc-card-head">
             <span class="acc-icon"><i data-lucide="user-plus"></i></span>
-            <div><h2>الاشتراكات — آخر 30 يومًا</h2><p>عدد الحسابات الجديدة يوميًا.</p></div>
+            <div><h2>{{ 'Signups — last 30 days' if lang == 'en' else 'الاشتراكات — آخر 30 يومًا' }}</h2><p>{{ 'New accounts per day.' if lang == 'en' else 'عدد الحسابات الجديدة يوميًا.' }}</p></div>
           </div>
           <div class="chart">
             {% for d in signups_chart %}
@@ -126,7 +145,7 @@
         <div class="acc-card">
           <div class="acc-card-head">
             <span class="acc-icon"><i data-lucide="activity"></i></span>
-            <div><h2>الاستخدام — آخر 30 يومًا</h2><p>إجمالي النقاط المستهلَكة عبر كل الحسابات.</p></div>
+            <div><h2>{{ 'Usage — last 30 days' if lang == 'en' else 'الاستخدام — آخر 30 يومًا' }}</h2><p>{{ 'Total credits consumed across all accounts.' if lang == 'en' else 'إجمالي النقاط المستهلَكة عبر كل الحسابات.' }}</p></div>
           </div>
           <div class="chart">
             {% for d in usage_chart %}
@@ -148,34 +167,34 @@
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="trending-up"></i></span>
           <div>
-            <h2>التوقّعات</h2>
-            <p>إسقاط خطّي مبني على معدّل آخر 30 يومًا — قابل للتحديث مع تغيّر الإيقاع.</p>
+            <h2>{{ 'Forecasts' if lang == 'en' else 'التوقّعات' }}</h2>
+            <p>{{ 'Linear projection based on last-30-day rate — updates as cadence changes.' if lang == 'en' else 'إسقاط خطّي مبني على معدّل آخر 30 يومًا — قابل للتحديث مع تغيّر الإيقاع.' }}</p>
           </div>
         </div>
         <div class="kpi-grid" style="margin:0 0 18px">
           <div class="kpi-card">
-            <div class="kpi-label">اشتراكات نهاية الشهر</div>
-            <div class="kpi-big">{{ proj_signups_month }}<span> متوقّع</span></div>
-            <div class="kpi-meta">يتبقى {{ days_left }} يوم على نهاية الشهر</div>
+            <div class="kpi-label">{{ 'End-of-month signups' if lang == 'en' else 'اشتراكات نهاية الشهر' }}</div>
+            <div class="kpi-big">{{ proj_signups_month }}<span> {{ 'projected' if lang == 'en' else 'متوقّع' }}</span></div>
+            <div class="kpi-meta">{{ days_left }} {{ 'days left this month' if lang == 'en' else 'يوم يتبقى على نهاية الشهر' }}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">عمليات نهاية الشهر</div>
+            <div class="kpi-label">{{ 'End-of-month ops' if lang == 'en' else 'عمليات نهاية الشهر' }}</div>
             <div class="kpi-big">{{ proj_extractions_month }}<span></span></div>
-            <div class="kpi-meta">{{ proj_credits_month }} نقطة متوقّعة</div>
+            <div class="kpi-meta">{{ proj_credits_month }} {{ 'credits projected' if lang == 'en' else 'نقطة متوقّعة' }}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">تكلفة Gemini نهاية الشهر</div>
+            <div class="kpi-label">{{ 'End-of-month Gemini cost' if lang == 'en' else 'تكلفة Gemini نهاية الشهر' }}</div>
             <div class="kpi-big">${{ proj_cost_month }}<span></span></div>
-            <div class="kpi-meta">بالمعدّل الحالي</div>
+            <div class="kpi-meta">{{ 'at current rate' if lang == 'en' else 'بالمعدّل الحالي' }}</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">للوصول إلى 100 مستخدم</div>
-            <div class="kpi-big">{{ ms_users_100 if ms_users_100 is not none else '∞' }}<span> يوم</span></div>
-            <div class="kpi-meta">و 1000 خلال {{ ms_users_1000 if ms_users_1000 is not none else '∞' }} يوم</div>
+            <div class="kpi-label">{{ 'To reach 100 users' if lang == 'en' else 'للوصول إلى 100 مستخدم' }}</div>
+            <div class="kpi-big">{{ ms_users_100 if ms_users_100 is not none else '∞' }}<span> {{ 'days' if lang == 'en' else 'يوم' }}</span></div>
+            <div class="kpi-meta">{{ 'and 1,000 in' if lang == 'en' else 'و 1000 خلال' }} {{ ms_users_1000 if ms_users_1000 is not none else '∞' }} {{ 'days' if lang == 'en' else 'يوم' }}</div>
           </div>
         </div>
 
-        <h3 style="font-size:14px;color:var(--muted);font-weight:700;margin:6px 0 8px">توقّع الاشتراكات — 30 يومًا قادمة</h3>
+        <h3 style="font-size:14px;color:var(--muted);font-weight:700;margin:6px 0 8px">{{ 'Signups forecast — next 30 days' if lang == 'en' else 'توقّع الاشتراكات — 30 يومًا قادمة' }}</h3>
         <div class="chart">
           {% for f in forecast_30d %}
           <div class="chart-bar" style="--h:{{ (f.signups / forecast_signup_max * 100) if forecast_signup_max else 0 }}%" title="{{ f.d }} — {{ f.signups }}">
@@ -184,10 +203,10 @@
           {% endfor %}
         </div>
         <div class="chart-axis">
-          <span>اليوم +1</span><span>اليوم +15</span><span>اليوم +30</span>
+          <span>{{ 'Day +1' if lang == 'en' else 'اليوم +1' }}</span><span>{{ 'Day +15' if lang == 'en' else 'اليوم +15' }}</span><span>{{ 'Day +30' if lang == 'en' else 'اليوم +30' }}</span>
         </div>
 
-        <h3 style="font-size:14px;color:var(--muted);font-weight:700;margin:18px 0 8px">توقّع الاستخدام — 30 يومًا قادمة (نقاط)</h3>
+        <h3 style="font-size:14px;color:var(--muted);font-weight:700;margin:18px 0 8px">{{ 'Usage forecast — next 30 days (credits)' if lang == 'en' else 'توقّع الاستخدام — 30 يومًا قادمة (نقاط)' }}</h3>
         <div class="chart">
           {% for f in forecast_30d %}
           <div class="chart-bar" style="--h:{{ (f.credits / forecast_usage_max * 100) if forecast_usage_max else 0 }}%" title="{{ f.d }} — {{ f.credits }}">
@@ -196,7 +215,7 @@
           {% endfor %}
         </div>
         <div class="chart-axis">
-          <span>اليوم +1</span><span>اليوم +15</span><span>اليوم +30</span>
+          <span>{{ 'Day +1' if lang == 'en' else 'اليوم +1' }}</span><span>{{ 'Day +15' if lang == 'en' else 'اليوم +15' }}</span><span>{{ 'Day +30' if lang == 'en' else 'اليوم +30' }}</span>
         </div>
       </div>
 
@@ -204,14 +223,14 @@
       <div class="acc-card">
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="users"></i></span>
-          <div><h2>متوسطات لكل مستخدم نشط</h2><p>للمستخدمين الذين أجروا عملية واحدة على الأقل هذا الشهر.</p></div>
+          <div><h2>{{ 'Per-user averages' if lang == 'en' else 'متوسطات لكل مستخدم نشط' }}</h2><p>{{ 'For users who ran at least one op this month.' if lang == 'en' else 'للمستخدمين الذين أجروا عملية واحدة على الأقل هذا الشهر.' }}</p></div>
         </div>
         <div class="acc-profile" style="max-width:none">
-          <div class="acc-row"><span>متوسط النقاط / مستخدم</span><b>{{ avg_credits_per_user }}</b></div>
-          <div class="acc-row"><span>متوسط العمليات / مستخدم</span><b>{{ avg_ops_per_user }}</b></div>
-          <div class="acc-row"><span>عدد المستخدمين النشطين</span><b>{{ active_users }}</b></div>
-          <div class="acc-row"><span>متوسط زمن المعالجة</span><b>{{ avg_ms or '—' }} ms</b></div>
-          <div class="acc-row"><span>أبطأ عملية على الإطلاق</span><b>{{ slowest_ms or '—' }} ms</b></div>
+          <div class="acc-row"><span>{{ 'Avg credits / user' if lang == 'en' else 'متوسط النقاط / مستخدم' }}</span><b>{{ avg_credits_per_user }}</b></div>
+          <div class="acc-row"><span>{{ 'Avg ops / user' if lang == 'en' else 'متوسط العمليات / مستخدم' }}</span><b>{{ avg_ops_per_user }}</b></div>
+          <div class="acc-row"><span>{{ 'Active users' if lang == 'en' else 'عدد المستخدمين النشطين' }}</span><b>{{ active_users }}</b></div>
+          <div class="acc-row"><span>{{ 'Avg processing time' if lang == 'en' else 'متوسط زمن المعالجة' }}</span><b>{{ avg_ms or '—' }} ms</b></div>
+          <div class="acc-row"><span>{{ 'Slowest op ever' if lang == 'en' else 'أبطأ عملية على الإطلاق' }}</span><b>{{ slowest_ms or '—' }} ms</b></div>
         </div>
       </div>
 
@@ -219,7 +238,7 @@
       <div class="acc-card">
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="layers"></i></span>
-          <div><h2>توزيع الخطط</h2><p>المستخدمون حسب الخطة.</p></div>
+          <div><h2>{{ 'Plan distribution' if lang == 'en' else 'توزيع الخطط' }}</h2><p>{{ 'Users by plan.' if lang == 'en' else 'المستخدمون حسب الخطة.' }}</p></div>
         </div>
         <div class="plan-strip">
           {% for plan, count in plan_counts.items() %}
@@ -236,11 +255,11 @@
         <div class="acc-card">
           <div class="acc-card-head">
             <span class="acc-icon"><i data-lucide="trophy"></i></span>
-            <div><h2>أكثر المستخدمين هذا الشهر</h2><p>حسب النقاط المستهلَكة.</p></div>
+            <div><h2>{{ 'Top users this month' if lang == 'en' else 'أكثر المستخدمين هذا الشهر' }}</h2><p>{{ 'By credits consumed.' if lang == 'en' else 'حسب النقاط المستهلَكة.' }}</p></div>
           </div>
           {% if top_users %}
           <div class="keys scrollable">
-            <div class="krow khead"><div>المستخدم</div><div>الخطة</div><div>النقاط</div><div>العمليات</div></div>
+            <div class="krow khead"><div>{{ 'User' if lang == 'en' else 'المستخدم' }}</div><div>{{ 'Plan' if lang == 'en' else 'الخطة' }}</div><div>{{ 'Credits' if lang == 'en' else 'النقاط' }}</div><div>{{ 'Ops' if lang == 'en' else 'العمليات' }}</div></div>
             {% for u in top_users %}
             <div class="krow">
               <div style="word-break:break-all">{{ u.email }}</div>
@@ -250,12 +269,12 @@
             </div>
             {% endfor %}
           </div>
-          {% else %}<p class="hint">لا توجد عمليات هذا الشهر.</p>{% endif %}
+          {% else %}<p class="hint">{{ 'No ops this month.' if lang == 'en' else 'لا توجد عمليات هذا الشهر.' }}</p>{% endif %}
         </div>
         <div class="acc-card">
           <div class="acc-card-head">
             <span class="acc-icon"><i data-lucide="bar-chart-3"></i></span>
-            <div><h2>الأدوات الأكثر طلبًا</h2><p>هذا الشهر — حسب النقاط.</p></div>
+            <div><h2>{{ 'Top tools' if lang == 'en' else 'الأدوات الأكثر طلبًا' }}</h2><p>{{ 'This month — by credits.' if lang == 'en' else 'هذا الشهر — حسب النقاط.' }}</p></div>
           </div>
           {% if top_tools %}
           <div class="tool-list">
@@ -268,9 +287,9 @@
             </div>
             {% endfor %}
           </div>
-          {% else %}<p class="hint">لا توجد بيانات بعد.</p>{% endif %}
+          {% else %}<p class="hint">{{ 'No data yet.' if lang == 'en' else 'لا توجد بيانات بعد.' }}</p>{% endif %}
           {% if top_doctypes %}
-          <h3 style="font-size:13.5px;margin-top:22px;color:var(--muted);font-weight:700">أنواع المستندات</h3>
+          <h3 style="font-size:13.5px;margin-top:22px;color:var(--muted);font-weight:700">{{ 'Document types' if lang == 'en' else 'أنواع المستندات' }}</h3>
           <div class="doctype-list">
             {% for d in top_doctypes %}
             <span class="chip chip-muted">{{ d.name }} · <b>{{ d.count }}</b></span>
@@ -285,11 +304,11 @@
         <div class="acc-card">
           <div class="acc-card-head">
             <span class="acc-icon"><i data-lucide="user-check"></i></span>
-            <div><h2>أحدث التسجيلات</h2><p>آخر 10 حسابات.</p></div>
+            <div><h2>{{ 'Recent signups' if lang == 'en' else 'أحدث التسجيلات' }}</h2><p>{{ 'Last 10 accounts.' if lang == 'en' else 'آخر 10 حسابات.' }}</p></div>
           </div>
           {% if recent_signups %}
           <div class="keys scrollable">
-            <div class="krow khead"><div>التاريخ</div><div>البريد</div><div>الخطة</div><div>التأكيد</div></div>
+            <div class="krow khead"><div>{{ 'Date' if lang == 'en' else 'التاريخ' }}</div><div>{{ 'Email' if lang == 'en' else 'البريد' }}</div><div>{{ 'Plan' if lang == 'en' else 'الخطة' }}</div><div>{{ 'Verified' if lang == 'en' else 'التأكيد' }}</div></div>
             {% for s in recent_signups %}
             <div class="krow">
               <div>{{ s.created_at }}</div>
@@ -299,16 +318,16 @@
             </div>
             {% endfor %}
           </div>
-          {% else %}<p class="hint">لا توجد تسجيلات بعد.</p>{% endif %}
+          {% else %}<p class="hint">{{ 'No signups yet.' if lang == 'en' else 'لا توجد تسجيلات بعد.' }}</p>{% endif %}
         </div>
         <div class="acc-card">
           <div class="acc-card-head">
             <span class="acc-icon"><i data-lucide="history"></i></span>
-            <div><h2>آخر النشاط</h2><p>آخر 15 عملية عبر كل الحسابات.</p></div>
+            <div><h2>{{ 'Recent activity' if lang == 'en' else 'آخر النشاط' }}</h2><p>{{ 'Last 15 ops across all accounts.' if lang == 'en' else 'آخر 15 عملية عبر كل الحسابات.' }}</p></div>
           </div>
           {% if recent_activity %}
           <div class="keys scrollable">
-            <div class="krow khead"><div>الوقت</div><div>المستخدم</div><div>النوع</div><div>النقاط</div></div>
+            <div class="krow khead"><div>{{ 'Time' if lang == 'en' else 'الوقت' }}</div><div>{{ 'User' if lang == 'en' else 'المستخدم' }}</div><div>{{ 'Kind' if lang == 'en' else 'النوع' }}</div><div>{{ 'Credits' if lang == 'en' else 'النقاط' }}</div></div>
             {% for h in recent_activity %}
             <div class="krow">
               <div>{{ h.created_at }}</div>
@@ -318,7 +337,7 @@
             </div>
             {% endfor %}
           </div>
-          {% else %}<p class="hint">لا يوجد نشاط بعد.</p>{% endif %}
+          {% else %}<p class="hint">{{ 'No activity yet.' if lang == 'en' else 'لا يوجد نشاط بعد.' }}</p>{% endif %}
         </div>
       </div>
 
@@ -326,7 +345,7 @@
       <div class="acc-card">
         <div class="acc-card-head">
           <span class="acc-icon"><i data-lucide="server"></i></span>
-          <div><h2>حالة النظام</h2><p>معلومات تقنية مختصرة.</p></div>
+          <div><h2>{{ 'System status' if lang == 'en' else 'حالة النظام' }}</h2><p>{{ 'Brief technical info.' if lang == 'en' else 'معلومات تقنية مختصرة.' }}</p></div>
         </div>
         <div class="acc-profile">
           <div class="acc-row"><span>Gemini fast model</span><b>{{ llm_models.easy }}</b></div>
@@ -339,6 +358,7 @@
         </div>
       </div>
     </div>
-  </section>
+    </main>
+  </div>
 </body>
 </html>

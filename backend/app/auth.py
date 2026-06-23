@@ -68,8 +68,8 @@ def turnstile_sitekey() -> str:
 # margin (~70%) holds regardless of which model customers use.
 STRONG_UNITS = int(os.getenv("STRONG_UNITS", "8"))
 
-PLAN_LIMITS = {  # credits / month
-    "free": 300,
+PLAN_LIMITS = {  # credits / month — must match the marketing copy on /pricing
+    "free": 30,
     "lite": 1200,
     "starter": 3500,
     "pro": 8500,
@@ -117,7 +117,7 @@ def get_usage(db: Session, api_key: models.ApiKey):
         .first()
     )
     used = row.count if row else 0
-    limit = PLAN_LIMITS.get(api_key.user.plan, 50)
+    limit = PLAN_LIMITS.get(api_key.user.plan, 30)
     return used, limit, row
 
 
