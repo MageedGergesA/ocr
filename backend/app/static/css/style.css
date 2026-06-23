@@ -2225,10 +2225,7 @@ html[data-theme="dark"] .lp-ui-fmt-btn { background: var(--bg-alt); border-color
 .lp-illu-export { position: absolute; padding: 6px 12px; background: #fff;
   border: 1px solid var(--line-strong); border-radius: 6px; font-weight: 700;
   font-size: 12px; color: var(--ink); box-shadow: 0 2px 4px rgba(15,23,42,.08); }
-.lp-ex-1 { top: 24%; inset-inline-start: 18%; transform: rotate(-6deg); }
-.lp-ex-2 { top: 30%; inset-inline-end: 16%; transform: rotate(4deg); }
-.lp-ex-3 { bottom: 22%; inset-inline-start: 24%; transform: rotate(3deg); }
-.lp-ex-4 { bottom: 28%; inset-inline-end: 18%; transform: rotate(-4deg); }
+
 
 /* ═══ FEATURES ═══ */
 .lp-features { display: grid; grid-template-columns: 1fr;
@@ -2237,38 +2234,14 @@ html[data-theme="dark"] .lp-ui-fmt-btn { background: var(--bg-alt); border-color
 .lp-feat { padding: 32px 24px; border-inline-end: 1px solid var(--line);
   border-bottom: 1px solid var(--line); display: flex; flex-direction: column; }
 .lp-feat:last-child { border-inline-end: 0; }
-.lp-feat-card { background: linear-gradient(135deg, #f8fafc, #fff, var(--brand-tint));
-  aspect-ratio: 4/3; border-radius: 12px; border: 1px solid var(--line);
-  margin-bottom: 18px; padding: 14px; position: relative;
-  display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.lp-feat-icon { position: absolute; top: 10px; inset-inline-start: 10px;
-  width: 32px; height: 32px; border-radius: 7px;
-  background: var(--brand); color: #fff;
-  display: inline-flex; align-items: center; justify-content: center; }
-.lp-feat-icon svg { width: 16px; height: 16px; stroke: currentColor; }
-.lp-feat-mock { background: #fff; border: 1px solid var(--line);
-  border-radius: 8px; padding: 10px; width: 95%; max-width: 240px;
-  font-size: 11px; box-shadow: 0 2px 6px rgba(15,23,42,.06); }
-.lp-feat-mock-cog .lp-cog-bar { background: var(--brand-tint); padding: 6px 8px;
-  border-radius: 5px; margin-bottom: 6px; color: var(--brand-dark); font-size: 10.5px; }
-.lp-feat-mock-cog .lp-cog-check { font-size: 10.5px; color: #16a34a; padding: 3px 0; }
-.lp-feat-mock-cog .lp-cog-check.warn { color: #b45309; }
-.lp-feat-mock-cog .lp-cog-derived { margin-top: 8px; padding: 6px 8px;
-  background: var(--hover-bg); border-radius: 5px; font-size: 11px; color: var(--ink); }
 
 
-.lp-feat-mock-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
-  padding: 8px; max-width: 220px; }
 .lp-tool { padding: 4px 6px; background: #f8fafc; border-radius: 4px;
   font-size: 10px; color: var(--ink); border: 1px solid var(--line); }
-.lp-feat-mock-odoo .lp-odoo-row { display: flex; justify-content: space-between;
-  padding: 5px 8px; border-bottom: 1px dashed var(--line); font-size: 10.5px; }
-.lp-feat-mock-odoo .lp-odoo-row:last-child { border-bottom: 0; }
+
+
 .lp-tick { color: var(--brand); font-weight: 800; }
-.lp-feat-h { font-size: 17px; font-weight: 600; color: var(--ink);
-  margin-top: 8px; letter-spacing: -.01em; }
-.lp-feat-p { margin-top: 8px; color: var(--ink-2); font-size: 14px;
-  line-height: 1.55; flex: 1; }
+
 
 /* ═══ CUSTOMER STORY ═══ */
 .lp-case { display: grid; grid-template-columns: 1fr; gap: 0;
@@ -3505,7 +3478,6 @@ html[data-theme="dark"] .theme-toggle .sun { display: none; }
 .lp-pricing-band { background: linear-gradient(180deg, rgba(15,118,110,0.025) 0%, transparent 60%); }
 [data-theme="dark"] .lp-pricing-band { background: linear-gradient(180deg, rgba(20,184,166,0.06) 0%, transparent 60%); }
 
-.lp-h2-jumbo { font-size: clamp(36px, 4.5vw, 56px); letter-spacing: -0.02em; font-weight: 800; }
 
 /* Per-card cadence toggle: minimalist black bar (Figma style) */
 .lp-pt-save {
@@ -4043,11 +4015,7 @@ html[data-theme="dark"] .theme-toggle .sun { display: none; }
   letter-spacing: -0.028em !important;
   line-height: 1.05 !important;
 }
-.lp-h2-jumbo {
-  font-size: clamp(56px, 7vw, 88px) !important;
-  letter-spacing: -0.035em !important;
-  line-height: 1 !important;
-}
+
 
 /* ── 4. Body type — Figma scale (larger, more confident lead) ────── */
 .lp-lead, .lp-section-sub {
@@ -4327,30 +4295,7 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
 
 /* Compliance chip row (top of hero text) — subtle, factual, enterprise
    signal. Replaces "THE #1 ARABIC DOCUMENT AI" brag. */
-.lp-hero-chips {
-  display: flex; flex-wrap: wrap; gap: 8px;
-  margin-bottom: 24px;
-}
-.lp-hero-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 11px;
-  background: rgba(15, 118, 110, 0.06);
-  border: 1px solid rgba(15, 118, 110, 0.18);
-  border-radius: 999px;
-  font-size: 12px; font-weight: 600;
-  color: #0f766e;
-  letter-spacing: -0.005em;
-}
-[data-theme="dark"] .lp-hero-chip {
-  background: rgba(20,184,166,0.10);
-  border-color: rgba(20,184,166,0.30);
-  color: #5eead4;
-}
-.lp-hero-chip .lp-chip-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #0f766e;
-}
-[data-theme="dark"] .lp-hero-chip .lp-chip-dot { background: #14b8a6; }
+
 
 /* Tighter, more confident lead — outcome-specific copy needs less filler.
    Bigger font than before, darker color (was muted gray, now ink-2). */
@@ -4451,19 +4396,10 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
 }
 
 /* ═══ HERO SOCIAL PROOF — avatars + stars sits below stats strip ═══ */
-.lp-hero-social {
-  margin-top: 22px;
-  display: flex; align-items: center; gap: 12px;
-  flex-wrap: wrap;
-  color: var(--ink-2, #475569); font-size: 13.5px;
-}
-.lp-hero-social .lp-social-text b {
-  color: var(--ink, #0f172a); font-weight: 600;
-}
-[data-theme="dark"] .lp-hero-social { color: #94a3b8; }
-[data-theme="dark"] .lp-hero-social .lp-social-text b { color: #f1f5f9; }
+
+
 /* Star color override — Figma yellow, not the muted orange */
-.lp-hero-social .lp-stars { color: #f59e0b; font-size: 13px; letter-spacing: 1.5px; }
+
 
 /* ═══ TESTIMONIAL CARDS — 3-column grid, realistic detail-heavy quotes ═══ */
 .lp-tm-section {
@@ -4572,123 +4508,21 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
    HERO FLOATING CARDS — Mindee-style document overlap behind main window.
    Fills the previously-empty pink-gradient right-column area with depth.
    ═══════════════════════════════════════════════════════════════════════ */
-.lp-hf-card {
-  position: absolute; z-index: 1;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow:
-    0 2px 8px rgba(15,23,42,.08),
-    0 12px 32px -8px rgba(15,23,42,.20);
-  border: 1px solid rgba(15,23,42,.06);
-  padding: 14px;
-  pointer-events: none;
-  opacity: .92;
-  transition: transform .4s, opacity .4s;
-}
+
 .lp-hero-visual:hover .lp-hf-card { opacity: 1; }
-[data-theme="dark"] .lp-hf-card {
-  background: #1e293b;
-  border-color: rgba(255,255,255,.08);
-}
+
 
 /* Card 1 — Arabic prescription (top-left, rotated -8°) */
-.lp-hf-card-1 {
-  width: 180px;
-  top: 10%; left: 4%;
-  transform: rotate(-7deg);
-  background: linear-gradient(180deg, #fffceb 0%, #fff 100%);
-}
-[data-theme="dark"] .lp-hf-card-1 {
-  background: linear-gradient(180deg, rgba(245,158,11,.10) 0%, #1e293b 100%);
-}
-.lp-hf-rx-symbol {
-  font-size: 26px; font-weight: 800; color: #0f766e;
-  font-family: 'Times New Roman', serif;
-  margin-bottom: 8px;
-}
-[data-theme="dark"] .lp-hf-rx-symbol { color: #14b8a6; }
-.lp-hf-stamp {
-  position: absolute; bottom: 10px; right: 12px;
-  font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
-  padding: 3px 7px;
-  background: rgba(15,118,110,.10);
-  color: #0f766e;
-  border-radius: 4px;
-  border: 1px dashed rgba(15,118,110,.3);
-}
-[data-theme="dark"] .lp-hf-stamp {
-  background: rgba(20,184,166,.18); color: #5eead4;
-  border-color: rgba(20,184,166,.4);
-}
+
 
 /* Card 2 — National ID (top-right, rotated +6°) */
-.lp-hf-card-2 {
-  width: 200px;
-  top: 4%; right: 6%;
-  transform: rotate(5deg);
-  padding: 12px;
-}
-.lp-hf-id-band {
-  background: #0f766e; color: #fff;
-  padding: 4px 8px; border-radius: 4px;
-  font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
-  text-align: center;
-  margin-bottom: 10px;
-}
-[data-theme="dark"] .lp-hf-id-band { background: #14b8a6; }
-.lp-hf-id-row { display: flex; gap: 10px; align-items: center; }
-.lp-hf-id-photo {
-  width: 38px; height: 44px;
-  background: linear-gradient(180deg, #f1f5f9, #e2e8f0);
-  border-radius: 4px;
-  font-size: 20px; line-height: 44px; text-align: center;
-}
-[data-theme="dark"] .lp-hf-id-photo {
-  background: linear-gradient(180deg, #334155, #1e293b);
-}
-.lp-hf-id-fields { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+
 
 /* Card 3 — Invoice (bottom-right, rotated -3°) */
-.lp-hf-card-3 {
-  width: 200px;
-  bottom: 10%; right: 4%;
-  transform: rotate(-3deg);
-  padding: 14px;
-  background: linear-gradient(180deg, #fff 0%, #f9fafb 100%);
-}
-[data-theme="dark"] .lp-hf-card-3 {
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-}
-.lp-hf-inv-head {
-  font-size: 9px; font-weight: 700; letter-spacing: 1px;
-  color: #475569;
-  border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 6px; margin-bottom: 8px;
-}
-[data-theme="dark"] .lp-hf-inv-head { color: #94a3b8; border-bottom-color: #334155; }
-.lp-hf-inv-total {
-  margin-top: 8px;
-  font-size: 14px; font-weight: 800;
-  color: #0f766e;
-  text-align: right;
-  letter-spacing: -0.01em;
-}
-[data-theme="dark"] .lp-hf-inv-total { color: #2dd4bf; }
+
 
 /* Shared placeholder "text" lines */
-.lp-hf-line {
-  height: 4px; border-radius: 2px;
-  background: linear-gradient(90deg, #e5e7eb 0%, #f1f5f9 100%);
-  margin-bottom: 6px;
-}
-[data-theme="dark"] .lp-hf-line {
-  background: linear-gradient(90deg, #334155 0%, #1e293b 100%);
-}
-.lp-hf-w50 { width: 50%; }
-.lp-hf-w60 { width: 60%; }
-.lp-hf-w70 { width: 70%; }
-.lp-hf-w80 { width: 80%; }
-.lp-hf-w90 { width: 90%; }
+
 
 /* Ensure the main browser window stays on top (z-index 2) over the cards */
 
@@ -4699,9 +4533,7 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
 }
 
 /* RTL: swap positions */
-[dir="rtl"] .lp-hf-card-1 { left: auto; right: 4%; transform: rotate(7deg); }
-[dir="rtl"] .lp-hf-card-2 { right: auto; left: 6%; transform: rotate(-5deg); }
-[dir="rtl"] .lp-hf-card-3 { right: auto; left: 4%; transform: rotate(3deg); }
+
 
 /* ═══════════════════════════════════════════════════════════════════════
    FAQ ACCORDION — Mindee/Stripe pattern. Native <details>/<summary> for
@@ -6866,10 +6698,7 @@ html[data-theme="dark"] ::selection {
   letter-spacing: -0.022em !important;
   line-height: 1.18 !important;
 }
-.lp-h2-jumbo {
-  font-size: clamp(36px, 4vw, 56px) !important;
-  letter-spacing: -0.028em !important;
-}
+
 .lp-lead, .lp-section-sub {
   font-size: 17px !important;
   line-height: 1.55 !important;
@@ -7857,31 +7686,11 @@ pre.lp-devcode-panel code {
 .lp-h1 em { font-style: italic; color: inherit; }
 
 /* 3. Customer-logo strip INSIDE the hero frame */
-.lp-hero-logos {
-  border-top: 1px solid #e5e7eb;
-  margin-top: 24px;
-  padding: 28px clamp(24px, 5vw, 56px) 32px;
-  max-width: 1180px;
-  margin-inline: auto;
-}
-[data-theme="dark"] .lp-hero-logos { border-top-color: rgba(255,255,255,.06); }
-.lp-hero-logos-label {
-  text-align: center;
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: #94a3b8;
-  margin: 0 0 18px;
-}
-[data-theme="dark"] .lp-hero-logos-label { color: #b4c1d0; }
+
 
 /* The shared .lp-customer-logos rule already styles the row; this just
    ensures the bottom border doesn't double up when nested in the hero. */
-.lp-hero-logos .lp-customer-logos {
-  border: 0 !important;
-  padding-bottom: 0 !important;
-  margin: 0 auto !important;
-}
+
 
 /* ═══════════════════════════════════════════════════════════════════════
    HERO CHROME STATUS PILL
@@ -8528,11 +8337,7 @@ body.lp-body {
 }
 
 /* Kill the jumbo variant — collapses to regular H2 */
-.lp-h2-jumbo {
-  font-size: clamp(26px, 3vw, 32px) !important;
-  letter-spacing: -0.018em !important;
-  line-height: 1.2 !important;
-}
+
 
 /* Docs page H1 — match subpage H1 */
 .docs-hero h1 {
