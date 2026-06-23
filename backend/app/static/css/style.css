@@ -8931,3 +8931,136 @@ body.lp-body {
   .lp-hero { padding: 64px 20px !important; }
   .lp-trust-logos { padding: 40px 20px; }
 }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   LOCKDOWN 1b — sitewide cleanup. Three highest-impact corrections.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* 1. LOCK section vertical rhythm. The F-Wave 1a clamp(60px,8vw,120px)
+   broke teknolines' single-cadence rule. Replace with locked 80px. */
+.lp-section {
+  padding-block: 80px !important;
+}
+.lp-section-head {
+  margin-bottom: 48px !important;
+}
+@media (max-width: 640px) {
+  .lp-section { padding-block: 56px !important; }
+  .lp-section-head { margin-bottom: 36px !important; }
+}
+
+/* 2. KILL the full-bleed mint band. Class is removed from the template
+   but the CSS lingers; neutralize so any re-use of the class can't
+   bring it back accidentally. */
+.lp-section-mint {
+  background: transparent !important;
+  margin-inline: 0 !important;
+  padding: 80px 32px !important;
+  width: auto !important;
+  max-width: none !important;
+}
+.lp-section-mint .lp-h2 { color: inherit !important; }
+[data-theme="dark"] .lp-section-mint { background: transparent !important; }
+[data-theme="dark"] .lp-section-mint .lp-h2 { color: inherit !important; }
+
+/* 3. REPAINT .lp-final-cta + .cta-final to plain white. They drag a
+   dark gradient onto every page; the teknolines pattern reserves the
+   only saturated section for the hero. */
+.lp-final-cta {
+  background: #fff !important;
+  background-image: none !important;
+  margin-inline: 0 !important;
+  padding: 80px 24px !important;
+  width: auto !important;
+  max-width: none !important;
+  color: #1f2937 !important;
+  border-top: 1px solid #e5e7eb !important;
+}
+[data-theme="dark"] .lp-final-cta {
+  background: #0e151f !important;
+  color: #cbd5e1 !important;
+  border-top-color: #1f2937 !important;
+}
+.lp-final-cta::before { display: none !important; }
+.lp-final-cta::after { display: none !important; }
+
+/* Inner text flips back to dark on white */
+.lp-final-cta .lp-cta-kicker {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+}
+[data-theme="dark"] .lp-final-cta .lp-cta-kicker {
+  background: rgba(20,184,166,.12) !important;
+  color: #5eead4 !important;
+}
+.lp-final-cta .lp-cta-h {
+  color: #0f172a !important;
+}
+[data-theme="dark"] .lp-final-cta .lp-cta-h {
+  color: #f8fafc !important;
+}
+.lp-final-cta .lp-cta-sub {
+  color: #475569 !important;
+}
+[data-theme="dark"] .lp-final-cta .lp-cta-sub {
+  color: #b4c1d0 !important;
+}
+/* Primary pill flips to dark-bg / white-text on the white surface */
+.lp-final-cta .lp-cta-pill {
+  background: #0f172a !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,.20) !important;
+}
+.lp-final-cta .lp-cta-pill:hover {
+  background: #1f2937 !important;
+}
+[data-theme="dark"] .lp-final-cta .lp-cta-pill {
+  background: #fff !important;
+  color: #0a0e1a !important;
+}
+[data-theme="dark"] .lp-final-cta .lp-cta-pill:hover {
+  background: #f1f5f9 !important;
+}
+.lp-final-cta .lp-cta-features li {
+  color: #64748b !important;
+}
+[data-theme="dark"] .lp-final-cta .lp-cta-features li {
+  color: #b4c1d0 !important;
+}
+.lp-final-cta .lp-cta-features svg {
+  color: #0f766e !important;
+}
+[data-theme="dark"] .lp-final-cta .lp-cta-features svg {
+  color: #2dd4bf !important;
+}
+/* Stop the lpAttn pulse from the original .lp-btn-primary rule */
+.lp-final-cta .lp-cta-pill { animation: none !important; }
+
+/* Same treatment for the old .cta-final (used by docs.html / legal.html) */
+.cta-final {
+  background: #fff !important;
+  background-image: none !important;
+  color: #1f2937 !important;
+  padding: 80px 24px !important;
+  border-top: 1px solid #e5e7eb !important;
+}
+[data-theme="dark"] .cta-final {
+  background: #0e151f !important;
+  color: #cbd5e1 !important;
+  border-top-color: #1f2937 !important;
+}
+.cta-final h2 { color: #0f172a !important; }
+[data-theme="dark"] .cta-final h2 { color: #f8fafc !important; }
+.cta-final p { color: #475569 !important; opacity: 1 !important; }
+[data-theme="dark"] .cta-final p { color: #b4c1d0 !important; }
+.cta-final .btn-primary {
+  background: #0f172a !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,.20) !important;
+}
+.cta-final .btn-primary:hover { background: #1f2937 !important; }
+[data-theme="dark"] .cta-final .btn-primary {
+  background: #fff !important; color: #0a0e1a !important;
+}
+[data-theme="dark"] .cta-final .btn-primary:hover { background: #f1f5f9 !important; }
