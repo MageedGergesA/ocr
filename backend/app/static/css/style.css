@@ -9249,3 +9249,36 @@ body.lp-body {
   font-weight: 700 !important;
   letter-spacing: -0.022em !important;
 }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   LOCKDOWN 1f — kill decorative dividers + step-card UI animations.
+   Teknolines uses section padding to separate sections; it does NOT
+   stamp a diamond marker between every section. The dividers add
+   visual noise without information.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* 1. Hide the lp-stripe-divider blocks. The 56px tall flex element
+   with a horizontal dotted line + mint diamond between every section
+   is replaced by the section's own 80px padding. The wrapping variant
+   (used by the compare panel) stays — that's content, not decoration. */
+.lp-stripe-divider:not(.lp-stripe-content) {
+  display: none !important;
+}
+
+/* 2. Stop the fake browser-frame animations on the How-It-Works
+   step cards. The progress bar fill (lp-ui-bar-fill) and the
+   detection spinner (lp-ui-spinner) both run on infinite loops
+   inside the 3 step illustrations. Teknolines runs zero animation
+   in this kind of decorative panel. */
+.lp-ui-bar-fill { animation: none !important; width: 100% !important; }
+.lp-ui-spinner { animation: none !important; }
+
+/* 3. Already covered by prefers-reduced-motion but make explicit:
+   no animation on any of the unused floatY / heroFade / softPulse
+   keyframes. (These are defined but mostly orphan — keep the
+   definitions, just don't run them on visible elements.) */
+@media (prefers-reduced-motion: reduce) {
+  .lp-ui-bar-fill,
+  .lp-ui-spinner { animation: none !important; }
+}
