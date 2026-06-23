@@ -1849,94 +1849,26 @@ html[data-theme="dark"] body.lp-body {
 /* Hero window — bigger now that the 3 floating cards are gone (Wave A.1).
    Enterprise heroes commit to ONE big visual; we go from 720px → 820px
    and drop the perspective tilt for a calmer, more credible feel. */
-.lp-hd-window { position: relative; width: 100%; max-width: 820px; background: #fff;
-  border: 1px solid var(--line-strong); border-radius: 14px;
-  box-shadow:
-    0 1px 3px rgba(15,23,42,.06),
-    0 20px 44px -14px rgba(15,23,42,.18),
-    0 40px 72px -28px rgba(15,23,42,.14);
-  overflow: hidden; }
-.lp-hd-chrome { display: flex; align-items: center; gap: 6px;
-  padding: 11px 14px; background: #f8fafc; border-bottom: 1px solid var(--line); }
-.lp-hd-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
-.lp-hd-url { flex: 1; text-align: center; margin-inline: 10px;
-  font-size: 11px; color: var(--muted); padding: 3px 10px;
-  background: #fff; border: 1px solid var(--line); border-radius: 7px;
-  max-width: 280px; margin-inline-start: auto; margin-inline-end: auto; }
-.lp-hd-canvas { position: relative; height: 440px; background: #f8fafc;
-  overflow: hidden; }
-.lp-hd-slide { position: absolute; inset: 0; opacity: 0; transition: opacity .5s;
-  pointer-events: none; padding: 24px; }
-.lp-hd-slide.active { opacity: 1; }
+
 
 /* Doc previews — pure CSS/HTML mocks. Sizes bumped for legibility in
    the hero preview window (was illegible at 380px canvas / 13px lines). */
-.lp-doc { background: #fff; border-radius: 8px; padding: 22px;
-  box-shadow: 0 2px 10px rgba(15,23,42,.05); height: 100%; }
-.lp-doc-head { border-bottom: 2px solid var(--ink); padding-bottom: 12px; margin-bottom: 14px; }
-.lp-doc-head b { font-size: 18px; color: var(--ink); display: block; }
-.lp-doc-head small { color: var(--muted); font-size: 13px; }
-.lp-doc-pat { font-size: 13.5px; padding: 10px 0; border-bottom: 1px dashed var(--line);
-  color: var(--ink-2); margin-bottom: 16px; }
-.lp-doc-rxsymbol { font-size: 18px; font-weight: 700; color: var(--brand);
-  font-family: 'Times New Roman', serif; margin-bottom: 4px;
-  display: inline-block; line-height: 1; }
-.lp-doc-line { font-size: 14.5px; padding: 8px 12px; background: #f8fafc;
-  border: 1px solid var(--line); border-radius: 6px; margin-bottom: 7px;
-  color: var(--ink); font-weight: 500; }
+
 
 /* ID card */
-.lp-doc-id { background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 14px; }
-.lp-doc-id-band { background: var(--brand); color: #fff; padding: 6px 12px;
-  border-radius: 6px 6px 0 0; font-size: 11px; font-weight: 700; }
-.lp-doc-id-row { display: grid; grid-template-columns: 80px 1fr; gap: 14px;
-  padding: 18px 12px; background: #fff; border-radius: 0 0 6px 6px; }
-.lp-doc-id-photo { width: 80px; height: 90px; background: var(--line); border-radius: 6px;
-  display: flex; align-items: center; justify-content: center; font-size: 36px; }
-.lp-doc-id-fields div { padding: 5px 0; font-size: 13px; border-bottom: 1px dotted var(--line); }
-.lp-doc-id-fields div:last-child { border: 0; }
-.lp-doc-id-fields span { color: var(--muted); margin-inline-end: 6px; font-size: 11px; }
+
 
 /* Invoice */
-.lp-doc-inv-head { display: flex; justify-content: space-between; padding-bottom: 10px;
-  margin-bottom: 14px; border-bottom: 2px solid var(--ink); }
-.lp-doc-inv-head b { font-size: 16px; }
-.lp-doc-inv-head span { font-size: 12px; color: var(--muted); }
-.lp-doc-inv-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.lp-doc-inv-table th, .lp-doc-inv-table td { padding: 6px 8px; border-bottom: 1px solid var(--line);
-  text-align: start; }
-.lp-doc-inv-table th { background: var(--brand-tint); color: var(--brand-dark); font-size: 11px; }
-.lp-doc-inv-total { margin-top: 12px; padding: 8px 12px; background: var(--ink); color: #fff;
-  border-radius: 6px; font-size: 14px; font-weight: 700; text-align: end; }
+
 
 /* Handwriting mock */
-.lp-doc-hw { background: #fffbeb; padding: 24px;
-  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 22px,
-    rgba(15,23,42,.05) 22px, rgba(15,23,42,.05) 23px); }
-.lp-doc-hw-line { font-family: 'Cairo'; font-size: 15px; font-weight: 700; color: #1e3a5f;
-  margin-bottom: 7px; opacity: .85; letter-spacing: -.02em; }
-.lp-doc-hw-1 { font-size: 18px; transform: rotate(-1deg); }
-.lp-doc-hw-2 { font-size: 13px; color: #475569; transform: rotate(.5deg); }
-.lp-doc-hw-3 { transform: rotate(-.3deg); }
-.lp-doc-hw-4 { font-size: 14px; margin-top: 8px; }
-.lp-doc-hw-5, .lp-doc-hw-6 { transform: rotate(-.8deg); margin-inline-start: 12px; }
+
 
 /* Contract */
-.lp-doc-ct-head { text-align: center; padding-bottom: 14px;
-  border-bottom: 1px solid var(--line); margin-bottom: 14px; }
-.lp-doc-ct-head b { font-size: 18px; letter-spacing: .04em; }
-.lp-doc-ct-clause { font-size: 12px; line-height: 1.6; margin-bottom: 10px;
-  color: var(--ink-2); padding-inline-start: 8px;
-  border-inline-start: 2px solid var(--line); }
-.lp-doc-ct-clause b { color: var(--ink); }
+
 
 /* Scan line */
-.lp-hd-scan { position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(180deg, transparent 0%,
-    rgba(15,118,110,.04) 45%, rgba(15,118,110,.16) 50%,
-    rgba(15,118,110,.04) 55%, transparent 100%);
-  mix-blend-mode: multiply; transform: translateY(-100%);
-  animation: lpScan 3.6s ease-in-out infinite; }
+
 @keyframes lpScan {
   0%, 25% { transform: translateY(-100%); }
   60% { transform: translateY(100%); }
@@ -1944,23 +1876,11 @@ html[data-theme="dark"] body.lp-body {
 }
 
 /* Result drawer */
-.lp-hd-result { position: absolute; inset-inline: 14px; bottom: 0;
-  background: #fff; border: 1px solid var(--brand); border-bottom: 0;
-  border-radius: 8px 8px 0 0; padding: 36px 14px 14px;
-  box-shadow: 0 -8px 24px -10px rgba(15,23,42,.18), 0 0 0 4px rgba(15,118,110,.1);
-  height: 200px; transform: translateY(101%); opacity: 0;
-  transition: transform .45s cubic-bezier(.25,.8,.25,1), opacity .35s;
-  overflow: hidden; }
-.lp-hd-result.open { transform: translateY(0); opacity: 1; }
-.lp-hd-result-badge { position: absolute; top: 9px; inset-inline-end: 12px;
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 3px 9px; background: var(--brand-tint); color: var(--brand-dark);
-  border-radius: 6px; font-size: 11px; font-weight: 600; }
+
+
 .lp-spin { animation: lpSpin .9s linear infinite; }
 @keyframes lpSpin { to { transform: rotate(360deg); } }
-.lp-hd-result-text { font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-size: 10.5px; line-height: 1.55; color: var(--ink); margin: 0;
-  white-space: pre-wrap; overflow: hidden; max-height: 156px; direction: ltr; text-align: start; }
+
 
 /* ═══ TRUSTBAND ═══ */
 .lp-trustband { padding: 36px 32px; text-align: center; }
@@ -2156,9 +2076,7 @@ html[data-theme="dark"] .lp-wordmarks .wm-rest:hover { color: #2dd4bf; }
 .lp-rx-item { font-size: 12px; padding: 6px 10px; background: #f8fafc;
   border-radius: 6px; color: var(--ink); }
 .lp-rx-item b { color: var(--brand-dark); font-weight: 600; }
-.lp-rx-banner { margin-top: 12px; padding: 8px 12px;
-  background: var(--brand-tint); color: var(--brand-dark);
-  border-radius: 6px; font-size: 11px; font-weight: 600; text-align: center; }
+
 
 /* Failed output */
 .lp-fail-output { font-family: monospace; font-size: 12px; line-height: 1.7;
@@ -3499,7 +3417,6 @@ html[data-theme="dark"] .theme-toggle .sun { display: none; }
   font-weight: 700; }
 
 
-
 /* ═══════════════════════════════════════════════════════════════════════
    DARK-MODE SWEEP — surfaces that were hardcoding #fff backgrounds and
    showing white-on-dark across the app shell, dashboard, and auth pages.
@@ -3579,10 +3496,7 @@ html[data-theme="dark"] .theme-toggle .sun { display: none; }
   border-color: #334155;
   color: #e2e8f0;
 }
-[data-theme="dark"] .lp-hd-chrome {
-  background: #0f172a;
-  border-color: #334155;
-}
+
 
 /* ─── Visual reproduction toggle (Path B) ─────────────────────────────── */
 .visual-toggle {
@@ -4819,7 +4733,7 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
 .lp-hf-w90 { width: 90%; }
 
 /* Ensure the main browser window stays on top (z-index 2) over the cards */
-.lp-hd-window { position: relative; z-index: 2; }
+
 
 /* On mobile, hide the floating cards to avoid clutter */
 @media (max-width: 960px) {
@@ -4923,80 +4837,19 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
    PRE-FOOTER MINI-CTA — "Start free OR Talk to sales"
    Captures enterprise leads who need a sales conversation.
    ═══════════════════════════════════════════════════════════════════════ */
-.lp-presales-cta {
-  padding-block: 56px 80px !important;
-}
 
-.lp-presales-card {
-  max-width: 1100px; margin: 0 auto;
-  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
-  border-radius: 20px;
-  padding: 56px clamp(28px, 5vw, 64px);
-  display: grid; grid-template-columns: 1fr;
-  gap: 28px;
-  color: #fff;
-  position: relative;
-  overflow: hidden;
-}
+
 @media (min-width: 860px) {
   .lp-presales-card { grid-template-columns: 1.6fr 1fr; align-items: center; gap: 48px; }
 }
 /* Subtle dot grid pattern in the background */
-.lp-presales-card::before {
-  content: "";
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(circle at 1px 1px, rgba(255,255,255,.10) 1px, transparent 0);
-  background-size: 24px 24px;
-  opacity: .35;
-  pointer-events: none;
-}
-.lp-presales-left { position: relative; z-index: 1; }
-.lp-presales-right {
-  position: relative; z-index: 1;
-  display: flex; flex-direction: column; gap: 12px;
-  align-items: stretch;
-}
+
+
 @media (min-width: 860px) { .lp-presales-right { align-items: flex-end; } }
 
-.lp-presales-card .lp-kicker {
-  background: rgba(255,255,255,.12);
-  border-color: rgba(255,255,255,.20);
-  color: #fff;
-}
-.lp-presales-card .lp-kicker .lp-dot { background: #fbbf24; }
-.lp-presales-card .lp-h2 {
-  color: #fff !important;
-  font-size: clamp(28px, 3vw, 38px) !important;
-  margin: 16px 0 12px !important;
-  letter-spacing: -0.025em;
-  line-height: 1.15;
-}
-.lp-presales-card .lp-section-sub {
-  color: rgba(255,255,255,.85) !important;
-  font-size: 16px !important;
-  margin: 0 !important;
-  max-width: 540px;
-}
+
 /* CTA buttons inside this dark card need light-mode treatment */
-.lp-presales-card .lp-btn-primary {
-  background: #fff !important;
-  color: #0f172a !important;
-  border-color: #fff !important;
-}
-.lp-presales-card .lp-btn-primary:hover {
-  background: #f1f5f9 !important;
-  transform: translateY(-1px);
-}
-.lp-presales-card .lp-btn-ghost {
-  background: transparent !important;
-  color: #fff !important;
-  border-color: rgba(255,255,255,.30) !important;
-}
-.lp-presales-card .lp-btn-ghost:hover {
-  background: rgba(255,255,255,.10) !important;
-  border-color: rgba(255,255,255,.50) !important;
-}
+
 
 /* ═══════════════════════════════════════════════════════════════════════
    TABBED FEATURES — Mindee-style "AI capabilities" with 4 tabs.
@@ -5290,208 +5143,32 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
    FIGMA DOCTYPE GALLERY — "Explore what people are making" pattern.
    2x3 grid of image-style cards. Each thumb is a pure-CSS doctype mock.
    ═══════════════════════════════════════════════════════════════════════ */
-.lp-gallery-section { padding-block: clamp(80px, 8vw, 120px); }
 
-.lp-gallery {
-  display: grid; grid-template-columns: 1fr;
-  gap: 24px;
-  max-width: 1180px; margin: 56px auto 0;
-  padding: 0 24px;
-}
+
 @media (min-width: 640px) { .lp-gallery { grid-template-columns: 1fr 1fr; } }
 @media (min-width: 980px) { .lp-gallery { grid-template-columns: 1fr 1fr 1fr; } }
 
-.lp-gal-card {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  transition: transform .25s;
-}
-.lp-gal-card:hover { transform: translateY(-4px); }
 
 /* The image-style thumbnail (aspect-ratio rectangle) */
-.lp-gal-thumb {
-  aspect-ratio: 16/11;
-  background: #f3f4f6;
-  border-radius: 12px;
-  position: relative;
-  overflow: hidden;
-  padding: 18px;
-  transition: filter .25s;
-}
-.lp-gal-card:hover .lp-gal-thumb { filter: brightness(1.02); }
-[data-theme="dark"] .lp-gal-thumb { background: #1e293b; }
 
-.lp-gal-card h3 {
-  margin: 14px 4px 4px;
-  font-size: 15px; font-weight: 600;
-  color: #0f172a;
-  letter-spacing: -0.012em;
-}
-[data-theme="dark"] .lp-gal-card h3 { color: #f1f5f9; }
-.lp-gal-card p {
-  margin: 0 4px;
-  font-size: 13px; color: #64748b;
-  line-height: 1.45;
-}
-[data-theme="dark"] .lp-gal-card p { color: #94a3b8; }
 
 /* Card 1 — Prescription (warm cream) */
-.lp-gal-rx .lp-gal-thumb {
-  background: linear-gradient(135deg, #fffceb 0%, #fef3c7 100%);
-}
-.lp-gal-rx-symbol {
-  font: 800 56px/1 'Times New Roman', serif;
-  color: #0f766e;
-  text-shadow: 2px 2px 0 rgba(15,118,110,.12);
-}
-.lp-gal-rx-lines { margin-top: 18px; display: flex; flex-direction: column; gap: 6px; }
-.lp-gal-rx-lines span {
-  height: 4px; border-radius: 2px;
-  background: rgba(15,118,110,.18);
-}
-.lp-gal-rx-lines span:nth-child(1) { width: 70%; }
-.lp-gal-rx-lines span:nth-child(2) { width: 85%; }
-.lp-gal-rx-lines span:nth-child(3) { width: 60%; }
-.lp-gal-rx-lines span:nth-child(4) { width: 75%; }
+
 
 /* Card 2 — Invoice (slate) */
-.lp-gal-inv .lp-gal-thumb {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-}
-.lp-gal-inv-stamp {
-  display: inline-block;
-  padding: 3px 9px;
-  background: #14532d; color: #fff;
-  font: 700 10px/1 -apple-system, sans-serif;
-  letter-spacing: 2px;
-  border-radius: 3px;
-  margin-bottom: 12px;
-}
-.lp-gal-inv-table {
-  width: 100%; border-collapse: collapse;
-  font: 500 11px/1.4 -apple-system, sans-serif;
-}
-.lp-gal-inv-table td {
-  padding: 4px 0;
-  color: #14532d;
-  border-bottom: 1px dashed rgba(20,83,45,.20);
-}
-.lp-gal-inv-table tr:last-child td { border-bottom: 0; padding-top: 6px; font-size: 12px; }
-.lp-gal-inv-table td:last-child { text-align: end; }
+
 
 /* Card 3 — Egyptian ID (gold/yellow) */
-.lp-gal-id .lp-gal-thumb {
-  background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
-}
-.lp-gal-id-band {
-  background: #92400e; color: #fef3c7;
-  padding: 5px 10px; border-radius: 3px;
-  font: 700 10px/1.2 -apple-system, sans-serif;
-  text-align: center;
-  margin-bottom: 12px;
-}
-[dir="rtl"] .lp-gal-id-band { text-align: center; }
-.lp-gal-id-grid { display: flex; gap: 10px; align-items: center; }
-.lp-gal-id-photo {
-  width: 40px; height: 44px;
-  background: rgba(146,64,14,.18);
-  border-radius: 3px;
-  display: grid; place-items: center;
-  font-size: 22px;
-}
-.lp-gal-id-fields { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-.lp-gal-id-fields div {
-  height: 4px; border-radius: 2px;
-  background: rgba(146,64,14,.25);
-}
-.lp-gal-id-fields div:nth-child(1) { width: 60%; }
-.lp-gal-id-fields div:nth-child(2) { width: 80%; }
-.lp-gal-id-fields div:nth-child(3) { width: 45%; }
+
 
 /* Card 4 — Passport (navy blue) */
-.lp-gal-passport .lp-gal-thumb {
-  background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
-}
-.lp-gal-passport-cover {
-  color: #fbbf24;
-  height: 100%;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 6px;
-  text-align: center;
-}
-.lp-gal-passport-arms {
-  font-size: 28px;
-}
-.lp-gal-passport-title {
-  font: 700 12px/1 -apple-system, sans-serif;
-  letter-spacing: 5px;
-  margin-bottom: 8px;
-}
-.lp-gal-passport-mrz {
-  font: 500 10px/1.4 ui-monospace, monospace;
-  color: #cbd5e1;
-  letter-spacing: 1px;
-}
+
 
 /* Card 5 — Lease contract (paper white) */
-.lp-gal-contract .lp-gal-thumb {
-  background: linear-gradient(135deg, #fff 0%, #f9fafb 100%);
-  border: 1px solid rgba(15,23,42,.06);
-}
-[data-theme="dark"] .lp-gal-contract .lp-gal-thumb {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-}
-.lp-gal-contract-h {
-  font: 700 11px/1.2 -apple-system, sans-serif;
-  color: #1e293b;
-  letter-spacing: 2px;
-  padding-bottom: 8px;
-  border-bottom: 1.5px solid #1e293b;
-  margin-bottom: 12px;
-  text-align: center;
-}
-[data-theme="dark"] .lp-gal-contract-h { color: #f1f5f9; border-bottom-color: #f1f5f9; }
-.lp-gal-contract-lines { display: flex; flex-direction: column; gap: 5px; }
-.lp-gal-contract-lines span {
-  height: 3px; border-radius: 1.5px;
-  background: rgba(15,23,42,.18);
-}
-[data-theme="dark"] .lp-gal-contract-lines span { background: rgba(255,255,255,.18); }
-.lp-gal-contract-lines span:nth-child(1) { width: 90%; }
-.lp-gal-contract-lines span:nth-child(2) { width: 70%; }
-.lp-gal-contract-lines span:nth-child(3) { width: 95%; }
-.lp-gal-contract-lines span:nth-child(4) { width: 75%; }
-.lp-gal-contract-lines span:nth-child(5) { width: 60%; }
-.lp-gal-contract-lines span:nth-child(6) { width: 85%; }
-.lp-gal-contract-sig {
-  font: 600 11px/1 -apple-system, sans-serif;
-  color: #0f766e;
-  margin-top: 10px;
-  text-align: end;
-}
+
 
 /* Card 6 — "And 23 more →" mosaic */
-.lp-gal-more .lp-gal-thumb {
-  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-  display: grid; place-items: center;
-  padding: 14px;
-}
-.lp-gal-more-grid {
-  display: grid; grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px; width: 100%;
-}
-.lp-gal-more-grid span {
-  background: #fff;
-  border-radius: 6px;
-  aspect-ratio: 1;
-  display: grid; place-items: center;
-  font-size: 16px;
-  color: #6d28d9;
-  font-weight: 700;
-}
-[data-theme="dark"] .lp-gal-more-grid span { background: #1e293b; color: #c4b5fd; }
+
 
 /* ═══════════════════════════════════════════════════════════════════════
    FIGMA BLACK BOTTOM — "Start with a template" full-bleed dark block
@@ -5564,35 +5241,16 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
   transition: transform .25s;
 }
 .lp-black-card:hover { transform: translateY(-4px); }
-.lp-black-tile {
-  display: flex; flex-direction: column;
-  justify-content: space-between;
-  aspect-ratio: 4/5;
-  background: linear-gradient(135deg, #fff7e6 0%, #fef3c7 100%);
-  border-radius: 12px;
-  padding: 18px;
-  position: relative;
-  overflow: hidden;
-}
+
 .lp-black-card-rx .lp-black-tile-rx {
   font: 800 64px/1 'Times New Roman', serif;
   color: #0f766e;
   text-shadow: 3px 3px 0 rgba(15,118,110,.12);
 }
-.lp-black-tile-band {
-  font: 700 10px/1 -apple-system, sans-serif;
-  letter-spacing: 1.5px;
-  padding: 5px 10px;
-  background: rgba(15,118,110,.15);
-  color: #0f766e;
-  border-radius: 4px;
-  align-self: flex-start;
-}
+
 
 /* Card 2 — Invoice */
-.lp-black-tile-inv {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-}
+
 .lp-black-inv-stamp {
   background: #92400e; color: #fff;
   padding: 6px 12px; border-radius: 4px;
@@ -5607,9 +5265,7 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
 }
 
 /* Card 3 — Egyptian ID */
-.lp-black-tile-id {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-}
+
 .lp-black-id-band {
   background: #14532d; color: #fff;
   padding: 6px 10px; border-radius: 3px;
@@ -5623,12 +5279,7 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
 }
 
 /* Card 4 — Passport */
-.lp-black-tile-passport {
-  background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
-  color: #fbbf24;
-  justify-content: center;
-  align-items: center;
-}
+
 .lp-black-passport-arms {
   font-size: 34px;
   text-align: center;
@@ -5641,9 +5292,7 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
 }
 
 /* Card 5 — Lease contract */
-.lp-black-tile-contract {
-  background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
-}
+
 .lp-black-contract-h {
   background: #881337;
   color: #fff;
@@ -8428,33 +8077,7 @@ pre.lp-devcode-panel code {
    hero communicates value created (workflow closed) rather than just
    value extracted (data appeared). Enterprise heroes use this pattern.
    ═══════════════════════════════════════════════════════════════════════ */
-.lp-hd-result-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px;
-  margin-top: 10px;
-  padding: 8px 12px;
-  background: rgba(15,118,110,.06);
-  border: 1px solid rgba(15,118,110,.18);
-  border-radius: 6px;
-}
-.lp-hd-pushed {
-  display: inline-flex; align-items: center; gap: 6px;
-  font: 600 11.5px/1 -apple-system, "Inter", sans-serif;
-  color: #0f766e;
-  letter-spacing: -0.005em;
-}
-.lp-hd-pushed svg { color: #0f766e; flex: none; }
-.lp-hd-elapsed {
-  font: 500 11px/1 ui-monospace, "JetBrains Mono", monospace;
-  color: #475569;
-  letter-spacing: 0;
-}
-[data-theme="dark"] .lp-hd-result-footer {
-  background: rgba(20,184,166,.08);
-  border-color: rgba(20,184,166,.20);
-}
-[data-theme="dark"] .lp-hd-pushed, [data-theme="dark"] .lp-hd-pushed svg { color: #2dd4bf; }
-[data-theme="dark"] .lp-hd-elapsed { color: #94a3b8; }
+
 
 /* ═══════════════════════════════════════════════════════════════════════
    HERO PHASE-1 NANONETS PASS
@@ -8542,63 +8165,18 @@ pre.lp-devcode-panel code {
    spinner (less distracting). Old .lp-hd-result-badge styles obsolete.
    ═══════════════════════════════════════════════════════════════════════ */
 
-.lp-hd-status {
-  display: inline-flex; align-items: center; gap: 7px;
-  margin-inline-start: auto;
-  padding: 4px 11px 4px 8px;
-  background: rgba(15,118,110,.08);
-  border: 1px solid rgba(15,118,110,.18);
-  border-radius: 999px;
-  font: 600 11px/1 -apple-system, "Inter", sans-serif;
-  color: #0f766e;
-  letter-spacing: -0.005em;
-  white-space: nowrap;
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-[data-theme="dark"] .lp-hd-status {
-  background: rgba(20,184,166,.10);
-  border-color: rgba(20,184,166,.25);
-  color: #5eead4;
-}
-
-.lp-hd-status-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: #0f766e;
-  flex: none;
-  position: relative;
-  box-shadow: 0 0 0 0 rgba(15,118,110,.40);
-  animation: lpHdStatusPulse 1.8s infinite ease-out;
-}
-[data-theme="dark"] .lp-hd-status-dot { background: #2dd4bf; }
-@keyframes lpHdStatusPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(15,118,110,.50); }
-  70%  { box-shadow: 0 0 0 6px rgba(15,118,110,0); }
-  100% { box-shadow: 0 0 0 0 rgba(15,118,110,0); }
-}
-[data-theme="dark"] .lp-hd-status-dot {
-  animation-name: lpHdStatusPulseDark;
-}
-@keyframes lpHdStatusPulseDark {
-  0%   { box-shadow: 0 0 0 0 rgba(20,184,166,.50); }
-  70%  { box-shadow: 0 0 0 6px rgba(20,184,166,0); }
-  100% { box-shadow: 0 0 0 0 rgba(20,184,166,0); }
-}
 
 /* Chrome row now needs to allow flex children */
-.lp-hd-chrome { width: 100%; }
+
 
 /* The old floating result-badge — obsolete since the badge moved into
    the chrome. Hide any orphan instances + neutralise the absolute position. */
-.lp-hd-result .lp-hd-result-badge { display: none !important; }
+
 
 /* Hide the status pill on narrow viewports where chrome runs out of room */
 @media (max-width: 720px) {
   .lp-hd-status { display: none; }
 }
-
 
 
 /* ════════════════════════════════════════════════════════════════════
@@ -9324,14 +8902,6 @@ body.lp-body {
 }
 
 /* Handwriting doc mockup (lp-doc-hw) — was cream */
-.lp-doc-hw {
-  background: #f9fafb !important;
-  border: 1px solid #e5e7eb;
-}
-[data-theme="dark"] .lp-doc-hw {
-  background: #0f1722 !important;
-  border-color: #1f2937;
-}
 
 
 /* ════════════════════════════════════════════════════════════════════
@@ -9364,13 +8934,5 @@ body.lp-body {
 }
 
 /* National-ID doc mock — was cream/yellow gradient. Flatten. */
-.lp-doc-id {
-  background: #f9fafb !important;
-  background-image: none !important;
-  border: 1px solid #e5e7eb;
-}
-[data-theme="dark"] .lp-doc-id {
-  background: #0f1722 !important;
-  background-image: none !important;
-  border-color: #1f2937;
-}
+
+
