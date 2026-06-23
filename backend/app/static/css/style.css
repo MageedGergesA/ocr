@@ -1813,12 +1813,8 @@ html[data-theme="dark"] body.lp-body {
 .lp-social { margin-top: 28px; display: flex; align-items: center; gap: 12px;
   color: var(--ink-2); font-size: 14px; flex-wrap: wrap; }
 .lp-social-text b { color: var(--ink); font-weight: 600; }
-.lp-avatars { display: flex; }
-.lp-avatar { width: 30px; height: 30px; border-radius: 50%; color: #fff;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 11px; border: 2px solid #fff; margin-inline-end: -8px;
-  object-fit: cover; object-position: center;
-  box-shadow: 0 1px 2px rgba(15,23,42,.12); }
+
+
 .lp-stars { color: #f59e0b; line-height: 1; font-size: 14px; letter-spacing: 1px; }
 
 /* Hero rotator — the keyword that cycles. Brand teal, heavier weight,
@@ -2259,10 +2255,8 @@ html[data-theme="dark"] .lp-ui-fmt-btn { background: var(--bg-alt); border-color
 .lp-feat-mock-cog .lp-cog-check.warn { color: #b45309; }
 .lp-feat-mock-cog .lp-cog-derived { margin-top: 8px; padding: 6px 8px;
   background: var(--hover-bg); border-radius: 5px; font-size: 11px; color: var(--ink); }
-.lp-ar-line { padding: 4px 6px; margin-bottom: 4px; background: #f8fafc;
-  border-radius: 4px; font-size: 11px; color: var(--ink); }
-.lp-ar-hw { font-family: 'Cairo'; font-weight: 700; color: #1e3a5f;
-  transform: rotate(-.5deg); background: #fffbeb; }
+
+
 .lp-feat-mock-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
   padding: 8px; max-width: 220px; }
 .lp-tool { padding: 4px 6px; background: #f8fafc; border-radius: 4px;
@@ -2280,32 +2274,17 @@ html[data-theme="dark"] .lp-ui-fmt-btn { background: var(--bg-alt); border-color
 .lp-case { display: grid; grid-template-columns: 1fr; gap: 0;
   align-items: center; border-top: 1px solid var(--line); }
 @media (min-width: 880px) { .lp-case { grid-template-columns: 1fr 1fr; } }
-.lp-case-text { padding: 48px 40px; }
+
 .lp-case-quote { margin-top: 14px; font-size: 22px; line-height: 1.4; color: var(--ink);
   font-weight: 500; letter-spacing: -.015em; max-width: 540px; }
 .lp-case-by { margin-top: 24px; display: flex; flex-direction: column; gap: 2px;
   font-size: 14px; }
 .lp-case-by strong { color: var(--ink); font-weight: 600; }
 .lp-case-by small { color: var(--muted); font-size: 13px; }
-.lp-case-portrait { background: var(--hover-bg); aspect-ratio: 5/3;
-  display: flex; align-items: center; justify-content: center; position: relative;
-  overflow: hidden; }
-.lp-case-portrait::before { content: ""; position: absolute; inset: 0;
-  background-image:
-    linear-gradient(45deg, rgba(0,0,0,.18) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.18) 75%),
-    linear-gradient(45deg, rgba(0,0,0,.18) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.18) 75%);
-  background-size: 4px 4px; background-position: 0 0, 2px 2px;
-  mix-blend-mode: multiply; pointer-events: none; }
-.lp-case-photo { width: 180px; height: 180px; border-radius: 50%;
-  background: var(--brand); color: #fff; font-weight: 800; font-size: 90px;
-  display: inline-flex; align-items: center; justify-content: center;
-  filter: grayscale(1) brightness(.95) sepia(1) hue-rotate(150deg) saturate(35%); }
-.lp-case-photo-1 { background: #8b5cf6; }
-.lp-case-photo-2 { background: #f97316; }
+
 
 /* Cartoonic SVG avatar (flat 2D portrait illustration) — kept as fallback */
-.lp-cartoon { width: min(280px, 80%); height: auto; display: block;
-  filter: drop-shadow(0 6px 16px rgba(15,23,42,.12)); }
+
 
 /* Real Unsplash portrait photo — handwritingocr's editorial-portrait treatment:
    bigger size, sepia-tint, and a cross-hatch dither overlay applied via the
@@ -2319,37 +2298,16 @@ html[data-theme="dark"] .lp-ui-fmt-btn { background: var(--bg-alt); border-color
 html[data-theme="dark"] .lp-real-portrait {
   filter: grayscale(.5) brightness(.92) sepia(.4) hue-rotate(345deg) saturate(1); }
 /* Cross-hatch dither overlay on the portrait container (handwritingocr signature) */
-.lp-case-portrait { position: relative; overflow: hidden; }
-.lp-case-portrait::after { content: ""; position: absolute; inset: 0;
-  background-image:
-    linear-gradient(45deg, rgba(0,0,0,.28) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.28) 75%),
-    linear-gradient(45deg, rgba(0,0,0,.28) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.28) 75%);
-  background-size: 4px 4px; background-position: 0 0, 2px 2px;
-  mix-blend-mode: multiply; pointer-events: none; z-index: 2; }
+
 
 /* Use-case real photo frame — fills the top of the card, edge-to-edge.
    Slight desat + brightness filter so colors don't compete with the brand teal. */
-.lp-case-photo-frame { margin: -28px -24px 18px;
-  aspect-ratio: 3/2; overflow: hidden; position: relative;
-  background: var(--brand-tint); }
-.lp-case-photo-img { width: 100%; height: 100%; object-fit: cover; display: block;
-  filter: saturate(.78) brightness(1.02); transition: .3s; }
-.lp-case-card:hover .lp-case-photo-img { transform: scale(1.04); filter: saturate(.95) brightness(1.04); }
-html[data-theme="dark"] .lp-case-photo-img { filter: saturate(.65) brightness(.82); }
+
 
 /* ═══ USE CASES ═══ */
-.lp-cases { display: grid; grid-template-columns: 1fr; gap: 0;
-  border-top: 1px solid var(--line); margin-top: 32px; }
+
 @media (min-width: 980px) { .lp-cases { grid-template-columns: 1fr 1fr 1fr 1fr; } }
-.lp-case-card { padding: 28px 24px; border-inline-end: 1px solid var(--line);
-  border-bottom: 1px solid var(--line); transition: .2s; cursor: default; }
-.lp-case-card:last-child { border-inline-end: 0; }
-.lp-case-card h3 { font-size: 18px; font-weight: 600; margin-top: 14px;
-  color: var(--ink); letter-spacing: -.015em; transition: .2s; line-height: 1.35; }
-.lp-case-card:hover h3 { color: #dc2626; }
-.lp-case-card p { margin-top: 10px; font-size: 14.5px; line-height: 1.6;
-  color: var(--ink-2); }
-[dir="rtl"] .lp-case-card p { font-size: 15px; line-height: 1.7; }
+
 
 /* ═══ TESTIMONIALS ═══ */
 .lp-testimonials { display: grid; grid-template-columns: 1fr;
@@ -5175,150 +5133,31 @@ section.lp-stripe-divider.lp-stripe-content + .lp-section {
    that sits between the pre-footer mini-CTA and the actual footer.
    Edge-to-edge solid black with 5-card template gallery.
    ═══════════════════════════════════════════════════════════════════════ */
-.lp-black-cta {
-  background: #0a0e1a !important;
-  margin-inline: calc(50% - 50vw) !important;
-  padding: clamp(80px, 9vw, 120px) clamp(24px, 6vw, 64px) !important;
-  width: 100vw !important;
-  max-width: 100vw !important;
-  color: #fff;
-  position: relative;
-  overflow: hidden;
-}
-.lp-black-inner {
-  max-width: 1180px;
-  margin: 0 auto !important;
-}
-.lp-black-cta h2 {
-  color: #fff !important;
-  margin: 0 0 16px !important;
-  letter-spacing: -0.03em !important;
-}
-.lp-black-cta .lp-section-sub {
-  color: #94a3b8 !important;
-  max-width: 540px;
-  margin: 0 0 32px !important;
-}
+
 
 /* Pager row (Figma's "1 of 6 ‹ ›") */
-.lp-black-pager {
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 32px;
-  font-size: 13px; color: #64748b;
-}
-.lp-black-pager > span:first-child {
-  margin-inline-end: auto;
-}
-.lp-black-arrow {
-  width: 36px; height: 36px;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 50%;
-  color: #94a3b8;
-  font-size: 18px; line-height: 1;
-  cursor: pointer;
-  transition: .2s;
-  display: inline-grid; place-items: center;
-}
-.lp-black-arrow:hover {
-  background: rgba(255,255,255,.06);
-  color: #fff;
-  border-color: rgba(255,255,255,.30);
-}
+
 
 /* Card gallery — 5 colored template tiles */
-.lp-black-gallery {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
+
 @media (min-width: 640px) { .lp-black-gallery { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 980px) { .lp-black-gallery { grid-template-columns: repeat(5, 1fr); } }
-
-.lp-black-card {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  transition: transform .25s;
-}
-.lp-black-card:hover { transform: translateY(-4px); }
-
-.lp-black-card-rx .lp-black-tile-rx {
-  font: 800 64px/1 'Times New Roman', serif;
-  color: #0f766e;
-  text-shadow: 3px 3px 0 rgba(15,118,110,.12);
-}
 
 
 /* Card 2 — Invoice */
 
-.lp-black-inv-stamp {
-  background: #92400e; color: #fff;
-  padding: 6px 12px; border-radius: 4px;
-  font: 800 11px/1 -apple-system, sans-serif;
-  letter-spacing: 2px;
-  align-self: flex-start;
-}
-.lp-black-inv-amt {
-  font: 800 22px/1 -apple-system, sans-serif;
-  letter-spacing: -0.02em;
-  color: #92400e;
-}
 
 /* Card 3 — Egyptian ID */
 
-.lp-black-id-band {
-  background: #14532d; color: #fff;
-  padding: 6px 10px; border-radius: 3px;
-  font: 700 10px/1.1 -apple-system, sans-serif;
-  letter-spacing: 1.5px;
-  align-self: flex-start;
-}
-.lp-black-id-photo {
-  font-size: 56px;
-  align-self: center;
-}
 
 /* Card 4 — Passport */
 
-.lp-black-passport-arms {
-  font-size: 34px;
-  text-align: center;
-}
-.lp-black-passport-text {
-  font: 700 12px/1 -apple-system, sans-serif;
-  letter-spacing: 5px;
-  margin-top: 12px;
-  text-align: center;
-}
 
 /* Card 5 — Lease contract */
 
-.lp-black-contract-h {
-  background: #881337;
-  color: #fff;
-  padding: 6px 12px; border-radius: 3px;
-  font: 800 10px/1 -apple-system, sans-serif;
-  letter-spacing: 2px;
-  align-self: flex-start;
-}
-.lp-black-contract-lines {
-  display: flex; flex-direction: column; gap: 5px;
-}
-.lp-black-contract-lines span {
-  height: 3px; border-radius: 1.5px; background: rgba(136,19,55,.30);
-}
-.lp-black-contract-lines span:nth-child(1) { width: 90%; }
-.lp-black-contract-lines span:nth-child(2) { width: 70%; }
-.lp-black-contract-lines span:nth-child(3) { width: 85%; }
 
 /* Label below tile */
-.lp-black-label {
-  display: block;
-  margin-top: 12px;
-  padding: 0 4px;
-  font-size: 13.5px; font-weight: 500;
-  color: #cbd5e1;
-}
+
 
 /* On mobile, hide the pager — the gallery wraps to 2-col, no controls needed */
 @media (max-width: 640px) {
@@ -7254,13 +7093,7 @@ html[data-theme="dark"] ::selection {
    E.2 — COMPETITIVE FLAG-PLANTING SECTION
    Bar-chart leaderboard with our product at #1, named competitors below.
    ═══════════════════════════════════════════════════════════════════════ */
-.lp-bench-section { padding-block: 80px !important; }
 
-.lp-bench-inner {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
 
 .lp-bench-head {
   text-align: center;
@@ -7273,34 +7106,11 @@ html[data-theme="dark"] ::selection {
   max-width: 700px;
   margin: 0 auto !important;
 }
-.lp-bench-emphasis {
-  color: #0f766e;
-  font-style: italic;
-  font-weight: 800;
-}
-[data-theme="dark"] .lp-bench-emphasis { color: #2dd4bf; }
+
 
 /* Leaderboard rows */
-.lp-bench-leaderboard {
-  display: flex; flex-direction: column;
-  gap: 12px;
-  margin: 0 auto;
-}
 
-.lp-bench-row {
-  display: grid;
-  grid-template-columns: 36px 200px 1fr 70px;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  background: #fff;
-}
-[data-theme="dark"] .lp-bench-row {
-  background: rgba(255,255,255,.02);
-  border-color: rgba(255,255,255,.06);
-}
+
 @media (max-width: 720px) {
   .lp-bench-row {
     grid-template-columns: 28px 1fr 60px;
@@ -7309,93 +7119,9 @@ html[data-theme="dark"] ::selection {
   .lp-bench-bar { grid-column: 1 / -1; margin-top: 6px; }
 }
 
-.lp-bench-rank {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  background: #f1f5f9;
-  color: #64748b;
-  display: inline-grid; place-items: center;
-  font: 700 13px/1 -apple-system, "Inter", sans-serif;
-}
-[data-theme="dark"] .lp-bench-rank {
-  background: rgba(255,255,255,.06);
-  color: #b4c1d0;
-}
-
-.lp-bench-name {
-  font: 600 16px/1.2 -apple-system, "Inter", sans-serif;
-  color: #0f172a;
-  letter-spacing: -0.012em;
-  display: flex; flex-direction: column;
-  gap: 2px;
-}
-[data-theme="dark"] .lp-bench-name { color: #f8fafc; }
-.lp-bench-name small {
-  font-size: 11.5px; font-weight: 500;
-  color: #94a3b8;
-  letter-spacing: 0;
-}
-[data-theme="dark"] .lp-bench-name small { color: #b4c1d0; }
-
-.lp-bench-bar {
-  height: 10px;
-  background: #f1f5f9;
-  border-radius: 999px;
-  overflow: hidden;
-  position: relative;
-}
-[data-theme="dark"] .lp-bench-bar { background: rgba(255,255,255,.06); }
-.lp-bench-bar > span {
-  display: block; height: 100%;
-  background: #cbd5e1;
-  border-radius: 999px;
-}
-[data-theme="dark"] .lp-bench-bar > span { background: rgba(255,255,255,.20); }
-
-.lp-bench-score {
-  font: 700 16px/1 ui-monospace, "JetBrains Mono", monospace;
-  color: #475569;
-  letter-spacing: -0.02em;
-  text-align: end;
-}
-[data-theme="dark"] .lp-bench-score { color: #cbd5e1; }
 
 /* Winner row — mint border + mint bar + ink score */
-.lp-bench-row-winner {
-  border-color: #0f766e !important;
-  border-width: 2px !important;
-  background: linear-gradient(135deg, rgba(15,118,110,.06), rgba(15,118,110,.02)) !important;
-}
-[data-theme="dark"] .lp-bench-row-winner {
-  border-color: #2dd4bf !important;
-  background: linear-gradient(135deg, rgba(20,184,166,.08), rgba(20,184,166,.02)) !important;
-}
-.lp-bench-row-winner .lp-bench-rank {
-  background: #0f766e !important;
-  color: #fff !important;
-}
-[data-theme="dark"] .lp-bench-row-winner .lp-bench-rank {
-  background: #14b8a6 !important;
-  color: #0a0e1a !important;
-}
-.lp-bench-row-winner .lp-bench-bar > span {
-  background: linear-gradient(90deg, #0f766e, #14b8a6) !important;
-}
-.lp-bench-row-winner .lp-bench-score {
-  color: #0f766e !important;
-  font-weight: 800 !important;
-}
-[data-theme="dark"] .lp-bench-row-winner .lp-bench-score { color: #2dd4bf !important; }
 
-.lp-bench-footnote {
-  text-align: center;
-  margin-top: 28px;
-  font-size: 13.5px;
-  color: #64748b;
-}
-.lp-bench-footnote span { margin: 0 8px; color: #cbd5e1; }
-[data-theme="dark"] .lp-bench-footnote { color: #b4c1d0; }
-[data-theme="dark"] .lp-bench-footnote span { color: #475569; }
 
 /* E.3 — 8-card enterprise controls grid (was 4) */
 .lp-trust-row-list-8 {
@@ -8726,12 +8452,7 @@ body.lp-body {
 
 /* 2. Repaint the case-study photo (was inline #f97316 orange via
    .lp-case-photo-2). Folded into the brand surface. */
-.lp-case-photo-2 {
-  background: #0f766e !important;
-}
-[data-theme="dark"] .lp-case-photo-2 {
-  background: #14b8a6 !important;
-}
+
 
 /* 3. Compare panel — strip the radial glow + gradient on the winner
    col, drop the "outer mint glow" on the whole panel. Keeps the
@@ -8926,12 +8647,7 @@ body.lp-body {
 /* Case photo violet residue (.lp-case-photo-1 was #8b5cf6). The
    matching photo-2 was already mint-ified in 1d; mirror here so the
    pair are consistent. */
-.lp-case-photo-1 {
-  background: #0f766e !important;
-}
-[data-theme="dark"] .lp-case-photo-1 {
-  background: #14b8a6 !important;
-}
+
 
 /* National-ID doc mock — was cream/yellow gradient. Flatten. */
 
