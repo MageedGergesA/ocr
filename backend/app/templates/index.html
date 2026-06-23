@@ -77,153 +77,161 @@
 
     <div class="lp-stripe-divider" aria-hidden="true"></div>
 
-    {# ════════════════ HERO ════════════════ #}
+    {# ════════════════ HERO — teknolines-clean lockdown ════════════════
+       Pattern (per /home/mageed/odoo_work_19/odoo/teknolines/tekno_webasite):
+       single saturated band, partner-style pill, calm H1, two CTAs, three
+       capability cells; right column = 3×2 identical doctype cards. NO
+       hero animation. Logos moved OUT to a separate light strip below.
+       ──────────────────────────────────────────────────────────────── #}
     <section class="lp-hero">
       <div class="lp-hero-grid">
 
         <div class="lp-hero-text">
-          {# Compliance signals live in the dark footer (GDPR / SOC 2 / PDPL
-             badges); we removed the hero chip row to let the headline land
-             first and give the column more breathing room. #}
+
+          <div class="lp-partner-pill">
+            <span class="lp-partner-dot" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <span class="lp-partner-text">{{ 'Arabic-first document AI' if lang == 'en' else 'ذكاء مستندات عربي أولاً' }}</span>
+          </div>
 
           {% if lang == 'en' %}
-          {# Phase-1 (Nanonets-clean): single-block H1, one highlighted word
-             in a mint chip, no rotator, no stats strip, no avatars.
-             Whitespace carries the message; the strip below carries proof. #}
           <h1 class="lp-h1">
-            Arabic document AI that <span class="lp-hi-chip">actually reads</span> your documents.
+            Arabic Documents.<br/>
+            Structured Without<br/>
+            Guesswork.
           </h1>
           <p class="lp-lead">
-            From 11 minutes of manual entry to <b>30-second structured data</b> — handwriting, mixed-script invoices, and national IDs included.
+            We extract clean, structured data from prescriptions, invoices, national IDs and contracts — handwritten or printed, Arabic or mixed-script.
           </p>
+          <p class="lp-hero-microtrust">No setup. Free tier. Built for MENA teams.</p>
           <div class="lp-hero-cta">
             {% if user %}
             <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app">Open the app →</a>
             <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/docs">View API docs</a>
             {% else %}
-            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">Start free — 30 credits, no card →</a>
+            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">Start free →</a>
             <a class="lp-btn lp-btn-ghost lp-btn-lg" href="#compare">See live extraction</a>
             {% endif %}
           </div>
           {% else %}
           <h1 class="lp-h1">
-            ذكاء اصطناعي عربي <span class="lp-hi-chip">يقرأ فعلًا</span> مستنداتك.
+            مستندات عربية.<br/>
+            بيانات منظّمة بلا<br/>
+            تخمين.
           </h1>
           <p class="lp-lead">
-            من 11 دقيقة إدخال يدوي إلى <b>بيانات منظّمة في 30 ثانية</b> — خط اليد، الفواتير مختلطة الكتابة، والهويات.
+            نستخرج بيانات منظّمة نظيفة من الروشتات والفواتير وبطاقات الهوية والعقود — خط يد أو مطبوع، عربي أو مختلط الكتابة.
           </p>
+          <p class="lp-hero-microtrust">بدون إعداد. خطة مجانية. مبنيّ لفِرَق MENA.</p>
           <div class="lp-hero-cta">
             {% if user %}
             <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app">افتح التطبيق ←</a>
             <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/docs">وثائق الـ API</a>
             {% else %}
-            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">ابدأ مجانًا — 30 نقطة، بدون بطاقة ←</a>
+            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">ابدأ مجانًا ←</a>
             <a class="lp-btn lp-btn-ghost lp-btn-lg" href="#compare">شاهد الاستخراج المباشر</a>
             {% endif %}
           </div>
           {% endif %}
-        </div>
 
-        {# Hero visual — orbit diagram (Nanonets-style centerpiece).
-           One central hub (℞ = mostakhles signature) with 6 orbiting
-           document types: 4 outer (cardinal) + 2 inner. Abstract,
-           premium, conceptual — replaced the literal browser+JSON mock
-           which read as "demo" rather than "enterprise". #}
-        <div class="lp-hero-visual">
-          <div class="lp-orbit" aria-hidden="true">
-
-            {# Dotted concentric rings — slow rotation gives subtle life #}
-            <svg class="lp-orbit-rings" viewBox="0 0 520 520">
-              <circle cx="260" cy="260" r="220" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 6" opacity="0.18"/>
-              <circle cx="260" cy="260" r="135" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 6" opacity="0.22"/>
-              <circle cx="260" cy="260" r="62"  fill="none" stroke="currentColor" stroke-width="1"   opacity="0.10"/>
-            </svg>
-
-            {# Central hub — ℞ signature mark #}
-            <div class="lp-orbit-hub">
-              <div class="lp-orbit-hub-disc">
-                <span class="lp-orbit-hub-mark">℞</span>
-              </div>
-              <span class="lp-orbit-hub-label">mostakhles</span>
+          <div class="lp-hero-stats">
+            <div class="lp-hero-stat">
+              <div class="lp-hero-stat-num">30s</div>
+              <div class="lp-hero-stat-lbl">{{ 'AVERAGE PER DOC' if lang == 'en' else 'متوسط لكل مستند' }}</div>
             </div>
-
-            {# Outer ring nodes — 4 cardinal points #}
-            <div class="lp-orbit-node lp-orbit-n-top">
-              <span class="lp-orbit-circle">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
-              </span>
-              <span class="lp-orbit-label">{{ 'Prescription' if lang == 'en' else 'روشتة' }}</span>
+            <div class="lp-hero-stat-divider" aria-hidden="true"></div>
+            <div class="lp-hero-stat">
+              <div class="lp-hero-stat-num">99.4%</div>
+              <div class="lp-hero-stat-lbl">{{ 'FIELD ACCURACY' if lang == 'en' else 'دقة الحقول' }}</div>
             </div>
-
-            <div class="lp-orbit-node lp-orbit-n-right">
-              <span class="lp-orbit-circle">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 9h16M8 4v16"/></svg>
-              </span>
-              <span class="lp-orbit-label">{{ 'Invoice' if lang == 'en' else 'فاتورة' }}</span>
+            <div class="lp-hero-stat-divider" aria-hidden="true"></div>
+            <div class="lp-hero-stat">
+              <div class="lp-hero-stat-num lp-hero-stat-num-sm">{{ 'AR + EN' if lang == 'en' else 'عربي + إنجليزي' }}</div>
+              <div class="lp-hero-stat-lbl">{{ 'PRINT + HANDWRITING' if lang == 'en' else 'مطبوع + خط يد' }}</div>
             </div>
-
-            <div class="lp-orbit-node lp-orbit-n-bottom">
-              <span class="lp-orbit-circle">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="9" cy="12" r="2.2"/><path d="M14 10h4M14 14h4"/></svg>
-              </span>
-              <span class="lp-orbit-label">{{ 'National ID' if lang == 'en' else 'بطاقة الرقم القومي' }}</span>
-            </div>
-
-            <div class="lp-orbit-node lp-orbit-n-left">
-              <span class="lp-orbit-circle">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 12h6M9 16h4"/><circle cx="17" cy="17" r="1.6"/></svg>
-              </span>
-              <span class="lp-orbit-label">{{ 'Contract' if lang == 'en' else 'عقد' }}</span>
-            </div>
-
-            {# Inner ring nodes — 2 offset, smaller #}
-            <div class="lp-orbit-node lp-orbit-inner lp-orbit-n-tr">
-              <span class="lp-orbit-circle">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5L13 7.5l3.5 3.5L6.5 21H3v-3.5z"/><path d="M14 6l3-3 3.5 3.5-3 3z"/></svg>
-              </span>
-              <span class="lp-orbit-label">{{ 'Handwriting' if lang == 'en' else 'خط يد' }}</span>
-            </div>
-
-            <div class="lp-orbit-node lp-orbit-inner lp-orbit-n-bl">
-              <span class="lp-orbit-circle">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9h18M3 14h18M9 4v16M15 4v16"/></svg>
-              </span>
-              <span class="lp-orbit-label">{{ 'Tables' if lang == 'en' else 'جداول' }}</span>
-            </div>
-
-            {# Static status chip — top-right of the orbit canvas. No JS
-               owns this element anymore; the old rotator was wired up to
-               the deleted browser-mockup slides. #}
-            <span class="lp-orbit-status">
-              <span class="lp-orbit-status-dot" aria-hidden="true"></span>
-              <span>{{ 'Live · 99.4% field accuracy' if lang == 'en' else 'مباشر · دقة الحقول 99.4٪' }}</span>
-            </span>
           </div>
         </div>
-        {# Old browser+slides mockup deleted. The hero-rotator script
-           bails on `if (!slides.length) return;` so removing the
-           `.lp-hd-slide` elements neutralises it cleanly. #}
+
+        {# Right column: 3×2 grid of identical doctype cards — teknolines
+           pattern. Same card, only icon tile color + glyph change. The eye
+           locks on the grid in one pass. #}
+        <div class="lp-hero-visual">
+          <div class="lp-doctype-grid">
+
+            <div class="lp-doctype-card">
+              <div class="lp-doctype-icon lp-doctype-icon-blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
+              </div>
+              <div class="lp-doctype-name">{{ 'Prescription' if lang == 'en' else 'روشتة' }}</div>
+              <div class="lp-doctype-desc">{{ 'Drug + dose + frequency' if lang == 'en' else 'دواء + جرعة + تردد' }}</div>
+            </div>
+
+            <div class="lp-doctype-card">
+              <div class="lp-doctype-icon lp-doctype-icon-green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>
+              </div>
+              <div class="lp-doctype-name">{{ 'Invoice' if lang == 'en' else 'فاتورة' }}</div>
+              <div class="lp-doctype-desc">{{ 'Line items + totals + VAT' if lang == 'en' else 'بنود + إجمالي + ضريبة' }}</div>
+            </div>
+
+            <div class="lp-doctype-card">
+              <div class="lp-doctype-icon lp-doctype-icon-teal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="9" cy="12" r="2.2"/><path d="M14 10h4M14 14h4"/></svg>
+              </div>
+              <div class="lp-doctype-name">{{ 'National ID' if lang == 'en' else 'بطاقة الهوية' }}</div>
+              <div class="lp-doctype-desc">{{ 'Name + number + dates' if lang == 'en' else 'اسم + رقم + تواريخ' }}</div>
+            </div>
+
+            <div class="lp-doctype-card">
+              <div class="lp-doctype-icon lp-doctype-icon-orange">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 12h6M9 16h4"/><circle cx="17" cy="17" r="1.6"/></svg>
+              </div>
+              <div class="lp-doctype-name">{{ 'Contract' if lang == 'en' else 'عقد' }}</div>
+              <div class="lp-doctype-desc">{{ 'Parties + clauses + signatures' if lang == 'en' else 'أطراف + بنود + توقيعات' }}</div>
+            </div>
+
+            <div class="lp-doctype-card">
+              <div class="lp-doctype-icon lp-doctype-icon-purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5L13 7.5l3.5 3.5L6.5 21H3v-3.5z"/><path d="M14 6l3-3 3.5 3.5-3 3z"/></svg>
+              </div>
+              <div class="lp-doctype-name">{{ 'Handwriting' if lang == 'en' else 'خط اليد' }}</div>
+              <div class="lp-doctype-desc">{{ 'Arabic + English scripts' if lang == 'en' else 'عربي + إنجليزي' }}</div>
+            </div>
+
+            <div class="lp-doctype-card">
+              <div class="lp-doctype-icon lp-doctype-icon-red">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9h18M3 14h18M9 4v16M15 4v16"/></svg>
+              </div>
+              <div class="lp-doctype-name">{{ 'Tables' if lang == 'en' else 'جداول' }}</div>
+              <div class="lp-doctype-desc">{{ 'Rows + columns + headers' if lang == 'en' else 'صفوف + أعمدة + رؤوس' }}</div>
+            </div>
+
+          </div>
+          <div class="lp-doctype-more">
+            + {{ 'Receipts, Statements, Forms' if lang == 'en' else 'إيصالات، كشوف حساب، نماذج' }}
+          </div>
+        </div>
 
       </div>
+    </section>
 
-      {# Customer logo strip — Nanonets pattern: logos sit INSIDE the hero
-         frame (not a separate section below). Doubles the hero's job:
-         pitch on top, proof on the bottom edge. #}
-      <div class="lp-hero-logos">
-        <p class="lp-hero-logos-label">
-          {{ 'Used by professionals at teams across MENA' if lang == 'en' else 'يستخدمه مهنيون في فرق عبر المنطقة' }}
-        </p>
-        <ul class="lp-customer-logos">
-          <li>Vodafone</li>
-          <li>e& <small>etisalat</small></li>
-          <li>STC</li>
-          <li>aramex</li>
-          <li>CIB</li>
-          <li>EFG</li>
-          <li>talabat</li>
-          <li>careem</li>
-        </ul>
-      </div>
+    {# Customer logo strip — extracted from the hero to a separate light
+       strip so the mint band is the page's single saturated moment. #}
+    <section class="lp-trust-logos">
+      <p class="lp-trust-logos-label">
+        {{ 'Used by professionals at teams across MENA' if lang == 'en' else 'يستخدمه مهنيون في فرق عبر المنطقة' }}
+      </p>
+      <ul class="lp-customer-logos">
+        <li>Vodafone</li>
+        <li>e& <small>etisalat</small></li>
+        <li>STC</li>
+        <li>aramex</li>
+        <li>CIB</li>
+        <li>EFG</li>
+        <li>talabat</li>
+        <li>careem</li>
+      </ul>
     </section>
 
     {# Trust-band section below is HIDDEN — its content moved into the hero
