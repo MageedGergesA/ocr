@@ -9064,3 +9064,68 @@ body.lp-body {
   background: #fff !important; color: #0a0e1a !important;
 }
 [data-theme="dark"] .cta-final .btn-primary:hover { background: #f1f5f9 !important; }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   LOCKDOWN 1c — color drift cleanup, page 2.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* 1. Repaint the 3 "How it works" step cards to one neutral surface.
+   Was mint/cream/lavender (3 different colors per page). Teknolines
+   uses one repeated card surface — kills the rainbow scan. */
+.lp-step-art-1,
+.lp-step-art-2,
+.lp-step-art-3 {
+  background: #f9fafb !important;
+  border: 1px solid #e5e7eb;
+}
+[data-theme="dark"] .lp-step-art-1,
+[data-theme="dark"] .lp-step-art-2,
+[data-theme="dark"] .lp-step-art-3 {
+  background: #0f1722 !important;
+  border-color: #1f2937;
+}
+
+/* 2. Strip the .lp-pricing-band mint gradient. Pricing page hero
+   now reads as plain section, matching every other page header. */
+.lp-pricing-band {
+  background: transparent !important;
+}
+
+/* 3. Kill the WhatsApp-green accent on contact's fast tiles. The
+   "instant recognition" justification is real but breaks the
+   single-brand rule across the public site. WA is still labeled
+   in the text + the icon is identifiable by shape. */
+.lp-fast-wa svg { color: var(--brand) !important; }
+.lp-fast-wa:hover {
+  border-color: var(--brand) !important;
+  box-shadow: 0 4px 12px -2px rgba(15,118,110,.18) !important;
+}
+[data-theme="dark"] .lp-fast-wa svg { color: #2dd4bf !important; }
+[data-theme="dark"] .lp-fast-wa:hover {
+  border-color: #2dd4bf !important;
+  box-shadow: 0 4px 12px -2px rgba(45,212,191,.22) !important;
+}
+
+/* 4. Strip the docs-hero radial mint gradient. The page is otherwise
+   white; the only mint moment in the site is the homepage hero. */
+.docs-hero {
+  background: transparent !important;
+  background-image: none !important;
+  padding: 80px 0 56px !important;
+}
+[data-theme="dark"] .docs-hero { background: transparent !important; }
+.docs-hero h1 {
+  font-size: clamp(32px, 4vw, 44px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* And lock the docs sections to the 80px rhythm */
+.docs-section {
+  padding: 80px 0 !important;
+}
+@media (max-width: 640px) {
+  .docs-section { padding: 56px 0 !important; }
+  .docs-hero { padding: 56px 0 40px !important; }
+}
