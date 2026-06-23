@@ -9200,3 +9200,52 @@ body.lp-body {
     animation: none !important;
   }
 }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   LOCKDOWN 1e — typography ceiling. Cap all H1/H2 to the lockdown
+   scale: hero=52px, subpage H1=44px, section H2=32px. The Figma-jumbo
+   rules (up to 88px) shout instead of speak; teknolines reads as
+   confident enterprise at 32–40px section heads.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* H1 on subpages (about, privacy, seo_landing) — cap at 44px */
+.lp-h1 {
+  font-size: clamp(32px, 4vw, 44px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.022em !important;
+  line-height: 1.12 !important;
+}
+
+/* But the homepage hero keeps its 52px scale (defined at line ~8716
+   with more specific selector .lp-hero-text .lp-h1 — wins). */
+
+/* H2 section heads — cap at 32px */
+.lp-h2 {
+  font-size: clamp(26px, 3vw, 32px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.018em !important;
+  line-height: 1.2 !important;
+}
+
+/* Kill the jumbo variant — collapses to regular H2 */
+.lp-h2-jumbo {
+  font-size: clamp(26px, 3vw, 32px) !important;
+  letter-spacing: -0.018em !important;
+  line-height: 1.2 !important;
+}
+
+/* Docs page H1 — match subpage H1 */
+.docs-hero h1 {
+  font-size: clamp(32px, 4vw, 44px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.022em !important;
+  line-height: 1.12 !important;
+}
+
+/* Old generic .hero h1 (any remaining off-system page) */
+.hero h1 {
+  font-size: clamp(32px, 4vw, 44px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.022em !important;
+}
