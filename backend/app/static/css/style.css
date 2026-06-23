@@ -9129,3 +9129,74 @@ body.lp-body {
   .docs-section { padding: 56px 0 !important; }
   .docs-hero { padding: 56px 0 40px !important; }
 }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   LOCKDOWN 1d — colored avatars, compare drift, animation diet.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* 1. One avatar surface — was 3 inline-style colors (#f97316 orange,
+   #0f766e mint, #7c3aed violet). Now all read as the same accent. */
+.lp-tm-avatar-brand {
+  background: #0f766e !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .lp-tm-avatar-brand {
+  background: #14b8a6 !important;
+  color: #0a2925 !important;
+}
+
+/* 2. Repaint the case-study photo (was inline #f97316 orange via
+   .lp-case-photo-2). Folded into the brand surface. */
+.lp-case-photo-2 {
+  background: #0f766e !important;
+}
+[data-theme="dark"] .lp-case-photo-2 {
+  background: #14b8a6 !important;
+}
+
+/* 3. Compare panel — strip the radial glow + gradient on the winner
+   col, drop the "outer mint glow" on the whole panel. Keeps the
+   1px brand border so the winner col is still distinguishable. */
+.lp-compare-panel {
+  box-shadow: none !important;
+}
+.lp-compare-winner {
+  background: #f9fafb !important;
+  background-image: none !important;
+}
+.lp-compare-winner::before { display: none !important; }
+[data-theme="dark"] .lp-compare-winner {
+  background: #0f1722 !important;
+}
+
+/* 4. Animation diet — kill the 4 colored kicker-dot pulses + the
+   hero CTA attention pulse. The mint dot stays for the lp-kicker
+   default; colored variants now use the mint color too. */
+.lp-kicker-coral .lp-dot,
+.lp-kicker-amber .lp-dot,
+.lp-kicker-violet .lp-dot {
+  background: var(--brand) !important;
+  animation-name: lpKDot !important;
+}
+[data-theme="dark"] .lp-kicker-coral .lp-dot,
+[data-theme="dark"] .lp-kicker-amber .lp-dot,
+[data-theme="dark"] .lp-kicker-violet .lp-dot {
+  background: #14b8a6 !important;
+}
+
+/* Hero CTA pulse — remove the attention shimmer on the primary CTA.
+   Teknolines runs zero hero animation. The button is already prominent. */
+.lp-hero-cta .lp-btn-primary {
+  animation: none !important;
+}
+
+/* Respect users who prefer reduced motion — kill all kicker pulses too */
+@media (prefers-reduced-motion: reduce) {
+  .lp-kicker .lp-dot,
+  .lp-kicker-coral .lp-dot,
+  .lp-kicker-amber .lp-dot,
+  .lp-kicker-violet .lp-dot {
+    animation: none !important;
+  }
+}
