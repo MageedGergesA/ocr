@@ -97,140 +97,469 @@
 
           {% if lang == 'en' %}
           <h1 class="lp-h1">
-            Arabic Documents.<br/>
-            Structured Without<br/>
-            Guesswork.
+            <span class="lp-h1-line">Arabic documents.</span>
+            <span class="lp-h1-line">Structured without guesswork.</span>
           </h1>
-          <p class="lp-lead">
-            We extract clean, structured data from prescriptions, invoices, national IDs and contracts — handwritten or printed, Arabic or mixed-script.
-          </p>
-          <p class="lp-hero-microtrust">No setup. Free tier. Built for MENA teams.</p>
-          <div class="lp-hero-cta">
-            {% if user %}
-            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app">Open the app →</a>
-            <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/docs">View API docs</a>
-            {% else %}
-            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">Start free →</a>
-            <a class="lp-btn lp-btn-ghost lp-btn-lg" href="#compare">See live extraction</a>
-            {% endif %}
-          </div>
           {% else %}
           <h1 class="lp-h1">
-            مستندات عربية.<br/>
-            بيانات منظّمة بلا<br/>
-            تخمين.
+            <span class="lp-h1-line">مستندات عربية.</span>
+            <span class="lp-h1-line">بيانات منظّمة بلا تخمين.</span>
           </h1>
-          <p class="lp-lead">
-            نستخرج بيانات منظّمة نظيفة من الروشتات والفواتير وبطاقات الهوية والعقود — خط يد أو مطبوع، عربي أو مختلط الكتابة.
-          </p>
-          <p class="lp-hero-microtrust">بدون إعداد. خطة مجانية. مبنيّ لفِرَق MENA.</p>
-          <div class="lp-hero-cta">
-            {% if user %}
-            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app">افتح التطبيق ←</a>
-            <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/docs">وثائق الـ API</a>
-            {% else %}
-            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">ابدأ مجانًا ←</a>
-            <a class="lp-btn lp-btn-ghost lp-btn-lg" href="#compare">شاهد الاستخراج المباشر</a>
-            {% endif %}
-          </div>
           {% endif %}
 
-          <div class="lp-hero-stats">
-            <div class="lp-hero-stat">
-              <div class="lp-hero-stat-num">30s</div>
-              <div class="lp-hero-stat-lbl">{{ 'AVERAGE PER DOC' if lang == 'en' else 'متوسط لكل مستند' }}</div>
-            </div>
-            <div class="lp-hero-stat-divider" aria-hidden="true"></div>
-            <div class="lp-hero-stat">
-              <div class="lp-hero-stat-num">99.4%</div>
-              <div class="lp-hero-stat-lbl">{{ 'FIELD ACCURACY' if lang == 'en' else 'دقة الحقول' }}</div>
-            </div>
-            <div class="lp-hero-stat-divider" aria-hidden="true"></div>
-            <div class="lp-hero-stat">
-              <div class="lp-hero-stat-num lp-hero-stat-num-sm">{{ 'AR + EN' if lang == 'en' else 'عربي + إنجليزي' }}</div>
-              <div class="lp-hero-stat-lbl">{{ 'PRINT + HANDWRITING' if lang == 'en' else 'مطبوع + خط يد' }}</div>
+          {# ClickUp-pattern: 3 checkmark bullets w/ bold leads (replaces lead paragraph) #}
+          <ul class="lp-hero-bullets">
+            <li>
+              <span class="lp-bullet-check" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="lp-bullet-text">
+                <b>{{ 'Any document.' if lang == 'en' else 'أي مستند.' }}</b>
+                {{ 'Prescriptions, invoices, national IDs, contracts.' if lang == 'en' else 'روشتات، فواتير، هويات، عقود.' }}
+              </span>
+            </li>
+            <li>
+              <span class="lp-bullet-check" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="lp-bullet-text">
+                <b>{{ 'Any script.' if lang == 'en' else 'أي خط.' }}</b>
+                {{ 'Printed or handwritten, Arabic or English.' if lang == 'en' else 'مطبوع أو خط يد، عربي أو إنجليزي.' }}
+              </span>
+            </li>
+            <li>
+              <span class="lp-bullet-check" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="lp-bullet-text">
+                <b>{{ 'Any layout.' if lang == 'en' else 'أي تخطيط.' }}</b>
+                {{ 'Tables, forms, stamps, signatures.' if lang == 'en' else 'جداول، نماذج، أختام، توقيعات.' }}
+              </span>
+            </li>
+          </ul>
+
+          {# CTA + inline microcopy (sits beside the button, not below) #}
+          <div class="lp-hero-cta">
+            {% if user %}
+            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app">{{ "Open the app." if lang == 'en' else 'افتح التطبيق.' }}</a>
+            {% else %}
+            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">{{ "Get started. It's FREE!" if lang == 'en' else "ابدأ. مجاني!" }}</a>
+            {% endif %}
+            <div class="lp-cta-micro">
+              <div>{{ 'Free forever.' if lang == 'en' else 'مجاني للأبد.' }}</div>
+              <div>{{ 'No credit card.' if lang == 'en' else 'بدون بطاقة ائتمان.' }}</div>
             </div>
           </div>
+
+          {# Tiny uppercase eyebrow (the ClickUp "GET 400% MORE DONE..." line) #}
+          <p class="lp-hero-eyebrow">
+            {{ '30s PER DOC' if lang == 'en' else '30ث لكل مستند' }}
+            <span class="lp-hero-eyebrow-dot">·</span>
+            {{ '99.4% FIELD ACCURACY' if lang == 'en' else 'دقة 99.4٪ للحقول' }}
+          </p>
+
+          {# Feature pill strip — 12 doctypes, the first active w/ check #}
+          <div class="lp-hero-pills">
+            <span class="lp-feature-pill lp-feature-pill-active">
+              {{ 'Prescription' if lang == 'en' else 'روشتة' }}
+              <span class="lp-pill-check" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+            </span>
+            <span class="lp-feature-pill">{{ 'Invoice' if lang == 'en' else 'فاتورة' }}</span>
+            <span class="lp-feature-pill">{{ 'National ID' if lang == 'en' else 'هوية' }}</span>
+            <span class="lp-feature-pill">{{ 'Contract' if lang == 'en' else 'عقد' }}</span>
+            <span class="lp-feature-pill">{{ 'Handwriting' if lang == 'en' else 'خط يد' }}</span>
+            <span class="lp-feature-pill">{{ 'Tables' if lang == 'en' else 'جداول' }}</span>
+            <span class="lp-feature-pill">{{ 'Receipt' if lang == 'en' else 'إيصال' }}</span>
+            <span class="lp-feature-pill">{{ 'Statement' if lang == 'en' else 'كشف' }}</span>
+            <span class="lp-feature-pill">{{ 'Form' if lang == 'en' else 'نموذج' }}</span>
+            <span class="lp-feature-pill">{{ 'Stamp' if lang == 'en' else 'ختم' }}</span>
+            <span class="lp-feature-pill">{{ 'Signature' if lang == 'en' else 'توقيع' }}</span>
+            <span class="lp-feature-pill">{{ 'Logo' if lang == 'en' else 'شعار' }}</span>
+          </div>
+
         </div>
 
-        {# Right column: 3×2 grid of identical doctype cards — teknolines
-           pattern. Same card, only icon tile color + glyph change. The eye
-           locks on the grid in one pass. #}
+        {# ─── RIGHT column: stacked product screenshots in browser chrome ─── #}
+        {# Front card = /app upload, back card = /dashboard peeking out      #}
+        {# Both lang-aware via html[lang=...] selectors in CSS.              #}
         <div class="lp-hero-visual">
-          <div class="lp-doctype-grid">
+          <div class="lp-shots">
 
-            <div class="lp-doctype-card">
-              <div class="lp-doctype-icon lp-doctype-icon-blue">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
-              </div>
-              <div class="lp-doctype-name">{{ 'Prescription' if lang == 'en' else 'روشتة' }}</div>
-              <div class="lp-doctype-desc">{{ 'Drug + dose + frequency' if lang == 'en' else 'دواء + جرعة + تردد' }}</div>
+            {# Live counter — top-right balance to the bottom-left JSON. Pulses live. #}
+            <div class="lp-shot-counter" aria-hidden="true">
+              <span class="lp-shot-counter-dot"></span>
+              <span class="lp-shot-counter-num">2,847</span>
+              <span class="lp-shot-counter-label">{{ 'extracted today' if lang == 'en' else 'مستخرج اليوم' }}</span>
             </div>
 
-            <div class="lp-doctype-card">
-              <div class="lp-doctype-icon lp-doctype-icon-green">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>
+            {# Front card: /app upload, primary visual.
+               (Back dashboard card removed for declutter — see CLAUDE.md
+               Wave 1k.) #}
+            <div class="lp-shot-card lp-shot-front lp-shot-app"
+                 role="img"
+                 aria-label="{{ 'Mostakhles app — Arabic document upload + structured extraction' if lang == 'en' else 'تطبيق مستخلص — رفع المستندات العربية واستخراج البيانات المنظّمة' }}">
+              <div class="lp-shot-chrome">
+                <span class="lp-shot-dot lp-shot-dot-red"></span>
+                <span class="lp-shot-dot lp-shot-dot-yellow"></span>
+                <span class="lp-shot-dot lp-shot-dot-green"></span>
+                <span class="lp-shot-url">mostakhles.ai/app</span>
               </div>
-              <div class="lp-doctype-name">{{ 'Invoice' if lang == 'en' else 'فاتورة' }}</div>
-              <div class="lp-doctype-desc">{{ 'Line items + totals + VAT' if lang == 'en' else 'بنود + إجمالي + ضريبة' }}</div>
+              <div class="lp-shot-img"></div>
             </div>
 
-            <div class="lp-doctype-card">
-              <div class="lp-doctype-icon lp-doctype-icon-teal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="9" cy="12" r="2.2"/><path d="M14 10h4M14 14h4"/></svg>
+            {# Floating result overlay — 3 cyclable variants (prescription,
+               invoice, national ID) showing extraction breadth. JS in the
+               footer cycles every 5s and re-triggers the typewriter reveal. #}
+            <div class="lp-shot-result" dir="ltr" aria-hidden="true">
+
+              {# Variant 1: Prescription — DEFAULT visible #}
+              <div class="lp-shot-result-variant" data-variant="rx" data-active>
+                <div class="lp-shot-result-head">
+                  <span class="lp-shot-result-check" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <span class="lp-shot-result-title">prescription.pdf</span>
+                  <span class="lp-shot-result-time">1.8s</span>
+                </div>
+                <div class="lp-shot-result-body">
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"patient"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">{{ '"Ahmed Khalil"' if lang == 'en' else '"أحمد خليل"' }}</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"drug"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"Amoxicillin"</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"dose_mg"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-num">500</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"frequency"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"3×/day"</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"duration_days"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-num">7</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"pharmacy"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">{{ '"El Ezaby"' if lang == 'en' else '"العزبي"' }}</span></div>
+                </div>
               </div>
-              <div class="lp-doctype-name">{{ 'National ID' if lang == 'en' else 'بطاقة الهوية' }}</div>
-              <div class="lp-doctype-desc">{{ 'Name + number + dates' if lang == 'en' else 'اسم + رقم + تواريخ' }}</div>
+
+              {# Variant 2: Invoice #}
+              <div class="lp-shot-result-variant" data-variant="invoice" hidden>
+                <div class="lp-shot-result-head">
+                  <span class="lp-shot-result-check" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <span class="lp-shot-result-title">invoice-1042.pdf</span>
+                  <span class="lp-shot-result-time">2.1s</span>
+                </div>
+                <div class="lp-shot-result-body">
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"vendor"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">{{ '"Aramex"' if lang == 'en' else '"أرامكس"' }}</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"invoice_no"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"INV-1042"</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"subtotal_egp"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-num">4800</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"vat_egp"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-num">672</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"total_egp"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-num">5472</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"due_date"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"2026-07-15"</span></div>
+                </div>
+              </div>
+
+              {# Variant 3: National ID #}
+              <div class="lp-shot-result-variant" data-variant="id" hidden>
+                <div class="lp-shot-result-head">
+                  <span class="lp-shot-result-check" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <span class="lp-shot-result-title">id-card.jpg</span>
+                  <span class="lp-shot-result-time">1.4s</span>
+                </div>
+                <div class="lp-shot-result-body">
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"name"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">{{ '"Mona Saleh"' if lang == 'en' else '"منى صالح"' }}</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"id_number"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"29512012345678"</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"birth_date"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"1995-12-01"</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"expiry"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"2032-08-22"</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"gender"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"F"</span></div>
+                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"governorate"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">{{ '"Cairo"' if lang == 'en' else '"القاهرة"' }}</span></div>
+                </div>
+              </div>
             </div>
 
-            <div class="lp-doctype-card">
-              <div class="lp-doctype-icon lp-doctype-icon-orange">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 12h6M9 16h4"/><circle cx="17" cy="17" r="1.6"/></svg>
-              </div>
-              <div class="lp-doctype-name">{{ 'Contract' if lang == 'en' else 'عقد' }}</div>
-              <div class="lp-doctype-desc">{{ 'Parties + clauses + signatures' if lang == 'en' else 'أطراف + بنود + توقيعات' }}</div>
-            </div>
-
-            <div class="lp-doctype-card">
-              <div class="lp-doctype-icon lp-doctype-icon-purple">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5L13 7.5l3.5 3.5L6.5 21H3v-3.5z"/><path d="M14 6l3-3 3.5 3.5-3 3z"/></svg>
-              </div>
-              <div class="lp-doctype-name">{{ 'Handwriting' if lang == 'en' else 'خط اليد' }}</div>
-              <div class="lp-doctype-desc">{{ 'Arabic + English scripts' if lang == 'en' else 'عربي + إنجليزي' }}</div>
-            </div>
-
-            <div class="lp-doctype-card">
-              <div class="lp-doctype-icon lp-doctype-icon-red">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9h18M3 14h18M9 4v16M15 4v16"/></svg>
-              </div>
-              <div class="lp-doctype-name">{{ 'Tables' if lang == 'en' else 'جداول' }}</div>
-              <div class="lp-doctype-desc">{{ 'Rows + columns + headers' if lang == 'en' else 'صفوف + أعمدة + رؤوس' }}</div>
-            </div>
+            {# Cost badge removed for declutter — JSON header already shows the 1.8s timing. #}
 
           </div>
-          <div class="lp-doctype-more">
-            + {{ 'Receipts, Statements, Forms' if lang == 'en' else 'إيصالات، كشوف حساب، نماذج' }}
+          <div class="lp-app-mock-OBSOLETE" dir="ltr" hidden aria-hidden="true">
+
+            {# Topbar #}
+            <div class="lp-app-topbar">
+              <div class="lp-app-workspace">
+                <span class="lp-app-ws-mark">⬡</span>
+                <span class="lp-app-ws-name">{{ 'Cairo Pharma' if lang == 'en' else 'صيدلية القاهرة' }}</span>
+                <svg class="lp-app-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="lp-app-tools">
+                <span class="lp-app-search-bar"></span>
+                <span class="lp-app-cog">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </span>
+              </div>
+            </div>
+
+            <div class="lp-app-body">
+
+              {# Left rail of small icons #}
+              <div class="lp-app-rail">
+                <div class="lp-app-rail-icon lp-app-rail-icon-active">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                </div>
+                <div class="lp-app-rail-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
+                </div>
+                <div class="lp-app-rail-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+                </div>
+                <div class="lp-app-rail-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                </div>
+              </div>
+
+              {# Sidebar #}
+              <div class="lp-app-sidebar">
+                <div class="lp-app-sidebar-head">
+                  <svg class="lp-app-caret-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                  <span class="lp-app-sidebar-title">{{ 'Home' if lang == 'en' else 'الرئيسية' }}</span>
+                  <span class="lp-app-sidebar-spacer"></span>
+                  <span class="lp-app-sidebar-plus">+</span>
+                  <svg class="lp-app-caret-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <ul class="lp-app-list">
+                  <li class="lp-app-item">
+                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                    <span class="lp-app-item-label">{{ 'Inbox' if lang == 'en' else 'الوارد' }}</span>
+                    <span class="lp-app-badge lp-app-badge-red">3</span>
+                  </li>
+                  <li class="lp-app-item">
+                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span class="lp-app-item-label">{{ 'My Documents' if lang == 'en' else 'مستنداتي' }}</span>
+                  </li>
+                  <li class="lp-app-item">
+                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span class="lp-app-item-label">{{ 'Templates' if lang == 'en' else 'القوالب' }}</span>
+                  </li>
+                </ul>
+
+                <div class="lp-app-sidebar-section">{{ 'Healthcare Team' if lang == 'en' else 'فريق الرعاية' }}</div>
+                <ul class="lp-app-list">
+                  <li class="lp-app-item">
+                    <span class="lp-app-bullet">≡</span>
+                    <span class="lp-app-item-label">{{ 'Prescription Queue' if lang == 'en' else 'قائمة الروشتات' }}</span>
+                  </li>
+                  <li class="lp-app-item">
+                    <span class="lp-app-bullet">#</span>
+                    <span class="lp-app-item-label">{{ 'Lab Reports' if lang == 'en' else 'تقارير المعمل' }}</span>
+                  </li>
+                  <li class="lp-app-item">
+                    <span class="lp-app-mini-avatar lp-app-ma-blue">DA</span>
+                    <span class="lp-app-item-label">{{ 'Dr. Ahmed' if lang == 'en' else 'د. أحمد' }}</span>
+                    <span class="lp-app-badge lp-app-badge-red">1</span>
+                  </li>
+                  <li class="lp-app-item">
+                    <span class="lp-app-mini-avatar lp-app-ma-pink">PA</span>
+                    <span class="lp-app-item-label">{{ 'Pharmacy AI' if lang == 'en' else 'صيدلية الذكاء' }}</span>
+                    <span class="lp-app-badge lp-app-badge-red">3</span>
+                  </li>
+                  <li class="lp-app-item">
+                    <span class="lp-app-mini-avatar lp-app-ma-amber">ZS</span>
+                    <span class="lp-app-item-label">{{ 'Zeinab S.' if lang == 'en' else 'زينب س.' }}</span>
+                  </li>
+                  <li class="lp-app-item">
+                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    <span class="lp-app-item-label">{{ 'Vision & Strategy' if lang == 'en' else 'الرؤية والاستراتيجية' }}</span>
+                  </li>
+                </ul>
+
+                <div class="lp-app-sidebar-section">{{ 'Spaces' if lang == 'en' else 'المساحات' }}</div>
+                <ul class="lp-app-list">
+                  <li class="lp-app-item lp-app-item-active">
+                    <span class="lp-app-space-square lp-app-space-red">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                    </span>
+                    <span class="lp-app-item-label">{{ 'Prescription' if lang == 'en' else 'روشتة' }}</span>
+                  </li>
+                  <li class="lp-app-item lp-app-item-muted">
+                    <span class="lp-app-bullet">≡</span>
+                    <span class="lp-app-item-label">{{ 'Invoices' if lang == 'en' else 'الفواتير' }}</span>
+                  </li>
+                  <li class="lp-app-item lp-app-item-muted">
+                    <span class="lp-app-bullet">≡</span>
+                    <span class="lp-app-item-label">{{ 'Statements' if lang == 'en' else 'كشوف' }}</span>
+                  </li>
+                  <li class="lp-app-item lp-app-item-muted">
+                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    <span class="lp-app-item-label">{{ 'ID Pack' if lang == 'en' else 'حزمة الهوية' }}</span>
+                  </li>
+                  <li class="lp-app-item lp-app-item-muted">
+                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    <span class="lp-app-item-label">{{ 'Design Documents' if lang == 'en' else 'مستندات التصميم' }}</span>
+                  </li>
+                </ul>
+              </div>
+
+              {# Main panel #}
+              <div class="lp-app-main">
+                <div class="lp-app-main-head">
+                  <span class="lp-app-main-icon">
+                    <svg viewBox="0 0 24 24" fill="#ef4444" stroke="none"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+                  </span>
+                  <span class="lp-app-main-title">{{ 'Prescription' if lang == 'en' else 'روشتة' }}</span>
+                  <svg class="lp-app-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                  <svg class="lp-app-main-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="lp-app-tabs">
+                  <span class="lp-app-tab">
+                    <svg viewBox="0 0 24 24" fill="#3b82f6" stroke="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Chat
+                  </span>
+                  <span class="lp-app-tab lp-app-tab-active">
+                    <svg viewBox="0 0 24 24" fill="#10b981" stroke="none"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Fields
+                  </span>
+                  <span class="lp-app-tab">
+                    <svg viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
+                    Schedule
+                  </span>
+                  <span class="lp-app-tab">
+                    <svg viewBox="0 0 24 24" fill="#8b5cf6" stroke="none"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                    JSON
+                  </span>
+                  <span class="lp-app-tab">
+                    <svg viewBox="0 0 24 24" fill="#06b6d4" stroke="none"><circle cx="12" cy="12" r="10"/></svg>
+                    History
+                  </span>
+                  <span class="lp-app-tab lp-app-tab-add">+ View</span>
+                </div>
+                <div class="lp-app-table-head">
+                  <span>{{ 'Field' if lang == 'en' else 'الحقل' }}</span>
+                  <span>{{ 'Value' if lang == 'en' else 'القيمة' }}</span>
+                </div>
+                <div class="lp-app-group">
+                  <div class="lp-app-group-head">
+                    <span class="lp-app-collapse-arrow">▾</span>
+                    <span class="lp-app-chip lp-app-chip-done">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      EXTRACTED
+                    </span>
+                    <span class="lp-app-count">5</span>
+                  </div>
+                  <div class="lp-app-row">
+                    <span class="lp-app-row-name">
+                      <span class="lp-app-row-check lp-app-row-check-done">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
+                      {{ 'Patient' if lang == 'en' else 'المريض' }}
+                    </span>
+                    <span class="lp-app-row-asn">
+                      <span class="lp-app-row-avatar lp-app-row-avatar-blue">A</span>
+                    </span>
+                  </div>
+                  <div class="lp-app-row">
+                    <span class="lp-app-row-name">
+                      <span class="lp-app-row-check lp-app-row-check-done">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
+                      {{ 'Drug name' if lang == 'en' else 'اسم الدواء' }}
+                      <span class="lp-app-row-meta">2</span>
+                    </span>
+                    <span class="lp-app-row-asn">
+                      <span class="lp-app-row-avatar lp-app-row-avatar-green">B</span>
+                      <span class="lp-app-row-avatar lp-app-row-avatar-purple">C</span>
+                    </span>
+                  </div>
+                  <div class="lp-app-row lp-app-row-indent">
+                    <span class="lp-app-row-name">
+                      <span class="lp-app-row-check lp-app-row-check-empty"></span>
+                      {{ 'Dose' if lang == 'en' else 'الجرعة' }}
+                    </span>
+                    <span class="lp-app-row-asn">
+                      <span class="lp-app-row-avatar lp-app-row-avatar-pink">D</span>
+                    </span>
+                  </div>
+                  <div class="lp-app-row lp-app-row-indent">
+                    <span class="lp-app-row-name">
+                      <span class="lp-app-row-check lp-app-row-check-empty"></span>
+                      {{ 'Frequency' if lang == 'en' else 'التردد' }}
+                    </span>
+                    <span class="lp-app-row-asn">
+                      <span class="lp-app-row-avatar lp-app-row-avatar-teal">E</span>
+                    </span>
+                  </div>
+                  <div class="lp-app-row">
+                    <span class="lp-app-row-name">
+                      <span class="lp-app-row-check lp-app-row-check-done">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
+                      {{ 'Duration' if lang == 'en' else 'المدة' }}
+                    </span>
+                    <span class="lp-app-row-asn">
+                      <span class="lp-app-row-avatar lp-app-row-avatar-amber">F</span>
+                    </span>
+                  </div>
+                  <div class="lp-app-row lp-app-row-add">
+                    <span class="lp-app-row-name lp-app-row-name-add">
+                      <span class="lp-app-row-add-plus">+</span>
+                      {{ 'Add field' if lang == 'en' else 'إضافة حقل' }}
+                    </span>
+                  </div>
+                </div>
+                <div class="lp-app-group">
+                  <div class="lp-app-group-head">
+                    <span class="lp-app-collapse-arrow">▾</span>
+                    <span class="lp-app-chip lp-app-chip-progress">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                      IN PROGRESS
+                    </span>
+                    <span class="lp-app-count">3</span>
+                  </div>
+                  <div class="lp-app-row">
+                    <span class="lp-app-row-name">
+                      <span class="lp-app-flag" aria-hidden="true"></span>
+                      {{ 'Pharmacy Stamp' if lang == 'en' else 'ختم الصيدلية' }}
+                    </span>
+                    <span class="lp-app-row-asn">
+                      <span class="lp-app-row-avatar lp-app-row-avatar-red">G</span>
+                    </span>
+                  </div>
+                  <div class="lp-app-row">
+                    <span class="lp-app-row-name">
+                      <span class="lp-app-row-arrow">▸</span>
+                      {{ 'Signature Match' if lang == 'en' else 'مطابقة التوقيع' }}
+                      <span class="lp-app-row-meta">1</span>
+                    </span>
+                    <span class="lp-app-row-asn">
+                      <span class="lp-app-row-avatar lp-app-row-avatar-blue">H</span>
+                      <span class="lp-app-row-avatar lp-app-row-avatar-green">I</span>
+                    </span>
+                  </div>
+                  <div class="lp-app-row">
+                    <span class="lp-app-row-name">
+                      <span class="lp-app-row-arrow">▸</span>
+                      {{ 'Date Validation' if lang == 'en' else 'فحص التاريخ' }}
+                      <svg class="lp-app-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      <span class="lp-app-row-meta">5</span>
+                      <span class="lp-app-row-meta lp-app-row-meta-red">1</span>
+                    </span>
+                    <span class="lp-app-row-asn">
+                      <span class="lp-app-row-avatar lp-app-row-avatar-yellow">J</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
       </div>
     </section>
 
-    {# Customer logo strip — extracted from the hero to a separate light
-       strip so the mint band is the page's single saturated moment. #}
-    <section class="lp-trust-logos">
-      <p class="lp-trust-logos-label">
-        {{ 'Used by professionals at teams across MENA' if lang == 'en' else 'يستخدمه مهنيون في فرق عبر المنطقة' }}
-      </p>
-      <ul class="lp-customer-logos">
+    {# Full-width TRUSTED BY band — pulled OUT of the hero text column so
+       it can span the page width (ClickUp pattern). Label on the left,
+       6 logos centered/distributed across the rest of the row. #}
+    <section class="lp-hero-trustband">
+      <span class="lp-hero-trust-label">{{ 'TRUSTED BY' if lang == 'en' else 'يثق بها' }}</span>
+      <ul class="lp-hero-trust-logos">
         <li>Vodafone</li>
-        <li>e& <small>etisalat</small></li>
         <li>STC</li>
         <li>aramex</li>
         <li>CIB</li>
         <li>EFG</li>
         <li>talabat</li>
-        <li>careem</li>
       </ul>
     </section>
 
@@ -1380,6 +1709,58 @@ result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
           show(errEl);
           statusEl.textContent = isAr ? 'فشل' : 'Failed';
         }
+      }
+    })();
+  </script>
+
+  {# ── Hero animations: counter count-up + JSON variant cycler ────── #}
+  <script nonce="{{ csp_nonce }}">
+    (function () {
+      // Respect prefers-reduced-motion.
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* ─── A. Counter count-up: 0 → 2,847 over 1.5s, ease-out cubic ─── */
+      const counter = document.querySelector('.lp-shot-counter-num');
+      if (counter) {
+        const target = 2847;
+        if (reduce) {
+          counter.textContent = target.toLocaleString();
+        } else {
+          const dur = 1500;
+          let start = null;
+          counter.textContent = '0';
+          function step(now) {
+            if (start === null) start = now;
+            const t = Math.min(1, (now - start) / dur);
+            const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+            counter.textContent = Math.round(target * eased).toLocaleString();
+            if (t < 1) requestAnimationFrame(step);
+          }
+          // Tiny delay so the count-up runs after the typewriter starts.
+          setTimeout(function () { requestAnimationFrame(step); }, 350);
+        }
+      }
+
+      /* ─── D. JSON variant cycler: swap every 5s + re-trigger typewriter ─── */
+      const variants = document.querySelectorAll('.lp-shot-result-variant');
+      if (!reduce && variants.length > 1) {
+        let i = 0;
+        setInterval(function () {
+          variants[i].hidden = true;
+          variants[i].removeAttribute('data-active');
+          i = (i + 1) % variants.length;
+          variants[i].hidden = false;
+          variants[i].setAttribute('data-active', '');
+          // Re-trigger the typewriter row reveal by nuking and re-adding the
+          // CSS animation. Force reflow between steps so the browser sees
+          // the value change.
+          const rows = variants[i].querySelectorAll('.lp-shot-result-row');
+          rows.forEach(function (row) {
+            row.style.animation = 'none';
+            void row.offsetWidth;
+            row.style.animation = '';
+          });
+        }, 5000);
       }
     })();
   </script>

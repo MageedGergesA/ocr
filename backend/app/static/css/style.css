@@ -7756,3 +7756,2216 @@ body.lp-body {
 /* National-ID doc mock — was cream/yellow gradient. Flatten. */
 
 
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1a — HERO REPAINT
+   ════════════════════════════════════════════════════════════════════
+   Replaces the teknolines mint-band hero with the ClickUp pattern
+   (studied from clickup.com/lp homepage):
+     · White page, white hero band (no saturated band here)
+     · Light contained card holding H1 + visual
+     · ONE black pill CTA (no twin CTAs)
+     · ONE accent color across doctype icons (mint), not 6 rainbow
+   This is appended AFTER the teknolines lockdown so all !important
+   rules from 1a–1h cascade-override cleanly.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* Page canvas stays white. */
+body.lp-body { background: #fff !important; background-image: none !important; }
+[data-theme="dark"] body.lp-body { background: #0b1018 !important; background-image: none !important; }
+
+/* Hero band — strip the mint gradient, go white. */
+.lp-hero {
+  padding: 96px 24px 80px !important;
+  background: #fff !important;
+  background-image: none !important;
+  color: var(--ink) !important;
+  border: 0 !important;
+  position: relative;
+  overflow: visible !important;
+}
+.lp-hero::before { display: none !important; }
+.lp-hero::after { display: none !important; }
+[data-theme="dark"] .lp-hero {
+  background: #0b1018 !important;
+  background-image: none !important;
+}
+
+/* Hero grid — typography directly on the white page (ClickUp pattern,
+   no card wrapper). The doctype tiles are already their own bordered
+   cards; the headline column sits naked on white. */
+.lp-hero-grid {
+  position: relative;
+  max-width: 1240px;
+  margin: 0 auto;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 48px !important;
+}
+@media (min-width: 980px) {
+  .lp-hero-grid {
+    grid-template-columns: 1fr 1.15fr !important;
+    gap: 56px !important;
+    align-items: center;
+    padding: 0 !important;
+  }
+}
+[data-theme="dark"] .lp-hero-grid {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.lp-hero-text { padding: 0 !important; background: transparent !important; }
+.lp-hero-visual { padding: 0 !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
+
+/* Partner-pill — bordered white pill (no shadow needed on light bg). */
+.lp-partner-pill {
+  background: #fff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: none !important;
+  color: #0f172a !important;
+}
+[data-theme="dark"] .lp-partner-pill {
+  background: #1f2937 !important;
+  border-color: #2d3748 !important;
+  color: #e5e7eb !important;
+}
+.lp-partner-dot { background: #10b981 !important; color: #fff !important; }
+
+/* H1 — dark, calm scale (ClickUp uses ~56px, single-weight). */
+.lp-hero-text .lp-h1 {
+  font-size: 56px !important;
+  line-height: 1.06 !important;
+  letter-spacing: -0.025em !important;
+  font-weight: 800 !important;
+  color: #0a0a0a !important;
+  margin: 0 0 24px !important;
+  text-wrap: balance;
+}
+@media (max-width: 980px) {
+  .lp-hero-text .lp-h1 { font-size: 42px !important; }
+}
+@media (max-width: 640px) {
+  .lp-hero-text .lp-h1 { font-size: 34px !important; }
+}
+[data-theme="dark"] .lp-hero-text .lp-h1 { color: #f1f5f9 !important; }
+.lp-hero-text .lp-h1 .lp-hi-chip {
+  all: unset; color: #10b981; font-weight: 800;
+}
+
+.lp-hero-text .lp-lead {
+  color: #475569 !important;
+  font-size: 17px !important;
+  line-height: 1.6 !important;
+  margin: 0 0 16px !important;
+  max-width: 520px;
+}
+[data-theme="dark"] .lp-hero-text .lp-lead { color: #cbd5e1 !important; }
+.lp-hero-text .lp-lead b { color: #0a0a0a !important; font-weight: 600 !important; }
+[data-theme="dark"] .lp-hero-text .lp-lead b { color: #f1f5f9 !important; }
+
+.lp-hero-microtrust {
+  color: #6b7280 !important;
+  font-size: 13px !important;
+  margin: 0 0 28px !important;
+}
+[data-theme="dark"] .lp-hero-microtrust { color: #94a3b8 !important; }
+
+/* CTA — single BLACK pill (the ClickUp signature move). */
+.lp-hero-text .lp-hero-cta {
+  margin: 0 0 48px !important;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.lp-hero-text .lp-btn-primary {
+  background: #0b0b0b !important;
+  color: #fff !important;
+  border: 1px solid #0b0b0b !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06) !important;
+  animation: none !important;
+  font-weight: 600 !important;
+}
+.lp-hero-text .lp-btn-primary:hover {
+  background: #1f1f1f !important;
+  color: #fff !important;
+  border-color: #1f1f1f !important;
+  transform: translateY(-1px);
+}
+[data-theme="dark"] .lp-hero-text .lp-btn-primary {
+  background: #fff !important;
+  color: #0a0a0a !important;
+  border-color: #fff !important;
+}
+[data-theme="dark"] .lp-hero-text .lp-btn-primary:hover {
+  background: #f1f5f9 !important;
+  color: #0a0a0a !important;
+  border-color: #f1f5f9 !important;
+}
+
+/* Stats strip — dark text on light. */
+.lp-hero-stats {
+  padding-top: 28px !important;
+  border-top: 1px solid #e5e7eb !important;
+  max-width: 540px;
+}
+[data-theme="dark"] .lp-hero-stats { border-top-color: #1f2937 !important; }
+.lp-hero-stat-num { font-size: 30px !important; color: #0a0a0a !important; }
+[data-theme="dark"] .lp-hero-stat-num { color: #f1f5f9 !important; }
+.lp-hero-stat-num-sm { font-size: 20px !important; }
+.lp-hero-stat-lbl { color: #6b7280 !important; }
+[data-theme="dark"] .lp-hero-stat-lbl { color: #94a3b8 !important; }
+.lp-hero-stat-divider { background: #e5e7eb !important; }
+[data-theme="dark"] .lp-hero-stat-divider { background: #1f2937 !important; }
+
+/* ─── Right column: doctype grid — ONE accent (mint), not 6 rainbow ─ */
+.lp-doctype-card {
+  background: #fff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: none !important;
+  border-radius: 14px !important;
+  padding: 20px 16px !important;
+  min-height: 156px !important;
+}
+[data-theme="dark"] .lp-doctype-card {
+  background: #1f2937 !important;
+  border-color: #2d3748 !important;
+}
+
+.lp-doctype-icon-blue,
+.lp-doctype-icon-green,
+.lp-doctype-icon-teal,
+.lp-doctype-icon-orange,
+.lp-doctype-icon-purple,
+.lp-doctype-icon-red {
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 1px solid #d1fae5 !important;
+}
+[data-theme="dark"] .lp-doctype-icon-blue,
+[data-theme="dark"] .lp-doctype-icon-green,
+[data-theme="dark"] .lp-doctype-icon-teal,
+[data-theme="dark"] .lp-doctype-icon-orange,
+[data-theme="dark"] .lp-doctype-icon-purple,
+[data-theme="dark"] .lp-doctype-icon-red {
+  background: rgba(16,185,129,.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16,185,129,.25) !important;
+}
+
+.lp-doctype-name { color: #0a0a0a !important; }
+[data-theme="dark"] .lp-doctype-name { color: #f1f5f9 !important; }
+.lp-doctype-desc { color: #6b7280 !important; }
+[data-theme="dark"] .lp-doctype-desc { color: #94a3b8 !important; }
+.lp-doctype-more { color: #6b7280 !important; }
+[data-theme="dark"] .lp-doctype-more { color: #94a3b8 !important; }
+
+/* Mobile padding diet */
+@media (max-width: 640px) {
+  .lp-hero { padding: 64px 16px !important; }
+  .lp-hero-grid { padding: 36px 24px !important; border-radius: 18px !important; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1b — HERO STRUCTURE REWRITE
+   ════════════════════════════════════════════════════════════════════
+   Replaces the lp-lead paragraph with 3 checkmark bullets, the stats
+   strip with a 12-pill feature strip, and the doctype tile grid with
+   a real-looking product-UI mock (sidebar + main panel + extracted
+   fields). Goal: pixel-feel parity with clickup.com/lp hero.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* ─── 3 checkmark bullets (replaces .lp-lead) ─────────────────────── */
+.lp-hero-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lp-hero-bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.lp-bullet-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: #10b981;
+  margin-top: 2px;
+}
+.lp-bullet-check svg { width: 18px; height: 18px; }
+.lp-bullet-text {
+  font-size: 17px;
+  line-height: 1.55;
+  color: #475569;
+}
+[data-theme="dark"] .lp-bullet-text { color: #cbd5e1; }
+.lp-bullet-text b {
+  color: #0a0a0a;
+  font-weight: 700;
+  margin-right: 2px;
+}
+[data-theme="dark"] .lp-bullet-text b { color: #f1f5f9; }
+[dir="rtl"] .lp-bullet-text b { margin-right: 0; margin-left: 2px; }
+
+/* ─── CTA + inline microcopy ──────────────────────────────────────── */
+.lp-hero-text .lp-hero-cta {
+  margin: 0 0 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  flex-wrap: wrap;
+}
+.lp-cta-micro {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+[data-theme="dark"] .lp-cta-micro { color: #94a3b8; }
+.lp-cta-micro div { white-space: nowrap; }
+
+/* ─── Tiny uppercase eyebrow above pill strip ─────────────────────── */
+.lp-hero-eyebrow {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.16em !important;
+  color: #6b7280 !important;
+  text-transform: uppercase !important;
+  margin: 0 0 16px !important;
+}
+[data-theme="dark"] .lp-hero-eyebrow { color: #94a3b8 !important; }
+.lp-hero-eyebrow-dot {
+  display: inline-block;
+  margin: 0 8px;
+  color: #d1d5db;
+}
+[data-theme="dark"] .lp-hero-eyebrow-dot { color: #475569; }
+
+/* ─── Feature pill strip (replaces stats strip) ───────────────────── */
+.lp-hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 520px;
+}
+.lp-feature-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  transition: border-color .15s;
+}
+[data-theme="dark"] .lp-feature-pill {
+  background: #131a25;
+  border-color: #2d3748;
+  color: #cbd5e1;
+}
+.lp-feature-pill-active {
+  background: linear-gradient(135deg, #fff 0%, #fff 100%);
+  border: 1px solid #c7d2fe;
+  color: #4f46e5;
+  position: relative;
+  padding-right: 12px;
+}
+.lp-feature-pill-active::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  padding: 1px;
+  background: linear-gradient(135deg, #818cf8, #f472b6);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+[data-theme="dark"] .lp-feature-pill-active {
+  background: #131a25;
+  color: #a5b4fc;
+}
+.lp-pill-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #818cf8, #f472b6);
+  color: #fff;
+  flex: none;
+}
+.lp-pill-check svg { width: 11px; height: 11px; }
+
+/* ════════════════════════════════════════════════════════════════════
+   PRODUCT-UI MOCK (right column, ClickUp's Mango Inc. analog)
+   ──────────────────────────────────────────────────────────────────── */
+
+.lp-app-mock {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.04),
+    0 8px 24px rgba(0,0,0,.06),
+    0 24px 60px rgba(0,0,0,.04);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  color: #1f2937;
+  max-width: 100%;
+  width: 100%;
+  line-height: 1.4;
+  user-select: none;
+}
+[data-theme="dark"] .lp-app-mock {
+  background: #1a2333;
+  border-color: #2d3748;
+  color: #e5e7eb;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.2),
+    0 8px 24px rgba(0,0,0,.3),
+    0 24px 60px rgba(0,0,0,.2);
+}
+
+/* Topbar */
+.lp-app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 12px;
+}
+[data-theme="dark"] .lp-app-topbar { border-bottom-color: #2d3748; }
+.lp-app-workspace {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}
+[data-theme="dark"] .lp-app-workspace { border-color: #2d3748; }
+.lp-app-ws-mark {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: #f59e0b;
+  border-radius: 3px;
+  color: transparent;
+  font-size: 0;
+}
+.lp-app-caret { width: 12px; height: 12px; color: #6b7280; }
+.lp-app-tools { display: flex; align-items: center; gap: 8px; }
+.lp-app-search-bar {
+  display: inline-block;
+  width: 180px;
+  height: 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+[data-theme="dark"] .lp-app-search-bar { border-color: #2d3748; }
+.lp-app-cog {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: #6b7280;
+}
+[data-theme="dark"] .lp-app-cog { color: #94a3b8; }
+.lp-app-cog svg { width: 14px; height: 14px; }
+
+/* Body — three columns: rail + sidebar + main */
+.lp-app-body {
+  display: grid;
+  grid-template-columns: 36px 180px 1fr;
+  min-height: 420px;
+}
+
+/* Rail */
+.lp-app-rail {
+  background: linear-gradient(180deg, #1f2937 0%, #0f172a 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0;
+}
+.lp-app-rail-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: rgba(255,255,255,.55);
+}
+.lp-app-rail-icon svg { width: 16px; height: 16px; }
+.lp-app-rail-icon-active {
+  background: rgba(255,255,255,.10);
+  color: #fff;
+}
+
+/* Sidebar */
+.lp-app-sidebar {
+  background: #fbfbfc;
+  border-right: 1px solid #f1f5f9;
+  padding: 6px 0;
+  overflow: hidden;
+}
+[data-theme="dark"] .lp-app-sidebar {
+  background: #131a25;
+  border-right-color: #2d3748;
+}
+.lp-app-sidebar-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.lp-app-sidebar-title { flex: 1; }
+.lp-app-sidebar-spacer { flex: 1; }
+.lp-app-sidebar-plus {
+  font-size: 14px;
+  color: #6b7280;
+  cursor: pointer;
+}
+[data-theme="dark"] .lp-app-sidebar-plus { color: #94a3b8; }
+.lp-app-caret-mini { width: 10px; height: 10px; color: #6b7280; }
+[data-theme="dark"] .lp-app-caret-mini { color: #94a3b8; }
+.lp-app-sidebar-section {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  text-transform: none;
+  padding: 10px 12px 4px;
+}
+.lp-app-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.lp-app-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #1f2937;
+}
+[data-theme="dark"] .lp-app-item { color: #e5e7eb; }
+.lp-app-item-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lp-app-item-active {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 600;
+}
+[data-theme="dark"] .lp-app-item-active {
+  background: rgba(99,102,241,.20);
+  color: #a5b4fc;
+}
+.lp-app-item-muted { color: #94a3b8; }
+[data-theme="dark"] .lp-app-item-muted { color: #6b7280; }
+.lp-app-i {
+  width: 14px;
+  height: 14px;
+  color: #6b7280;
+  flex: none;
+}
+.lp-app-item-active .lp-app-i { color: #4f46e5; }
+.lp-app-bullet {
+  width: 14px;
+  text-align: center;
+  font-size: 11px;
+  color: #6b7280;
+  flex: none;
+}
+.lp-app-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  flex: none;
+}
+.lp-app-badge-red { background: #ef4444; }
+.lp-app-mini-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 8px;
+  font-weight: 700;
+  color: #fff;
+  flex: none;
+}
+.lp-app-ma-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.lp-app-ma-pink { background: linear-gradient(135deg, #f472b6, #db2777); }
+.lp-app-ma-amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.lp-app-space-square {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  color: #fff;
+  flex: none;
+}
+.lp-app-space-square svg { width: 9px; height: 9px; }
+.lp-app-space-red { background: #ef4444; }
+
+/* Main panel */
+.lp-app-main {
+  padding: 8px 12px;
+  overflow: hidden;
+}
+.lp-app-main-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 8px;
+}
+.lp-app-main-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+.lp-app-main-icon svg { width: 14px; height: 14px; border-radius: 3px; }
+.lp-app-main-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+.lp-app-main-star {
+  width: 12px;
+  height: 12px;
+  color: #d1d5db;
+  margin-left: 4px;
+}
+[data-theme="dark"] .lp-app-main-star { color: #475569; }
+
+.lp-app-tabs {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid #f1f5f9;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+[data-theme="dark"] .lp-app-tabs { border-bottom-color: #2d3748; }
+.lp-app-tabs::-webkit-scrollbar { display: none; }
+.lp-app-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  white-space: nowrap;
+}
+[data-theme="dark"] .lp-app-tab { color: #94a3b8; }
+.lp-app-tab svg { width: 11px; height: 11px; flex: none; }
+.lp-app-tab-active {
+  color: #0a0a0a;
+  font-weight: 600;
+  border-bottom: 2px solid #0a0a0a;
+  padding-bottom: 2px;
+}
+[data-theme="dark"] .lp-app-tab-active {
+  color: #f1f5f9;
+  border-bottom-color: #f1f5f9;
+}
+.lp-app-tab-add { color: #9ca3af; }
+
+.lp-app-table-head {
+  display: grid;
+  grid-template-columns: 1fr 80px;
+  padding: 6px 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #f1f5f9;
+}
+[data-theme="dark"] .lp-app-table-head { border-bottom-color: #2d3748; }
+
+.lp-app-group { padding: 8px 0 0; }
+.lp-app-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+.lp-app-collapse-arrow {
+  font-size: 10px;
+  color: #6b7280;
+}
+[data-theme="dark"] .lp-app-collapse-arrow { color: #94a3b8; }
+.lp-app-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.lp-app-chip svg { width: 10px; height: 10px; }
+.lp-app-chip-done { background: #10b981; color: #fff; }
+.lp-app-chip-progress { background: #06b6d4; color: #fff; }
+.lp-app-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+[data-theme="dark"] .lp-app-count { color: #94a3b8; }
+
+.lp-app-row {
+  display: grid;
+  grid-template-columns: 1fr 80px;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 12px;
+}
+[data-theme="dark"] .lp-app-row { border-bottom-color: rgba(255,255,255,.04); }
+.lp-app-row-indent { padding-left: 24px; }
+.lp-app-row-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #1f2937;
+}
+[data-theme="dark"] .lp-app-row-name { color: #e5e7eb; }
+.lp-app-row-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid #d1d5db;
+  flex: none;
+}
+.lp-app-row-check-empty { background: transparent; }
+.lp-app-row-check-done {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+.lp-app-row-check-done svg { width: 9px; height: 9px; }
+.lp-app-row-meta {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  color: #6b7280;
+  padding: 0 4px;
+  margin-left: 4px;
+}
+.lp-app-row-meta-red { color: #ef4444; font-weight: 700; }
+.lp-app-row-asn {
+  display: inline-flex;
+  align-items: center;
+  gap: -4px;
+}
+.lp-app-row-asn > * + * { margin-left: -6px; }
+.lp-app-row-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  border: 1.5px solid #fff;
+  box-sizing: border-box;
+  flex: none;
+}
+[data-theme="dark"] .lp-app-row-avatar { border-color: #1a2333; }
+.lp-app-row-avatar-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.lp-app-row-avatar-green { background: linear-gradient(135deg, #10b981, #047857); }
+.lp-app-row-avatar-purple { background: linear-gradient(135deg, #a78bfa, #6d28d9); }
+.lp-app-row-avatar-pink { background: linear-gradient(135deg, #f472b6, #db2777); }
+.lp-app-row-avatar-teal { background: linear-gradient(135deg, #2dd4bf, #0d9488); }
+.lp-app-row-avatar-amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.lp-app-row-avatar-red { background: linear-gradient(135deg, #f87171, #b91c1c); }
+.lp-app-row-avatar-yellow { background: linear-gradient(135deg, #fbbf24, #b45309); }
+
+.lp-app-flag {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f59e0b;
+  flex: none;
+}
+.lp-app-row-arrow {
+  font-size: 10px;
+  color: #6b7280;
+  width: 14px;
+  text-align: center;
+}
+.lp-app-lock {
+  width: 11px;
+  height: 11px;
+  color: #6b7280;
+  margin-left: 2px;
+}
+[data-theme="dark"] .lp-app-lock { color: #94a3b8; }
+.lp-app-row-add { padding-left: 24px; opacity: .55; }
+.lp-app-row-name-add { color: #94a3b8; }
+.lp-app-row-add-plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* Mobile collapse — stack on narrow screens */
+@media (max-width: 640px) {
+  .lp-app-body {
+    grid-template-columns: 36px 160px 1fr;
+    min-height: 360px;
+  }
+  .lp-app-search-bar { width: 100px; }
+  .lp-feature-pill { font-size: 12px; padding: 5px 12px; }
+  .lp-bullet-text { font-size: 16px; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1c — REAL SCREENSHOT INSTEAD OF FAKE MOCK
+   ════════════════════════════════════════════════════════════════════
+   Swaps the stylized lp-app-mock for a real /app capture from the
+   running product. Two captures (light + dark) live in static/img/hero
+   and swap via [data-theme].
+   ──────────────────────────────────────────────────────────────────── */
+
+.lp-app-shot {
+  width: 100%;
+  aspect-ratio: 1180 / 760;
+  background-image: url('/static/img/hero/app_light.png');
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.04),
+    0 8px 24px rgba(0,0,0,.06),
+    0 24px 60px rgba(0,0,0,.04);
+  overflow: hidden;
+}
+[data-theme="dark"] .lp-app-shot {
+  background-image: url('/static/img/hero/app_dark.png');
+  border-color: #2d3748;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.2),
+    0 8px 24px rgba(0,0,0,.3),
+    0 24px 60px rgba(0,0,0,.2);
+}
+
+/* Override stale dark-mode .lp-hero-text and .lp-hero-visual backgrounds
+   from N.2 + Figma-era waves (lines ~4083 + ~6967). They paint dark fills
+   that look like a stray rectangle on the page. Transparent in both modes. */
+.lp-hero-text,
+.lp-hero-visual,
+[data-theme="dark"] .lp-hero-text,
+[data-theme="dark"] .lp-hero-visual {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1d — STACKED COLLAGE w/ BROWSER CHROME
+   ════════════════════════════════════════════════════════════════════
+   Replaces the single .lp-app-shot with 2 stacked cards (front = /app,
+   back = /dashboard peeking behind). Each card gets macOS-style window
+   chrome (traffic-light dots + URL). Both lang-aware via [lang=].
+   The single .lp-app-shot CSS above is now dead (sweep next pass).
+   ──────────────────────────────────────────────────────────────────── */
+
+.lp-shots {
+  position: relative;
+  width: 100%;
+  padding: 32px 24px 0 0;
+  isolation: isolate;
+}
+[dir="rtl"] .lp-shots { padding: 32px 0 0 24px; }
+
+.lp-shot-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.04),
+    0 12px 32px rgba(0,0,0,.08),
+    0 32px 80px rgba(0,0,0,.05);
+  overflow: hidden;
+}
+[data-theme="dark"] .lp-shot-card {
+  border-color: #1f2937;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.2),
+    0 12px 32px rgba(0,0,0,.3),
+    0 32px 80px rgba(0,0,0,.2);
+}
+
+/* Front card sits in normal flow, full column width */
+.lp-shot-front {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+/* Back card is offset to peek out behind the top-right (top-left in RTL) */
+.lp-shot-back {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60%;
+  z-index: 1;
+  transform: rotate(3deg);
+  transform-origin: top right;
+}
+[dir="rtl"] .lp-shot-back {
+  right: auto;
+  left: 0;
+  transform: rotate(-3deg);
+  transform-origin: top left;
+}
+
+/* Window chrome — traffic lights + URL */
+.lp-shot-chrome {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  background: #f6f6f7;
+  border-bottom: 1px solid #ebedf0;
+}
+[data-theme="dark"] .lp-shot-chrome {
+  background: #1a2333;
+  border-bottom-color: #2d3748;
+}
+.lp-shot-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+}
+.lp-shot-dot-red    { background: #ff5f57; }
+.lp-shot-dot-yellow { background: #febc2e; }
+.lp-shot-dot-green  { background: #28c840; }
+.lp-shot-url {
+  margin-left: auto;
+  font-size: 11px;
+  color: #8a8a8e;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: 0.01em;
+}
+[dir="rtl"] .lp-shot-url { margin-left: 0; margin-right: auto; }
+[data-theme="dark"] .lp-shot-url { color: #94a3b8; }
+
+/* Screenshot area inside each card */
+.lp-shot-img {
+  width: 100%;
+  aspect-ratio: 1180 / 760;
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+}
+
+/* Language-aware screenshot swap.
+   The HTML root has lang="{{ lang or 'ar' }}" (per index.html line 2). */
+html[lang="en"] .lp-shot-app .lp-shot-img        { background-image: url('/static/img/hero/app_en.png'); }
+html[lang="ar"] .lp-shot-app .lp-shot-img        { background-image: url('/static/img/hero/app_ar.png'); }
+html[lang="en"] .lp-shot-dashboard .lp-shot-img  { background-image: url('/static/img/hero/dashboard_en.png'); }
+html[lang="ar"] .lp-shot-dashboard .lp-shot-img  { background-image: url('/static/img/hero/dashboard_ar.png'); }
+
+/* Mobile: hide the back card so the front stays focused */
+@media (max-width: 720px) {
+  .lp-shots { padding: 0; }
+  .lp-shot-back { display: none; }
+}
+
+/* Kill the dead .lp-app-shot (CSS still present from 1c but markup gone) */
+.lp-app-shot { display: none !important; }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1e — FLOATING JSON RESULT OVERLAY
+   ════════════════════════════════════════════════════════════════════
+   Adds the punchline to the hero: the OUTPUT of the product. A floating
+   black terminal-style card sits in front of the stacked screenshots
+   showing real JSON extracted from a prescription (mixed Arabic + Latin
+   values). Subtle vertical float animation.
+   ──────────────────────────────────────────────────────────────────── */
+
+.lp-shot-result {
+  position: absolute;
+  bottom: -16px;
+  left: -36px;
+  z-index: 4;
+  width: 290px;
+  max-width: 86vw;
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.10),
+    0 24px 48px rgba(0,0,0,.18),
+    0 48px 96px rgba(0,0,0,.08);
+  overflow: hidden;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+  animation: lpShotFloat 7s ease-in-out infinite;
+}
+[dir="rtl"] .lp-shot-result {
+  left: auto;
+  right: -36px;
+}
+
+@keyframes lpShotFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+.lp-shot-result-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+.lp-shot-result-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.22);
+  color: #fff;
+  flex: none;
+}
+.lp-shot-result-check svg { width: 10px; height: 10px; }
+.lp-shot-result-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lp-shot-result-time {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: .85;
+  font-variant-numeric: tabular-nums;
+}
+
+.lp-shot-result-body {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.lp-shot-result-row {
+  display: grid;
+  grid-template-columns: 130px auto 1fr;
+  gap: 4px;
+  align-items: baseline;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.lp-shot-result-key   { color: #93c5fd; }
+.lp-shot-result-colon { color: #64748b; }
+.lp-shot-result-val   { color: #5eead4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lp-shot-result-num   { color: #fbbf24; }
+
+/* Mobile: keep the result card hidden so the front screenshot stays clean */
+@media (max-width: 720px) {
+  .lp-shot-result { display: none; }
+}
+
+/* Push the .lp-shots wrapper down a bit so the result card has room to
+   sit at the bottom-left without spilling off the page. */
+.lp-shots { padding-bottom: 24px; }
+
+/* Tighten hero top padding — was 96px, drop to 64px so the H1 sits
+   closer to the header chrome (more "premium SaaS" feel). */
+@media (min-width: 980px) {
+  .lp-hero { padding-top: 64px !important; padding-bottom: 64px !important; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1f — HERO POLISH (typewriter JSON, trust strip, pulse)
+   ════════════════════════════════════════════════════════════════════
+   Three high-impact micro-polish moves layered on top of the hero:
+     · JSON result rows reveal with a staggered slide-in (typewriter)
+     · "TRUSTED BY · Vodafone · STC · ..." strip below the feature pills
+     · Pulsing mint ring on the partner-pill green dot (signals "live")
+   ──────────────────────────────────────────────────────────────────── */
+
+/* ─── 1. Inline trust strip below the feature pills ───────────────── */
+.lp-hero-trust {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.lp-hero-trust-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #9ca3af;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+[data-theme="dark"] .lp-hero-trust-label { color: #6b7280; }
+.lp-hero-trust-logos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.lp-hero-trust-logos li {
+  font-size: 14px;
+  font-weight: 700;
+  color: #9ca3af;
+  letter-spacing: -0.01em;
+  transition: color .15s;
+}
+.lp-hero-trust-logos li:hover { color: #475569; }
+[data-theme="dark"] .lp-hero-trust-logos li { color: #6b7280; }
+[data-theme="dark"] .lp-hero-trust-logos li:hover { color: #94a3b8; }
+@media (max-width: 640px) {
+  .lp-hero-trust { gap: 12px; margin-top: 24px; }
+  .lp-hero-trust-logos { gap: 14px; }
+  .lp-hero-trust-logos li { font-size: 13px; }
+}
+
+/* ─── 2. JSON result rows reveal — staggered typewriter ──────────── */
+.lp-shot-result-row {
+  opacity: 0;
+  transform: translateX(-8px);
+  animation: lpJsonRow 0.45s ease-out forwards;
+}
+[dir="rtl"] .lp-shot-result-row { transform: translateX(8px); }
+.lp-shot-result-body .lp-shot-result-row:nth-child(1) { animation-delay: 0.40s; }
+.lp-shot-result-body .lp-shot-result-row:nth-child(2) { animation-delay: 0.55s; }
+.lp-shot-result-body .lp-shot-result-row:nth-child(3) { animation-delay: 0.70s; }
+.lp-shot-result-body .lp-shot-result-row:nth-child(4) { animation-delay: 0.85s; }
+.lp-shot-result-body .lp-shot-result-row:nth-child(5) { animation-delay: 1.00s; }
+.lp-shot-result-body .lp-shot-result-row:nth-child(6) { animation-delay: 1.15s; }
+
+@keyframes lpJsonRow {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Respect reduced-motion users — skip the typewriter and the float */
+@media (prefers-reduced-motion: reduce) {
+  .lp-shot-result-row {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .lp-shot-result { animation: none !important; }
+}
+
+/* ─── 3. Pulsing mint ring on the partner-pill dot ────────────────── */
+.lp-partner-dot {
+  position: relative;
+  z-index: 0;
+}
+.lp-partner-dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: #10b981;
+  z-index: -1;
+  animation: lpPartnerPulse 2.4s ease-out infinite;
+}
+@keyframes lpPartnerPulse {
+  0%   { transform: scale(1);   opacity: .55; }
+  70%  { transform: scale(2.0); opacity: 0; }
+  100% { transform: scale(2.0); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-partner-dot::after { animation: none; opacity: 0; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1g — HERO DEPTH + LIVE COUNTER + JSON SHRINK
+   ════════════════════════════════════════════════════════════════════
+   Three depth/balance moves:
+     1. Soft radial mint glow behind the .lp-hero-visual screenshots —
+        gives the right column "premium SaaS depth" without losing
+        the white-page aesthetic.
+     2. Live-counter pill top-right (2,847 extracted today) — balances
+        the bottom-left weight of the JSON card with a top-right weight.
+     3. JSON card shrunk + repositioned to PEEK (not dominate). Was 290px
+        wide, now 244px. Lifted off the front card so the product UI
+        underneath stays visible.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* 1. Soft mint glow behind the screenshots — depth without color */
+.lp-hero-visual {
+  position: relative;
+  isolation: isolate;
+}
+.lp-hero-visual::before {
+  content: "";
+  position: absolute;
+  inset: -40px -20px -40px -20px;
+  background:
+    radial-gradient(58% 58% at 55% 50%, rgba(16,185,129,.10) 0%, transparent 70%),
+    radial-gradient(40% 60% at 85% 30%, rgba(99,102,241,.07) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 40px;
+  filter: blur(1px);
+}
+[data-theme="dark"] .lp-hero-visual::before {
+  background:
+    radial-gradient(58% 58% at 55% 50%, rgba(16,185,129,.18) 0%, transparent 70%),
+    radial-gradient(40% 60% at 85% 30%, rgba(99,102,241,.14) 0%, transparent 70%);
+}
+
+/* 2. Live-counter pill — top-right of the .lp-shots wrapper */
+.lp-shot-counter {
+  position: absolute;
+  top: -4px;
+  right: 8px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 16px 8px 12px;
+  background: rgba(255,255,255,.95);
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.05),
+    0 8px 24px rgba(0,0,0,.08);
+  font-size: 12.5px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+[dir="rtl"] .lp-shot-counter {
+  right: auto;
+  left: 8px;
+  padding: 8px 12px 8px 16px;
+}
+[data-theme="dark"] .lp-shot-counter {
+  background: rgba(26,35,51,.92);
+  border-color: #2d3748;
+}
+.lp-shot-counter-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  position: relative;
+  flex: none;
+}
+.lp-shot-counter-dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: #10b981;
+  z-index: -1;
+  animation: lpCounterPulse 2s ease-out infinite;
+}
+@keyframes lpCounterPulse {
+  0%   { transform: scale(1);   opacity: .55; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.lp-shot-counter-num {
+  font-weight: 700;
+  color: #0a0a0a;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+[data-theme="dark"] .lp-shot-counter-num { color: #f1f5f9; }
+.lp-shot-counter-label {
+  color: #6b7280;
+  font-size: 12px;
+  white-space: nowrap;
+}
+[data-theme="dark"] .lp-shot-counter-label { color: #94a3b8; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-shot-counter-dot::after { animation: none; opacity: 0; }
+}
+@media (max-width: 720px) {
+  .lp-shot-counter { display: none; }
+}
+
+/* 3. JSON card — shrink + reposition so it peeks rather than covers */
+.lp-shot-result {
+  width: 244px !important;
+  bottom: -12px !important;
+  left: -52px !important;
+}
+[dir="rtl"] .lp-shot-result {
+  left: auto !important;
+  right: -52px !important;
+}
+.lp-shot-result-head {
+  padding: 9px 13px !important;
+  font-size: 11.5px !important;
+}
+.lp-shot-result-body {
+  padding: 11px 14px !important;
+  gap: 3px !important;
+}
+.lp-shot-result-row {
+  grid-template-columns: 110px auto 1fr !important;
+  font-size: 10.5px !important;
+  line-height: 1.5 !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1h — DRAMATIC DEPTH + LIVE CYCLING + COUNTER
+   ════════════════════════════════════════════════════════════════════
+   Four upgrades shipping together:
+     A. JS animates counter 0 → 2,847 on load (counter.js inline)
+     B. Stronger mint+indigo glow + slight 3D rotateY tilt on the stack
+     C. 3rd floating badge bottom-opposite-corner ("⚡ 1.8s · $0.002/doc")
+     D. JSON cycles between Prescription / Invoice / National ID every 5s
+        with typewriter reveal re-triggering on each variant switch
+   ──────────────────────────────────────────────────────────────────── */
+
+/* === B. Stronger glow + 3D perspective tilt === */
+.lp-hero-visual::before {
+  background:
+    radial-gradient(58% 58% at 55% 45%, rgba(16,185,129,.20) 0%, transparent 70%),
+    radial-gradient(42% 60% at 80% 30%, rgba(99,102,241,.14) 0%, transparent 70%),
+    radial-gradient(35% 45% at 25% 75%, rgba(244,114,182,.08) 0%, transparent 70%);
+  filter: blur(20px);
+}
+
+.lp-shots {
+  transform: perspective(2800px) rotateY(-4deg) rotateX(1deg);
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  transition: transform .4s ease;
+}
+[dir="rtl"] .lp-shots {
+  transform: perspective(2800px) rotateY(4deg) rotateX(1deg);
+}
+.lp-shots:hover {
+  transform: perspective(2800px) rotateY(-2deg) rotateX(0.5deg);
+}
+[dir="rtl"] .lp-shots:hover {
+  transform: perspective(2800px) rotateY(2deg) rotateX(0.5deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-shots,
+  [dir="rtl"] .lp-shots,
+  .lp-shots:hover,
+  [dir="rtl"] .lp-shots:hover {
+    transform: none !important;
+  }
+}
+
+/* === C. 3rd floating badge — bottom-opposite-corner to the JSON === */
+.lp-shot-badge {
+  position: absolute;
+  bottom: 8px;
+  right: -16px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #0a0a0a;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  letter-spacing: -0.01em;
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.20),
+    0 24px 48px rgba(0,0,0,.10);
+  white-space: nowrap;
+  animation: lpBadgeFloat 8s ease-in-out infinite;
+  animation-delay: 2s;
+}
+[dir="rtl"] .lp-shot-badge {
+  right: auto;
+  left: -16px;
+}
+.lp-shot-badge-icon {
+  width: 12px;
+  height: 12px;
+  color: #fbbf24;
+  flex: none;
+}
+@keyframes lpBadgeFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+@media (max-width: 720px) {
+  .lp-shot-badge { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-shot-badge { animation: none; }
+}
+
+/* === D. JSON variant cycler === */
+/* All variants stack in the same .lp-shot-result wrapper. Only the
+   [data-active] one is visible. The 'hidden' attribute is what JS toggles. */
+.lp-shot-result-variant[hidden] { display: none; }
+.lp-shot-result-variant[data-active] {
+  display: block;
+  animation: lpVariantIn 0.35s ease-out;
+}
+@keyframes lpVariantIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-shot-result-variant[data-active] { animation: none; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1i — ENTERPRISE PRESENCE BUMP
+   ════════════════════════════════════════════════════════════════════
+   Match ClickUp's "enterprise" weight precisely:
+     · CTA: bigger padding (16×32), 16px font, sharper radius
+     · Pills: taller (10×20), 14px font, vibrant 3-color gradient border
+       on active state + larger check
+     · Partner pill: subtle purple→pink gradient border (matches active pill)
+     · TRUSTED BY: label ABOVE the logos (Linear pattern), logos 20px Inter
+       Bold, single muted gray — reads as a real brand strip not text
+     · Right column: less aggressive 3D tilt + wider at lg+ so the
+       product screenshots feel BIG, not toy-sized
+   ──────────────────────────────────────────────────────────────────── */
+
+/* === CTA: enterprise-sized black pill === */
+.lp-hero-text .lp-btn-primary {
+  padding: 16px 32px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  letter-spacing: -0.005em !important;
+}
+
+/* === Feature pills: taller, vibrant active gradient === */
+.lp-feature-pill {
+  padding: 10px 20px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #1f2937 !important;
+  border-color: #e5e7eb !important;
+}
+[data-theme="dark"] .lp-feature-pill { color: #e5e7eb !important; }
+
+.lp-feature-pill-active {
+  padding: 10px 14px 10px 20px !important;
+  gap: 8px !important;
+  color: #1f2937 !important;
+  font-weight: 600 !important;
+}
+[dir="rtl"] .lp-feature-pill-active {
+  padding: 10px 20px 10px 14px !important;
+}
+[data-theme="dark"] .lp-feature-pill-active {
+  color: #f1f5f9 !important;
+}
+.lp-feature-pill-active::before {
+  padding: 1.5px !important;
+  background: linear-gradient(135deg, #6366f1 0%, #ec4899 50%, #f97316 100%) !important;
+}
+
+.lp-pill-check {
+  width: 18px !important;
+  height: 18px !important;
+}
+.lp-pill-check svg { width: 12px !important; height: 12px !important; }
+
+/* === Partner pill: gradient border like the active feature pill === */
+.lp-partner-pill {
+  position: relative;
+  padding: 9px 18px 9px 8px !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  border: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+[dir="rtl"] .lp-partner-pill {
+  padding: 9px 8px 9px 18px !important;
+}
+.lp-partner-pill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  padding: 1.25px;
+  background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+[data-theme="dark"] .lp-partner-pill {
+  background: #131a25 !important;
+  color: #e5e7eb !important;
+}
+[data-theme="dark"] .lp-partner-pill::before {
+  background: linear-gradient(135deg, #818cf8 0%, #f472b6 100%);
+}
+
+/* === TRUSTED BY: label above, big Inter-Bold logos in single row === */
+.lp-hero-trust {
+  margin-top: 44px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 16px !important;
+}
+[dir="rtl"] .lp-hero-trust { align-items: flex-end !important; }
+
+.lp-hero-trust-label {
+  font-size: 11px !important;
+  letter-spacing: 0.22em !important;
+  color: #9ca3af !important;
+  font-weight: 600 !important;
+}
+
+.lp-hero-trust-logos {
+  display: flex !important;
+  gap: 40px !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+.lp-hero-trust-logos li {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #9ca3af !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1 !important;
+  transition: color .15s, transform .15s !important;
+}
+.lp-hero-trust-logos li:hover {
+  color: #475569 !important;
+  transform: translateY(-1px) !important;
+}
+[data-theme="dark"] .lp-hero-trust-logos li { color: #6b7280 !important; }
+[data-theme="dark"] .lp-hero-trust-logos li:hover { color: #cbd5e1 !important; }
+
+@media (max-width: 720px) {
+  .lp-hero-trust-logos { gap: 24px !important; flex-wrap: wrap !important; }
+  .lp-hero-trust-logos li { font-size: 18px !important; }
+}
+
+/* === Right column: tone down the 3D + give it more horizontal room === */
+.lp-shots {
+  transform: perspective(2800px) rotateY(-2.5deg) rotateX(0.5deg) !important;
+}
+[dir="rtl"] .lp-shots {
+  transform: perspective(2800px) rotateY(2.5deg) rotateX(0.5deg) !important;
+}
+.lp-shots:hover {
+  transform: perspective(2800px) rotateY(-1deg) rotateX(0.25deg) !important;
+}
+[dir="rtl"] .lp-shots:hover {
+  transform: perspective(2800px) rotateY(1deg) rotateX(0.25deg) !important;
+}
+
+@media (min-width: 1100px) {
+  .lp-hero-grid {
+    grid-template-columns: 0.9fr 1.3fr !important;
+    gap: 48px !important;
+  }
+}
+@media (min-width: 1400px) {
+  .lp-hero-grid {
+    grid-template-columns: 0.85fr 1.4fr !important;
+  }
+}
+
+/* Hero CTA row — bring micro copy nice and tight to the bigger button */
+.lp-hero-text .lp-hero-cta {
+  gap: 18px !important;
+}
+.lp-cta-micro {
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1j — TRUSTED BY as a full-width band BELOW the hero
+   ════════════════════════════════════════════════════════════════════
+   Pulled the trust strip OUT of the narrow .lp-hero-text column into
+   its own full-width section so the logos can stretch across the page
+   without wrapping — matches ClickUp's pattern exactly.
+   ──────────────────────────────────────────────────────────────────── */
+
+.lp-hero-trustband {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 32px 24px 24px;
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  flex-wrap: wrap;
+  background: transparent;
+}
+[dir="rtl"] .lp-hero-trustband {
+  /* flex-direction stays the same — the natural RTL flow flips visually */
+}
+
+.lp-hero-trustband .lp-hero-trust-label {
+  font-size: 11px !important;
+  letter-spacing: 0.22em !important;
+  color: #9ca3af !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex: none;
+}
+
+.lp-hero-trustband .lp-hero-trust-logos {
+  display: flex !important;
+  align-items: center;
+  gap: 56px !important;
+  list-style: none;
+  margin: 0 !important;
+  padding: 0;
+  flex: 1;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+.lp-hero-trustband .lp-hero-trust-logos li {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #9ca3af !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1 !important;
+  transition: color .15s, transform .15s;
+}
+.lp-hero-trustband .lp-hero-trust-logos li:hover {
+  color: #475569 !important;
+  transform: translateY(-1px);
+}
+[data-theme="dark"] .lp-hero-trustband .lp-hero-trust-logos li {
+  color: #6b7280 !important;
+}
+[data-theme="dark"] .lp-hero-trustband .lp-hero-trust-logos li:hover {
+  color: #cbd5e1 !important;
+}
+
+@media (max-width: 720px) {
+  .lp-hero-trustband {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 28px 20px 20px;
+  }
+  .lp-hero-trustband .lp-hero-trust-logos {
+    gap: 24px !important;
+    justify-content: flex-start;
+  }
+  .lp-hero-trustband .lp-hero-trust-logos li {
+    font-size: 18px !important;
+  }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1k — DECLUTTER ("it is crowded" feedback)
+   ════════════════════════════════════════════════════════════════════
+   Cut 2 floating elements and shrink the rest so the /app screenshot
+   gets to breathe. The right column had 6 things competing:
+     · back dashboard card    → REMOVED (markup gone)
+     · cost badge "1.8s/doc"  → REMOVED (JSON header shows the time)
+     · live counter           → smaller + softer
+     · JSON cycler            → smaller + tighter
+     · /app front screenshot  → larger (no longer hidden by back card)
+     · radial glow            → kept (purely background)
+   Net visual elements: 3 (was 6).
+   ──────────────────────────────────────────────────────────────────── */
+
+/* Shrink the live counter — was a prominent floating pill, now a tiny tag */
+.lp-shot-counter {
+  padding: 6px 12px 6px 10px !important;
+  font-size: 11.5px !important;
+  gap: 7px !important;
+  top: -2px !important;
+}
+.lp-shot-counter-num { font-size: 12px !important; }
+.lp-shot-counter-label { font-size: 11px !important; }
+.lp-shot-counter-dot {
+  width: 7px !important;
+  height: 7px !important;
+}
+
+/* Slim the JSON peek down — was 244px wide, now 220px, tighter rows */
+.lp-shot-result {
+  width: 220px !important;
+  bottom: -18px !important;
+  left: -40px !important;
+}
+[dir="rtl"] .lp-shot-result {
+  left: auto !important;
+  right: -40px !important;
+}
+.lp-shot-result-head {
+  padding: 7px 12px !important;
+  font-size: 11px !important;
+}
+.lp-shot-result-body {
+  padding: 9px 12px !important;
+  gap: 2px !important;
+}
+.lp-shot-result-row {
+  grid-template-columns: 100px auto 1fr !important;
+  font-size: 10px !important;
+  line-height: 1.45 !important;
+}
+
+/* Front /app screenshot now stands alone — give it a fuller shadow so it
+   doesn't feel orphan'd without the back card. */
+.lp-shot-front {
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.04),
+    0 16px 40px rgba(0,0,0,.12),
+    0 48px 96px rgba(0,0,0,.06) !important;
+}
+
+/* Without the back card we don't need the 3D tilt — flatter reads cleaner */
+.lp-shots,
+[dir="rtl"] .lp-shots {
+  transform: perspective(2800px) rotateY(0deg) rotateX(0deg) !important;
+}
+.lp-shots:hover,
+[dir="rtl"] .lp-shots:hover {
+  transform: perspective(2800px) rotateY(0deg) rotateX(0deg) !important;
+}
+
+/* Remove the wrapper offset padding now that the back card is gone */
+.lp-shots,
+[dir="rtl"] .lp-shots {
+  padding: 12px 0 24px 0 !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1l — TRUE CLICKUP PARITY
+   ════════════════════════════════════════════════════════════════════
+   Studied from clickup.com saved HTML 6/25/2026 — applied the actual
+   class signatures rather than approximating from screenshots:
+     · H1 shimmer-line metallic sweep every 10s (ClickUp's signature)
+     · CTA exact specs (14×20 padding, 18px font-weight 650, -.36px LS)
+     · CTA hover rotating rainbow conic-gradient (Stripe/ClickUp move)
+     · Active pill simplified to blue/mint border + corner check
+       (their actual implementation, not the gradient-mask I built)
+     · Eyebrow monospace 14px uppercase (their Sometype Mono)
+   ──────────────────────────────────────────────────────────────────── */
+
+/* === 1. H1 metallic shimmer (sweeps every 10s) === */
+.lp-hero-text .lp-h1 {
+  background: linear-gradient(
+    90deg,
+    #0a0a0a 0%,
+    #0a0a0a calc(50% - 150px),
+    rgba(255,255,255,0.55) 50%,
+    #0a0a0a calc(50% + 150px),
+    #0a0a0a 100%
+  ) !important;
+  background-size: 200% 100%;
+  background-position: -100% 0;
+  -webkit-background-clip: text !important;
+          background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  animation: lpH1Shimmer 10s ease-in-out 3s infinite;
+}
+@keyframes lpH1Shimmer {
+  0%, 5%   { background-position: -100% 0; }
+  25%      { background-position: 100% 0; }
+  30%, 100%{ background-position: 100% 0; }
+}
+[data-theme="dark"] .lp-hero-text .lp-h1 {
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #f1f5f9 calc(50% - 150px),
+    rgba(255,255,255,0.85) 50%,
+    #f1f5f9 calc(50% + 150px),
+    #f1f5f9 100%
+  ) !important;
+  background-size: 200% 100%;
+  background-position: -100% 0;
+  -webkit-background-clip: text !important;
+          background-clip: text !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero-text .lp-h1 { animation: none !important; }
+}
+
+/* === 2. CTA exact specs from ClickUp === */
+.lp-hero-text .lp-btn-primary {
+  padding: 14px 22px !important;
+  font-size: 18px !important;
+  font-weight: 650 !important;
+  letter-spacing: -.36px !important;
+  line-height: 24px !important;
+  border-radius: 12px !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
+  overflow: visible !important;
+}
+
+/* === 3. CTA hover rotating rainbow conic-gradient === */
+.lp-hero-text .lp-btn-primary {
+  position: relative !important;
+  isolation: isolate;
+}
+.lp-hero-text .lp-btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  z-index: -1;
+  border-radius: 15px;
+  background: conic-gradient(
+    rgb(0,145,255),
+    rgb(255,2,240),
+    rgb(247,104,8),
+    rgb(102,71,240),
+    rgb(0,145,255)
+  );
+  opacity: 0;
+  transition: opacity .2s ease;
+  animation: lpRainbowSpin 1.5s linear infinite;
+  animation-play-state: paused;
+}
+.lp-hero-text .lp-btn-primary:hover::before {
+  opacity: 1;
+  animation-play-state: running;
+}
+.lp-hero-text .lp-btn-primary:hover {
+  transform: translateY(-1px);
+}
+@keyframes lpRainbowSpin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero-text .lp-btn-primary::before,
+  .lp-hero-text .lp-btn-primary:hover::before {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}
+
+/* === 4. Active pill — simplify to mint border + corner check === */
+.lp-feature-pill-active {
+  padding: 8px 18px !important;
+  background: #ecfdf5 !important;
+  border: 2px solid #10b981 !important;
+  color: #047857 !important;
+  position: relative;
+}
+[data-theme="dark"] .lp-feature-pill-active {
+  background: rgba(16,185,129,.10) !important;
+  border-color: #10b981 !important;
+  color: #34d399 !important;
+}
+/* Hide the prior 3-color gradient mask override from wave 1i */
+.lp-feature-pill-active::before {
+  display: none !important;
+}
+/* Position the check as a corner badge (their pattern) */
+.lp-pill-check {
+  position: absolute !important;
+  top: -6px !important;
+  right: -6px !important;
+  width: 18px !important;
+  height: 18px !important;
+  background: #10b981 !important;
+  border: 2px solid #fff !important;
+  border-radius: 50% !important;
+  color: #fff !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.10);
+}
+[dir="rtl"] .lp-pill-check {
+  right: auto !important;
+  left: -6px !important;
+}
+[data-theme="dark"] .lp-pill-check {
+  border-color: #131a25 !important;
+}
+.lp-pill-check svg {
+  width: 10px !important;
+  height: 10px !important;
+}
+
+/* === 5. Eyebrow — monospace, uppercase, slightly bigger === */
+.lp-hero-eyebrow {
+  font-family: 'JetBrains Mono', 'SF Mono', Menlo, ui-monospace, monospace !important;
+  font-size: 13px !important;
+  letter-spacing: 0.04em !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+}
+
+/* === Partner pill — animated rainbow conic on hover (their move) === */
+.lp-partner-pill {
+  position: relative !important;
+  overflow: visible !important;
+  isolation: isolate;
+  transition: transform .15s ease;
+}
+.lp-partner-pill::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: 999px;
+  background: conic-gradient(
+    rgb(0,145,255),
+    rgb(255,2,240),
+    rgb(247,104,8),
+    rgb(102,71,240),
+    rgb(0,145,255)
+  );
+  filter: blur(6px);
+  opacity: 0;
+  transition: opacity .28s cubic-bezier(.25,.46,.45,.94);
+  animation: lpRainbowSpin 4s linear infinite;
+  animation-play-state: paused;
+}
+.lp-partner-pill:hover::after {
+  opacity: 0.75;
+  animation-play-state: running;
+}
+.lp-partner-pill:hover {
+  transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-partner-pill::after { animation: none !important; opacity: 0 !important; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1m — FIX H1 SHIMMER (per-line, not whole-h1)
+   ════════════════════════════════════════════════════════════════════
+   The 1l shimmer applied background-clip:text on the whole .lp-h1,
+   which broke text rendering across the <br/> — each letter looked
+   half-erased. ClickUp wraps each line in its own .shimmerLine span
+   so the gradient sweeps each line independently. Markup updated to
+   <span class="lp-h1-line"> per line.
+   ──────────────────────────────────────────────────────────────────── */
+
+/* Kill the broken whole-h1 shimmer from 1l */
+.lp-hero-text .lp-h1 {
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+          background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+  animation: none !important;
+  color: #0a0a0a !important;
+}
+[data-theme="dark"] .lp-hero-text .lp-h1 {
+  color: #f1f5f9 !important;
+}
+
+/* Apply shimmer per LINE so the gradient sweeps each one independently
+   and there are no cross-line rendering artifacts. */
+.lp-h1-line {
+  display: block;
+  background-image: linear-gradient(
+    90deg,
+    currentColor 0%,
+    currentColor calc(50% - 120px),
+    rgba(255,255,255,0.45) 50%,
+    currentColor calc(50% + 120px),
+    currentColor 100%
+  );
+  background-size: 200% 100%;
+  background-position: -100% 0;
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: lpLineShimmer 12s ease-in-out infinite;
+  padding-bottom: 0.1em; /* Some descenders get clipped by background-clip; this restores them */
+}
+.lp-h1-line:nth-child(2) {
+  animation-delay: 1.5s;
+}
+
+@keyframes lpLineShimmer {
+  0%, 4%   { background-position: -100% 0; }
+  18%      { background-position: 100% 0; }
+  22%, 100%{ background-position: 100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-h1-line {
+    background: none !important;
+    -webkit-text-fill-color: currentColor !important;
+    animation: none !important;
+  }
+}
+
+/* Also kill the broken h1 shimmer from 1l for dark mode */
+[data-theme="dark"] .lp-hero-text .lp-h1 {
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+          background-clip: border-box !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1n — DROP H1 SHIMMER ENTIRELY
+   ════════════════════════════════════════════════════════════════════
+   ClickUp's shimmer is so subtle and brief (~2s of 10s cycle) that it
+   barely registers. But every static screenshot of Mostakhles catches
+   it mid-sweep, where it looks like letters have white "holes" in them.
+   Net cost > benefit. Removing — clean solid black H1.
+   ──────────────────────────────────────────────────────────────────── */
+
+.lp-h1-line,
+[data-theme="dark"] .lp-h1-line {
+  display: block;
+  background: none !important;
+  background-image: none !important;
+  -webkit-background-clip: border-box !important;
+          background-clip: border-box !important;
+  -webkit-text-fill-color: currentColor !important;
+  animation: none !important;
+  padding-bottom: 0 !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 1o — TRUE SPEC PARITY FROM ACTUAL SOURCE
+   ════════════════════════════════════════════════════════════════════
+   Read /home/mageed/Downloads/clickup.com/_next/static/css/1ea4...
+   directly — applying their EXACT specs, not approximations:
+     · H1: 60px, weight 700, ls -2.1px, STATIC #202020→#8f8f8f gradient
+     · Pills: 4.33×12.33 padding, 1px DASHED border, 14px Inter
+       weight 600, ls -.15px, gap 6px
+     · Active: 3×11 padding, mint solid border, corner check
+     · Eyebrow: 14px monospace, weight 500, lh 18px
+     · Grid: 4.7fr / 4.87fr, gap 100px, align-items start
+   ──────────────────────────────────────────────────────────────────── */
+
+/* === H1: ClickUp's exact static dark→gray gradient + 60px === */
+.lp-hero-text .lp-h1 {
+  font-size: 60px !important;
+  font-weight: 700 !important;
+  letter-spacing: -2.1px !important;
+  line-height: 1.1 !important;
+  background: linear-gradient(98deg, #202020 43.06%, #8f8f8f 91.81%) !important;
+  -webkit-background-clip: text !important;
+          background-clip: text !important;
+  -webkit-text-fill-color: rgba(0,0,0,0) !important;
+  color: #1a202c !important;
+  padding-block-end: 10px !important;
+  margin: 8px 0 0 !important;
+}
+@media (max-width: 980px) {
+  .lp-hero-text .lp-h1 { font-size: 48px !important; }
+}
+@media (max-width: 640px) {
+  .lp-hero-text .lp-h1 { font-size: 36px !important; }
+}
+[data-theme="dark"] .lp-hero-text .lp-h1 {
+  background: linear-gradient(98deg, #f1f5f9 43.06%, #94a3b8 91.81%) !important;
+  -webkit-background-clip: text !important;
+          background-clip: text !important;
+  -webkit-text-fill-color: rgba(0,0,0,0) !important;
+}
+/* Lines render via their own spans now (from 1m) — but those are
+   currently animation-killed by 1n. Make sure they don't interfere
+   with the gradient — they should inherit and not paint solid. */
+.lp-h1-line,
+[data-theme="dark"] .lp-h1-line {
+  background: none !important;
+  -webkit-background-clip: inherit !important;
+          background-clip: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  color: inherit !important;
+  animation: none !important;
+}
+
+/* === Pills: dashed gray, tiny padding, ClickUp's exact specs === */
+.lp-hero-pills {
+  gap: 6px !important;
+}
+.lp-feature-pill {
+  padding: 4.33px 12.33px !important;
+  border: 1px dashed #d9d9d9 !important;
+  border-radius: 54px !important;
+  color: #646464 !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  letter-spacing: -0.15px !important;
+  background: transparent !important;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color .3s ease, background-color .3s ease;
+}
+[data-theme="dark"] .lp-feature-pill {
+  border-color: #2d3748 !important;
+  color: #94a3b8 !important;
+}
+.lp-feature-pill:hover {
+  border-color: #9ca3af !important;
+}
+[data-theme="dark"] .lp-feature-pill:hover {
+  border-color: #475569 !important;
+}
+
+/* === Active pill: clean mint solid border (Mostakhles' brand color) === */
+.lp-feature-pill-active {
+  padding: 3px 11px !important;
+  border: 2px solid #10b981 !important;
+  border-style: solid !important;
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  font-weight: 600 !important;
+}
+[data-theme="dark"] .lp-feature-pill-active {
+  background: rgba(16,185,129,.10) !important;
+  border-color: #10b981 !important;
+  color: #34d399 !important;
+}
+
+/* Active check at top-right corner (top-left in RTL) — small mint disk
+   with a white ring around it. Sizes match ClickUp exactly. */
+.lp-pill-check {
+  position: absolute !important;
+  top: -4px !important;
+  right: -4px !important;
+  width: 16px !important;
+  height: 16px !important;
+  background: #10b981 !important;
+  color: #fff !important;
+  border-radius: 54px !important;
+  border: 1.5px solid #fff !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,.10) !important;
+}
+[dir="rtl"] .lp-pill-check {
+  right: auto !important;
+  left: -4px !important;
+}
+[data-theme="dark"] .lp-pill-check {
+  border-color: #0b1018 !important;
+}
+.lp-pill-check svg {
+  width: 9px !important;
+  height: 9px !important;
+}
+
+/* === Eyebrow ("workspaceBuilderTitle"): 14px mono, exact === */
+.lp-hero-eyebrow {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Sometype Mono', Menlo, ui-monospace, monospace !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 18px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.01em !important;
+  color: #0a0a0a !important;
+}
+[data-theme="dark"] .lp-hero-eyebrow {
+  color: #cbd5e1 !important;
+}
+
+/* === Grid: equal columns 4.7fr/4.87fr, 100px gap, top-aligned === */
+@media (min-width: 980px) {
+  .lp-hero-grid {
+    grid-template-columns: 4.7fr 4.87fr !important;
+    gap: 100px !important;
+    align-items: start !important;
+    padding-top: 40px !important;
+  }
+}
+@media (min-width: 1400px) {
+  .lp-hero-grid {
+    grid-template-columns: 4.7fr 4.87fr !important;
+  }
+}
