@@ -713,6 +713,21 @@
          tell the story as a connected flow. Cards positioned absolutely on
          a curved SVG baseline. Mobile collapses to a clean vertical stack. #}
       <div class="lp-problem-flow">
+        {# Ambient Arabic-letter ghost pattern — wave 19D, subtle texture so the
+           section feels ABOUT Arabic, not just talking about it. #}
+        <div class="lp-problem-bg" aria-hidden="true">
+          <span style="top:8%;left:6%">ك</span>
+          <span style="top:14%;left:88%">ب</span>
+          <span style="top:32%;left:18%">م</span>
+          <span style="top:48%;left:78%">ل</span>
+          <span style="top:62%;left:8%">س</span>
+          <span style="top:72%;left:92%">ف</span>
+          <span style="top:88%;left:46%">ت</span>
+          <span style="top:22%;left:52%">ر</span>
+          <span style="top:80%;left:24%">ن</span>
+          <span style="top:5%;left:34%">ع</span>
+        </div>
+
         <svg class="lp-problem-flow-svg" viewBox="0 0 1100 360" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
           <defs>
             <linearGradient id="lp-flow-grad" x1="0" y1="0" x2="1" y2="0">
@@ -733,7 +748,15 @@
           <path d="M60 240 C 280 60, 460 60, 560 200 S 820 360, 1040 130"
                 stroke="url(#lp-flow-grad)" stroke-width="3" fill="none"
                 stroke-linecap="round" stroke-dasharray="2 8"/>
-          {# Node anchor dots #}
+          {# Connector lines from each path-dot toward its card (wave 19E + 20).
+             Container is now 1180×720 (was 1100×360 in wave 12). The SVG still
+             uses the original 1100×360 viewBox with xMidYMid meet, so it renders
+             letterboxed in the upper-middle of the container. Lines extend the
+             full visible height of the SVG so they reach close to the cards. #}
+          <path d="M170 148 L170 355" stroke="#f97316" stroke-width="1.5" stroke-dasharray="3 4" opacity=".55"/>
+          <path d="M560 200 L560 5"   stroke="#ec4899" stroke-width="1.5" stroke-dasharray="3 4" opacity=".55"/>
+          <path d="M940 178 L940 355" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="3 4" opacity=".55"/>
+          {# Node anchor dots (drawn after the connector lines so they sit on top) #}
           <circle cx="170"  cy="148" r="9" fill="#f97316"/>
           <circle cx="560"  cy="200" r="9" fill="#ec4899"/>
           <circle cx="940"  cy="178" r="9" fill="#8b5cf6"/>
@@ -745,45 +768,115 @@
 
         {# 3 waypoint cards anchored to dots on the path #}
         <article class="lp-problem-node lp-problem-node-1">
-          <div class="lp-problem-node-stat">40<span class="lp-problem-node-stat-suffix">%</span></div>
+          <div class="lp-problem-node-stat" data-count="40" data-suffix="%">0<span class="lp-problem-node-stat-suffix">%</span></div>
           <p class="lp-problem-node-kicker">{{ 'CURSIVE SCRIPT' if lang == 'en' else 'خط متّصل' }}</p>
           <h3 class="lp-problem-node-h">{{ 'Arabic letters connect.' if lang == 'en' else 'الحروف العربية تتّصل.' }}</h3>
           <p class="lp-problem-node-body">
             {{ 'Mainstream OCR was trained on isolated English letters. On connected Arabic, accuracy drops up to 40%.' if lang == 'en' else 'أنظمة OCR العالمية مُدرَّبة على حروف إنجليزية منفصلة. مع العربية المتّصلة، تنخفض الدقّة حتى 40٪.' }}
           </p>
+          {# Wave 19A: failure micro-mock — show, don't tell #}
+          <div class="lp-problem-mock" dir="rtl" aria-hidden="true">
+            <div class="lp-problem-mock-row">
+              <span class="lp-problem-mock-label">{{ 'Typed' if lang == 'en' else 'مكتوب' }}</span>
+              <span class="lp-problem-mock-val lp-problem-mock-good">مستخلِص</span>
+            </div>
+            <div class="lp-problem-mock-arrow" aria-hidden="true">↓</div>
+            <div class="lp-problem-mock-row">
+              <span class="lp-problem-mock-label">OCR</span>
+              <span class="lp-problem-mock-val lp-problem-mock-bad">م ـ ت خ <span class="lp-problem-mock-q">?</span>ص</span>
+            </div>
+          </div>
         </article>
 
         <article class="lp-problem-node lp-problem-node-2">
-          <div class="lp-problem-node-stat">73<span class="lp-problem-node-stat-suffix">%</span></div>
+          <div class="lp-problem-node-stat" data-count="73" data-suffix="%">0<span class="lp-problem-node-stat-suffix">%</span></div>
           <p class="lp-problem-node-kicker">{{ 'MIXED DIRECTION' if lang == 'en' else 'اتجاهات مختلطة' }}</p>
           <h3 class="lp-problem-node-h">{{ 'RTL + LTR in one line.' if lang == 'en' else 'عربي + لاتيني في نفس السطر.' }}</h3>
           <p class="lp-problem-node-body">
             {{ '73% of MENA business documents mix Arabic and Latin on the same line. Single-direction engines garble both.' if lang == 'en' else '73٪ من المستندات في المنطقة تخلط العربية مع اللاتينية في نفس السطر. المحرّكات أحادية الاتجاه تُشوّه الاثنين.' }}
           </p>
+          <div class="lp-problem-mock" aria-hidden="true">
+            <div class="lp-problem-mock-row">
+              <span class="lp-problem-mock-label">{{ 'Typed' if lang == 'en' else 'مكتوب' }}</span>
+              <span class="lp-problem-mock-val lp-problem-mock-good">Total: 14,000 <bdo dir="rtl">ج.م</bdo></span>
+            </div>
+            <div class="lp-problem-mock-arrow" aria-hidden="true">↓</div>
+            <div class="lp-problem-mock-row">
+              <span class="lp-problem-mock-label">OCR</span>
+              <span class="lp-problem-mock-val lp-problem-mock-bad">Tota<span class="lp-problem-mock-q">?</span> :14,000 م.ج</span>
+            </div>
+          </div>
         </article>
 
         <article class="lp-problem-node lp-problem-node-3">
-          <div class="lp-problem-node-stat">1<span class="lp-problem-node-stat-suffix">/4</span></div>
+          <div class="lp-problem-node-stat" data-count="25" data-prefix="1/" data-suffix="">0<span class="lp-problem-node-stat-suffix">/4</span></div>
           <p class="lp-problem-node-kicker">{{ 'HANDWRITING + STAMPS' if lang == 'en' else 'خط يد وأختام' }}</p>
           <h3 class="lp-problem-node-h">{{ 'Not just print.' if lang == 'en' else 'ليست مجرّد طباعة.' }}</h3>
           <p class="lp-problem-node-body">
             {{ '1 in 4 MENA medical, retail and government docs include handwriting, smudges or pharmacy stamps. Most OCR collapses.' if lang == 'en' else '1 من كل 4 مستندات طبية أو حكومية بالمنطقة فيها خط يد أو ختم أو بقعة. معظم أنظمة OCR تتعطّل.' }}
           </p>
+          <div class="lp-problem-mock" dir="rtl" aria-hidden="true">
+            <div class="lp-problem-mock-row">
+              <span class="lp-problem-mock-label">{{ 'Written' if lang == 'en' else 'مكتوب' }}</span>
+              <span class="lp-problem-mock-val lp-problem-mock-good">
+                <span class="lp-problem-mock-scribble"></span>
+                <span class="lp-problem-mock-scribble lp-problem-mock-scribble-2"></span>
+              </span>
+            </div>
+            <div class="lp-problem-mock-arrow" aria-hidden="true">↓</div>
+            <div class="lp-problem-mock-row">
+              <span class="lp-problem-mock-label">OCR</span>
+              <span class="lp-problem-mock-val lp-problem-mock-bad"><span class="lp-problem-mock-q">??</span> <span class="lp-problem-mock-q">??</span> <span class="lp-problem-mock-q">??</span></span>
+            </div>
+          </div>
         </article>
       </div>
 
-      {# Closing line — ties the 3 waypoints back to the brand promise #}
-      <p class="lp-problem-tagline">
-        {% if lang == 'en' %}
-        <span class="lp-problem-tagline-line"></span>
-        <span class="lp-problem-tagline-text">Mostakhles was built from scratch for all three.</span>
-        <span class="lp-problem-tagline-line"></span>
-        {% else %}
-        <span class="lp-problem-tagline-line"></span>
-        <span class="lp-problem-tagline-text">مستخلِص بُني من الصفر لمعالجة الثلاثة.</span>
-        <span class="lp-problem-tagline-line"></span>
-        {% endif %}
-      </p>
+      {# Wave 19B: closing fix-strip — show the resolution side-by-side,
+         then a CTA. Picks up some energy from the comparison section we cut. #}
+      <div class="lp-problem-fix">
+        <div class="lp-problem-fix-card lp-problem-fix-card-fail">
+          <div class="lp-problem-fix-badge lp-problem-fix-badge-fail">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            {{ 'GENERIC OCR' if lang == 'en' else 'OCR العام' }}
+          </div>
+          <div class="lp-problem-fix-out lp-problem-fix-out-fail" dir="ltr">
+            <span>"patient" : "Ah<span class="lp-problem-mock-q">??</span>d Kh<span class="lp-problem-mock-q">??</span>l<span class="lp-problem-mock-q">?</span>"</span>
+            <span>"drug"&nbsp;&nbsp;&nbsp; : "Amox<span class="lp-problem-mock-q">??</span>lin"</span>
+            <span>"dose"&nbsp;&nbsp;&nbsp; : "<span class="lp-problem-mock-q">???</span> mg"</span>
+            <span>"pharmacy" : "<span class="lp-problem-mock-q">?????</span>"</span>
+          </div>
+        </div>
+
+        <div class="lp-problem-fix-arrow" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M4 16h22M22 8l8 8-8 8" stroke="#0f766e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <div class="lp-problem-fix-card lp-problem-fix-card-win">
+          <div class="lp-problem-fix-badge lp-problem-fix-badge-win">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Mostakhles
+          </div>
+          <div class="lp-problem-fix-out lp-problem-fix-out-win" dir="ltr">
+            <span>"patient" : "Ahmed Khalil"</span>
+            <span>"drug"&nbsp;&nbsp;&nbsp; : "Amoxicillin"</span>
+            <span>"dose"&nbsp;&nbsp;&nbsp; : "500 mg"</span>
+            <span>"pharmacy" : <span class="lp-problem-fix-ar">{{ '"El Ezaby"' if lang == 'en' else '"العزبي"' }}</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lp-problem-cta-row">
+        <a href="/app" class="lp-problem-cta">
+          {{ 'Test it on your own broken doc' if lang == 'en' else 'جرّبه على مستندك المعطوب' }}
+          <span class="lp-problem-cta-arrow" aria-hidden="true">→</span>
+        </a>
+        <span class="lp-problem-cta-note">
+          {{ 'Free. 30 docs. No card.' if lang == 'en' else 'مجاني. 30 مستند. بدون بطاقة.' }}
+        </span>
+      </div>
     </section>
 
 
@@ -2350,6 +2443,69 @@ result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
           });
         }, 5000);
       }
+    })();
+  </script>
+
+  {# ── Wave 19C: problem-band stat counters animate on scroll-into-view ─── #}
+  <script nonce="{{ csp_nonce }}">
+    (function () {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const stats = document.querySelectorAll('.lp-problem-node-stat[data-count]');
+      if (!stats.length) return;
+
+      function renderFinal(el) {
+        const target = parseInt(el.dataset.count, 10) || 0;
+        const prefix = el.dataset.prefix || '';
+        const suffix = el.dataset.suffix || '';
+        const isFraction = prefix === '1/';
+        // Card 3 shows "1/4" — display target is 4, not 25
+        const display = isFraction ? '1' : String(target);
+        const suffixHtml = isFraction
+          ? '<span class="lp-problem-node-stat-suffix">/4</span>'
+          : '<span class="lp-problem-node-stat-suffix">' + suffix + '</span>';
+        el.innerHTML = display + suffixHtml;
+        el.classList.add('is-visible');
+      }
+
+      function animateTo(el) {
+        const target = parseInt(el.dataset.count, 10) || 0;
+        const prefix = el.dataset.prefix || '';
+        const suffix = el.dataset.suffix || '';
+        const isFraction = prefix === '1/';
+        if (reduce) { renderFinal(el); return; }
+        const dur = 1100;
+        let start = null;
+        function step(now) {
+          if (start === null) start = now;
+          const t = Math.min(1, (now - start) / dur);
+          const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+          const v = isFraction
+            ? (Math.round(target * eased) === target ? '1' : '0')
+            : String(Math.round(target * eased));
+          const suffixHtml = isFraction
+            ? '<span class="lp-problem-node-stat-suffix">/4</span>'
+            : '<span class="lp-problem-node-stat-suffix">' + suffix + '</span>';
+          el.innerHTML = v + suffixHtml;
+          if (t < 1) requestAnimationFrame(step);
+        }
+        el.classList.add('is-visible');
+        requestAnimationFrame(step);
+      }
+
+      if (!('IntersectionObserver' in window)) {
+        stats.forEach(renderFinal);
+        return;
+      }
+      const io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            animateTo(entry.target);
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.5, rootMargin: '0px 0px -40px 0px' });
+
+      stats.forEach(function (el) { io.observe(el); });
     })();
   </script>
 
