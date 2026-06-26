@@ -8905,6 +8905,117 @@ html[lang="ar"] .lp-shot-dashboard .lp-shot-img  { background-image: url('/stati
   .lp-hero-trust-logos li { font-size: 13px; }
 }
 
+/* ════════════════════════════════════════════════════════════════
+   CLICKUP LOCKDOWN 18 — Trust bar rotator (3 sets × 6 brand wordmarks)
+   CSS-only fade cycle: 12s total, each set visible for ~3.5s with
+   1s overlap fades. Hover pauses the rotation.
+   Wordmarks use typographic styling per brand convention (bold,
+   lowercase, italic, letter-spacing) — text only, no logo art.
+   ════════════════════════════════════════════════════════════════ */
+
+.lp-hero-trust-rotator {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 32px;
+}
+
+.lp-hero-trust-rotator .lp-trust-set {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  opacity: 0;
+  animation: lpTrustFade 12s linear infinite;
+  animation-fill-mode: both;
+}
+
+.lp-hero-trust-rotator .lp-trust-set li {
+  flex: 0 0 auto;
+}
+
+/* Each set holds ~33% of the 12s cycle (3.5s visible) with ~0.5s
+   cross-fade overlap at each boundary. Positive delays + fill-mode:both
+   keep sets B/C hidden during their pre-roll.
+   Specificity bumped to .lp-hero-trust-rotator .lp-trust-set-X to match the
+   parent rule above — without that, the shorthand `animation:` in the parent
+   resets delay back to 0s and all three sets cycle in lockstep. */
+.lp-hero-trust-rotator .lp-trust-set-a { animation-delay: 0s; }
+.lp-hero-trust-rotator .lp-trust-set-b { animation-delay: 4s; }
+.lp-hero-trust-rotator .lp-trust-set-c { animation-delay: 8s; }
+
+@keyframes lpTrustFade {
+  0%        { opacity: 0; }
+  4%, 33%   { opacity: 1; }
+  38%, 96%  { opacity: 0; }
+  100%      { opacity: 0; }
+}
+
+.lp-hero-trust-rotator:hover .lp-trust-set,
+.lp-hero-trust-rotator:focus-within .lp-trust-set {
+  animation-play-state: paused;
+}
+
+/* Wordmark base */
+.lp-trust-wm {
+  font-family: var(--cu-font-inter, Inter, system-ui, -apple-system, sans-serif);
+  font-size: 17px;
+  font-weight: 700;
+  color: #9ca3af;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  transition: color .2s ease;
+  display: inline-block;
+}
+.lp-hero-trust-rotator:hover .lp-trust-wm { color: #475569; }
+[data-theme="dark"] .lp-trust-wm { color: #6b7280; }
+[data-theme="dark"] .lp-hero-trust-rotator:hover .lp-trust-wm { color: #94a3b8; }
+
+/* Per-brand typography hints (typography only, no logo art) */
+.lp-trust-wm-vodafone { font-weight: 800; letter-spacing: -0.015em; }
+.lp-trust-wm-stc      { font-weight: 800; letter-spacing: 0.04em; }
+.lp-trust-wm-aramex   { font-weight: 800; text-transform: lowercase; letter-spacing: 0; font-style: italic; }
+.lp-trust-wm-cib      { font-weight: 800; letter-spacing: 0.06em; }
+.lp-trust-wm-efg      { font-weight: 700; letter-spacing: 0.02em; }
+.lp-trust-wm-talabat  { font-weight: 800; text-transform: lowercase; letter-spacing: -0.01em; }
+
+.lp-trust-wm-careem   { font-weight: 700; letter-spacing: -0.015em; }
+.lp-trust-wm-etisalat { font-weight: 800; letter-spacing: -0.01em; display: inline-flex; align-items: baseline; gap: 4px; }
+.lp-trust-wm-etisalat em { font-size: 11px; font-style: normal; font-weight: 600; text-transform: lowercase; letter-spacing: 0; opacity: .85; }
+.lp-trust-wm-adcb     { font-weight: 800; letter-spacing: 0.05em; }
+.lp-trust-wm-mashreq  { font-weight: 800; text-transform: lowercase; letter-spacing: -0.005em; }
+.lp-trust-wm-mada     { font-weight: 800; text-transform: lowercase; letter-spacing: -0.01em; }
+.lp-trust-wm-jumia    { font-weight: 800; letter-spacing: 0.04em; }
+
+.lp-trust-wm-noon     { font-weight: 800; text-transform: lowercase; letter-spacing: -0.015em; }
+.lp-trust-wm-almarai  { font-weight: 700; letter-spacing: -0.005em; }
+.lp-trust-wm-adnoc    { font-weight: 800; letter-spacing: 0.06em; }
+.lp-trust-wm-qnb      { font-weight: 800; letter-spacing: 0.06em; }
+.lp-trust-wm-fawry    { font-weight: 800; text-transform: lowercase; letter-spacing: -0.01em; }
+.lp-trust-wm-mobily   { font-weight: 700; text-transform: lowercase; letter-spacing: 0; font-style: italic; }
+
+@media (max-width: 980px) {
+  .lp-hero-trust-rotator { min-height: 28px; }
+  .lp-trust-wm           { font-size: 15px; }
+  .lp-hero-trust-rotator .lp-trust-set { gap: 16px; }
+}
+
+@media (max-width: 640px) {
+  .lp-trust-wm                           { font-size: 13px; }
+  .lp-hero-trust-rotator .lp-trust-set   { gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .lp-hero-trust-rotator                 { min-height: 56px; }
+}
+
+/* Respect users who prefer reduced motion — show first set only, no cycle */
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero-trust-rotator .lp-trust-set { animation: none; opacity: 0; }
+  .lp-trust-set-a                      { opacity: 1; }
+}
+
 /* ─── 2. JSON result rows reveal — staggered typewriter ──────────── */
 .lp-shot-result-row {
   opacity: 0;
@@ -12603,8 +12714,10 @@ body,
   background-size: contain !important;
   background-position: top center !important;
   background-color: #fff;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  /* Smooth high-quality downscaling — `crisp-edges` was wrong for screenshots
+     of anti-aliased UI; it forced nearest-neighbour and shattered the text.
+     Default rendering uses bilinear/Lanczos which is sharp for this content. */
+  image-rendering: auto;
 }
 
 /* Use the new image for both lang variants (English UI but content is universal) */

@@ -583,15 +583,36 @@
        it can span the page width (ClickUp pattern). Label on the left,
        6 logos centered/distributed across the rest of the row. #}
     <section class="lp-hero-trustband">
-      <span class="lp-hero-trust-label">{{ 'TRUSTED BY' if lang == 'en' else 'يثق بها' }}</span>
-      <ul class="lp-hero-trust-logos">
-        <li>Vodafone</li>
-        <li>STC</li>
-        <li>aramex</li>
-        <li>CIB</li>
-        <li>EFG</li>
-        <li>talabat</li>
-      </ul>
+      <span class="lp-hero-trust-label">{{ 'TRUSTED BY TEAMS AT' if lang == 'en' else 'يستخدمه فِرَق في' }}</span>
+      <div class="lp-hero-trust-rotator">
+        {# Set A — Telecom · Logistics · Banking #}
+        <ul class="lp-hero-trust-logos lp-trust-set lp-trust-set-a">
+          <li><span class="lp-trust-wm lp-trust-wm-vodafone">Vodafone</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-stc">STC</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-aramex">aramex</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-cib">CIB</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-efg">EFG Hermes</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-talabat">talabat</span></li>
+        </ul>
+        {# Set B — E-commerce · Banking · Payments #}
+        <ul class="lp-hero-trust-logos lp-trust-set lp-trust-set-b">
+          <li><span class="lp-trust-wm lp-trust-wm-careem">Careem</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-etisalat">e&amp; <em>etisalat</em></span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-adcb">ADCB</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-mashreq">mashreq</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-mada">mada</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-jumia">JUMIA</span></li>
+        </ul>
+        {# Set C — Retail · Energy · Delivery #}
+        <ul class="lp-hero-trust-logos lp-trust-set lp-trust-set-c">
+          <li><span class="lp-trust-wm lp-trust-wm-noon">noon</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-almarai">Almarai</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-adnoc">ADNOC</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-qnb">QNB</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-fawry">fawry</span></li>
+          <li><span class="lp-trust-wm lp-trust-wm-mobily">mobily</span></li>
+        </ul>
+      </div>
     </section>
 
     {# Trust-band section below is HIDDEN — its content moved into the hero
