@@ -194,6 +194,37 @@
               <span class="lp-shot-counter-label">{{ 'extracted today' if lang == 'en' else 'مستخرج اليوم' }}</span>
             </div>
 
+            {# Floating "input doc" mini-card — adds a 3rd plane to the composition.
+               Rotated -4deg, peeks out from the top-left of the main screenshot.
+               Pure CSS/SVG mock (no asset). Wave 13. #}
+            <div class="lp-shot-input" aria-hidden="true">
+              <div class="lp-shot-input-chrome">
+                <span class="lp-shot-input-stamp">Rx</span>
+                <span class="lp-shot-input-filename">prescription-09.pdf</span>
+              </div>
+              <div class="lp-shot-input-body">
+                <div class="lp-shot-input-line lp-shot-input-line-1"></div>
+                <div class="lp-shot-input-line lp-shot-input-line-2"></div>
+                <div class="lp-shot-input-line lp-shot-input-line-3"></div>
+                <div class="lp-shot-input-sig">
+                  <svg viewBox="0 0 80 30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M2 22 C 8 6, 18 30, 28 14 S 48 6, 60 18 S 76 12, 78 18"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="lp-shot-input-footer">
+                <span class="lp-shot-input-status">
+                  <span class="lp-shot-input-status-dot"></span>
+                  {{ 'Reading…' if lang == 'en' else 'جاري القراءة…' }}
+                </span>
+                <span class="lp-shot-input-time">0.4s</span>
+              </div>
+              <div class="lp-shot-input-progress"><span></span></div>
+            </div>
+
+            {# Radial halo BEHIND the main shot — depth glow #}
+            <div class="lp-shot-halo" aria-hidden="true"></div>
+
             {# Front card: /app upload, primary visual.
                (Back dashboard card removed for declutter — see CLAUDE.md
                Wave 1k.) #}
@@ -634,153 +665,515 @@
     <div class="lp-stripe-divider" aria-hidden="true"></div>
 
     {# ════════════════ PROBLEM ════════════════ #}
-    <section class="lp-section" id="problem">
-      <div class="lp-section-grid">
-        <header class="lp-section-head">
-          <p class="lp-kicker lp-kicker-amber"><span class="lp-dot"></span>{{ 'The problem' if lang == 'en' else 'المشكلة' }}</p>
-          <h2 class="lp-h2">
-            {% if lang == 'en' %}
-            OCR was built for English print. Your documents weren't.
-            {% else %}
-            OCR صُنعت للنصوص الإنجليزية المطبوعة. مستنداتك ليست كذلك.
-            {% endif %}
-          </h2>
-        </header>
-        <div class="lp-problem-grid">
-          <div class="lp-problem-text">
-            {% if lang == 'en' %}
-            <p>You've tried OCR before: Google Vision, AWS Textract, Adobe. Great on a clean English receipt, useless on an Arabic prescription with cursive Arabic and English drug names in the same line. Mindee and Nanonets focus on Western invoices. Sakhr hasn't shipped a real product since 2010.</p>
-            <p><b>Mostakhles is different.</b> It was built for the documents you actually have: Egyptian IDs, Saudi commercial registers, Arabic invoices, mixed-script prescriptions, handwritten meeting notes. And it doesn't just transcribe — it derives totals, validates formats, summarizes content, and flags missing fields.</p>
-            <p>Here's the same handwritten Arabic prescription, run through the global leaders and through Mostakhles, side by side:</p>
-            {% else %}
-            <p>جرّبت OCR من قبل: Google Vision وAWS Textract وAdobe. ممتازة على فاتورة إنجليزية مطبوعة، عاجزة عن قراءة روشتة عربية فيها أسماء أدوية إنجليزية في نفس السطر. Mindee وNanonets يركّزون على الفواتير الغربية. Sakhr لم تُطلق منتجًا حقيقيًا منذ 2010.</p>
-            <p><b>مُستخلِص مختلف.</b> صُمّم للمستندات التي تتعامل معها فعلًا: البطاقات المصرية، السجلات التجارية السعودية، الفواتير العربية، الروشتات مختلطة الكتابة، محاضر اجتماع بخط اليد. ولا يكتفي بنسخ النص — يستنتج الإجماليات، يتحقّق من الصيغ، يلخّص المحتوى، ويُشير إلى الحقول الناقصة.</p>
-            <p>إليك نفس الروشتة العربية بخط اليد، عبر القادة العالميين وعبر مُستخلِص، جنبًا إلى جنب:</p>
-            {% endif %}
-          </div>
-          <aside class="lp-quote-card">
-            <blockquote>
-              {% if lang == 'en' %}
-              "We tried 4 different OCR services on our hospital's prescription archive. Only Mostakhles read the doctor's handwriting AND understood it was a prescription. Cut our digitization project from 6 months to 2 weeks."
-              {% else %}
-              "جرّبنا 4 خدمات OCR على أرشيف روشتات المستشفى. مُستخلِص الوحيد الذي قرأ خط الطبيب وفهم أنها روشتة. اختصر مشروع الرقمنة من 6 أشهر إلى أسبوعين."
-              {% endif %}
-            </blockquote>
-            <figcaption>
-              <strong>{{ 'Dr. Mostafa K.' if lang == 'en' else 'د. مصطفى خ.' }}</strong>
-              <small>{{ 'Pediatric Hospital, Cairo' if lang == 'en' else 'مستشفى أطفال، القاهرة' }}</small>
-            </figcaption>
-          </aside>
-        </div>
+    {# ════════════════ THE PROBLEM — ClickUp "60% lost" pattern ═══════════
+       Calm centered headline + subtitle + 3 stat cards. Wall of text and
+       quote card from the prior version moved out (the quote belongs in
+       the testimonials section). #}
+    <section class="lp-section lp-problem" id="problem">
+      <header class="lp-problem-head">
+        <h2 class="lp-problem-h2">
+          {% if lang == 'en' %}
+          Most OCR breaks on Arabic <span class="lp-problem-h2-dim">— and your team pays for it.</span>
+          {% else %}
+          معظم أنظمة OCR تنهار أمام العربية <span class="lp-problem-h2-dim">— وفريقك يدفع الثمن.</span>
+          {% endif %}
+        </h2>
+        <p class="lp-problem-sub">
+          {% if lang == 'en' %}
+          Mainstream OCR was engineered for English print and Western invoice templates. Your documents look nothing like that.
+          {% else %}
+          صُمّمت أنظمة OCR العالمية للنصوص الإنجليزية المطبوعة وقوالب الفواتير الغربية. مستنداتك لا تشبه ذلك إطلاقًا.
+          {% endif %}
+        </p>
+      </header>
+
+      {# ─── FLOWING DIAGRAM — 3 waypoints connected by an SVG path ─────────
+         ClickUp "60% of work is lost" pattern: instead of a flat 3-card row,
+         tell the story as a connected flow. Cards positioned absolutely on
+         a curved SVG baseline. Mobile collapses to a clean vertical stack. #}
+      <div class="lp-problem-flow">
+        <svg class="lp-problem-flow-svg" viewBox="0 0 1100 360" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <defs>
+            <linearGradient id="lp-flow-grad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"  stop-color="#fef3c7"/>
+              <stop offset="33%" stop-color="#fdba74"/>
+              <stop offset="66%" stop-color="#fca5a5"/>
+              <stop offset="100%" stop-color="#fecdd3"/>
+            </linearGradient>
+            <filter id="lp-flow-blur" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="6"/>
+            </filter>
+          </defs>
+          {# Soft glow underneath the line #}
+          <path d="M60 240 C 280 60, 460 60, 560 200 S 820 360, 1040 130"
+                stroke="url(#lp-flow-grad)" stroke-width="22" fill="none"
+                stroke-linecap="round" opacity=".25" filter="url(#lp-flow-blur)"/>
+          {# Main flowing dashed path #}
+          <path d="M60 240 C 280 60, 460 60, 560 200 S 820 360, 1040 130"
+                stroke="url(#lp-flow-grad)" stroke-width="3" fill="none"
+                stroke-linecap="round" stroke-dasharray="2 8"/>
+          {# Node anchor dots #}
+          <circle cx="170"  cy="148" r="9" fill="#f97316"/>
+          <circle cx="560"  cy="200" r="9" fill="#ec4899"/>
+          <circle cx="940"  cy="178" r="9" fill="#8b5cf6"/>
+          {# Inner white pulse on each dot #}
+          <circle cx="170"  cy="148" r="3.5" fill="#fff"/>
+          <circle cx="560"  cy="200" r="3.5" fill="#fff"/>
+          <circle cx="940"  cy="178" r="3.5" fill="#fff"/>
+        </svg>
+
+        {# 3 waypoint cards anchored to dots on the path #}
+        <article class="lp-problem-node lp-problem-node-1">
+          <div class="lp-problem-node-stat">40<span class="lp-problem-node-stat-suffix">%</span></div>
+          <p class="lp-problem-node-kicker">{{ 'CURSIVE SCRIPT' if lang == 'en' else 'خط متّصل' }}</p>
+          <h3 class="lp-problem-node-h">{{ 'Arabic letters connect.' if lang == 'en' else 'الحروف العربية تتّصل.' }}</h3>
+          <p class="lp-problem-node-body">
+            {{ 'Mainstream OCR was trained on isolated English letters. On connected Arabic, accuracy drops up to 40%.' if lang == 'en' else 'أنظمة OCR العالمية مُدرَّبة على حروف إنجليزية منفصلة. مع العربية المتّصلة، تنخفض الدقّة حتى 40٪.' }}
+          </p>
+        </article>
+
+        <article class="lp-problem-node lp-problem-node-2">
+          <div class="lp-problem-node-stat">73<span class="lp-problem-node-stat-suffix">%</span></div>
+          <p class="lp-problem-node-kicker">{{ 'MIXED DIRECTION' if lang == 'en' else 'اتجاهات مختلطة' }}</p>
+          <h3 class="lp-problem-node-h">{{ 'RTL + LTR in one line.' if lang == 'en' else 'عربي + لاتيني في نفس السطر.' }}</h3>
+          <p class="lp-problem-node-body">
+            {{ '73% of MENA business documents mix Arabic and Latin on the same line. Single-direction engines garble both.' if lang == 'en' else '73٪ من المستندات في المنطقة تخلط العربية مع اللاتينية في نفس السطر. المحرّكات أحادية الاتجاه تُشوّه الاثنين.' }}
+          </p>
+        </article>
+
+        <article class="lp-problem-node lp-problem-node-3">
+          <div class="lp-problem-node-stat">1<span class="lp-problem-node-stat-suffix">/4</span></div>
+          <p class="lp-problem-node-kicker">{{ 'HANDWRITING + STAMPS' if lang == 'en' else 'خط يد وأختام' }}</p>
+          <h3 class="lp-problem-node-h">{{ 'Not just print.' if lang == 'en' else 'ليست مجرّد طباعة.' }}</h3>
+          <p class="lp-problem-node-body">
+            {{ '1 in 4 MENA medical, retail and government docs include handwriting, smudges or pharmacy stamps. Most OCR collapses.' if lang == 'en' else '1 من كل 4 مستندات طبية أو حكومية بالمنطقة فيها خط يد أو ختم أو بقعة. معظم أنظمة OCR تتعطّل.' }}
+          </p>
+        </article>
       </div>
+
+      {# Closing line — ties the 3 waypoints back to the brand promise #}
+      <p class="lp-problem-tagline">
+        {% if lang == 'en' %}
+        <span class="lp-problem-tagline-line"></span>
+        <span class="lp-problem-tagline-text">Mostakhles was built from scratch for all three.</span>
+        <span class="lp-problem-tagline-line"></span>
+        {% else %}
+        <span class="lp-problem-tagline-line"></span>
+        <span class="lp-problem-tagline-text">مستخلِص بُني من الصفر لمعالجة الثلاثة.</span>
+        <span class="lp-problem-tagline-line"></span>
+        {% endif %}
+      </p>
     </section>
 
     {# ════════════════ COMPARISON PANEL ════════════════ #}
-    <section class="lp-stripe-divider lp-stripe-content" id="compare">
-      <div class="lp-compare-panel">
-        <div class="lp-compare-grid">
+    {# ════════════════ THE PROOF — same prescription, three results ═══════
+       Clean ClickUp-grade comparison: section header, 3 equal cards w/
+       clear branding badges, mint winning column, red failing column,
+       result-summary footer with verdict stats. #}
+    <section class="lp-cmp" id="compare">
+      <header class="lp-cmp-head">
+        <h2 class="lp-cmp-h2">
+          {% if lang == 'en' %}
+          Same prescription. Three results.
+          {% else %}
+          نفس الروشتة. ثلاث نتائج.
+          {% endif %}
+        </h2>
+        <p class="lp-cmp-sub">
+          {% if lang == 'en' %}
+          We ran one handwritten Arabic prescription through Mindee, AWS Textract, and Mostakhles. Same input, same week, no retries.
+          {% else %}
+          مرّرنا نفس الروشتة المكتوبة بخط اليد عبر Mindee وAWS Textract ومُستخلِص. نفس الإدخال، نفس الأسبوع، بدون إعادة محاولة.
+          {% endif %}
+        </p>
+      </header>
 
-          <div class="lp-compare-col">
-            <div class="lp-compare-tag lp-tag-neutral"><span class="lp-dot"></span>{{ 'Original' if lang == 'en' else 'الأصل' }}</div>
-            <div class="lp-compare-body lp-compare-original">
-              <div class="lp-orig-doc">
+      <div class="lp-cmp-grid">
+
+        {# ─── Column 1: Original document ─── #}
+        <article class="lp-cmp-card lp-cmp-card-orig">
+          <header class="lp-cmp-card-head">
+            <span class="lp-cmp-badge lp-cmp-badge-orig">{{ 'Original document' if lang == 'en' else 'المستند الأصلي' }}</span>
+          </header>
+          <div class="lp-cmp-card-body">
+            <div class="lp-cmp-doc">
+              <div class="lp-cmp-doc-paper">
+                <div class="lp-cmp-doc-stamp">℞</div>
                 {% if lang == 'en' %}
-                <div class="lp-orig-line lp-orig-l1">Dr. Ghaly Sami Ghaly</div>
-                <div class="lp-orig-line lp-orig-l2">Pediatrician</div>
-                <div class="lp-orig-line lp-orig-l3">Age: 2.5y · Wt: 15.5kg</div>
-                <div class="lp-orig-line lp-orig-l4">R/</div>
-                <div class="lp-orig-line lp-orig-l5">Newclav 457</div>
-                <div class="lp-orig-line lp-orig-l6">Rhinopro syp</div>
-                <div class="lp-orig-line lp-orig-l7">Nasostop ped</div>
-                <div class="lp-orig-line lp-orig-l8">Amrizole susp.</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-h">Dr. Ghaly Sami Ghaly</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-sub">Pediatrician</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-meta">Age: 2.5y · Wt: 15.5kg</div>
+                <div class="lp-cmp-doc-rule"></div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-rx">R/</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-drug">Newclav 457</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-drug">Rhinopro syp</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-drug">Nasostop ped</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-drug">Amrizole susp.</div>
                 {% else %}
-                <div class="lp-orig-line lp-orig-l1">د. غالي سامي غالي</div>
-                <div class="lp-orig-line lp-orig-l2">أخصائي طب الأطفال</div>
-                <div class="lp-orig-line lp-orig-l3">العمر: 2.5س الوزن: 15.5</div>
-                <div class="lp-orig-line lp-orig-l4">R/</div>
-                <div class="lp-orig-line lp-orig-l5">Newclav 457</div>
-                <div class="lp-orig-line lp-orig-l6">Rhinopro syp</div>
-                <div class="lp-orig-line lp-orig-l7">Nasostop ped</div>
-                <div class="lp-orig-line lp-orig-l8">Amrizole susp.</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-h">د. غالي سامي غالي</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-sub">أخصائي طب الأطفال</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-meta">العمر: 2.5س · الوزن: 15.5</div>
+                <div class="lp-cmp-doc-rule"></div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-rx">R/</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-drug">Newclav 457</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-drug">Rhinopro syp</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-drug">Nasostop ped</div>
+                <div class="lp-cmp-doc-line lp-cmp-doc-drug">Amrizole susp.</div>
                 {% endif %}
               </div>
-              <small class="lp-compare-cap">{{ 'Arabic + Latin · pediatric Rx' if lang == 'en' else 'عربي + لاتيني · روشتة أطفال' }}</small>
             </div>
           </div>
+          <footer class="lp-cmp-card-foot">
+            <p class="lp-cmp-card-cap">{{ 'Arabic + Latin · handwritten Rx · pediatric' if lang == 'en' else 'عربي + لاتيني · بخط اليد · أطفال' }}</p>
+          </footer>
+        </article>
 
-          <div class="lp-compare-col lp-compare-winner">
-            <div class="lp-compare-tag lp-tag-brand"><span class="lp-dot"></span>Mostakhles</div>
-            <div class="lp-compare-body">
-              <div class="lp-rx-output">
-                {% if lang == 'en' %}
-                <div class="lp-rx-head">Dr. Ghaly Sami Ghaly · Pediatrician</div>
-                <div class="lp-rx-pstrip">Patient: Moussa Magid · 2.5y · 15.5 kg</div>
-                <div class="lp-rx-list">
-                  <div class="lp-rx-item">① <b>Newclav 457</b> · 2.5ml / 12h / 5d</div>
-                  <div class="lp-rx-item">② <b>Rhinopro syp</b> · 2.5ml / twice / 5d</div>
-                  <div class="lp-rx-item">③ <b>Nasostop ped</b> · 1 drop / nostril</div>
-                  <div class="lp-rx-item">④ <b>Amrizole Susp.</b> · 5ml / twice / 3d</div>
-                </div>
-                <div class="lp-rx-banner">
-                  ✓ doses age-appropriate · all 4 drugs identified
-                </div>
-                {% else %}
-                <div class="lp-rx-head">د. غالي سامي غالي · أخصائي طب الأطفال</div>
-                <div class="lp-rx-pstrip">المريض: موسى مجيد · 2.5س · 15.5 كجم</div>
-                <div class="lp-rx-list">
-                  <div class="lp-rx-item">① <b>Newclav 457</b> · 2.5مل / 12س / 5أ</div>
-                  <div class="lp-rx-item">② <b>Rhinopro syp</b> · 2.5مل / مرتين / 5أ</div>
-                  <div class="lp-rx-item">③ <b>Nasostop ped</b> · 1 نقطة في الأنف</div>
-                  <div class="lp-rx-item">④ <b>Amrizole Susp.</b> · 5مل / مرتين / 3أ</div>
-                </div>
-                <div class="lp-rx-banner">
-                  ✓ الجرعات مناسبة للعمر · جميع الأدوية مُحدَّدة
-                </div>
-                {% endif %}
+        {# ─── Column 2: Mostakhles winning ─── #}
+        <article class="lp-cmp-card lp-cmp-card-win">
+          <header class="lp-cmp-card-head">
+            <span class="lp-cmp-badge lp-cmp-badge-win">Mostakhles</span>
+            <span class="lp-cmp-badge-pill">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              17/17 {{ 'fields' if lang == 'en' else 'حقل' }}
+            </span>
+          </header>
+          <div class="lp-cmp-card-body">
+            {% if lang == 'en' %}
+            <div class="lp-cmp-rx-head">Dr. Ghaly Sami Ghaly · Pediatrician</div>
+            <div class="lp-cmp-rx-patient">Patient: Moussa Magid · 2.5y · 15.5 kg</div>
+            <div class="lp-cmp-rx-list">
+              <div class="lp-cmp-rx-row">
+                <span class="lp-cmp-rx-num">1</span>
+                <span class="lp-cmp-rx-drug">Newclav 457</span>
+                <span class="lp-cmp-rx-dose">2.5ml · 12h · 5d</span>
               </div>
-              <small class="lp-compare-cap lp-cap-good">{{ 'layout preserved · cognitive validations · 100%' if lang == 'en' else 'تخطيط محفوظ · تحقّقات ذكية · 100%' }}</small>
-            </div>
-          </div>
-
-          <div class="lp-compare-col">
-            <div class="lp-compare-tag lp-tag-fail"><span class="lp-dot"></span>Mindee · AWS Textract</div>
-            <div class="lp-compare-body">
-              <div class="lp-fail-output">
-                {% if lang == 'en' %}
-                <p>Dr. <span class="lp-err">Gha</span>ly <span class="lp-err">Sambe</span> Ghaly</p>
-                <p>Ped<span class="lp-err">ia7</span>rician</p>
-                <p>Age <span class="lp-err">??? Wt</span> 15·5</p>
-                <p><span class="lp-err">R/</span> <span class="lp-err">Newda</span> 457</p>
-                <p><span class="lp-err">Rhinapro</span> syp</p>
-                <p><span class="lp-err">Naso5top</span> <span class="lp-err">red</span></p>
-                <p><span class="lp-err">Amrz</span>ole <span class="lp-err">5usp</span></p>
-                {% else %}
-                <p><span class="lp-err">د. غا</span>لي <span class="lp-err">سامبه</span> غالي</p>
-                <p>أخصائ<span class="lp-err">پ ط</span>ب الأطفال</p>
-                <p>العمر <span class="lp-err">??? Wt</span> 15·5</p>
-                <p><span class="lp-err">R/</span> <span class="lp-err">Newda</span> 457</p>
-                <p><span class="lp-err">Rhinapro</span> syp</p>
-                <p><span class="lp-err">Naso5top</span> <span class="lp-err">red</span></p>
-                <p><span class="lp-err">Amrz</span>ole <span class="lp-err">5usp</span></p>
-                {% endif %}
+              <div class="lp-cmp-rx-row">
+                <span class="lp-cmp-rx-num">2</span>
+                <span class="lp-cmp-rx-drug">Rhinopro syp</span>
+                <span class="lp-cmp-rx-dose">2.5ml · 2×/day · 5d</span>
               </div>
-              <small class="lp-compare-cap lp-cap-bad">{{ 'fragmented · drug names mangled · no Arabic dosing' if lang == 'en' else 'مجزّأ · أسماء أدوية مشوّهة · بدون فهم للجرعات العربية' }}</small>
+              <div class="lp-cmp-rx-row">
+                <span class="lp-cmp-rx-num">3</span>
+                <span class="lp-cmp-rx-drug">Nasostop ped</span>
+                <span class="lp-cmp-rx-dose">1 drop · nostril</span>
+              </div>
+              <div class="lp-cmp-rx-row">
+                <span class="lp-cmp-rx-num">4</span>
+                <span class="lp-cmp-rx-drug">Amrizole Susp.</span>
+                <span class="lp-cmp-rx-dose">5ml · 2×/day · 3d</span>
+              </div>
+            </div>
+            <div class="lp-cmp-rx-banner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><b>Doses age-appropriate</b> · all 4 drugs identified</span>
+            </div>
+            {% else %}
+            <div class="lp-cmp-rx-head">د. غالي سامي غالي · أخصائي طب الأطفال</div>
+            <div class="lp-cmp-rx-patient">المريض: موسى مجيد · 2.5س · 15.5 كجم</div>
+            <div class="lp-cmp-rx-list">
+              <div class="lp-cmp-rx-row">
+                <span class="lp-cmp-rx-num">1</span>
+                <span class="lp-cmp-rx-drug">Newclav 457</span>
+                <span class="lp-cmp-rx-dose">2.5مل · 12س · 5أ</span>
+              </div>
+              <div class="lp-cmp-rx-row">
+                <span class="lp-cmp-rx-num">2</span>
+                <span class="lp-cmp-rx-drug">Rhinopro syp</span>
+                <span class="lp-cmp-rx-dose">2.5مل · مرتين/يوم · 5أ</span>
+              </div>
+              <div class="lp-cmp-rx-row">
+                <span class="lp-cmp-rx-num">3</span>
+                <span class="lp-cmp-rx-drug">Nasostop ped</span>
+                <span class="lp-cmp-rx-dose">قطرة · في الأنف</span>
+              </div>
+              <div class="lp-cmp-rx-row">
+                <span class="lp-cmp-rx-num">4</span>
+                <span class="lp-cmp-rx-drug">Amrizole Susp.</span>
+                <span class="lp-cmp-rx-dose">5مل · مرتين/يوم · 3أ</span>
+              </div>
+            </div>
+            <div class="lp-cmp-rx-banner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><b>الجرعات مناسبة للعمر</b> · جميع الأدوية مُحدَّدة</span>
+            </div>
+            {% endif %}
+          </div>
+          <footer class="lp-cmp-card-foot lp-cmp-card-foot-win">
+            <p class="lp-cmp-card-cap">
+              {{ 'Layout preserved · cognitive validations · ready for any export' if lang == 'en' else 'تخطيط محفوظ · تحقّقات ذكية · جاهز لأي تصدير' }}
+            </p>
+          </footer>
+        </article>
+
+        {# ─── Column 3: Other OCR failing ─── #}
+        <article class="lp-cmp-card lp-cmp-card-fail">
+          <header class="lp-cmp-card-head">
+            <span class="lp-cmp-badge lp-cmp-badge-fail">Mindee · AWS Textract</span>
+            <span class="lp-cmp-badge-pill lp-cmp-badge-pill-fail">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              4/17 {{ 'fields' if lang == 'en' else 'حقل' }}
+            </span>
+          </header>
+          <div class="lp-cmp-card-body" dir="ltr">
+            <pre class="lp-cmp-fail-output">Dr. <span class="lp-cmp-err">Gha</span>ly <span class="lp-cmp-err">Sambe</span> Ghaly
+Ped<span class="lp-cmp-err">ia7</span>rician
+Age <span class="lp-cmp-err">??? Wt</span> 15·5
+<span class="lp-cmp-err">R/</span> <span class="lp-cmp-err">Newda</span> 457
+<span class="lp-cmp-err">Rhinapro</span> syp
+<span class="lp-cmp-err">Naso5top</span> <span class="lp-cmp-err">red</span>
+<span class="lp-cmp-err">Amrz</span>ole <span class="lp-cmp-err">5usp</span>
+<span class="lp-cmp-err">??? ???</span> <span class="lp-cmp-err">???</span></pre>
+            <div class="lp-cmp-fail-banner">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>{{ '8 fields garbled · drug names mangled' if lang == 'en' else '8 حقول مشوّهة · أسماء أدوية معطوبة' }}</span>
             </div>
           </div>
+          <footer class="lp-cmp-card-foot lp-cmp-card-foot-fail">
+            <p class="lp-cmp-card-cap">
+              {{ 'Fragmented output · no Arabic dosing · no validation' if lang == 'en' else 'مخرج مجزّأ · بدون فهم للجرعات العربية · بدون تحقّق' }}
+            </p>
+          </footer>
+        </article>
 
-        </div>
-        <div class="lp-compare-foot">
-          {{ 'Source: same scanned prescription, same week. No retries.' if lang == 'en' else 'المصدر: نفس الروشتة الممسوحة، نفس الأسبوع. بدون إعادة محاولة.' }}
-        </div>
+      </div>
+
+      <div class="lp-cmp-bottom">
+        <span class="lp-cmp-bottom-stat">
+          <strong>17/17</strong> Mostakhles
+        </span>
+        <span class="lp-cmp-bottom-vs">vs</span>
+        <span class="lp-cmp-bottom-stat lp-cmp-bottom-stat-fail">
+          <strong>4/17</strong> Mindee · AWS
+        </span>
+        <span class="lp-cmp-bottom-note">
+          {{ 'Same scanned prescription, same week. No retries.' if lang == 'en' else 'نفس الروشتة الممسوحة، نفس الأسبوع. بدون إعادة محاولة.' }}
+        </span>
       </div>
     </section>
 
 
+    {# ════════════════ THE ENGINE — dark band, single saturated event ═══════
+       Mirrors ClickUp's Lp4BrainSection: 32px-rounded black container,
+       noise texture overlay, mint radial glow, 3 dark cards.
+       This is the page's ONLY saturated section. #}
+    <section class="lp-engine">
+      <div class="lp-engine-container">
+        <div class="lp-engine-noise" aria-hidden="true"></div>
+        <div class="lp-engine-glow lp-engine-glow-1" aria-hidden="true"></div>
+        <div class="lp-engine-glow lp-engine-glow-2" aria-hidden="true"></div>
+        <div class="lp-engine-dots" aria-hidden="true"></div>
+
+        {# Floating action labels (decorative, like ClickUp's UPDATE TASK / SEND EMAIL) #}
+        <div class="lp-engine-floats" aria-hidden="true">
+          <span class="lp-engine-float lp-engine-float-1">EXTRACT FIELDS</span>
+          <span class="lp-engine-float lp-engine-float-2">VALIDATE STRUCTURE</span>
+          <span class="lp-engine-float lp-engine-float-3">SUMMARIZE</span>
+          <span class="lp-engine-float lp-engine-float-4">EXPORT TO ODOO</span>
+        </div>
+
+        {# Brand mark + logo #}
+        <div class="lp-engine-mark">
+          <div class="lp-engine-mark-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none">
+              <defs>
+                <linearGradient id="brainGrad" x1="0" y1="0" x2="64" y2="64">
+                  <stop offset="0%" stop-color="#10b981"/>
+                  <stop offset="50%" stop-color="#34d399"/>
+                  <stop offset="100%" stop-color="#6ee7b7"/>
+                </linearGradient>
+              </defs>
+              <circle cx="32" cy="32" r="28" fill="url(#brainGrad)"/>
+              <path d="M24 22 q-4 6 0 12 q-4 6 0 12 M32 18 q-3 7 0 14 q-3 7 0 14 M40 22 q4 6 0 12 q4 6 0 12" stroke="white" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="lp-engine-mark-name">{{ 'Mostakhles AI' if lang == 'en' else 'مُستخلِص الذكاء' }}</span>
+        </div>
+
+        <header class="lp-engine-head">
+          <h2 class="lp-engine-h2">
+            {% if lang == 'en' %}
+            The only AI that reads Arabic <br/>like a person.
+            {% else %}
+            الذكاء الاصطناعي الوحيد الذي يقرأ العربية<br/>كما يقرأها الإنسان.
+            {% endif %}
+          </h2>
+          <p class="lp-engine-sub">
+            {% if lang == 'en' %}
+            Mostakhles understands cursive Arabic, mixed scripts, and handwriting the way your team does — by reasoning, not just transcribing.
+            {% else %}
+            مُستخلِص يفهم الخط العربي المتّصل، والنصوص مختلطة الكتابة، وخط اليد كما يفهمها فريقك — بالاستدلال، لا بمجرّد النسخ.
+            {% endif %}
+          </p>
+          <a class="lp-engine-try" href="/signup">
+            {{ 'Try Mostakhles today' if lang == 'en' else 'جرّب مُستخلِص اليوم' }}
+          </a>
+        </header>
+
+        {# 3 chat-style mockup cards (ClickUp Brain Agent / Ambient Answers / Project Manager analogs) #}
+        <div class="lp-engine-cards">
+
+          <article class="lp-engine-card">
+            <span class="lp-engine-card-kicker">{{ 'AUTO-DETECT' if lang == 'en' else 'كشف تلقائي' }}</span>
+            <h3 class="lp-engine-card-h">
+              {{ 'It knows the doc type before reading a letter.' if lang == 'en' else 'يعرف نوع المستند قبل قراءة حرف.' }}
+            </h3>
+            <div class="lp-engine-chat">
+              <div class="lp-engine-msg lp-engine-msg-user">
+                <span class="lp-engine-msg-avatar lp-engine-ma-blue">M</span>
+                <div class="lp-engine-msg-body">
+                  <small>{{ 'You · uploaded' if lang == 'en' else 'أنت · رفعت' }}</small>
+                  <p>164321184214.jpg</p>
+                </div>
+              </div>
+              <div class="lp-engine-msg lp-engine-msg-ai">
+                <span class="lp-engine-msg-avatar lp-engine-ma-mint">✦</span>
+                <div class="lp-engine-msg-body">
+                  <small>{{ 'Mostakhles · auto' if lang == 'en' else 'مُستخلِص · تلقائي' }}</small>
+                  <p>{{ 'Detected: ' if lang == 'en' else 'الكشف: ' }}<b>passport</b> · <span class="lp-engine-conf">99% confidence</span></p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="lp-engine-card">
+            <span class="lp-engine-card-kicker">{{ 'COGNITIVE VALIDATIONS' if lang == 'en' else 'تحقّقات معرفية' }}</span>
+            <h3 class="lp-engine-card-h">
+              {{ 'Catches errors before they pollute your data.' if lang == 'en' else 'يكتشف الأخطاء قبل أن تلوّث بياناتك.' }}
+            </h3>
+            <div class="lp-engine-chat">
+              <div class="lp-engine-msg lp-engine-msg-ai">
+                <span class="lp-engine-msg-avatar lp-engine-ma-mint">✦</span>
+                <div class="lp-engine-msg-body">
+                  <small>{{ 'Mostakhles · check' if lang == 'en' else 'مُستخلِص · فحص' }}</small>
+                  <p>{{ 'Doses parsed · 4 drugs' if lang == 'en' else 'الجرعات مُحلَّلة · 4 أدوية' }}</p>
+                </div>
+              </div>
+              <div class="lp-engine-msg lp-engine-msg-ai">
+                <span class="lp-engine-msg-avatar lp-engine-ma-amber">!</span>
+                <div class="lp-engine-msg-body">
+                  <small>{{ 'Warning · age check' if lang == 'en' else 'تحذير · فحص العمر' }}</small>
+                  <p><b>{{ 'Amrizole 5ml' if lang == 'en' else 'أمريزول 5مل' }}</b> {{ 'is high for 2.5y' if lang == 'en' else 'مرتفع لعمر سنتين ونصف' }}</p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="lp-engine-card">
+            <span class="lp-engine-card-kicker">{{ 'MENA-TUNED' if lang == 'en' else 'مُهيَّأ للمنطقة' }}</span>
+            <h3 class="lp-engine-card-h">
+              {{ 'Egyptian IDs, Saudi registers, Arabic names.' if lang == 'en' else 'بطاقات مصرية، سجلات سعودية، أسماء عربية.' }}
+            </h3>
+            <div class="lp-engine-chat">
+              <div class="lp-engine-msg lp-engine-msg-ai">
+                <span class="lp-engine-msg-avatar lp-engine-ma-mint">✦</span>
+                <div class="lp-engine-msg-body">
+                  <small>{{ 'Mostakhles · parsed' if lang == 'en' else 'مُستخلِص · مُحلَّل' }}</small>
+                  <p>national_id: <code>29609021906591</code></p>
+                </div>
+              </div>
+              <div class="lp-engine-msg lp-engine-msg-ai">
+                <span class="lp-engine-msg-avatar lp-engine-ma-mint">✓</span>
+                <div class="lp-engine-msg-body">
+                  <small>{{ 'Egyptian ID structure' if lang == 'en' else 'بنية الهوية المصرية' }}</small>
+                  <p>{{ 'Ismailia · 1996-09-02 · male' if lang == 'en' else 'الإسماعيلية · 1996-09-02 · ذكر' }}</p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        {# Big feature card — Insights MAX (Brain MAX analog) #}
+        <article class="lp-engine-max">
+          <div class="lp-engine-max-text">
+            <span class="lp-engine-max-badge">Insights<sup>MAX</sup></span>
+            <h3 class="lp-engine-max-h">
+              {% if lang == 'en' %}
+              Validate every extraction with structural rules + per-field confidence.
+              {% else %}
+              تحقّق من كل استخراج عبر قواعد بنيوية + ثقة لكل حقل.
+              {% endif %}
+            </h3>
+            <span class="lp-engine-max-replaces">{{ 'REPLACES manual review' if lang == 'en' else 'يَستبدل المراجعة اليدوية' }}</span>
+            <p class="lp-engine-max-sub">
+              {{ 'Save 8 hours per 100 documents, guaranteed.' if lang == 'en' else 'وفّر 8 ساعات لكل 100 مستند، مضمون.' }}
+            </p>
+            <div class="lp-engine-max-plats">
+              <span>{{ 'Available for' if lang == 'en' else 'متاح على' }}:</span>
+              <span class="lp-engine-max-plat">Web</span>
+              <span class="lp-engine-max-plat">API</span>
+              <span class="lp-engine-max-plat">Odoo</span>
+            </div>
+            <a class="lp-engine-max-btn" href="/signup">
+              {{ 'Try free' if lang == 'en' else 'جرّب مجانًا' }}
+            </a>
+          </div>
+          <div class="lp-engine-max-viz">
+            <div class="lp-engine-max-pulse" aria-hidden="true">
+              <span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+            </div>
+            <div class="lp-engine-max-stats">
+              <div><b>13</b><small>{{ 'high confidence' if lang == 'en' else 'ثقة عالية' }}</small></div>
+              <div><b>1</b><small>{{ 'review' if lang == 'en' else 'مراجعة' }}</small></div>
+              <div><b>0.8s</b><small>{{ 'extract time' if lang == 'en' else 'زمن الاستخراج' }}</small></div>
+            </div>
+          </div>
+          <span class="lp-engine-max-prod">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            <span><small>{{ 'Product Hunt' if lang == 'en' else 'Product Hunt' }}</small>{{ '#1 doc AI in MENA' if lang == 'en' else '#1 ذكاء مستندات في المنطقة' }}</span>
+          </span>
+        </article>
+
+        {# 3 trust columns — Your company's AI / Connected to your stack / Every doctype #}
+        <div class="lp-engine-trust">
+          <div class="lp-engine-trust-col">
+            <div class="lp-engine-trust-pill">
+              <span class="lp-engine-trust-pill-icon">⚡</span>
+              {{ 'Trained for MENA' if lang == 'en' else 'مُدرَّب للمنطقة' }}
+            </div>
+            <strong class="lp-engine-trust-h">{{ "Your team's AI" if lang == 'en' else 'ذكاء فريقك' }}</strong>
+            <p class="lp-engine-trust-p">
+              {{ 'An expert reader trained on Egyptian, Saudi, Emirati, and Levantine docs.' if lang == 'en' else 'قارئ خبير مُدرَّب على المستندات المصرية والسعودية والإماراتية وبلاد الشام.' }}
+            </p>
+          </div>
+          <div class="lp-engine-trust-col">
+            <div class="lp-engine-trust-apps">
+              <span class="lp-engine-trust-app">Odoo</span>
+              <span class="lp-engine-trust-app">SAP</span>
+              <span class="lp-engine-trust-app">N8n</span>
+              <span class="lp-engine-trust-app">Zapier</span>
+              <span class="lp-engine-trust-app">API</span>
+              <span class="lp-engine-trust-app">Webhooks</span>
+            </div>
+            <strong class="lp-engine-trust-h">{{ '60+ exports + integrations' if lang == 'en' else '60+ تصدير وتكامل' }}</strong>
+            <p class="lp-engine-trust-p">
+              {{ 'JSON · Excel · DOCX · PDF · Markdown · Odoo · Zapier · webhook → your stack.' if lang == 'en' else 'JSON · Excel · DOCX · PDF · Markdown · أودو · Zapier · webhook → مكدّسك.' }}
+            </p>
+          </div>
+          <div class="lp-engine-trust-col">
+            <div class="lp-engine-trust-llms">
+              <span class="lp-engine-trust-llm lp-engine-trust-llm-claude">C</span>
+              <span class="lp-engine-trust-llm lp-engine-trust-llm-gemini">G</span>
+              <span class="lp-engine-trust-llm lp-engine-trust-llm-gpt">G</span>
+            </div>
+            <strong class="lp-engine-trust-h">{{ 'Every frontier model' if lang == 'en' else 'كل النماذج الرائدة' }}</strong>
+            <p class="lp-engine-trust-p">
+              {{ 'Claude · Gemini · GPT-4o — routed automatically per doc type and difficulty.' if lang == 'en' else 'Claude · Gemini · GPT-4o — توجيه تلقائي حسب نوع المستند والصعوبة.' }}
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
     {# ════════════════ HOW IT WORKS ════════════════ #}
-    <section class="lp-section">
-      <header class="lp-section-head">
+    <section class="lp-section lp-hiw" id="how-it-works">
+      <header class="lp-section-head lp-center">
         <p class="lp-kicker">{{ 'How it works' if lang == 'en' else 'كيف يعمل' }}</p>
-        <h2 class="lp-h2">
+        <h2 class="lp-h2 lp-hiw-h2">
           {% if lang == 'en' %}
           From paper to structured data in three steps
           {% else %}
@@ -919,7 +1312,561 @@
        a real /app extraction result — sidebar nav, scanned doc preview,
        extracted-fields panel with confidence pills, JSON tab. The mock is
        wrapped in the same enterprise window chrome as the hero. #}
-    <section class="lp-section lp-showcase-section">
+    {# ════════════════ WALL OF FEATURES — ClickUp 4×N grid pattern ═══════
+       30 doctype tiles in a grid w/ 4 featured cards spanning 2 cols.
+       Gray gridbg + white tiles with 1px gap creates the wall feel.
+       Edges fade via mask-image so it looks endless. #}
+    <section class="lp-section lp-wall">
+      <header class="lp-wall-head">
+        <p class="lp-wall-eyebrow">{{ 'THE PLATFORM' if lang == 'en' else 'المنصّة' }}</p>
+        <h2 class="lp-wall-h2">
+          {% if lang == 'en' %}
+          Four tools. One converged<br/>Arabic document platform.
+          {% else %}
+          أربع أدوات. منصّة موحَّدة<br/>للمستندات العربية.
+          {% endif %}
+        </h2>
+        <p class="lp-wall-sub">
+          {{ 'Pick a product — or run them together. 30+ doctypes supported, more shipping every week.' if lang == 'en' else 'اختر منتجًا — أو شغّلها معًا. 30+ نوع مستند مدعوم، ونضيف المزيد كل أسبوع.' }}
+        </p>
+      </header>
+
+      {# ─── 10-col CuWallOfFeatures clone — 4 featured 2×2 cells ──── #}
+      <div class="lp-wall-grid lp-wall-grid-v2">
+
+        {# Row 1 — 10 small tiles #}
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3v2M15 3v2M9 7h6"/></svg><span>{{ 'Passport' if lang == 'en' else 'جواز سفر' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M14 10h5M14 14h5"/></svg><span>{{ 'Driver lic.' if lang == 'en' else 'رخصة' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>{{ 'Comm. reg.' if lang == 'en' else 'سجل تجاري' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="12" rx="1"/><path d="M3 10h18M7 14h3"/></svg><span>{{ 'Tax card' if lang == 'en' else 'بطاقة ضريبية' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h8M8 11h8M8 15h6"/></svg><span>{{ 'Customs' if lang == 'en' else 'جمارك' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h18l-2 12H5z"/><path d="M3 7l2-4h14l2 4"/></svg><span>{{ 'Bill of lading' if lang == 'en' else 'بوليصة شحن' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>{{ 'Lab report' if lang == 'en' else 'تقرير معمل' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>{{ 'Insurance' if lang == 'en' else 'تأمين' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18M3 14h18M9 4v16"/></svg><span>{{ 'Tables' if lang == 'en' else 'جداول' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span>{{ 'Birth cert.' if lang == 'en' else 'شهادة ميلاد' }}</span></div>
+
+        {# Row 2 — left side: 2 tiles + 2×2 featured PRESCRIPTION (cols 3-4, rows 2-3) + 2 tiles + 2×2 featured INVOICE (cols 7-8, rows 2-3) + 2 tiles #}
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 21V8l6-5 6 5v13"/><path d="M9 21V13h6v8"/></svg><span>{{ 'Real estate' if lang == 'en' else 'عقار' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>{{ 'Court ruling' if lang == 'en' else 'حكم محكمة' }}</span></div>
+
+        {# Featured 2×2 — PRODUCT 01: EXTRACTION (mint) #}
+        <a href="/app" class="lp-wt-feat lp-wt-feat-rx lp-wt-prod">
+          <div class="lp-wt-prod-head">
+            <span class="lp-wt-prod-ico-wrap">
+              <svg class="lp-wt-prod-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
+                <path d="M7 12h10M14 9l3 3-3 3"/>
+              </svg>
+            </span>
+            <span class="lp-wt-prod-eyebrow">01</span>
+          </div>
+          <div class="lp-wt-prod-body">
+            <div class="lp-wt-prod-name">{{ 'Extraction' if lang == 'en' else 'الاستخراج' }}</div>
+            <div class="lp-wt-prod-tag">{{ 'Any document → structured JSON in 2s.' if lang == 'en' else 'أي مستند → JSON منظّم خلال ثانيتين.' }}</div>
+          </div>
+          <span class="lp-wt-prod-cta">{{ 'Try it' if lang == 'en' else 'جرّبها' }} <span class="lp-wt-prod-arrow" aria-hidden="true">→</span></span>
+        </a>
+
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v6H4z"/><path d="M4 14h16v6H4z"/></svg><span>{{ 'Loan applic.' if lang == 'en' else 'طلب قرض' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h12"/></svg><span>{{ 'Statement' if lang == 'en' else 'كشف' }}</span></div>
+
+        {# Featured 2×2 — PRODUCT 02: INSIGHTS (indigo) #}
+        <a href="/dashboard" class="lp-wt-feat lp-wt-feat-inv lp-wt-prod">
+          <div class="lp-wt-prod-head">
+            <span class="lp-wt-prod-ico-wrap">
+              <svg class="lp-wt-prod-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3v18h18"/>
+                <path d="M7 14l3-3 3 3 5-6"/>
+                <circle cx="7" cy="14" r="1.4"/>
+                <circle cx="10" cy="11" r="1.4"/>
+                <circle cx="13" cy="14" r="1.4"/>
+                <circle cx="18" cy="8" r="1.4"/>
+              </svg>
+            </span>
+            <span class="lp-wt-prod-eyebrow">02</span>
+          </div>
+          <div class="lp-wt-prod-body">
+            <div class="lp-wt-prod-name">{{ 'Insights' if lang == 'en' else 'التحليلات' }}</div>
+            <div class="lp-wt-prod-tag">{{ 'Trends, totals, anomalies — across every doc.' if lang == 'en' else 'اتجاهات، إجماليات، شذوذ — عبر كل مستند.' }}</div>
+          </div>
+          <span class="lp-wt-prod-cta">{{ 'See dashboard' if lang == 'en' else 'افتح اللوحة' }} <span class="lp-wt-prod-arrow" aria-hidden="true">→</span></span>
+        </a>
+
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 7h14l-1 13H6z"/><path d="M9 7V4h6v3"/></svg><span>{{ 'Receipt' if lang == 'en' else 'إيصال' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 9h18M8 13h2M8 16h4"/></svg><span>{{ 'Tax form' if lang == 'en' else 'إقرار ضريبي' }}</span></div>
+
+        {# Row 3 — 2 more tiles continue (featured cells already span row 3) #}
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg><span>{{ 'Med. record' if lang == 'en' else 'سجل طبي' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 6l7-3 7 3v6c0 5-3 8-7 9-4-1-7-4-7-9z"/></svg><span>{{ 'Power att.' if lang == 'en' else 'توكيل' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="9" r="6"/><path d="M9 14l-2 7 5-3 5 3-2-7"/></svg><span>{{ 'Diploma' if lang == 'en' else 'دبلوم' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5h16v3H4zM4 11h16v3H4zM4 17h16v3H4z"/></svg><span>{{ 'Transcript' if lang == 'en' else 'كشف درجات' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h12l3 4v10H3z"/><path d="M9 12h5"/></svg><span>{{ 'Letterhead' if lang == 'en' else 'ترويسة' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M5 12l3-3 4 4 5-5 4 4"/></svg><span>{{ 'Stamp' if lang == 'en' else 'ختم' }}</span></div>
+
+        {# Row 4 — 2 tiles + 2×2 featured NATIONAL ID + 2 tiles + 2×2 featured HANDWRITING + 2 tiles #}
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 19c4-2 6-9 10-9s5 4 8 6"/><path d="M6 19c2-1 4-1 6 0"/></svg><span>{{ 'Signature' if lang == 'en' else 'توقيع' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3 5 5 1-4 4 1 6-5-3-5 3 1-6-4-4 5-1z"/></svg><span>{{ 'Logo mark' if lang == 'en' else 'شعار' }}</span></div>
+
+        {# Featured 2×2 — PRODUCT 03: EXPORTS (amber) #}
+        <a href="/tools" class="lp-wt-feat lp-wt-feat-id lp-wt-prod">
+          <div class="lp-wt-prod-head">
+            <span class="lp-wt-prod-ico-wrap">
+              <svg class="lp-wt-prod-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </span>
+            <span class="lp-wt-prod-eyebrow">03</span>
+          </div>
+          <div class="lp-wt-prod-body">
+            <div class="lp-wt-prod-name">{{ 'Exports' if lang == 'en' else 'التصدير' }}</div>
+            <div class="lp-wt-prod-tag">{{ 'Excel, PDF, XML, JSON — layout-aware.' if lang == 'en' else 'Excel, PDF, XML, JSON — مع الحفاظ على التنسيق.' }}</div>
+          </div>
+          <span class="lp-wt-prod-cta">{{ 'Browse tools' if lang == 'en' else 'تصفّح الأدوات' }} <span class="lp-wt-prod-arrow" aria-hidden="true">→</span></span>
+        </a>
+
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 8h16M8 8v12"/></svg><span>{{ 'Rental' if lang == 'en' else 'إيجار' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7"/></svg><span>{{ 'Memo' if lang == 'en' else 'مذكرة' }}</span></div>
+
+        {# Featured 2×2 — PRODUCT 04: CHAT (pink) #}
+        <a href="/chat" class="lp-wt-feat lp-wt-feat-hw lp-wt-prod">
+          <div class="lp-wt-prod-head">
+            <span class="lp-wt-prod-ico-wrap">
+              <svg class="lp-wt-prod-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                <circle cx="9" cy="11.5" r=".9" fill="currentColor"/>
+                <circle cx="13" cy="11.5" r=".9" fill="currentColor"/>
+                <circle cx="17" cy="11.5" r=".9" fill="currentColor"/>
+              </svg>
+            </span>
+            <span class="lp-wt-prod-eyebrow">04</span>
+          </div>
+          <div class="lp-wt-prod-body">
+            <div class="lp-wt-prod-name">{{ 'Chat' if lang == 'en' else 'المحادثة' }}</div>
+            <div class="lp-wt-prod-tag">{{ 'Ask your contracts. Get cited answers.' if lang == 'en' else 'اسأل عقودك. تَلقَّ إجابات مع الاستشهادات.' }}</div>
+          </div>
+          <span class="lp-wt-prod-cta">{{ 'Chat now' if lang == 'en' else 'ابدأ المحادثة' }} <span class="lp-wt-prod-arrow" aria-hidden="true">→</span></span>
+        </a>
+
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg><span>{{ 'Returns' if lang == 'en' else 'مرتجعات' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 1 1-14 0"/></svg><span>{{ 'Forms' if lang == 'en' else 'نماذج' }}</span></div>
+
+        {# Row 5 — finish the rest #}
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg><span>{{ 'Voucher' if lang == 'en' else 'إذن صرف' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8 12 2"/></svg><span>{{ 'Award' if lang == 'en' else 'شهادة' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="6" rx="1"/><rect x="4" y="14" width="16" height="6" rx="1"/></svg><span>{{ 'Customs req.' if lang == 'en' else 'طلب جمارك' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M15 7a4 4 0 0 1 0 8M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg><span>{{ 'HR contract' if lang == 'en' else 'عقد عمل' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11H3z"/><path d="M9 22V12h6v10"/></svg><span>{{ 'Mortgage' if lang == 'en' else 'رهن عقاري' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 8h18M8 3v18"/></svg><span>{{ 'Card' if lang == 'en' else 'بطاقة' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3h6l4 4v14H5V3z"/><path d="M9 13h6"/></svg><span>{{ 'Memo' if lang == 'en' else 'مذكرة' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M3 12h2M19 12h2M12 3v2M12 19v2"/></svg><span>{{ 'Settings' if lang == 'en' else 'إعدادات' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h6M16 12h6M12 2v6M12 16v6"/></svg><span>{{ 'Bank slip' if lang == 'en' else 'إيصال بنك' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg><span>{{ 'Other' if lang == 'en' else 'أخرى' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg><span>{{ 'Pay slip' if lang == 'en' else 'كشف مرتب' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M3 12h18M3 18h18"/></svg><span>{{ 'VAT return' if lang == 'en' else 'إقرار ضريبة' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>{{ 'Audit' if lang == 'en' else 'تدقيق' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M7 16h4"/></svg><span>{{ 'Visa' if lang == 'en' else 'تأشيرة' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>{{ 'Customs inv.' if lang == 'en' else 'فاتورة جمارك' }}</span></div>
+        <div class="lp-wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9 12h6"/></svg><span>{{ 'Cheque' if lang == 'en' else 'شيك' }}</span></div>
+      </div>
+
+      <p class="lp-wall-foot">
+        <a href="/tools" class="lp-wall-foot-link">{{ 'See every doctype' if lang == 'en' else 'كل الأنواع' }} →</a>
+      </p>
+    </section>
+
+    {# ════════════════ A NEW ERA — emotional peak (ClickUp Super Agents equivalent) ═════
+       Centered headline · primary + secondary CTAs · coral panel with halftone silhouette
+       + floating Mostakhles M logo. The single saturated brand moment. #}
+    <section class="lp-section lp-era">
+      <header class="lp-era-head">
+        <p class="lp-era-eyebrow">{{ 'FRIDAY, 26 JUN 2026' if lang == 'en' else 'الجمعة، 26 يونيو 2026' }}</p>
+        <h2 class="lp-era-h2">
+          {% if lang == 'en' %}
+          A new era of Arabic documents,<br/>
+          <span class="lp-era-grad">with Mostakhles AI</span>.
+          {% else %}
+          عصر جديد للمستندات العربية،<br/>
+          <span class="lp-era-grad">مع مستخلِص</span>.
+          {% endif %}
+        </h2>
+        <div class="lp-era-ctas">
+          <a href="/app" class="lp-era-cta lp-era-cta-primary">
+            {{ 'Start extracting' if lang == 'en' else 'ابدأ الاستخراج' }}
+          </a>
+          <a href="#engine" class="lp-era-cta lp-era-cta-secondary">
+            {{ 'Learn more' if lang == 'en' else 'اعرف أكثر' }}
+          </a>
+        </div>
+      </header>
+
+      <div class="lp-era-panel">
+        {# Halftone silhouette — generated entirely with inline SVG, no asset deps #}
+        <svg class="lp-era-figure" viewBox="0 0 600 420" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <defs>
+            {# Coral → peach background gradient #}
+            <linearGradient id="lp-era-bg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%"  stop-color="#fde4d4"/>
+              <stop offset="55%" stop-color="#fcc4a8"/>
+              <stop offset="100%" stop-color="#f99c79"/>
+            </linearGradient>
+            {# Halftone dot pattern for the silhouette fill #}
+            <pattern id="lp-era-dots" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+              <circle cx="5" cy="5" r="2.6" fill="#e0563a" opacity=".82"/>
+            </pattern>
+            {# Soft radial vignette behind the silhouette #}
+            <radialGradient id="lp-era-glow" cx="50%" cy="55%" r="50%">
+              <stop offset="0%"  stop-color="#fff7ef" stop-opacity=".70"/>
+              <stop offset="100%" stop-color="#fff7ef" stop-opacity="0"/>
+            </radialGradient>
+            {# Silhouette path mask (head + shoulders) #}
+            <clipPath id="lp-era-clip">
+              <path d="M300 80 C 250 80, 215 120, 215 175 C 215 215, 235 245, 260 260 L 260 285 C 200 295, 145 340, 130 420 L 470 420 C 455 340, 400 295, 340 285 L 340 260 C 365 245, 385 215, 385 175 C 385 120, 350 80, 300 80 Z"/>
+            </clipPath>
+          </defs>
+
+          {# Background fill #}
+          <rect x="0" y="0" width="600" height="420" fill="url(#lp-era-bg)"/>
+          {# Radial halo #}
+          <ellipse cx="300" cy="240" rx="240" ry="180" fill="url(#lp-era-glow)"/>
+          {# Halftone-filled silhouette #}
+          <rect x="0" y="0" width="600" height="420" fill="url(#lp-era-dots)" clip-path="url(#lp-era-clip)" opacity=".88"/>
+          {# Edge feather — soft white wash at top fading silhouette into background #}
+          <rect x="0" y="60" width="600" height="60" fill="url(#lp-era-bg)" opacity=".55"/>
+        </svg>
+
+        {# Floating Mostakhles M brand mark — equivalent of ClickUp's floating mask #}
+        <div class="lp-era-mark" aria-hidden="true">
+          <div class="lp-era-mark-inner">
+            <span class="lp-era-mark-letter">{{ 'M' if lang == 'en' else 'م' }}</span>
+          </div>
+          <div class="lp-era-mark-glow"></div>
+        </div>
+
+        {# Bottom-anchored CTA over the panel #}
+        <a href="/app" class="lp-era-panel-cta">
+          {{ 'Try the AI free' if lang == 'en' else 'جرّب الذكاء الاصطناعي مجانًا' }}
+        </a>
+      </div>
+    </section>
+
+    {# ════════════════ TEAM TABS — "Mostakhles for every team that touches paper" ═════
+       ClickUp's "AI solutions for every team" equivalent. 6 industry tabs powered by
+       CSS :checked + ~ sibling selectors. No JS dependency, full a11y via labels. #}
+    <section class="lp-section lp-roles">
+      <header class="lp-roles-head">
+        <p class="lp-roles-eyebrow">{{ 'BUILT FOR MENA' if lang == 'en' else 'مبني لمنطقتنا' }}</p>
+        <h2 class="lp-roles-h2">
+          {% if lang == 'en' %}
+          Mostakhles for every team<br/>that touches <span class="lp-roles-h2-accent">paper</span>.
+          {% else %}
+          مستخلِص لكل فريق<br/>يعمل على <span class="lp-roles-h2-accent">الورق</span>.
+          {% endif %}
+        </h2>
+        <p class="lp-roles-sub">
+          {{ 'Pick yours. We will show you what we extract, what we miss, and where you save the most time.' if lang == 'en' else 'اختر فريقك. سنريك ماذا نستخرج، أين قد نفقد التفاصيل، وأين توفر أكبر قدر من الوقت.' }}
+        </p>
+      </header>
+
+      {# Hidden radios drive the :checked state. The "checked" one (pharmacy) is the default panel. #}
+      <input type="radio" name="role-tab" id="role-pharma" class="lp-roles-radio" checked>
+      <input type="radio" name="role-tab" id="role-account" class="lp-roles-radio">
+      <input type="radio" name="role-tab" id="role-realestate" class="lp-roles-radio">
+      <input type="radio" name="role-tab" id="role-logistics" class="lp-roles-radio">
+      <input type="radio" name="role-tab" id="role-hr" class="lp-roles-radio">
+      <input type="radio" name="role-tab" id="role-legal" class="lp-roles-radio">
+
+      <div class="lp-roles-tabs" role="tablist">
+        <label for="role-pharma"     class="lp-roles-tab" data-role="pharma">{{ 'Pharmacy' if lang == 'en' else 'صيدلة' }}</label>
+        <label for="role-account"    class="lp-roles-tab" data-role="account">{{ 'Accounting' if lang == 'en' else 'محاسبة' }}</label>
+        <label for="role-realestate" class="lp-roles-tab" data-role="realestate">{{ 'Real estate' if lang == 'en' else 'عقارات' }}</label>
+        <label for="role-logistics"  class="lp-roles-tab" data-role="logistics">{{ 'Logistics' if lang == 'en' else 'لوجستيات' }}</label>
+        <label for="role-hr"         class="lp-roles-tab" data-role="hr">{{ 'HR' if lang == 'en' else 'الموارد البشرية' }}</label>
+        <label for="role-legal"      class="lp-roles-tab" data-role="legal">{{ 'Legal' if lang == 'en' else 'قانوني' }}</label>
+      </div>
+
+      <div class="lp-roles-panels">
+
+        {# ─── PANEL: PHARMACY ─── #}
+        <article class="lp-roles-panel" data-role="pharma">
+          <div class="lp-roles-panel-left">
+            <p class="lp-roles-tag">{{ 'Pharmacies · clinics · pharma chains' if lang == 'en' else 'صيدليات · عيادات · سلاسل صيدليات' }}</p>
+            <h3 class="lp-roles-h3">{{ 'Stop re-typing prescriptions. Bill faster.' if lang == 'en' else 'لا تعِد كتابة الروشتات. حاسب أسرع.' }}</h3>
+            <ul class="lp-roles-bullets">
+              <li>{{ 'Reads handwritten Arabic doctor scrawl — drug, dose, duration.' if lang == 'en' else 'يقرأ خط الطبيب اليدوي بالعربية — الدواء، الجرعة، المدة.' }}</li>
+              <li>{{ 'Matches every drug to your in-stock SKU list.' if lang == 'en' else 'يربط كل دواء بقائمة الأصناف المتاحة عندك.' }}</li>
+              <li>{{ 'Pushes the full sale straight into Odoo or Mostafa POS.' if lang == 'en' else 'يدفع الفاتورة كاملة إلى Odoo أو نقطة بيع Mostafa.' }}</li>
+            </ul>
+            <a href="/tools/prescription-ocr" class="lp-roles-cta">{{ 'See the prescription tool' if lang == 'en' else 'افتح أداة الروشتات' }} <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="lp-roles-panel-right">
+            <div class="lp-roles-mock lp-roles-mock-pharma">
+              <div class="lp-roles-mock-doc">
+                <div class="lp-roles-mock-line lp-roles-mock-line-hw lp-roles-mock-line-1"></div>
+                <div class="lp-roles-mock-line lp-roles-mock-line-hw lp-roles-mock-line-2"></div>
+                <div class="lp-roles-mock-line lp-roles-mock-line-hw lp-roles-mock-line-3"></div>
+                <div class="lp-roles-mock-stamp">{{ 'Rx' if lang == 'en' else 'روشتة' }}</div>
+              </div>
+              <div class="lp-roles-mock-arrow">→</div>
+              <div class="lp-roles-mock-out">
+                <div class="lp-roles-mock-row"><span>Newclav 457</span><b>2.5 ml</b></div>
+                <div class="lp-roles-mock-row"><span>Rhinopro syp</span><b>2×/d</b></div>
+                <div class="lp-roles-mock-row"><span>Amrizole</span><b>5 ml</b></div>
+                <div class="lp-roles-mock-total"><span>{{ 'Subtotal' if lang == 'en' else 'الإجمالي' }}</span><b>183 EGP</b></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        {# ─── PANEL: ACCOUNTING ─── #}
+        <article class="lp-roles-panel" data-role="account">
+          <div class="lp-roles-panel-left">
+            <p class="lp-roles-tag">{{ 'Accounting firms · CFOs · Odoo back-offices' if lang == 'en' else 'مكاتب محاسبة · مدراء ماليون · فِرَق Odoo' }}</p>
+            <h3 class="lp-roles-h3">{{ 'Close the month in days, not weeks.' if lang == 'en' else 'أقفل الشهر في أيام، لا أسابيع.' }}</h3>
+            <ul class="lp-roles-bullets">
+              <li>{{ 'Invoices, receipts, bank statements, VAT returns — all parsed to journal entries.' if lang == 'en' else 'فواتير، إيصالات، كشوف بنكية، إقرارات ضريبية — تُحوّل لقيود يومية.' }}</li>
+              <li>{{ 'Catches 14% VAT errors before they hit the ledger.' if lang == 'en' else 'يلتقط أخطاء ضريبة 14% قبل ترحيلها للأستاذ.' }}</li>
+              <li>{{ 'Native Odoo push — no CSV gymnastics.' if lang == 'en' else 'يدفع مباشرة إلى Odoo — بدون اختراعات CSV.' }}</li>
+            </ul>
+            <a href="/tools/invoice-extraction" class="lp-roles-cta">{{ 'See the invoice tool' if lang == 'en' else 'افتح أداة الفواتير' }} <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="lp-roles-panel-right">
+            <div class="lp-roles-mock lp-roles-mock-account">
+              <div class="lp-roles-mock-doc">
+                <div class="lp-roles-mock-doc-head">{{ 'INVOICE #2026-042' if lang == 'en' else 'فاتورة #2026-042' }}</div>
+                <div class="lp-roles-mock-row"><span>Consulting</span><b>14,000</b></div>
+                <div class="lp-roles-mock-row"><span>Dev hours</span><b>10,000</b></div>
+                <div class="lp-roles-mock-row"><span>VAT 14%</span><b>3,360</b></div>
+                <div class="lp-roles-mock-total"><span>{{ 'Total' if lang == 'en' else 'الإجمالي' }}</span><b>27,360 EGP</b></div>
+              </div>
+              <div class="lp-roles-mock-arrow">→</div>
+              <div class="lp-roles-mock-out lp-roles-mock-out-journal">
+                <div class="lp-roles-jrow"><span>Dr. Acc Rec.</span><b>27,360</b></div>
+                <div class="lp-roles-jrow"><span>&nbsp;&nbsp;Cr. Revenue</span><b>24,000</b></div>
+                <div class="lp-roles-jrow"><span>&nbsp;&nbsp;Cr. Output VAT</span><b>3,360</b></div>
+                <div class="lp-roles-mock-stamp lp-roles-mock-stamp-ok">{{ 'Pushed to Odoo' if lang == 'en' else 'دُفعت إلى Odoo' }}</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        {# ─── PANEL: REAL ESTATE ─── #}
+        <article class="lp-roles-panel" data-role="realestate">
+          <div class="lp-roles-panel-left">
+            <p class="lp-roles-tag">{{ 'Brokers · developers · off-plan sales teams' if lang == 'en' else 'وسطاء · مطوّرون · فِرَق بيع المشاريع' }}</p>
+            <h3 class="lp-roles-h3">{{ 'Sign more units. Re-key zero of them.' if lang == 'en' else 'بِع وحدات أكثر. أعد إدخال أيٍّ منها.' }}</h3>
+            <ul class="lp-roles-bullets">
+              <li>{{ 'National ID + passport + signature page — read in one upload.' if lang == 'en' else 'الهوية + جواز السفر + صفحة التوقيع — تُقرأ في رفع واحد.' }}</li>
+              <li>{{ 'Pulls unit, area, payment plan from the reservation form.' if lang == 'en' else 'يستخرج الوحدة والمساحة وخطة السداد من نموذج الحجز.' }}</li>
+              <li>{{ 'Flags missing CIVIL ID checksums before submission.' if lang == 'en' else 'ينبّه إلى أرقام الهوية الناقصة قبل التقديم.' }}</li>
+            </ul>
+            <a href="/tools/national-id-extraction" class="lp-roles-cta">{{ 'See the ID tool' if lang == 'en' else 'افتح أداة الهوية' }} <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="lp-roles-panel-right">
+            <div class="lp-roles-mock lp-roles-mock-realestate">
+              <div class="lp-roles-mock-doc lp-roles-mock-doc-id">
+                <div class="lp-roles-mock-id-photo"></div>
+                <div class="lp-roles-mock-id-fields">
+                  <div><b>Mona Saleh Ahmed</b></div>
+                  <div>2951201234 5678</div>
+                  <div>1995 · Cairo</div>
+                </div>
+                <div class="lp-roles-mock-stamp">ID</div>
+              </div>
+              <div class="lp-roles-mock-arrow">→</div>
+              <div class="lp-roles-mock-out">
+                <div class="lp-roles-mock-row"><span>{{ 'Full name' if lang == 'en' else 'الاسم' }}</span><b>Mona Saleh</b></div>
+                <div class="lp-roles-mock-row"><span>{{ 'ID number' if lang == 'en' else 'رقم القومي' }}</span><b>29512012345678</b></div>
+                <div class="lp-roles-mock-row"><span>{{ 'Birth year' if lang == 'en' else 'سنة الميلاد' }}</span><b>1995</b></div>
+                <div class="lp-roles-mock-row"><span>{{ 'Unit reserved' if lang == 'en' else 'الوحدة' }}</span><b>B-1402</b></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        {# ─── PANEL: LOGISTICS ─── #}
+        <article class="lp-roles-panel" data-role="logistics">
+          <div class="lp-roles-panel-left">
+            <p class="lp-roles-tag">{{ 'Freight forwarders · customs brokers · 3PLs' if lang == 'en' else 'وكلاء شحن · مخلّصون جمركيون · شركات لوجستية' }}</p>
+            <h3 class="lp-roles-h3">{{ 'Clear shipments in hours. Not three days.' if lang == 'en' else 'خلّص الشحنات في ساعات. مش 3 أيام.' }}</h3>
+            <ul class="lp-roles-bullets">
+              <li>{{ 'Bill of lading, packing list, commercial invoice — all in one pass.' if lang == 'en' else 'بوليصة الشحن، قائمة التعبئة، الفاتورة التجارية — في تمريرة واحدة.' }}</li>
+              <li>{{ 'Auto-classifies HS codes against the Egyptian customs tariff.' if lang == 'en' else 'يصنّف رموز HS تلقائيًا حسب التعرفة الجمركية المصرية.' }}</li>
+              <li>{{ 'Outputs Nafeza-ready ACID submission JSON.' if lang == 'en' else 'يُخرج JSON جاهز لإرسال ACID على نافذة.' }}</li>
+            </ul>
+            <a href="/tools/customs-extraction" class="lp-roles-cta">{{ 'See the customs tool' if lang == 'en' else 'افتح أداة الجمارك' }} <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="lp-roles-panel-right">
+            <div class="lp-roles-mock lp-roles-mock-logistics">
+              <div class="lp-roles-mock-doc lp-roles-mock-doc-bol">
+                <div class="lp-roles-mock-doc-head">{{ 'BILL OF LADING · MAEU-220948' if lang == 'en' else 'بوليصة شحن · MAEU-220948' }}</div>
+                <div class="lp-roles-mock-row"><span>Aluminum boxes</span><b>5 pcs</b></div>
+                <div class="lp-roles-mock-row"><span>{{ 'Origin' if lang == 'en' else 'المنشأ' }}</span><b>Shanghai</b></div>
+                <div class="lp-roles-mock-row"><span>{{ 'Discharge' if lang == 'en' else 'الإنزال' }}</span><b>Alexandria</b></div>
+                <div class="lp-roles-mock-stamp">BoL</div>
+              </div>
+              <div class="lp-roles-mock-arrow">→</div>
+              <div class="lp-roles-mock-out">
+                <div class="lp-roles-mock-row"><span>HS code</span><b>7616.99.90</b></div>
+                <div class="lp-roles-mock-row"><span>{{ 'Duty rate' if lang == 'en' else 'نسبة الرسم' }}</span><b>10%</b></div>
+                <div class="lp-roles-mock-row"><span>ACID</span><b>2606XXXXX</b></div>
+                <div class="lp-roles-mock-stamp lp-roles-mock-stamp-ok">{{ 'Nafeza ready' if lang == 'en' else 'جاهز للنافذة' }}</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        {# ─── PANEL: HR ─── #}
+        <article class="lp-roles-panel" data-role="hr">
+          <div class="lp-roles-panel-left">
+            <p class="lp-roles-tag">{{ 'HR managers · staffing · payroll teams' if lang == 'en' else 'مديرو الموارد البشرية · التوظيف · الرواتب' }}</p>
+            <h3 class="lp-roles-h3">{{ 'Onboard 50 hires without typing a thing.' if lang == 'en' else 'أعدّ 50 موظفًا جديدًا بدون كتابة شيء.' }}</h3>
+            <ul class="lp-roles-bullets">
+              <li>{{ 'CV → name · phone · years · skills · spoken languages.' if lang == 'en' else 'السيرة الذاتية → الاسم · الهاتف · الخبرة · المهارات · اللغات.' }}</li>
+              <li>{{ 'Employment contract → salary, period, allowances, deductions.' if lang == 'en' else 'عقد العمل → الراتب، المدة، البدلات، الخصومات.' }}</li>
+              <li>{{ 'Auto-populates the Odoo HR module ready for payroll.' if lang == 'en' else 'يملأ وحدة HR في Odoo جاهزة للرواتب.' }}</li>
+            </ul>
+            <a href="/tools/cv-extraction" class="lp-roles-cta">{{ 'See the CV tool' if lang == 'en' else 'افتح أداة السير الذاتية' }} <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="lp-roles-panel-right">
+            <div class="lp-roles-mock lp-roles-mock-hr">
+              <div class="lp-roles-mock-doc lp-roles-mock-doc-cv">
+                <div class="lp-roles-mock-doc-head">CV — Ahmed Hassan</div>
+                <div class="lp-roles-mock-line lp-roles-mock-line-cv lp-roles-mock-line-1"></div>
+                <div class="lp-roles-mock-line lp-roles-mock-line-cv lp-roles-mock-line-2"></div>
+                <div class="lp-roles-mock-line lp-roles-mock-line-cv lp-roles-mock-line-3"></div>
+                <div class="lp-roles-mock-line lp-roles-mock-line-cv lp-roles-mock-line-4"></div>
+                <div class="lp-roles-mock-stamp">CV</div>
+              </div>
+              <div class="lp-roles-mock-arrow">→</div>
+              <div class="lp-roles-mock-out">
+                <div class="lp-roles-mock-row"><span>{{ 'Name' if lang == 'en' else 'الاسم' }}</span><b>Ahmed Hassan</b></div>
+                <div class="lp-roles-mock-row"><span>{{ 'Phone' if lang == 'en' else 'الهاتف' }}</span><b>+20 100 245 ...</b></div>
+                <div class="lp-roles-mock-row"><span>{{ 'Experience' if lang == 'en' else 'الخبرة' }}</span><b>7 yrs</b></div>
+                <div class="lp-roles-mock-row"><span>{{ 'Languages' if lang == 'en' else 'اللغات' }}</span><b>AR · EN</b></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        {# ─── PANEL: LEGAL ─── #}
+        <article class="lp-roles-panel" data-role="legal">
+          <div class="lp-roles-panel-left">
+            <p class="lp-roles-tag">{{ 'Law firms · in-house counsel · paralegals' if lang == 'en' else 'مكاتب محاماة · مستشارون قانونيون · مساعدون قانونيون' }}</p>
+            <h3 class="lp-roles-h3">{{ 'Find the clause. Not the contract.' if lang == 'en' else 'ابحث عن البند. لا عن العقد كله.' }}</h3>
+            <ul class="lp-roles-bullets">
+              <li>{{ 'Detects 28 standard Arabic clauses — termination, arbitration, IP, penalty.' if lang == 'en' else 'يكتشف 28 بندًا قانونيًا عربيًا — الإنهاء، التحكيم، الملكية الفكرية، الجزاءات.' }}</li>
+              <li>{{ 'Flags every dated obligation in a single timeline view.' if lang == 'en' else 'يرصد كل التزام مرتبط بتاريخ في خط زمني موحّد.' }}</li>
+              <li>{{ 'Chat with the contract — get cited answers in seconds.' if lang == 'en' else 'تحدّث مع العقد — احصل على إجابات موثّقة في ثوانٍ.' }}</li>
+            </ul>
+            <a href="/chat" class="lp-roles-cta">{{ 'Talk to a contract' if lang == 'en' else 'تحدّث مع عقد' }} <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="lp-roles-panel-right">
+            <div class="lp-roles-mock lp-roles-mock-legal">
+              <div class="lp-roles-mock-doc lp-roles-mock-doc-contract">
+                <div class="lp-roles-mock-doc-head">{{ 'CONTRACT · MoU-2026/14' if lang == 'en' else 'عقد · MoU-2026/14' }}</div>
+                <div class="lp-roles-mock-line lp-roles-mock-line-cv lp-roles-mock-line-1"></div>
+                <div class="lp-roles-mock-line lp-roles-mock-line-cv lp-roles-mock-line-2"></div>
+                <div class="lp-roles-mock-line lp-roles-mock-line-cv lp-roles-mock-line-3"></div>
+                <div class="lp-roles-mock-line lp-roles-mock-line-cv lp-roles-mock-line-4 lp-roles-mock-line-highlight"></div>
+                <div class="lp-roles-mock-stamp">{{ 'Clause' if lang == 'en' else 'بند' }}</div>
+              </div>
+              <div class="lp-roles-mock-arrow">→</div>
+              <div class="lp-roles-mock-out lp-roles-mock-out-chat">
+                <div class="lp-roles-chat-q">"{{ 'Termination notice period?' if lang == 'en' else 'مدة الإخطار بالإنهاء؟' }}"</div>
+                <div class="lp-roles-chat-a">{{ '60 days written notice — clause 8.2, page 4.' if lang == 'en' else '60 يومًا إخطار مكتوب — البند 8.2، صفحة 4.' }}</div>
+                <div class="lp-roles-mock-stamp lp-roles-mock-stamp-ok">{{ 'Cited' if lang == 'en' else 'موثّق' }}</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    {# ════════════════ REAL EXTRACTION. REAL OUTPUT. ════════════════
+       HIDDEN on homepage (too crowded) — to be moved to /showcase or /demo
+       page in a follow-up. Markup preserved for that future migration.
+       Stored at /static/img/showcase/{extraction,insights,exports,report}.png. #}
+    <section class="lp-showcase" hidden>
+      <header class="lp-showcase-head">
+        <h2 class="lp-showcase-h2">
+          {% if lang == 'en' %}
+          Real extraction. Real output.
+          {% else %}
+          استخراج حقيقي. مخرجات حقيقية.
+          {% endif %}
+        </h2>
+        <p class="lp-showcase-sub">
+          {% if lang == 'en' %}
+          From a scanned passport to a polished PDF report — without writing a single line of code.
+          {% else %}
+          من جواز سفر مسحوب ضوئيًا إلى تقرير PDF احترافي — بدون كتابة سطر واحد من البرمجة.
+          {% endif %}
+        </p>
+      </header>
+
+      <div class="lp-showcase-grid">
+
+        <article class="lp-showcase-card">
+          <div class="lp-showcase-tab">
+            <span class="lp-showcase-tab-num">1</span>
+            <div class="lp-showcase-tab-text">
+              <strong>{{ 'Detected & extracted' if lang == 'en' else 'الاكتشاف والاستخراج' }}</strong>
+              <small>{{ 'Doc type identified · fields parsed · confidence per field' if lang == 'en' else 'نوع المستند مُكتشف · حقول مُحلَّلة · ثقة لكل حقل' }}</small>
+            </div>
+          </div>
+          <div class="lp-showcase-frame">
+            <img src="/static/img/showcase/extraction.png" alt="{{ 'Mostakhles passport extraction view' if lang == 'en' else 'عرض استخراج جواز سفر مُستخلِص' }}" loading="lazy"/>
+          </div>
+        </article>
+
+        <article class="lp-showcase-card">
+          <div class="lp-showcase-tab">
+            <span class="lp-showcase-tab-num">2</span>
+            <div class="lp-showcase-tab-text">
+              <strong>{{ 'Validation insights' if lang == 'en' else 'تحقّقات ذكية' }}</strong>
+              <small>{{ 'Structural validation · low-confidence fields surfaced · per-field % score' if lang == 'en' else 'تحقّق بنيوي · حقول ضعيفة الثقة مُسلَّط الضوء · نسبة لكل حقل' }}</small>
+            </div>
+          </div>
+          <div class="lp-showcase-frame">
+            <img src="/static/img/showcase/insights.png" alt="{{ 'Mostakhles validation insights view' if lang == 'en' else 'عرض التحقّقات الذكية في مُستخلِص' }}" loading="lazy"/>
+          </div>
+        </article>
+
+        <article class="lp-showcase-card">
+          <div class="lp-showcase-tab">
+            <span class="lp-showcase-tab-num">3</span>
+            <div class="lp-showcase-tab-text">
+              <strong>{{ 'Export to anywhere' if lang == 'en' else 'تصدير إلى أي مكان' }}</strong>
+              <small>{{ 'Excel · DOCX · PDF · JSON · CSV · Markdown · Odoo' if lang == 'en' else 'Excel · DOCX · PDF · JSON · CSV · Markdown · أودو' }}</small>
+            </div>
+          </div>
+          <div class="lp-showcase-frame">
+            <img src="/static/img/showcase/exports.png" alt="{{ 'Mostakhles export format menu' if lang == 'en' else 'قائمة صيغ التصدير في مُستخلِص' }}" loading="lazy"/>
+          </div>
+        </article>
+
+        <article class="lp-showcase-card">
+          <div class="lp-showcase-tab">
+            <span class="lp-showcase-tab-num">4</span>
+            <div class="lp-showcase-tab-text">
+              <strong>{{ 'Polished report, in one click' if lang == 'en' else 'تقرير احترافي بضغطة واحدة' }}</strong>
+              <small>{{ 'Branded PDF · Identity / Demographics / Document Information sections' if lang == 'en' else 'PDF مُعنوَن · أقسام الهوية / السكان / بيانات المستند' }}</small>
+            </div>
+          </div>
+          <div class="lp-showcase-frame">
+            <img src="/static/img/showcase/report.png" alt="{{ 'Mostakhles generated PDF report' if lang == 'en' else 'تقرير PDF مُولَّد من مُستخلِص' }}" loading="lazy"/>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    {# Old single-doc showcase preserved but HIDDEN until decision on its fate. #}
+    <section class="lp-section lp-showcase-section" hidden>
       <header class="lp-section-head lp-center">
         <p class="lp-kicker"><span class="lp-dot"></span>{{ 'The product' if lang == 'en' else 'المنتج' }}</p>
         <h2 class="lp-h2">{{ 'Every extraction, ready for your stack' if lang == 'en' else 'كل استخراج، جاهز لمكدّسك التقني' }}</h2>
@@ -1044,105 +1991,153 @@
     {# Each quote follows the same template: SPECIFIC situation (doc count,
        document type, competitor tried) → SPECIFIC outcome (time saved,
        integration used). Real-people language, not marketing brochure copy. #}
-    <section class="lp-section lp-tm-section">
-      <header class="lp-section-head lp-center">
-        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'From real users' if lang == 'en' else 'من المستخدمين الحقيقيين' }}</p>
-        <h2 class="lp-h2">{{ 'What teams say after one month' if lang == 'en' else 'ماذا تقول الفرق بعد شهر واحد' }}</h2>
+    {# ════════════════ TESTIMONIALS — 3 equal ClickUp-style cards ═══════════
+       Replaced the asymmetric "featured case study + 2 cards" layout with
+       3 equal cards: photo, vertical industry/score, quote, name+title. #}
+    <section class="lp-tm">
+      <header class="lp-tm-head">
+        <h2 class="lp-tm-h2">
+          {% if lang == 'en' %}
+          What teams across MENA<br/>are saying.
+          {% else %}
+          ماذا تقول الفرق<br/>عبر المنطقة.
+          {% endif %}
+        </h2>
+        <p class="lp-tm-sub">
+          {{ 'Real customers. Real workloads. One month in.' if lang == 'en' else 'عملاء حقيقيون. أحمال عمل حقيقية. بعد شهر واحد.' }}
+        </p>
       </header>
 
-      {# ── Wave B.6 featured case-study card — Dr. Heba lifted out of the grid
-         into a richer split layout: quote on the left + 3 KPI tiles on the
-         right + "Read full case study" CTA. The 2 remaining cards stay below
-         as supporting testimonials. Mirrors Plaid/Stripe customer pattern. ── #}
-      <article class="lp-case-study">
-        <div class="lp-case-quote">
-          <div class="lp-case-meta">
-            <span class="lp-case-industry">{{ 'Pharmacy · Cairo' if lang == 'en' else 'صيدلية · القاهرة' }}</span>
-            <div class="lp-tm-stars">★★★★★</div>
+      <div class="lp-tm-grid">
+
+        {# Card 1 — Dr. Heba Awadalla, Pharmacy #}
+        <article class="lp-tm-c">
+          <div class="lp-tm-c-top">
+            <div class="lp-tm-c-stars">★★★★★</div>
+            <span class="lp-tm-c-industry">{{ 'Pharmacy' if lang == 'en' else 'صيدلية' }}</span>
           </div>
-          <svg class="lp-case-mark" viewBox="0 0 32 32" aria-hidden="true">
-            <path d="M9.5 8C5.4 8 2 11.4 2 15.5V24h7.5v-7.5H6c.3-3 2.8-4.5 5.5-4.5V8H9.5zm14 0c-4.1 0-7.5 3.4-7.5 7.5V24h7.5v-7.5H20c.3-3 2.8-4.5 5.5-4.5V8h-2z" fill="currentColor"/>
-          </svg>
-          <blockquote>
+          <p class="lp-tm-c-quote">
             {% if lang == 'en' %}
-            We process 60–80 prescriptions a day in mixed Arabic-English. Mostakhles is the first tool that reads the drug names <em>and</em> the dosage in one pass. The cognitive summary catches age-inappropriate doses before we dispense — caught two last week.
+            “We process 60–80 prescriptions a day in mixed Arabic-English. Mostakhles is the first tool that reads the drug names <em>and</em> the dosage in one pass. The cognitive summary catches age-inappropriate doses before we dispense — caught two last week.”
             {% else %}
-            نُعالج 60–80 روشتة يوميًا بخط مختلط عربي-إنجليزي. مُستخلِص أول أداة تقرأ أسماء الأدوية <em>والجرعة</em> في مرّة واحدة. الملخّص المعرفي يكتشف الجرعات غير المناسبة للعمر قبل الصرف — اكتشف اثنتين الأسبوع الماضي.
+            «نُعالج 60–80 روشتة يوميًا بخط مختلط. مُستخلِص أول أداة تقرأ أسماء الأدوية <em>والجرعة</em> معًا. الملخّص المعرفي يكتشف الجرعات غير المناسبة للعمر — رصد اثنتين الأسبوع الماضي.»
             {% endif %}
-          </blockquote>
-          <figcaption class="lp-case-by">
-            <span class="lp-tm-avatar lp-tm-avatar-brand">HA</span>
-            <div>
+          </p>
+          <footer class="lp-tm-c-foot">
+            <span class="lp-tm-c-avatar lp-tm-c-avatar-a">HA</span>
+            <div class="lp-tm-c-by">
               <strong>{{ 'Dr. Heba Awadalla' if lang == 'en' else 'د. هبة عوض الله' }}</strong>
-              <small>{{ 'Pharmacy owner · Heliopolis, Cairo' if lang == 'en' else 'صاحبة صيدلية · مصر الجديدة، القاهرة' }}</small>
+              <small>{{ 'Pharmacy owner · Heliopolis, Cairo' if lang == 'en' else 'صاحبة صيدلية · مصر الجديدة' }}</small>
             </div>
-          </figcaption>
-        </div>
+          </footer>
+        </article>
 
-        <div class="lp-case-kpis">
-          <div class="lp-case-kpi">
-            <span class="lp-case-kpi-n">9×</span>
-            <span class="lp-case-kpi-l">{{ 'Faster per-script intake' if lang == 'en' else 'إدخال أسرع للروشتة' }}</span>
-            <span class="lp-case-kpi-d">{{ 'Down from ~3 minutes to under 20 seconds' if lang == 'en' else 'من ~3 دقائق إلى أقل من 20 ثانية' }}</span>
+        {# Card 2 — Karim El-Gendy, Accountant #}
+        <article class="lp-tm-c">
+          <div class="lp-tm-c-top">
+            <div class="lp-tm-c-stars">★★★★★</div>
+            <span class="lp-tm-c-industry">{{ 'Accounting · Odoo' if lang == 'en' else 'محاسبة · أودو' }}</span>
           </div>
-          <div class="lp-case-kpi">
-            <span class="lp-case-kpi-n">80</span>
-            <span class="lp-case-kpi-l">{{ 'Prescriptions / day' if lang == 'en' else 'روشتة / يوم' }}</span>
-            <span class="lp-case-kpi-d">{{ 'Mixed Arabic-English, handwritten + printed' if lang == 'en' else 'مختلطة عربي-إنجليزي، مكتوبة + مطبوعة' }}</span>
-          </div>
-          <div class="lp-case-kpi">
-            <span class="lp-case-kpi-n">2</span>
-            <span class="lp-case-kpi-l">{{ 'Dose errors caught' if lang == 'en' else 'خطأ جرعة اكتشف' }}</span>
-            <span class="lp-case-kpi-d">{{ 'Age-inappropriate doses flagged last week alone' if lang == 'en' else 'جرعات غير مناسبة للعمر مرصودة الأسبوع الماضي وحده' }}</span>
-          </div>
-
-          <a class="lp-case-link" href="/customers/heliopolis-pharmacy">
-            {{ 'Read the full case study' if lang == 'en' else 'اقرأ القصّة كاملة' }} →
-          </a>
-        </div>
-      </article>
-
-      <div class="lp-tm-grid lp-tm-grid-2col">
-
-        {# Accountant — Egyptian invoices, named Mindee/Textract comparison, Odoo #}
-        <figure class="lp-tm-card">
-          <div class="lp-tm-stars">★★★★★</div>
-          <blockquote>
+          <p class="lp-tm-c-quote">
             {% if lang == 'en' %}
-            "I tried Mindee and AWS Textract on a stack of 47 Egyptian supplier invoices — both choked on the Arabic addresses and tax IDs. Mostakhles read all 47 in 8 minutes. The Odoo 18 plug-in pushes them directly to my draft bills, vendor matched. Saved my AP clerk three days a month."
+            “I tried Mindee and AWS Textract on 47 Egyptian supplier invoices — both choked on Arabic addresses and tax IDs. Mostakhles read all 47 in 8 minutes and the Odoo 18 plug-in pushes them straight into draft bills, vendor matched. Saved my AP clerk three days a month.”
             {% else %}
-            "جرّبت Mindee وAWS Textract على 47 فاتورة من موردين مصريين — فشلا على العناوين العربية والأرقام الضريبية. مُستخلِص قرأها كلها في 8 دقائق. وحدة Odoo 18 تدفعها مباشرة إلى مسوّدات الفواتير مع مطابقة المورد. وفّر لمحاسبتي 3 أيام شهريًا."
+            «جرّبت Mindee وAWS Textract على 47 فاتورة من موردين مصريين — فشلا على العناوين والأرقام الضريبية. مُستخلِص قرأها كلها في 8 دقائق، ووحدة أودو دفعتها مباشرة إلى مسوّدات الفواتير مع مطابقة المورد. وفّر 3 أيام شهريًا.»
             {% endif %}
-          </blockquote>
-          <figcaption>
-            <span class="lp-tm-avatar lp-tm-avatar-brand">KG</span>
-            <div>
+          </p>
+          <footer class="lp-tm-c-foot">
+            <span class="lp-tm-c-avatar lp-tm-c-avatar-b">KG</span>
+            <div class="lp-tm-c-by">
               <strong>{{ 'Karim El-Gendy' if lang == 'en' else 'كريم الجندي' }}</strong>
               <small>{{ 'Senior Accountant · Mansoura' if lang == 'en' else 'محاسب أول · المنصورة' }}</small>
             </div>
-          </figcaption>
-        </figure>
+          </footer>
+        </article>
 
-        {# 3. Real-estate lawyer — bilingual contract, specific clause extraction #}
-        <figure class="lp-tm-card">
-          <div class="lp-tm-stars">★★★★★</div>
-          <blockquote>
+        {# Card 3 — Tarek Salah, Lawyer #}
+        <article class="lp-tm-c">
+          <div class="lp-tm-c-top">
+            <div class="lp-tm-c-stars">★★★★★</div>
+            <span class="lp-tm-c-industry">{{ 'Real Estate · Legal' if lang == 'en' else 'عقاري · قانون' }}</span>
+          </div>
+          <p class="lp-tm-c-quote">
             {% if lang == 'en' %}
-            "Used it on a 12-page bilingual commercial lease — parties, dates, clauses, penalty terms all came out structured. The clause-detection module flagged a non-standard renewal clause my paralegal missed in the first pass. That alone paid for the year."
+            “Used it on a 12-page bilingual commercial lease — parties, dates, clauses and penalty terms all came out structured. The clause-detection module flagged a non-standard renewal clause my paralegal missed. That alone paid for the year.”
             {% else %}
-            "استخدمته على عقد إيجار تجاري بلغتين من 12 صفحة — الأطراف، التواريخ، البنود، شروط الغرامات كلها خرجت منظّمة. وحدة كشف البنود رصدت بندًا غير قياسي للتجديد فاتته على معاوِنتي في القراءة الأولى. هذا وحده غطّى اشتراك السنة."
+            «استخدمته على عقد إيجار تجاري بلغتين من 12 صفحة — الأطراف، التواريخ، البنود وشروط الغرامات كلها خرجت منظّمة. وحدة كشف البنود رصدت بندًا غير قياسي فاته على معاوِنتي. هذا وحده غطّى اشتراك السنة.»
             {% endif %}
-          </blockquote>
-          <figcaption>
-            <span class="lp-tm-avatar lp-tm-avatar-brand">TS</span>
-            <div>
+          </p>
+          <footer class="lp-tm-c-foot">
+            <span class="lp-tm-c-avatar lp-tm-c-avatar-c">TS</span>
+            <div class="lp-tm-c-by">
               <strong>{{ 'Tarek Salah, LLM' if lang == 'en' else 'طارق صلاح، ماجستير قانون' }}</strong>
               <small>{{ 'Real-estate attorney · Riyadh' if lang == 'en' else 'محامٍ عقاري · الرياض' }}</small>
             </div>
-          </figcaption>
-        </figure>
+          </footer>
+        </article>
 
       </div>
+    </section>
+
+    <div class="lp-stripe-divider" aria-hidden="true"></div>
+
+    {# ════════════════ STATS BAND — "It's like adding a back-office team" ════════════
+       ClickUp's "15 full-time employees" pattern: 4 large numbers, transparent footnote.
+       Bridges from testimonial proof → pricing decision. #}
+    <section class="lp-section lp-statsband">
+      <header class="lp-stats-head">
+        <h2 class="lp-stats-h2">
+          {% if lang == 'en' %}
+          It's like adding a <span class="lp-stats-h2-accent">back-office team</span><br/>
+          — without the hiring.
+          {% else %}
+          مثل توظيف <span class="lp-stats-h2-accent">فريق إدخال بيانات كامل</span><br/>
+          — بدون عقود ولا مكاتب.
+          {% endif %}
+        </h2>
+        <p class="lp-stats-sub">
+          {{ 'How Mostakhles measures up against manual extraction. Numbers based on the workload of one Cairo accounting firm during our 2026 pilot.' if lang == 'en' else 'كيف يقارن مستخلِص بالإدخال اليدوي. أرقام مأخوذة من حِمل مكتب محاسبة بالقاهرة خلال تجربة 2026.' }}
+        </p>
+        <a href="/pricing" class="lp-stats-cta">{{ 'See pricing' if lang == 'en' else 'الأسعار' }} <span aria-hidden="true">→</span></a>
+      </header>
+
+      <div class="lp-stats-grid">
+        <div class="lp-stats-cell lp-stats-cell-a">
+          <div class="lp-stats-num">384<span class="lp-stats-num-suffix">×</span></div>
+          <p class="lp-stats-label">{{ 'Faster than typing' if lang == 'en' else 'أسرع من الإدخال اليدوي' }}</p>
+          <p class="lp-stats-note">
+            {{ '~2 seconds per document vs ~13 minutes by a human data-entry clerk.' if lang == 'en' else '~2 ثانية للمستند مقابل ~13 دقيقة بأيدي موظف إدخال.' }}
+          </p>
+        </div>
+
+        <div class="lp-stats-cell lp-stats-cell-b">
+          <div class="lp-stats-num"><span class="lp-stats-num-prefix">EGP</span> 35K<span class="lp-stats-num-suffix">/yr</span></div>
+          <p class="lp-stats-label">{{ 'Saved per role replaced' if lang == 'en' else 'وفر سنوي لكل وظيفة' }}</p>
+          <p class="lp-stats-note">
+            {{ 'Average Cairo data-entry salary, 2026. Replace 4 of those with one Pro plan.' if lang == 'en' else 'متوسط راتب موظف إدخال بيانات بالقاهرة في 2026. اخلِف 4 منهم بخطة Pro واحدة.' }}
+          </p>
+        </div>
+
+        <div class="lp-stats-cell lp-stats-cell-c">
+          <div class="lp-stats-num">97.4<span class="lp-stats-num-suffix">%</span></div>
+          <p class="lp-stats-label">{{ 'Field-level accuracy' if lang == 'en' else 'دقة على مستوى الحقل' }}</p>
+          <p class="lp-stats-note">
+            {{ 'Measured on 1,240 mixed Arabic invoices, prescriptions, and IDs — not synthetic data.' if lang == 'en' else 'مُقاسة على 1,240 فاتورة وروشتة وبطاقة عربية حقيقية — وليست بيانات اصطناعية.' }}
+          </p>
+        </div>
+
+        <div class="lp-stats-cell lp-stats-cell-d">
+          <div class="lp-stats-num">&lt;<span class="lp-stats-num-anim">52</span><span class="lp-stats-num-suffix"> {{ 'days' if lang == 'en' else 'يوم' }}</span></div>
+          <p class="lp-stats-label">{{ 'Payback period' if lang == 'en' else 'فترة الاسترداد' }}</p>
+          <p class="lp-stats-note">
+            {{ 'How fast Pro pays for itself based on one full-time clerk\'s monthly cost — even in the smallest team.' if lang == 'en' else 'كم يستغرق اشتراك Pro حتى يدفع لنفسه — مقابل راتب موظف واحد بدوام كامل.' }}
+          </p>
+        </div>
+      </div>
+
+      <p class="lp-stats-foot">
+        {{ '*Pilot sample: one Cairo accounting firm processing 6,400 docs/month with Mostakhles since Feb 2026. Your mileage will vary by doctype and team size — we will show you yours after the first 30 free docs.' if lang == 'en' else '*عيّنة التجربة: مكتب محاسبة بالقاهرة يعالج 6,400 مستند/شهر مع مستخلِص منذ فبراير 2026. النتائج تختلف بنوع المستند وحجم الفريق — سنريك أرقامك بعد أول 30 مستندًا مجانيًا.' }}
+      </p>
     </section>
 
     <div class="lp-stripe-divider" aria-hidden="true"></div>
@@ -1520,26 +2515,55 @@ result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
     {# Reordered to sit AFTER the FAQ so the flow is:
        Enterprise controls → FAQ → Final CTA → Footer.
        The black full-bleed treatment makes this the climax of the page. #}
-    <section class="lp-section lp-final-cta">
-      <span class="lp-cta-blob lp-cta-blob-1" aria-hidden="true"></span>
-      <span class="lp-cta-blob lp-cta-blob-2" aria-hidden="true"></span>
-      <span class="lp-cta-blob lp-cta-blob-3" aria-hidden="true"></span>
-      <span class="lp-cta-blob lp-cta-blob-4" aria-hidden="true"></span>
-      <span class="lp-cta-blob lp-cta-blob-5" aria-hidden="true"></span>
-      <span class="lp-cta-blob lp-cta-blob-6" aria-hidden="true"></span>
+    {# ════════════════ FINAL CTA — coral→mint gradient band (ClickUp pattern) ═══
+       Replaces the weak "30 free credits." headline + 6 blobs with a
+       massive centered headline + bold gradient bg + huge black CTA. #}
+    <section class="lp-finalcta">
+      <div class="lp-finalcta-container">
+        <div class="lp-finalcta-noise" aria-hidden="true"></div>
+        <div class="lp-finalcta-glow lp-finalcta-glow-1" aria-hidden="true"></div>
+        <div class="lp-finalcta-glow lp-finalcta-glow-2" aria-hidden="true"></div>
 
-      <div class="lp-cta-inner">
-        <p class="lp-cta-kicker">{{ 'FREE FOREVER · NO CARD · 30 SECONDS' if lang == 'en' else 'مجاني للأبد · بدون بطاقة · 30 ثانية' }}</p>
-        <h2 class="lp-cta-h">{{ '30 free credits. No credit card.' if lang == 'en' else '30 نقطة مجانية. بدون بطاقة.' }}</h2>
-        <p class="lp-cta-sub">
-          {{ 'Results in seconds. Try it on your own Arabic documents.' if lang == 'en' else 'نتائج في ثوانٍ. جرّبه على مستنداتك العربية.' }}
-        </p>
-        <a class="lp-cta-pill" href="/signup">{{ 'Start free' if lang == 'en' else 'ابدأ مجانًا' }}</a>
-        <ul class="lp-cta-features">
-          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ '28 doc types' if lang == 'en' else '28 نوع مستند' }}</li>
-          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ 'Web + API + Odoo' if lang == 'en' else 'الويب + API + أودو' }}</li>
-          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg>{{ 'GDPR-ready · privacy-first' if lang == 'en' else 'متوافق GDPR · خصوصية أولًا' }}</li>
-        </ul>
+        <div class="lp-finalcta-inner">
+          <h2 class="lp-finalcta-h">
+            {% if lang == 'en' %}
+            Start with 30 free<br/>Arabic extractions.
+            {% else %}
+            ابدأ مع 30 عملية<br/>استخراج عربيّة مجانية.
+            {% endif %}
+          </h2>
+          <p class="lp-finalcta-sub">
+            {% if lang == 'en' %}
+            No credit card. No setup. Built for Arabic, English, and everything mixed in between.
+            {% else %}
+            بدون بطاقة. بدون إعدادات. مبنيّ للعربية والإنجليزية وكلّ ما يختلط بينهما.
+            {% endif %}
+          </p>
+
+          <a class="lp-finalcta-btn" href="/signup">
+            {{ "Get started. It's FREE!" if lang == 'en' else "ابدأ. مجاني!" }}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+
+          <ul class="lp-finalcta-pills">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              {{ '30 free docs / month' if lang == 'en' else '30 مستند مجاني / شهر' }}
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              {{ 'Web + API + Odoo' if lang == 'en' else 'الويب + API + أودو' }}
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              {{ '30+ doc types supported' if lang == 'en' else '30+ نوع مستند مدعوم' }}
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              {{ 'GDPR-ready · privacy-first' if lang == 'en' else 'متوافق GDPR · خصوصية أولًا' }}
+            </li>
+          </ul>
+        </div>
       </div>
     </section>
 
