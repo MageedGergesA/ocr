@@ -157,6 +157,12 @@
         <div class="shell-user-plan">{{ user.plan|capitalize }}</div>
       </div>
     </div>
+    <button type="button" class="shell-foot-link shell-collapse-btn" id="sidebarCollapseToggle"
+            style="background:none;border:0;cursor:pointer;font-family:inherit;font-size:13px;width:100%;text-align:start"
+            aria-label="{{ 'Collapse sidebar' if lang == 'en' else 'طيّ القائمة' }}">
+      <i data-lucide="chevrons-left"></i>
+      <span>{{ 'Collapse' if lang == 'en' else 'طيّ القائمة' }}</span>
+    </button>
     <button type="button" class="shell-foot-link" id="appThemeToggle" style="background:none;border:0;cursor:pointer;font-family:inherit;font-size:13px;width:100%;text-align:start">
       <svg class="sun" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
       <svg class="moon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -177,6 +183,8 @@
 // Theme: no-flash init + toggle. Same key as landing page so they share state.
 (function () {
   var root = document.documentElement;
+  // Apply persisted sidebar-collapsed state ASAP to minimise layout flash.
+  try { if (document.body && localStorage.getItem('mostakhles.sidebarCollapsed') === '1') document.body.classList.add('shell-collapsed'); } catch (e) {}
   if (!root.hasAttribute('data-theme')) {
     var t;
     try { t = localStorage.getItem('mostakhles.theme'); } catch (e) {}
@@ -247,7 +255,11 @@ function _shellToggle(toggleId, menuId, key, onOpen) {
       var pct = lim > 0 ? Math.max(2, Math.round((rem / lim) * 100)) : 0;
       var EN = "{{ 'true' if lang == 'en' else 'false' }}" === 'true';
       document.getElementById('creditsRemaining').textContent = rem.toLocaleString();
-      document.getElementById('creditsBarFill').style.width = pct + '%';
+      var _fill = document.getElementById('creditsBarFill');
+      _fill.style.width = pct + '%';
+      // pct is credits REMAINING — warn amber under 20%, red under 5%.
+      _fill.classList.toggle('low', pct <= 20 && pct > 5);
+      _fill.classList.toggle('critical', pct <= 5);
       document.getElementById('creditsMeta').textContent =
         EN ? (rem + ' of ' + lim + ' credits this month') : ('من ' + lim + ' نقطة هذا الشهر');
     }).catch(function () {
@@ -315,6 +327,30 @@ _shellToggle('planToggle', 'planSubmenu', 'mostakhles.planOpen');
       });
     });
   }
+})();
+</script>
+
+<script nonce="{{ csp_nonce }}">
+// Sidebar collapse/expand — narrow icon rail, persisted in localStorage.
+(function () {
+  var KEY = 'mostakhles.sidebarCollapsed';
+  var body = document.body;
+  function isCollapsed() { return body.classList.contains('shell-collapsed'); }
+  function set(collapsed) {
+    body.classList.toggle('shell-collapsed', collapsed);
+    try { localStorage.setItem(KEY, collapsed ? '1' : '0'); } catch (e) {}
+    var btn = document.getElementById('sidebarCollapseToggle');
+    if (btn) btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+  }
+  var pref = false; try { pref = localStorage.getItem(KEY) === '1'; } catch (e) {}
+  set(pref);
+  var toggle = document.getElementById('sidebarCollapseToggle');
+  if (toggle) toggle.addEventListener('click', function () { set(!isCollapsed()); });
+  // In collapsed mode, clicking a submenu toggle (Tools/Credits/Plan) expands
+  // the rail first (capture phase, before the submenu opener runs).
+  document.querySelectorAll('.shell-link-toggle').forEach(function (b) {
+    b.addEventListener('click', function () { if (isCollapsed()) set(false); }, true);
+  });
 })();
 </script>
 
