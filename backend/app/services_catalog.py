@@ -168,6 +168,10 @@ Egyptian/GCC tax invoices follow ETA/ZATCA formats. Conventions to watch:
 - Tax ID format (EG): ###-###-### or 9 contiguous digits; (SA) 15 digits starting with 3.
 - Common currencies: EGP, SAR, AED, USD. If you see "ج.م" or "L.E." → EGP.
 - Buyer often labelled العميل/المُشترى, seller as المُورِّد/البائع.
+- Identifiers (invoice number, tax ID, LPO/PO number) must be transcribed VERBATIM,
+  digit-for-digit, keeping the original separators exactly as printed. Do NOT insert,
+  remove, or re-group hyphens/spaces (e.g. "INV-2026-0847" stays "INV-2026-0847",
+  never "INV-2026-08-47"). If a digit is unclear, lower the confidence — do not guess a separator.
 
 BEYOND THE REQUIRED FIELDS, extract:
 - line_items: every visible row as columns=[الصنف, الكمية, سعر الوحدة, الإجمالي] and rows=[[...], ...]

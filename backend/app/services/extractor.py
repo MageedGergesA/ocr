@@ -12,6 +12,7 @@ shape that matches the document (form / table / narrative / mixed / prescription
 Output language is controlled by `output_lang` ('preserve' | 'ar' | 'en').
 """
 import json
+from datetime import date as _date
 
 from . import llm
 
@@ -652,6 +653,11 @@ You are {expert_role}. Read this document the way that expert would —
 notice domain conventions, spot inconsistencies, compute what isn't stated
 explicitly. Don't just copy text; UNDERSTAND it.
 
+[TODAY]
+Today's date is {_date.today().isoformat()}. Use this as the reference point for
+any date comparison (is a date in the future/past, is an invoice overdue, etc.).
+A date on or before today is NOT in the future.
+
 [CONTEXT & GUIDELINES]
 {cognitive_brief.strip()}
 
@@ -688,7 +694,8 @@ LANGUAGE: {value_lang_instr}
 
 Return ONLY the JSON object. No markdown fences, no commentary."""
 
-    hard = _resolve_hard(mode, hard, image_bytes, media_type, doctype_hint=hint)
+    # `hard` is already the caller-resolved tier (extract_expert has no mode/hint
+    # params of its own) — call the model directly without re-resolving.
     result = _run(image_bytes, media_type, prompt, hard)
     result = _ensure_dict_result(result)
     return _postprocess_field_names(result, output_lang)
