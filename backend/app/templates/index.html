@@ -656,70 +656,45 @@
         </p>
       </header>
 
-      {# ─── FLOWING DIAGRAM — 3 waypoints connected by an SVG path ─────────
-         ClickUp "60% of work is lost" pattern: instead of a flat 3-card row,
-         tell the story as a connected flow. Cards positioned absolutely on
-         a curved SVG baseline. Mobile collapses to a clean vertical stack. #}
-      <div class="lp-problem-flow">
-        <svg class="lp-problem-flow-svg" viewBox="0 0 1100 360" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <defs>
-            <linearGradient id="lp-flow-grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%"  stop-color="#fef3c7"/>
-              <stop offset="33%" stop-color="#fdba74"/>
-              <stop offset="66%" stop-color="#fca5a5"/>
-              <stop offset="100%" stop-color="#fecdd3"/>
-            </linearGradient>
-            <filter id="lp-flow-blur" x="-10%" y="-10%" width="120%" height="120%">
-              <feGaussianBlur stdDeviation="6"/>
-            </filter>
-          </defs>
-          {# Soft glow underneath the line #}
-          <path d="M60 240 C 280 60, 460 60, 560 200 S 820 360, 1040 130"
-                stroke="url(#lp-flow-grad)" stroke-width="22" fill="none"
-                stroke-linecap="round" opacity=".25" filter="url(#lp-flow-blur)"/>
-          {# Main flowing dashed path #}
-          <path d="M60 240 C 280 60, 460 60, 560 200 S 820 360, 1040 130"
-                stroke="url(#lp-flow-grad)" stroke-width="3" fill="none"
-                stroke-linecap="round" stroke-dasharray="2 8"/>
-          {# Node anchor dots #}
-          <circle cx="170"  cy="148" r="9" fill="#f97316"/>
-          <circle cx="560"  cy="200" r="9" fill="#ec4899"/>
-          <circle cx="940"  cy="178" r="9" fill="#8b5cf6"/>
-          {# Inner white pulse on each dot #}
-          <circle cx="170"  cy="148" r="3.5" fill="#fff"/>
-          <circle cx="560"  cy="200" r="3.5" fill="#fff"/>
-          <circle cx="940"  cy="178" r="3.5" fill="#fff"/>
-        </svg>
+      {# Clean aligned 3-card grid (replaces the wavy SVG-path "flow" with
+         floating cards + invented %/1-in-4 stats). Reuses the existing
+         .lp-problem-cards / .lp-problem-card styling. Content is now
+         qualitative and honest — no fabricated precision. Redesigned 2026-07-03. #}
+      <div class="lp-problem-cards">
 
-        {# 3 waypoint cards anchored to dots on the path.
-           data-count attributes drive the scroll-into-view counter animation
-           (the one Wave 19 keeper). #}
-        <article class="lp-problem-node lp-problem-node-1">
-          <div class="lp-problem-node-stat" data-count="40" data-suffix="%">0<span class="lp-problem-node-stat-suffix">%</span></div>
-          <p class="lp-problem-node-kicker">{{ 'CURSIVE SCRIPT' if lang == 'en' else 'خط متّصل' }}</p>
-          <h3 class="lp-problem-node-h">{{ 'Arabic letters connect.' if lang == 'en' else 'الحروف العربية تتّصل.' }}</h3>
-          <p class="lp-problem-node-body">
-            {{ 'Mainstream OCR was trained on isolated English letters. On connected Arabic, accuracy drops up to 40%.' if lang == 'en' else 'أنظمة OCR العالمية مُدرَّبة على حروف إنجليزية منفصلة. مع العربية المتّصلة، تنخفض الدقّة حتى 40٪.' }}
+        <article class="lp-problem-card">
+          <span class="lp-problem-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 0 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          </span>
+          <p class="lp-problem-card-kicker">{{ 'CURSIVE SCRIPT' if lang == 'en' else 'خط متّصل' }}</p>
+          <h3 class="lp-problem-card-h">{{ 'Arabic letters connect.' if lang == 'en' else 'الحروف العربية تتّصل.' }}</h3>
+          <p class="lp-problem-card-body">
+            {{ 'Mainstream OCR was trained on isolated Latin letters. In Arabic every letter changes shape by position and joins the next — the same word rendered a dozen ways.' if lang == 'en' else 'دُرّبت أنظمة OCR العالمية على حروف لاتينية منفصلة. في العربية يتغيّر شكل كل حرف حسب موضعه ويتّصل بما بعده — الكلمة نفسها بأشكال كثيرة.' }}
           </p>
         </article>
 
-        <article class="lp-problem-node lp-problem-node-2">
-          <div class="lp-problem-node-stat" data-count="73" data-suffix="%">0<span class="lp-problem-node-stat-suffix">%</span></div>
-          <p class="lp-problem-node-kicker">{{ 'MIXED DIRECTION' if lang == 'en' else 'اتجاهات مختلطة' }}</p>
-          <h3 class="lp-problem-node-h">{{ 'RTL + LTR in one line.' if lang == 'en' else 'عربي + لاتيني في نفس السطر.' }}</h3>
-          <p class="lp-problem-node-body">
-            {{ '73% of MENA business documents mix Arabic and Latin on the same line. Single-direction engines garble both.' if lang == 'en' else '73٪ من المستندات في المنطقة تخلط العربية مع اللاتينية في نفس السطر. المحرّكات أحادية الاتجاه تُشوّه الاثنين.' }}
+        <article class="lp-problem-card">
+          <span class="lp-problem-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 8 22 12 18 16"/><polyline points="6 8 2 12 6 16"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+          </span>
+          <p class="lp-problem-card-kicker">{{ 'MIXED DIRECTION' if lang == 'en' else 'اتجاهات مختلطة' }}</p>
+          <h3 class="lp-problem-card-h">{{ 'RTL + LTR in one line.' if lang == 'en' else 'عربي + لاتيني في نفس السطر.' }}</h3>
+          <p class="lp-problem-card-body">
+            {{ 'MENA business documents routinely mix Arabic with Latin names, tax IDs and dates on the same line. Single-direction engines garble both.' if lang == 'en' else 'مستندات الأعمال في المنطقة تخلط العربية مع الأسماء والأرقام الضريبية والتواريخ اللاتينية في نفس السطر. المحرّكات أحادية الاتجاه تُشوّه الاثنين.' }}
           </p>
         </article>
 
-        <article class="lp-problem-node lp-problem-node-3">
-          <div class="lp-problem-node-stat" data-count="25" data-prefix="1/" data-suffix="">0<span class="lp-problem-node-stat-suffix">/4</span></div>
-          <p class="lp-problem-node-kicker">{{ 'HANDWRITING + STAMPS' if lang == 'en' else 'خط يد وأختام' }}</p>
-          <h3 class="lp-problem-node-h">{{ 'Not just print.' if lang == 'en' else 'ليست مجرّد طباعة.' }}</h3>
-          <p class="lp-problem-node-body">
-            {{ '1 in 4 MENA medical, retail and government docs include handwriting, smudges or pharmacy stamps. Most OCR collapses.' if lang == 'en' else '1 من كل 4 مستندات طبية أو حكومية بالمنطقة فيها خط يد أو ختم أو بقعة. معظم أنظمة OCR تتعطّل.' }}
+        <article class="lp-problem-card">
+          <span class="lp-problem-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+          </span>
+          <p class="lp-problem-card-kicker">{{ 'HANDWRITING + STAMPS' if lang == 'en' else 'خط يد وأختام' }}</p>
+          <h3 class="lp-problem-card-h">{{ 'Not just print.' if lang == 'en' else 'ليست مجرّد طباعة.' }}</h3>
+          <p class="lp-problem-card-body">
+            {{ 'Real invoices, prescriptions and government forms carry handwriting, smudges and stamps over the text. Most OCR collapses on them.' if lang == 'en' else 'الفواتير والروشتات والنماذج الحكومية الحقيقية فيها خط يد وبقع وأختام فوق النص. معظم أنظمة OCR تتعطّل أمامها.' }}
           </p>
         </article>
+
       </div>
 
       {# Closing line — ties the 3 waypoints back to the brand promise #}
