@@ -24,7 +24,7 @@
   {% endif %}
   <meta property="og:title" content="مُستخلِص · Mostakhles — The Arabic Document AI">
   <meta property="og:description" content="Reads Arabic handwriting, invoices, contracts and IDs — then thinks: derives, validates, summarizes.">
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v={{ asset_v() }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   {# Enterprise font stack (Wave D.1): Inter for Latin (Linear / Stripe-tier),
@@ -582,35 +582,40 @@
     {# Full-width TRUSTED BY band — pulled OUT of the hero text column so
        it can span the page width (ClickUp pattern). Label on the left,
        6 logos centered/distributed across the rest of the row. #}
+    {# Honest capability strip — replaces the former fabricated "trusted by"
+       enterprise-logo rotator (Vodafone/STC/etc. were never customers; that
+       was a credibility + trademark liability, removed 2026-07-03). Same
+       rotator mechanics/CSS, now cycling the REAL breadth of documents it
+       reads, captioned truthfully. #}
     <section class="lp-hero-trustband">
-      <span class="lp-hero-trust-label">{{ 'TRUSTED BY TEAMS AT' if lang == 'en' else 'يستخدمه فِرَق في' }}</span>
+      <span class="lp-hero-trust-label">{{ 'EXTRACTS DATA FROM' if lang == 'en' else 'يستخرج البيانات من' }}</span>
       <div class="lp-hero-trust-rotator">
-        {# Set A — Telecom · Logistics · Banking #}
+        {# Set A — core finance & identity documents #}
         <ul class="lp-hero-trust-logos lp-trust-set lp-trust-set-a">
-          <li><span class="lp-trust-wm lp-trust-wm-vodafone">Vodafone</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-stc">STC</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-aramex">aramex</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-cib">CIB</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-efg">EFG Hermes</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-talabat">talabat</span></li>
+          <li><span class="lp-trust-wm">{{ 'Tax invoices' if lang == 'en' else 'فواتير ضريبية' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'National IDs' if lang == 'en' else 'بطاقات الرقم القومي' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Contracts' if lang == 'en' else 'عقود' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Bank statements' if lang == 'en' else 'كشوف حسابات' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Prescriptions' if lang == 'en' else 'روشتات' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Customs forms' if lang == 'en' else 'نماذج جمركية' }}</span></li>
         </ul>
-        {# Set B — E-commerce · Banking · Payments #}
+        {# Set B — commercial & operational documents #}
         <ul class="lp-hero-trust-logos lp-trust-set lp-trust-set-b">
-          <li><span class="lp-trust-wm lp-trust-wm-careem">Careem</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-etisalat">e&amp; <em>etisalat</em></span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-adcb">ADCB</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-mashreq">mashreq</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-mada">mada</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-jumia">JUMIA</span></li>
+          <li><span class="lp-trust-wm">{{ 'Commercial registers' if lang == 'en' else 'سجلات تجارية' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Tax cards' if lang == 'en' else 'بطاقات ضريبية' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Utility bills' if lang == 'en' else 'فواتير مرافق' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Business cards' if lang == 'en' else 'كروت شخصية' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Shipping labels' if lang == 'en' else 'بوالص شحن' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Receipts' if lang == 'en' else 'إيصالات' }}</span></li>
         </ul>
-        {# Set C — Retail · Energy · Delivery #}
+        {# Set C — hard-mode capabilities (the real differentiators) #}
         <ul class="lp-hero-trust-logos lp-trust-set lp-trust-set-c">
-          <li><span class="lp-trust-wm lp-trust-wm-noon">noon</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-almarai">Almarai</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-adnoc">ADNOC</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-qnb">QNB</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-fawry">fawry</span></li>
-          <li><span class="lp-trust-wm lp-trust-wm-mobily">mobily</span></li>
+          <li><span class="lp-trust-wm">{{ 'Handwriting' if lang == 'en' else 'خط اليد' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Arabic + English' if lang == 'en' else 'عربي وإنجليزي' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Tables & line items' if lang == 'en' else 'جداول وبنود' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Stamps' if lang == 'en' else 'أختام' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Signatures' if lang == 'en' else 'توقيعات' }}</span></li>
+          <li><span class="lp-trust-wm">{{ 'Scanned PDFs' if lang == 'en' else 'ملفات ممسوحة' }}</span></li>
         </ul>
       </div>
     </section>
@@ -620,68 +625,11 @@
        want to restore the separate section; remove after one stable release. #}
     <div class="lp-stripe-divider" aria-hidden="true" hidden></div>
 
-    {# ════════════════ TRUST BAR — D.4 Nanonets-style single row ═══════════ #}
-    {# Restructured (was 3 stacked rows): ONE clean row of customer wordmarks
-       only. Industry pills cut (redundant — verticals already shown in product
-       showcase + case study). Integrations moved to the developer section
-       where they fit logically. Single tight caption, no disclaimer hedge. #}
-    <section class="lp-trustband" hidden>
-      <p class="lp-trustband-label">
-        {{ 'Used by professionals at teams across MENA' if lang == 'en' else 'يستخدمه مهنيون في فرق عبر المنطقة' }}
-      </p>
-      <ul class="lp-customer-logos">
-        <li>Vodafone</li>
-        <li>e& <small>etisalat</small></li>
-        <li>STC</li>
-        <li>aramex</li>
-        <li>CIB</li>
-        <li>EFG</li>
-        <li>talabat</li>
-        <li>careem</li>
-      </ul>
-      <ul class="lp-wordmarks" hidden>
-        {# Wave C.9: inline SVG marks (Simple Icons CC0 paths) instead of
-           plain text — gives the row real-brand visual weight. Marks render
-           in subtle gray + brand-color on hover. #}
-        <li class="lp-wm-logo" data-brand="odoo" title="Odoo">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M11.475 19.943c4.39 0 7.95-3.561 7.95-7.95s-3.56-7.95-7.95-7.95-7.95 3.56-7.95 7.95 3.56 7.95 7.95 7.95zm0-3.31a4.64 4.64 0 1 1 0-9.281 4.64 4.64 0 0 1 0 9.281z"/>
-            <circle cx="20.6" cy="11.99" r="1.74"/>
-          </svg>
-          <span>Odoo</span>
-        </li>
-        <li class="lp-wm-logo" data-brand="zapier" title="Zapier">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M15.706 11.97c0 1.087-.196 2.124-.557 3.087a9.74 9.74 0 0 1-3.083.561h-.011a9.737 9.737 0 0 1-3.084-.56 8.886 8.886 0 0 1-.56-3.087 8.86 8.86 0 0 1 .557-3.084 9.812 9.812 0 0 1 3.084-.563h.011a9.836 9.836 0 0 1 3.084.564 8.857 8.857 0 0 1 .56 3.082zM23.488 10.4h-6.512l4.604-4.604a11.97 11.97 0 0 0-1.852-2.456v-.003a12.063 12.063 0 0 0-2.456-1.85l-4.604 4.604V-.42h-.014A12.06 12.06 0 0 0 9.34.116v6.514L4.736 2.025a11.998 11.998 0 0 0-2.453 1.854l-.005.004A12.063 12.063 0 0 0 .43 6.337l4.604 4.6h-6.51S-1.5 10.94-1.5 11.967v.012c0 1.046.135 2.06.385 3.027h6.514L.788 19.61c.54.943 1.166 1.821 1.852 2.624l.005.004c.802.685 1.681 1.31 2.625 1.85l4.6-4.604v6.514c.963.249 1.97.385 3.011.388h.046a12.06 12.06 0 0 0 3.012-.388v-6.514l4.602 4.604a12.06 12.06 0 0 0 2.46-1.85l.003-.005a12.064 12.064 0 0 0 1.85-2.624l-4.604-4.604h6.514c.249-.963.385-1.97.388-3.012v-.046c-.003-1.04-.139-2.046-.388-3.012z"/>
-          </svg>
-          <span>Zapier</span>
-        </li>
-        <li class="lp-wm-logo" data-brand="google" title="Google Drive">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M7.71 3.5L1.15 15l3.41 5.91L11.11 9.42 7.71 3.5z" fill="#1FA463"/>
-            <path d="M8.59 15h13.13L15.31 3.5H8.62L1.15 15h13.16l-2.86 4.97L8.59 15z" fill="#FFCD41"/>
-            <path d="M14.31 15l2.86 4.97 4.66-8.08-3.86-6.69H14.5L21.72 15h-7.41z" fill="#4287F5"/>
-          </svg>
-          <span>Google&nbsp;Drive</span>
-        </li>
-        <li class="lp-wm-logo" data-brand="microsoft" title="Microsoft 365">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="2" y="2" width="9.5" height="9.5" fill="#F25022"/>
-            <rect x="12.5" y="2" width="9.5" height="9.5" fill="#7FBA00"/>
-            <rect x="2" y="12.5" width="9.5" height="9.5" fill="#00A4EF"/>
-            <rect x="12.5" y="12.5" width="9.5" height="9.5" fill="#FFB900"/>
-          </svg>
-          <span>Microsoft&nbsp;365</span>
-        </li>
-        <li class="lp-wm-logo lp-wm-rest" data-brand="rest" title="REST API">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/>
-            <path d="M15.5 17l2 2 3.5-3.5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          </svg>
-          <span>REST&nbsp;API</span>
-        </li>
-      </ul>
-    </section>
+    {# Former hidden "Used by professionals at teams across MENA" trust bar
+       (Vodafone/etisalat/STC/aramex/CIB/EFG/talabat/careem) REMOVED 2026-07-03
+       — fabricated customer names, credibility + trademark liability even while
+       hidden. The honest integrations (Odoo, REST API) live in the developer
+       section where they belong. #}
 
     <div class="lp-stripe-divider" aria-hidden="true"></div>
 
@@ -933,7 +881,7 @@
             </h3>
             <span class="lp-engine-max-replaces">{{ 'REPLACES manual review' if lang == 'en' else 'يَستبدل المراجعة اليدوية' }}</span>
             <p class="lp-engine-max-sub">
-              {{ 'Save 8 hours per 100 documents, guaranteed.' if lang == 'en' else 'وفّر 8 ساعات لكل 100 مستند، مضمون.' }}
+              {{ 'Cut hours of manual data entry on every batch of documents.' if lang == 'en' else 'اختصر ساعات الإدخال اليدوي في كل دفعة مستندات.' }}
             </p>
             <div class="lp-engine-max-plats">
               <span>{{ 'Available for' if lang == 'en' else 'متاح على' }}:</span>
@@ -1621,84 +1569,86 @@
     {# ════════════════ TESTIMONIALS — 3 equal ClickUp-style cards ═══════════
        Replaced the asymmetric "featured case study + 2 cards" layout with
        3 equal cards: photo, vertical industry/score, quote, name+title. #}
+    {# Honest capability section — replaces three FABRICATED testimonials
+       (invented people/quotes/★ ratings; "real customers…one month in" with
+       zero customers). Same 3-card layout & CSS; now transparent, verifiable
+       capability cards that route to the free live tools. Removed 2026-07-03.
+       Bring real testimonials back here once actual customers provide them. #}
     <section class="lp-tm">
       <header class="lp-tm-head">
         <h2 class="lp-tm-h2">
           {% if lang == 'en' %}
-          What teams across MENA<br/>are saying.
+          Built for finance, health<br/>&amp; legal teams across MENA.
           {% else %}
-          ماذا تقول الفرق<br/>عبر المنطقة.
+          مصمّم لفرق المالية والصحة<br/>والقانون عبر المنطقة.
           {% endif %}
         </h2>
         <p class="lp-tm-sub">
-          {{ 'Real customers. Real workloads. One month in.' if lang == 'en' else 'عملاء حقيقيون. أحمال عمل حقيقية. بعد شهر واحد.' }}
+          {{ 'New and pre-launch — so instead of quotes, here is exactly what it does. Try any of it yourself, free.' if lang == 'en' else 'أداة جديدة قبل الإطلاق — فبدلًا من الاقتباسات، هذا ما تفعله بالضبط. جرّب أيًّا منها بنفسك مجانًا.' }}
         </p>
       </header>
 
       <div class="lp-tm-grid">
 
-        {# Card 1 — Dr. Heba Awadalla, Pharmacy #}
+        {# Card 1 — Pharmacy capability (verifiable, no endorsement) #}
         <article class="lp-tm-c">
           <div class="lp-tm-c-top">
-            <div class="lp-tm-c-stars">★★★★★</div>
             <span class="lp-tm-c-industry">{{ 'Pharmacy' if lang == 'en' else 'صيدلية' }}</span>
           </div>
           <p class="lp-tm-c-quote">
             {% if lang == 'en' %}
-            “We process 60–80 prescriptions a day in mixed Arabic-English. Mostakhles is the first tool that reads the drug names <em>and</em> the dosage in one pass. The cognitive summary catches age-inappropriate doses before we dispense — caught two last week.”
+            Reads mixed Arabic-English prescriptions in one pass — drug name, dose and duration — and flags age-inappropriate doses before dispensing.
             {% else %}
-            «نُعالج 60–80 روشتة يوميًا بخط مختلط. مُستخلِص أول أداة تقرأ أسماء الأدوية <em>والجرعة</em> معًا. الملخّص المعرفي يكتشف الجرعات غير المناسبة للعمر — رصد اثنتين الأسبوع الماضي.»
+            يقرأ الروشتات المختلطة عربي-إنجليزي في مرّة واحدة — اسم الدواء والجرعة والمدة — ويُنبّه للجرعات غير المناسبة للعمر قبل الصرف.
             {% endif %}
           </p>
           <footer class="lp-tm-c-foot">
-            <span class="lp-tm-c-avatar lp-tm-c-avatar-a">HA</span>
+            <span class="lp-tm-c-avatar lp-tm-c-avatar-a" aria-hidden="true">℞</span>
             <div class="lp-tm-c-by">
-              <strong>{{ 'Dr. Heba Awadalla' if lang == 'en' else 'د. هبة عوض الله' }}</strong>
-              <small>{{ 'Pharmacy owner · Heliopolis, Cairo' if lang == 'en' else 'صاحبة صيدلية · مصر الجديدة' }}</small>
+              <strong>{{ 'Handwriting · dosage checks' if lang == 'en' else 'خط اليد · فحص الجرعات' }}</strong>
+              <a href="/tools/prescription-ocr">{{ 'Try the prescription tool →' if lang == 'en' else 'جرّب أداة الروشتات →' }}</a>
             </div>
           </footer>
         </article>
 
-        {# Card 2 — Karim El-Gendy, Accountant #}
+        {# Card 2 — Accounting / Odoo capability #}
         <article class="lp-tm-c">
           <div class="lp-tm-c-top">
-            <div class="lp-tm-c-stars">★★★★★</div>
             <span class="lp-tm-c-industry">{{ 'Accounting · Odoo' if lang == 'en' else 'محاسبة · أودو' }}</span>
           </div>
           <p class="lp-tm-c-quote">
             {% if lang == 'en' %}
-            “I tried Mindee and AWS Textract on 47 Egyptian supplier invoices — both choked on Arabic addresses and tax IDs. Mostakhles read all 47 in 8 minutes and the Odoo 18 plug-in pushes them straight into draft bills, vendor matched. Saved my AP clerk three days a month.”
+            Extracts Egyptian supplier invoices — Arabic addresses, tax IDs and line items — and the free Odoo module pushes them straight into draft vendor bills.
             {% else %}
-            «جرّبت Mindee وAWS Textract على 47 فاتورة من موردين مصريين — فشلا على العناوين والأرقام الضريبية. مُستخلِص قرأها كلها في 8 دقائق، ووحدة أودو دفعتها مباشرة إلى مسوّدات الفواتير مع مطابقة المورد. وفّر 3 أيام شهريًا.»
+            يستخرج فواتير الموردين المصريين — العناوين والأرقام الضريبية والبنود — ووحدة أودو المجانية تدفعها مباشرة إلى مسوّدات فواتير الموردين.
             {% endif %}
           </p>
           <footer class="lp-tm-c-foot">
-            <span class="lp-tm-c-avatar lp-tm-c-avatar-b">KG</span>
+            <span class="lp-tm-c-avatar lp-tm-c-avatar-b" aria-hidden="true">🧾</span>
             <div class="lp-tm-c-by">
-              <strong>{{ 'Karim El-Gendy' if lang == 'en' else 'كريم الجندي' }}</strong>
-              <small>{{ 'Senior Accountant · Mansoura' if lang == 'en' else 'محاسب أول · المنصورة' }}</small>
+              <strong>{{ 'ETA / ZATCA-ready fields' if lang == 'en' else 'حقول جاهزة لـ ETA / ZATCA' }}</strong>
+              <a href="/tools/invoice-extraction">{{ 'Try the invoice tool →' if lang == 'en' else 'جرّب أداة الفواتير →' }}</a>
             </div>
           </footer>
         </article>
 
-        {# Card 3 — Tarek Salah, Lawyer #}
+        {# Card 3 — Real estate / legal capability #}
         <article class="lp-tm-c">
           <div class="lp-tm-c-top">
-            <div class="lp-tm-c-stars">★★★★★</div>
             <span class="lp-tm-c-industry">{{ 'Real Estate · Legal' if lang == 'en' else 'عقاري · قانون' }}</span>
           </div>
           <p class="lp-tm-c-quote">
             {% if lang == 'en' %}
-            “Used it on a 12-page bilingual commercial lease — parties, dates, clauses and penalty terms all came out structured. The clause-detection module flagged a non-standard renewal clause my paralegal missed. That alone paid for the year.”
+            Turns bilingual contracts into structured data — parties, dates and amounts — and flags non-standard clauses against 28 standard Arabic clause types.
             {% else %}
-            «استخدمته على عقد إيجار تجاري بلغتين من 12 صفحة — الأطراف، التواريخ، البنود وشروط الغرامات كلها خرجت منظّمة. وحدة كشف البنود رصدت بندًا غير قياسي فاته على معاوِنتي. هذا وحده غطّى اشتراك السنة.»
+            يحوّل العقود ثنائية اللغة إلى بيانات منظّمة — الأطراف والتواريخ والمبالغ — ويُنبّه للبنود غير القياسية مقابل 28 بندًا عربيًا معياريًا.
             {% endif %}
           </p>
           <footer class="lp-tm-c-foot">
-            <span class="lp-tm-c-avatar lp-tm-c-avatar-c">TS</span>
+            <span class="lp-tm-c-avatar lp-tm-c-avatar-c" aria-hidden="true">📄</span>
             <div class="lp-tm-c-by">
-              <strong>{{ 'Tarek Salah, LLM' if lang == 'en' else 'طارق صلاح، ماجستير قانون' }}</strong>
-              <small>{{ 'Real-estate attorney · Riyadh' if lang == 'en' else 'محامٍ عقاري · الرياض' }}</small>
+              <strong>{{ 'Clause detection · bilingual' if lang == 'en' else 'كشف البنود · ثنائي اللغة' }}</strong>
+              <a href="/chat">{{ 'Talk to a contract →' if lang == 'en' else 'تحدّث مع عقد →' }}</a>
             </div>
           </footer>
         </article>
@@ -1895,18 +1845,21 @@ result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
       </div>
     </section>
 
-    {# ════════════════ ENTERPRISE CONTROLS — E.3 expanded 4 → 8 ════════ #}
-    {# Was a slim 4-icon strip. Promoted to a proper enterprise-controls
-       block: 8 cards in 2 rows of 4, headline + sub. Compete with Nanonets'
-       "Built for how large orgs actually operate" / Plaid CISO sections. #}
-    <section class="lp-section lp-trust-row" id="security" aria-label="Security and enterprise controls">
+    {# ════════════════ SECURITY & PRIVACY — honest posture ════════════ #}
+    {# Rewritten 2026-07-03: the prior "Enterprise controls" block claimed
+       SOC 2 Type II, SAML SSO/SCIM, multi-region data residency, 365-day
+       audit logs and RBAC — NONE of which exist (pre-revenue, single VPS,
+       SSO deferred by plan). Those are false security claims a buyer's
+       security team would diligence. Replaced with what is ACTUALLY true
+       today, plus an honest roadmap card. Do not re-add unbuilt controls. #}
+    <section class="lp-section lp-trust-row" id="security" aria-label="Security and privacy">
       <header class="lp-bench-head" style="text-align:center; margin-bottom:40px;">
-        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Enterprise controls' if lang == 'en' else 'ضوابط للمؤسسات' }}</p>
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Security & privacy' if lang == 'en' else 'الأمان والخصوصية' }}</p>
         <h2 class="lp-h2" style="margin:14px 0 10px !important;">
-          {{ 'Built for how large orgs actually operate.' if lang == 'en' else 'مصمَّم لكيفية عمل المؤسسات الكبيرة فعلًا.' }}
+          {{ 'Your documents, handled with care.' if lang == 'en' else 'مستنداتك، تُعامَل بعناية.' }}
         </h2>
         <p class="lp-section-sub" style="max-width:660px; margin:0 auto !important;">
-          {{ 'Privacy, audit, access, and rate controls your IT and security teams already expect — built in from day one, not bolted on for the enterprise tier.' if lang == 'en' else 'الخصوصية والتدقيق والصلاحيات وضوابط المعدّل التي يتوقّعها فريق تكنولوجيا المعلومات لديك — مدمجة من اليوم الأول، ليست لاحقًا لخطّة المؤسسات.' }}
+          {{ 'A straight account of how your data is handled — including what is on the roadmap and not built yet. No badges we have not earned.' if lang == 'en' else 'شرح صريح لكيفية التعامل مع بياناتك — بما في ذلك ما هو على خارطة الطريق ولم يُبنَ بعد. بلا شارات لم نستحقّها.' }}
         </p>
       </header>
 
@@ -1914,66 +1867,64 @@ result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
         <li>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2 4 6v6c0 5 8 10 8 10s8-5 8-10V6l-8-4z"/><path d="m9 12 2 2 4-4"/></svg>
           <div>
-            <strong>{{ 'SOC 2 Type II' if lang == 'en' else 'SOC 2 Type II' }}</strong>
-            <small>{{ 'Audit in progress · Q4 2026' if lang == 'en' else 'تدقيق قيد التنفيذ · ربع 4 2026' }}</small>
+            <strong>{{ 'Encrypted in transit' if lang == 'en' else 'مُشفّر أثناء النقل' }}</strong>
+            <small>{{ 'TLS 1.3 on every request' if lang == 'en' else 'TLS 1.3 في كل طلب' }}</small>
           </div>
         </li>
         <li>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
           <div>
-            <strong>{{ 'GDPR + Egypt PDPL' if lang == 'en' else 'GDPR + PDPL مصر' }}</strong>
-            <small>{{ 'Active · DPA on request' if lang == 'en' else 'مفعّل · DPA عند الطلب' }}</small>
+            <strong>{{ 'Not stored by default' if lang == 'en' else 'لا تُخزَّن افتراضيًا' }}</strong>
+            <small>{{ 'Documents dropped after the request completes' if lang == 'en' else 'تُحذف المستندات بعد اكتمال الطلب' }}</small>
           </div>
         </li>
         <li>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22v-5"/><path d="M9 8V3a3 3 0 0 1 6 0v5"/><rect x="3" y="8" width="18" height="9" rx="2"/></svg>
           <div>
-            <strong>{{ 'AES-256 / TLS 1.3' if lang == 'en' else 'AES-256 / TLS 1.3' }}</strong>
-            <small>{{ 'Encrypted at rest + in transit' if lang == 'en' else 'مُشفّر في الراحة والنقل' }}</small>
+            <strong>{{ 'Never used for training' if lang == 'en' else 'لا تُستخدم للتدريب' }}</strong>
+            <small>{{ 'Your files do not train any model' if lang == 'en' else 'ملفاتك لا تدرّب أي نموذج' }}</small>
           </div>
         </li>
         <li>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18"/></svg>
           <div>
-            <strong>{{ 'EU + Egypt residency' if lang == 'en' else 'إقامة بأوروبا + مصر' }}</strong>
-            <small>{{ 'Pin data to Frankfurt or Cairo' if lang == 'en' else 'ثبّت البيانات في فرانكفورت أو القاهرة' }}</small>
+            <strong>{{ 'Transparent AI provider' if lang == 'en' else 'مزوّد ذكاء اصطناعي معلَن' }}</strong>
+            <small>{{ 'Extraction runs on Google Gemini — disclosed, not hidden' if lang == 'en' else 'يعمل الاستخراج عبر Google Gemini — معلَن لا مخفي' }}</small>
           </div>
         </li>
         <li>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="9" r="3"/><circle cx="15" cy="15" r="3"/><path d="M9 12v0M15 12v0"/><circle cx="9" cy="9" r="6" stroke-dasharray="2 3"/></svg>
           <div>
-            <strong>{{ 'SAML SSO + SCIM' if lang == 'en' else 'SAML SSO + SCIM' }}</strong>
-            <small>{{ 'Okta, Azure AD, Google Workspace' if lang == 'en' else 'Okta و Azure AD و Google Workspace' }}</small>
+            <strong>{{ 'Scoped API keys' if lang == 'en' else 'مفاتيح API محدّدة' }}</strong>
+            <small>{{ 'Per-key usage limits, revoke anytime' if lang == 'en' else 'حدود استخدام لكل مفتاح، إلغاء في أي وقت' }}</small>
           </div>
         </li>
         <li>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6h12"/><path d="M3 12h12"/><path d="M3 18h8"/><circle cx="18" cy="18" r="3"/><path d="m21 21-1.5-1.5"/></svg>
           <div>
-            <strong>{{ 'Role-based access' if lang == 'en' else 'صلاحيات حسب الدور' }}</strong>
-            <small>{{ 'Per-team, per-doctype permissions' if lang == 'en' else 'صلاحيات لكل فريق ولكل نوع مستند' }}</small>
-          </div>
-        </li>
-        <li>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h16v6H4z"/><path d="M4 14h16v6H4z"/><circle cx="8" cy="7" r="0.5" fill="currentColor"/><circle cx="8" cy="17" r="0.5" fill="currentColor"/></svg>
-          <div>
-            <strong>{{ 'Audit log · 365 days' if lang == 'en' else 'سجل تدقيق · 365 يوم' }}</strong>
-            <small>{{ 'Per-user trail of every call' if lang == 'en' else 'سجل لكل مستخدم لكل طلب' }}</small>
+            <strong>{{ 'Per-field confidence' if lang == 'en' else 'ثقة لكل حقل' }}</strong>
+            <small>{{ 'Every value scored so you trust it or check it' if lang == 'en' else 'كل قيمة لها درجة ثقة لتثق بها أو تراجعها' }}</small>
           </div>
         </li>
         <li>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="9" r="5"/><path d="M5 21c1-3 4-5 7-5s6 2 7 5"/><path d="m17 9 2 1"/><path d="m5 9 2 1"/></svg>
           <div>
             <strong>{{ 'Human-in-the-loop' if lang == 'en' else 'مراجعة بشرية' }}</strong>
-            <small>{{ 'Low-confidence fields queued for review' if lang == 'en' else 'حقول منخفضة الثقة تذهب للمراجعة' }}</small>
+            <small>{{ 'Low-confidence fields flagged for your review' if lang == 'en' else 'حقول منخفضة الثقة تُعلَّم لمراجعتك' }}</small>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>
+          <div>
+            <strong>{{ 'On the roadmap' if lang == 'en' else 'على خارطة الطريق' }}</strong>
+            <small>{{ 'SSO, audit logs & data residency — ask us if you need them' if lang == 'en' else 'SSO وسجلات التدقيق وإقامة البيانات — راسِلنا إن احتجتها' }}</small>
           </div>
         </li>
       </ul>
       <p class="lp-trust-row-foot">
-        <a href="/legal#security">{{ 'Read the security overview' if lang == 'en' else 'اقرأ نظرة الأمان' }} →</a>
+        <a href="/privacy">{{ 'Read our privacy policy' if lang == 'en' else 'اقرأ سياسة الخصوصية' }} →</a>
         <span aria-hidden="true">·</span>
-        <a href="/legal#dpa">{{ 'Download our DPA' if lang == 'en' else 'حمّل DPA' }} →</a>
-        <span aria-hidden="true">·</span>
-        <a href="/contact?topic=security">{{ 'Talk to our security team' if lang == 'en' else 'تواصل مع فريق الأمان' }} →</a>
+        <a href="/contact?topic=security">{{ 'Questions about security? Talk to us' if lang == 'en' else 'أسئلة عن الأمان؟ راسِلنا' }} →</a>
       </p>
     </section>
 
