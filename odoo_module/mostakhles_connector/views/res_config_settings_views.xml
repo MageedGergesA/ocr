@@ -19,6 +19,12 @@
                             <field name="mostakhles_base_url"/>
                         </setting>
                     </block>
+                    <block title="الخصوصية والتحسين" name="mostakhles_privacy_block">
+                        <setting string="مشاركة التصحيحات لتحسين الدقة"
+                                 help="عند تعديل قيمة مستخرَجة قبل تطبيقها، نرسل التصحيح إلى مُستخلِص لتحسين نماذج اللغة العربية. لا نرسل المستند — فقط اسم الحقل والقيمة المصحّحة.">
+                            <field name="mostakhles_share_corrections"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>
@@ -28,7 +34,7 @@
         <field name="name">إعدادات مُستخلِص</field>
         <field name="res_model">res.config.settings</field>
         <field name="view_mode">form</field>
-        <field name="target">inline</field>
+        <field name="target">current</field>
         <field name="context">{'module': 'mostakhles_connector'}</field>
     </record>
 

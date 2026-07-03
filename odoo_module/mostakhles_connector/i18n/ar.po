@@ -230,3 +230,39 @@ msgstr "السجل المستهدف لم يعد موجودًا."
 #, python-format
 msgid "%d field(s) matched — review and apply."
 msgstr "تطابق %d حقل — راجع وطبّق."
+
+# --- Usage meter & upgrade-at-the-wall (Feature 2) ------------------------
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_extract_wizard__usage_info
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_fill_wizard__usage_info
+msgid "Credits"
+msgstr "الرصيد"
+
+#. module: mostakhles_connector
+#: code:addons/mostakhles_connector/models/mostakhles_api.py:0
+#, python-format
+msgid "Credits left: %(remaining)s / %(limit)s"
+msgstr "الرصيد المتبقّي: %(remaining)s / %(limit)s"
+
+#. module: mostakhles_connector
+#: code:addons/mostakhles_connector/models/mostakhles_api.py:0
+#, python-format
+msgid ""
+"You're out of Mostakhles credits for this billing period.\n"
+"Upgrade your plan to keep extracting: %s"
+msgstr ""
+"لقد استنفدت رصيد مُستخلِص لفترة الفوترة الحالية.\n"
+"طوّر باقتك لمواصلة الاستخراج: %s"
+
+# --- Correction-capture feedback loop (Feature 1) -------------------------
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_mostakhles_fill_wizard__hid
+msgid "Extraction ID"
+msgstr "معرّف الاستخراج"
+
+#. module: mostakhles_connector
+#: model:ir.model.fields,field_description:mostakhles_connector.field_res_config_settings__mostakhles_share_corrections
+msgid "Share corrections to improve accuracy"
+msgstr "مشاركة التصحيحات لتحسين الدقة"

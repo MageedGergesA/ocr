@@ -9,6 +9,11 @@
                 <field name="state" invisible="1"/>
                 <field name="res_model" invisible="1"/>
                 <field name="res_id" invisible="1"/>
+                <field name="hid" invisible="1"/>
+                <div class="alert alert-info text-center py-1" role="status"
+                     invisible="not usage_info">
+                    <field name="usage_info" nolabel="1" readonly="1"/>
+                </div>
                 <group>
                     <field name="record_name" readonly="1"/>
                     <field name="document" filename="filename"

@@ -17,3 +17,12 @@ class ResConfigSettings(models.TransientModel):
         default="https://api.mostakhles.ai",
         help="The Mostakhles API base URL. Leave as default unless self-hosting.",
     )
+    mostakhles_share_corrections = fields.Boolean(
+        string="Share corrections to improve accuracy",
+        config_parameter="mostakhles.share_corrections",
+        default=True,
+        help="When you edit an extracted value before applying it, send the "
+             "correction back to Mostakhles so the Arabic models keep improving. "
+             "Only the field name and your corrected value are sent — never the "
+             "document. Turn this off to opt out.",
+    )

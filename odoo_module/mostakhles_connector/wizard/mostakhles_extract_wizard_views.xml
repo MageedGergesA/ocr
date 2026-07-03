@@ -6,6 +6,10 @@
         <field name="model">mostakhles.extract.wizard</field>
         <field name="arch" type="xml">
             <form string="استخراج بيانات المستند">
+                <div class="alert alert-info text-center py-1" role="status"
+                     invisible="not usage_info">
+                    <field name="usage_info" nolabel="1" readonly="1"/>
+                </div>
                 <group>
                     <field name="document" filename="filename" required="1"/>
                     <field name="filename" invisible="1"/>

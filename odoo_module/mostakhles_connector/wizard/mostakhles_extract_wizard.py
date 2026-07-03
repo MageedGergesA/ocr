@@ -3,7 +3,7 @@
 import base64
 import json
 
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 
@@ -20,6 +20,14 @@ class MostakhlesExtractWizard(models.TransientModel):
     line_ids = fields.One2many(
         "mostakhles.extract.line", "wizard_id", string="Extracted Fields")
     result_json = fields.Text(string="Raw Result", readonly=True)
+    usage_info = fields.Char(string="Credits", readonly=True)
+
+    @api.model
+    def default_get(self, fields_list):
+        vals = super().default_get(fields_list)
+        if "usage_info" in fields_list:
+            vals["usage_info"] = self.env["mostakhles.api"]._usage_label()
+        return vals
 
     def action_extract(self):
         self.ensure_one()
@@ -50,6 +58,7 @@ class MostakhlesExtractWizard(models.TransientModel):
         self.write({
             "document_type": result.get("document_type") or result.get("mode") or "",
             "result_json": json.dumps(result, ensure_ascii=False, indent=2),
+            "usage_info": self.env["mostakhles.api"]._format_usage(result.get("usage") or {}),
             "line_ids": lines,
         })
         return {
