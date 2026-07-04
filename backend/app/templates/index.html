@@ -16,10 +16,10 @@
   })();
   </script>
   {% if lang == 'en' %}
-  <title>Mostakhles — The #1 Arabic Document AI</title>
+  <title>Mostakhles — The Arabic Document AI</title>
   <meta name="description" content="The Arabic document AI that thinks: reads handwriting, cursive, invoices, contracts, and IDs — then derives, validates, and summarizes. Web, API, Odoo. Try free.">
   {% else %}
-  <title>مُستخلِص — رقم 1 في الذكاء الاصطناعي للمستندات العربية</title>
+  <title>مُستخلِص — الذكاء الاصطناعي للمستندات العربية</title>
   <meta name="description" content="ذكاء اصطناعي عربي يقرأ خط اليد والفواتير والعقود والهويات — ويستنتج ويتحقّق ويلخّص. عبر الويب وأودو والـ API. جرّب مجانًا.">
   {% endif %}
   <meta property="og:title" content="مُستخلِص · Mostakhles — The Arabic Document AI">
@@ -34,6 +34,9 @@
 </head>
 <body class="lp-body">
 
+  {# Skip-to-content link — first focusable element, revealed on :focus #}
+  <a class="lp-skip-link" href="#main">{{ 'Skip to content' if lang == 'en' else 'تخطَّ إلى المحتوى' }}</a>
+
   {# Top thin teal stripe (handwritingocr's signature precision marker) #}
   <div class="lp-top-stripe"></div>
 
@@ -46,8 +49,8 @@
           <span class="lp-brand-text">{{ 'Mostakhles' if lang == 'en' else 'مُستخلِص' }}<small>.ai</small></span>
         </a>
         <nav class="lp-nav-links">
-          <a href="#problem">{{ 'Why' if lang == 'en' else 'لماذا' }}</a>
-          <a href="#features">{{ 'Features' if lang == 'en' else 'المميزات' }}</a>
+          <a href="#why">{{ 'Why' if lang == 'en' else 'لماذا' }}</a>
+          <a href="#capabilities">{{ 'Features' if lang == 'en' else 'المميزات' }}</a>
           <a href="/pricing">{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</a>
           <a href="/docs">{{ 'API' if lang == 'en' else 'الـ API' }}</a>
           <a href="/about">{{ 'About' if lang == 'en' else 'عنّا' }}</a>
@@ -73,6 +76,7 @@
   </header>
 
   {# Whole page is a giant bordered card on a tinted body — the "enterprise" frame #}
+  <main id="main">
   <div class="lp-shell">
 
     <div class="lp-stripe-divider" aria-hidden="true"></div>
@@ -153,9 +157,9 @@
 
           {# Tiny uppercase eyebrow (the ClickUp "GET 400% MORE DONE..." line) #}
           <p class="lp-hero-eyebrow">
-            {{ '30s PER DOC' if lang == 'en' else '30ث لكل مستند' }}
+            {{ 'SECONDS PER DOC' if lang == 'en' else 'ثوانٍ لكل مستند' }}
             <span class="lp-hero-eyebrow-dot">·</span>
-            {{ '99.4% FIELD ACCURACY' if lang == 'en' else 'دقة 99.4٪ للحقول' }}
+            {{ 'ARABIC-FIRST EXTRACTION' if lang == 'en' else 'استخراج عربي أولاً' }}
           </p>
 
           {# Feature pill strip — 12 doctypes, the first active w/ check #}
@@ -186,13 +190,6 @@
         {# Both lang-aware via html[lang=...] selectors in CSS.              #}
         <div class="lp-hero-visual">
           <div class="lp-shots">
-
-            {# Live counter — top-right balance to the bottom-left JSON. Pulses live. #}
-            <div class="lp-shot-counter" aria-hidden="true">
-              <span class="lp-shot-counter-dot"></span>
-              <span class="lp-shot-counter-num">2,847</span>
-              <span class="lp-shot-counter-label">{{ 'extracted today' if lang == 'en' else 'مستخرج اليوم' }}</span>
-            </div>
 
             {# Floating "input doc" mini-card — adds a 3rd plane to the composition.
                Rotated -4deg, peeks out from the top-left of the main screenshot.
@@ -306,274 +303,6 @@
             {# Cost badge removed for declutter — JSON header already shows the 1.8s timing. #}
 
           </div>
-          <div class="lp-app-mock-OBSOLETE" dir="ltr" hidden aria-hidden="true">
-
-            {# Topbar #}
-            <div class="lp-app-topbar">
-              <div class="lp-app-workspace">
-                <span class="lp-app-ws-mark">⬡</span>
-                <span class="lp-app-ws-name">{{ 'Cairo Pharma' if lang == 'en' else 'صيدلية القاهرة' }}</span>
-                <svg class="lp-app-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-              </div>
-              <div class="lp-app-tools">
-                <span class="lp-app-search-bar"></span>
-                <span class="lp-app-cog">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                </span>
-              </div>
-            </div>
-
-            <div class="lp-app-body">
-
-              {# Left rail of small icons #}
-              <div class="lp-app-rail">
-                <div class="lp-app-rail-icon lp-app-rail-icon-active">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                </div>
-                <div class="lp-app-rail-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
-                </div>
-                <div class="lp-app-rail-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
-                </div>
-                <div class="lp-app-rail-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                </div>
-              </div>
-
-              {# Sidebar #}
-              <div class="lp-app-sidebar">
-                <div class="lp-app-sidebar-head">
-                  <svg class="lp-app-caret-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                  <span class="lp-app-sidebar-title">{{ 'Home' if lang == 'en' else 'الرئيسية' }}</span>
-                  <span class="lp-app-sidebar-spacer"></span>
-                  <span class="lp-app-sidebar-plus">+</span>
-                  <svg class="lp-app-caret-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-                <ul class="lp-app-list">
-                  <li class="lp-app-item">
-                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
-                    <span class="lp-app-item-label">{{ 'Inbox' if lang == 'en' else 'الوارد' }}</span>
-                    <span class="lp-app-badge lp-app-badge-red">3</span>
-                  </li>
-                  <li class="lp-app-item">
-                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span class="lp-app-item-label">{{ 'My Documents' if lang == 'en' else 'مستنداتي' }}</span>
-                  </li>
-                  <li class="lp-app-item">
-                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    <span class="lp-app-item-label">{{ 'Templates' if lang == 'en' else 'القوالب' }}</span>
-                  </li>
-                </ul>
-
-                <div class="lp-app-sidebar-section">{{ 'Healthcare Team' if lang == 'en' else 'فريق الرعاية' }}</div>
-                <ul class="lp-app-list">
-                  <li class="lp-app-item">
-                    <span class="lp-app-bullet">≡</span>
-                    <span class="lp-app-item-label">{{ 'Prescription Queue' if lang == 'en' else 'قائمة الروشتات' }}</span>
-                  </li>
-                  <li class="lp-app-item">
-                    <span class="lp-app-bullet">#</span>
-                    <span class="lp-app-item-label">{{ 'Lab Reports' if lang == 'en' else 'تقارير المعمل' }}</span>
-                  </li>
-                  <li class="lp-app-item">
-                    <span class="lp-app-mini-avatar lp-app-ma-blue">DA</span>
-                    <span class="lp-app-item-label">{{ 'Dr. Ahmed' if lang == 'en' else 'د. أحمد' }}</span>
-                    <span class="lp-app-badge lp-app-badge-red">1</span>
-                  </li>
-                  <li class="lp-app-item">
-                    <span class="lp-app-mini-avatar lp-app-ma-pink">PA</span>
-                    <span class="lp-app-item-label">{{ 'Pharmacy AI' if lang == 'en' else 'صيدلية الذكاء' }}</span>
-                    <span class="lp-app-badge lp-app-badge-red">3</span>
-                  </li>
-                  <li class="lp-app-item">
-                    <span class="lp-app-mini-avatar lp-app-ma-amber">ZS</span>
-                    <span class="lp-app-item-label">{{ 'Zeinab S.' if lang == 'en' else 'زينب س.' }}</span>
-                  </li>
-                  <li class="lp-app-item">
-                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                    <span class="lp-app-item-label">{{ 'Vision & Strategy' if lang == 'en' else 'الرؤية والاستراتيجية' }}</span>
-                  </li>
-                </ul>
-
-                <div class="lp-app-sidebar-section">{{ 'Spaces' if lang == 'en' else 'المساحات' }}</div>
-                <ul class="lp-app-list">
-                  <li class="lp-app-item lp-app-item-active">
-                    <span class="lp-app-space-square lp-app-space-red">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-                    </span>
-                    <span class="lp-app-item-label">{{ 'Prescription' if lang == 'en' else 'روشتة' }}</span>
-                  </li>
-                  <li class="lp-app-item lp-app-item-muted">
-                    <span class="lp-app-bullet">≡</span>
-                    <span class="lp-app-item-label">{{ 'Invoices' if lang == 'en' else 'الفواتير' }}</span>
-                  </li>
-                  <li class="lp-app-item lp-app-item-muted">
-                    <span class="lp-app-bullet">≡</span>
-                    <span class="lp-app-item-label">{{ 'Statements' if lang == 'en' else 'كشوف' }}</span>
-                  </li>
-                  <li class="lp-app-item lp-app-item-muted">
-                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                    <span class="lp-app-item-label">{{ 'ID Pack' if lang == 'en' else 'حزمة الهوية' }}</span>
-                  </li>
-                  <li class="lp-app-item lp-app-item-muted">
-                    <svg class="lp-app-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                    <span class="lp-app-item-label">{{ 'Design Documents' if lang == 'en' else 'مستندات التصميم' }}</span>
-                  </li>
-                </ul>
-              </div>
-
-              {# Main panel #}
-              <div class="lp-app-main">
-                <div class="lp-app-main-head">
-                  <span class="lp-app-main-icon">
-                    <svg viewBox="0 0 24 24" fill="#ef4444" stroke="none"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
-                  </span>
-                  <span class="lp-app-main-title">{{ 'Prescription' if lang == 'en' else 'روشتة' }}</span>
-                  <svg class="lp-app-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                  <svg class="lp-app-main-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                </div>
-                <div class="lp-app-tabs">
-                  <span class="lp-app-tab">
-                    <svg viewBox="0 0 24 24" fill="#3b82f6" stroke="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    Chat
-                  </span>
-                  <span class="lp-app-tab lp-app-tab-active">
-                    <svg viewBox="0 0 24 24" fill="#10b981" stroke="none"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Fields
-                  </span>
-                  <span class="lp-app-tab">
-                    <svg viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
-                    Schedule
-                  </span>
-                  <span class="lp-app-tab">
-                    <svg viewBox="0 0 24 24" fill="#8b5cf6" stroke="none"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-                    JSON
-                  </span>
-                  <span class="lp-app-tab">
-                    <svg viewBox="0 0 24 24" fill="#06b6d4" stroke="none"><circle cx="12" cy="12" r="10"/></svg>
-                    History
-                  </span>
-                  <span class="lp-app-tab lp-app-tab-add">+ View</span>
-                </div>
-                <div class="lp-app-table-head">
-                  <span>{{ 'Field' if lang == 'en' else 'الحقل' }}</span>
-                  <span>{{ 'Value' if lang == 'en' else 'القيمة' }}</span>
-                </div>
-                <div class="lp-app-group">
-                  <div class="lp-app-group-head">
-                    <span class="lp-app-collapse-arrow">▾</span>
-                    <span class="lp-app-chip lp-app-chip-done">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                      EXTRACTED
-                    </span>
-                    <span class="lp-app-count">5</span>
-                  </div>
-                  <div class="lp-app-row">
-                    <span class="lp-app-row-name">
-                      <span class="lp-app-row-check lp-app-row-check-done">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                      </span>
-                      {{ 'Patient' if lang == 'en' else 'المريض' }}
-                    </span>
-                    <span class="lp-app-row-asn">
-                      <span class="lp-app-row-avatar lp-app-row-avatar-blue">A</span>
-                    </span>
-                  </div>
-                  <div class="lp-app-row">
-                    <span class="lp-app-row-name">
-                      <span class="lp-app-row-check lp-app-row-check-done">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                      </span>
-                      {{ 'Drug name' if lang == 'en' else 'اسم الدواء' }}
-                      <span class="lp-app-row-meta">2</span>
-                    </span>
-                    <span class="lp-app-row-asn">
-                      <span class="lp-app-row-avatar lp-app-row-avatar-green">B</span>
-                      <span class="lp-app-row-avatar lp-app-row-avatar-purple">C</span>
-                    </span>
-                  </div>
-                  <div class="lp-app-row lp-app-row-indent">
-                    <span class="lp-app-row-name">
-                      <span class="lp-app-row-check lp-app-row-check-empty"></span>
-                      {{ 'Dose' if lang == 'en' else 'الجرعة' }}
-                    </span>
-                    <span class="lp-app-row-asn">
-                      <span class="lp-app-row-avatar lp-app-row-avatar-pink">D</span>
-                    </span>
-                  </div>
-                  <div class="lp-app-row lp-app-row-indent">
-                    <span class="lp-app-row-name">
-                      <span class="lp-app-row-check lp-app-row-check-empty"></span>
-                      {{ 'Frequency' if lang == 'en' else 'التردد' }}
-                    </span>
-                    <span class="lp-app-row-asn">
-                      <span class="lp-app-row-avatar lp-app-row-avatar-teal">E</span>
-                    </span>
-                  </div>
-                  <div class="lp-app-row">
-                    <span class="lp-app-row-name">
-                      <span class="lp-app-row-check lp-app-row-check-done">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                      </span>
-                      {{ 'Duration' if lang == 'en' else 'المدة' }}
-                    </span>
-                    <span class="lp-app-row-asn">
-                      <span class="lp-app-row-avatar lp-app-row-avatar-amber">F</span>
-                    </span>
-                  </div>
-                  <div class="lp-app-row lp-app-row-add">
-                    <span class="lp-app-row-name lp-app-row-name-add">
-                      <span class="lp-app-row-add-plus">+</span>
-                      {{ 'Add field' if lang == 'en' else 'إضافة حقل' }}
-                    </span>
-                  </div>
-                </div>
-                <div class="lp-app-group">
-                  <div class="lp-app-group-head">
-                    <span class="lp-app-collapse-arrow">▾</span>
-                    <span class="lp-app-chip lp-app-chip-progress">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
-                      IN PROGRESS
-                    </span>
-                    <span class="lp-app-count">3</span>
-                  </div>
-                  <div class="lp-app-row">
-                    <span class="lp-app-row-name">
-                      <span class="lp-app-flag" aria-hidden="true"></span>
-                      {{ 'Pharmacy Stamp' if lang == 'en' else 'ختم الصيدلية' }}
-                    </span>
-                    <span class="lp-app-row-asn">
-                      <span class="lp-app-row-avatar lp-app-row-avatar-red">G</span>
-                    </span>
-                  </div>
-                  <div class="lp-app-row">
-                    <span class="lp-app-row-name">
-                      <span class="lp-app-row-arrow">▸</span>
-                      {{ 'Signature Match' if lang == 'en' else 'مطابقة التوقيع' }}
-                      <span class="lp-app-row-meta">1</span>
-                    </span>
-                    <span class="lp-app-row-asn">
-                      <span class="lp-app-row-avatar lp-app-row-avatar-blue">H</span>
-                      <span class="lp-app-row-avatar lp-app-row-avatar-green">I</span>
-                    </span>
-                  </div>
-                  <div class="lp-app-row">
-                    <span class="lp-app-row-name">
-                      <span class="lp-app-row-arrow">▸</span>
-                      {{ 'Date Validation' if lang == 'en' else 'فحص التاريخ' }}
-                      <svg class="lp-app-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                      <span class="lp-app-row-meta">5</span>
-                      <span class="lp-app-row-meta lp-app-row-meta-red">1</span>
-                    </span>
-                    <span class="lp-app-row-asn">
-                      <span class="lp-app-row-avatar lp-app-row-avatar-yellow">J</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
       </div>
@@ -620,6 +349,55 @@
       </div>
     </section>
 
+    {# ════════════════ LIVE DEMO — real /v1/demo-extract, no signup ═══════════
+       Drop a file → POST to the public demo endpoint (server resolves the demo
+       key, forces fast tier, fair-use capped) → render the returned JSON.
+       Wired to the demo JS near the end of <body> via the lp* element IDs. #}
+    <section class="lp-section lp-live-section" id="try">
+      <header class="lp-section-head" style="text-align:center; margin-bottom:32px;">
+        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'Live demo' if lang == 'en' else 'تجربة مباشرة' }}</p>
+        <h2 class="lp-h2">{{ 'Try it on your own document.' if lang == 'en' else 'جرّبه على مستندك.' }}</h2>
+        <p class="lp-section-sub" style="max-width:640px; margin-inline:auto;">
+          {{ 'Drop an Arabic or English file — typed or handwritten — and watch the structured JSON come back in seconds. No signup.' if lang == 'en' else 'أفلِت ملفًا عربيًا أو إنجليزيًا — مطبوعًا أو بخط اليد — وشاهد البيانات المنظّمة (JSON) تعود خلال ثوانٍ. بدون تسجيل.' }}
+        </p>
+      </header>
+
+      <div class="lp-live-grid">
+
+        {# ── Dropzone ── #}
+        <div class="lp-live-drop" id="lpDropzone">
+          <input type="file" id="lpDropInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" hidden>
+          <span class="lp-live-drop-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </span>
+          <p class="lp-live-drop-title">{{ 'Drag & drop a document here' if lang == 'en' else 'اسحب وأفلِت مستندًا هنا' }}</p>
+          <p class="lp-live-drop-sub">{{ 'PDF, JPG, PNG, WEBP · up to 5 MB · 5 pages' if lang == 'en' else 'PDF أو JPG أو PNG أو WEBP · حتى 5 ميجابايت · 5 صفحات' }}</p>
+          <button type="button" class="lp-btn lp-btn-primary" id="lpDropPick">{{ 'Choose a file' if lang == 'en' else 'اختر ملفًا' }}</button>
+          <p class="lp-live-fineprint">{{ 'Runs on the fast tier · fair-use limited · your file is processed, not stored.' if lang == 'en' else 'يعمل على الطبقة السريعة · محدود بالاستخدام العادل · تتم معالجة ملفك دون تخزينه.' }}</p>
+        </div>
+
+        {# ── Result ── #}
+        <div class="lp-live-result">
+          <div class="lp-live-result-head">
+            <span>{{ 'Result' if lang == 'en' else 'النتيجة' }}</span>
+            <span class="lp-live-result-status" id="lpLiveStatus"></span>
+            <button type="button" class="lp-live-copy" id="lpLiveCopy" hidden>{{ 'Copy' if lang == 'en' else 'نسخ' }}</button>
+          </div>
+          <div class="lp-live-result-empty" id="lpLiveEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>{{ 'Your extracted JSON will appear here.' if lang == 'en' else 'ستظهر بياناتك المستخرجة (JSON) هنا.' }}</span>
+          </div>
+          <div class="lp-live-result-loading" id="lpLiveLoading" hidden>
+            <svg class="lp-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            <span>{{ 'Extracting…' if lang == 'en' else 'جارٍ الاستخراج…' }}</span>
+          </div>
+          <pre class="lp-live-result-json" id="lpLiveJson" hidden></pre>
+          <div class="lp-live-result-error" id="lpLiveError" hidden></div>
+        </div>
+
+      </div>
+    </section>
+
     {# Trust-band section below is HIDDEN — its content moved into the hero
        frame above per Nanonets pattern. Markup kept for now in case we
        want to restore the separate section; remove after one stable release. #}
@@ -639,7 +417,7 @@
        Mirrors ClickUp's Lp4BrainSection: 32px-rounded black container,
        noise texture overlay, mint radial glow, 3 dark cards.
        This is the page's ONLY saturated section. #}
-    <section class="lp-engine">
+    <section class="lp-engine" id="capabilities">
       <div class="lp-engine-container">
         <div class="lp-engine-noise" aria-hidden="true"></div>
         <div class="lp-engine-glow lp-engine-glow-1" aria-hidden="true"></div>
@@ -804,10 +582,6 @@
               <div><b>0.8s</b><small>{{ 'extract time' if lang == 'en' else 'زمن الاستخراج' }}</small></div>
             </div>
           </div>
-          <span class="lp-engine-max-prod">
-            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-            <span><small>{{ 'Product Hunt' if lang == 'en' else 'Product Hunt' }}</small>{{ '#1 doc AI in MENA' if lang == 'en' else '#1 ذكاء مستندات في المنطقة' }}</span>
-          </span>
         </article>
 
         {# 3 trust columns — Your company's AI / Connected to your stack / Every doctype #}
@@ -815,25 +589,23 @@
           <div class="lp-engine-trust-col">
             <div class="lp-engine-trust-pill">
               <span class="lp-engine-trust-pill-icon">⚡</span>
-              {{ 'Trained for MENA' if lang == 'en' else 'مُدرَّب للمنطقة' }}
+              {{ 'Tuned for MENA' if lang == 'en' else 'مُحسَّن للمنطقة' }}
             </div>
             <strong class="lp-engine-trust-h">{{ "Your team's AI" if lang == 'en' else 'ذكاء فريقك' }}</strong>
             <p class="lp-engine-trust-p">
-              {{ 'An expert reader trained on Egyptian, Saudi, Emirati, and Levantine docs.' if lang == 'en' else 'قارئ خبير مُدرَّب على المستندات المصرية والسعودية والإماراتية وبلاد الشام.' }}
+              {{ 'An expert reader tuned for Egyptian, Saudi, Emirati, and Levantine docs.' if lang == 'en' else 'قارئ خبير مُحسَّن للمستندات المصرية والسعودية والإماراتية وبلاد الشام.' }}
             </p>
           </div>
           <div class="lp-engine-trust-col">
             <div class="lp-engine-trust-apps">
+              <span class="lp-engine-trust-app">JSON</span>
               <span class="lp-engine-trust-app">Odoo</span>
-              <span class="lp-engine-trust-app">SAP</span>
-              <span class="lp-engine-trust-app">N8n</span>
-              <span class="lp-engine-trust-app">Zapier</span>
               <span class="lp-engine-trust-app">API</span>
               <span class="lp-engine-trust-app">Webhooks</span>
             </div>
-            <strong class="lp-engine-trust-h">{{ '60+ exports + integrations' if lang == 'en' else '60+ تصدير وتكامل' }}</strong>
+            <strong class="lp-engine-trust-h">{{ 'Exports & integrations' if lang == 'en' else 'تصدير وتكاملات' }}</strong>
             <p class="lp-engine-trust-p">
-              {{ 'JSON · Excel · DOCX · PDF · Markdown · Odoo · Zapier · webhook → your stack.' if lang == 'en' else 'JSON · Excel · DOCX · PDF · Markdown · أودو · Zapier · webhook → مكدّسك.' }}
+              {{ 'JSON · XLSX · CSV · DOCX · XML · searchable PDF · webhooks · REST API · Odoo.' if lang == 'en' else 'JSON · XLSX · CSV · DOCX · XML · PDF قابل للبحث · Webhooks · REST API · أودو.' }}
             </p>
           </div>
           <div class="lp-engine-trust-col">
@@ -1028,7 +800,7 @@
     {# ════════════════ TEAM TABS — "Mostakhles for every team that touches paper" ═════
        ClickUp's "AI solutions for every team" equivalent. 6 industry tabs powered by
        CSS :checked + ~ sibling selectors. No JS dependency, full a11y via labels. #}
-    <section class="lp-section lp-roles">
+    <section class="lp-section lp-roles" id="why">
       <header class="lp-roles-head">
         <p class="lp-roles-eyebrow">{{ 'BUILT FOR MENA' if lang == 'en' else 'مبني لمنطقتنا' }}</p>
         <h2 class="lp-roles-h2">
@@ -1051,7 +823,7 @@
       <input type="radio" name="role-tab" id="role-hr" class="lp-roles-radio">
       <input type="radio" name="role-tab" id="role-legal" class="lp-roles-radio">
 
-      <div class="lp-roles-tabs" role="tablist">
+      <div class="lp-roles-tabs">
         <label for="role-pharma"     class="lp-roles-tab" data-role="pharma">{{ 'Pharmacy' if lang == 'en' else 'صيدلة' }}</label>
         <label for="role-account"    class="lp-roles-tab" data-role="account">{{ 'Accounting' if lang == 'en' else 'محاسبة' }}</label>
         <label for="role-realestate" class="lp-roles-tab" data-role="realestate">{{ 'Real estate' if lang == 'en' else 'عقارات' }}</label>
@@ -1259,204 +1031,6 @@
       </div>
     </section>
 
-    {# ════════════════ REAL EXTRACTION. REAL OUTPUT. ════════════════
-       HIDDEN on homepage (too crowded) — to be moved to /showcase or /demo
-       page in a follow-up. Markup preserved for that future migration.
-       Stored at /static/img/showcase/{extraction,insights,exports,report}.png. #}
-    <section class="lp-showcase" hidden>
-      <header class="lp-showcase-head">
-        <h2 class="lp-showcase-h2">
-          {% if lang == 'en' %}
-          Real extraction. Real output.
-          {% else %}
-          استخراج حقيقي. مخرجات حقيقية.
-          {% endif %}
-        </h2>
-        <p class="lp-showcase-sub">
-          {% if lang == 'en' %}
-          From a scanned passport to a polished PDF report — without writing a single line of code.
-          {% else %}
-          من جواز سفر مسحوب ضوئيًا إلى تقرير PDF احترافي — بدون كتابة سطر واحد من البرمجة.
-          {% endif %}
-        </p>
-      </header>
-
-      <div class="lp-showcase-grid">
-
-        <article class="lp-showcase-card">
-          <div class="lp-showcase-tab">
-            <span class="lp-showcase-tab-num">1</span>
-            <div class="lp-showcase-tab-text">
-              <strong>{{ 'Detected & extracted' if lang == 'en' else 'الاكتشاف والاستخراج' }}</strong>
-              <small>{{ 'Doc type identified · fields parsed · confidence per field' if lang == 'en' else 'نوع المستند مُكتشف · حقول مُحلَّلة · ثقة لكل حقل' }}</small>
-            </div>
-          </div>
-          <div class="lp-showcase-frame">
-            <img src="/static/img/showcase/extraction.png" alt="{{ 'Mostakhles passport extraction view' if lang == 'en' else 'عرض استخراج جواز سفر مُستخلِص' }}" loading="lazy"/>
-          </div>
-        </article>
-
-        <article class="lp-showcase-card">
-          <div class="lp-showcase-tab">
-            <span class="lp-showcase-tab-num">2</span>
-            <div class="lp-showcase-tab-text">
-              <strong>{{ 'Validation insights' if lang == 'en' else 'تحقّقات ذكية' }}</strong>
-              <small>{{ 'Structural validation · low-confidence fields surfaced · per-field % score' if lang == 'en' else 'تحقّق بنيوي · حقول ضعيفة الثقة مُسلَّط الضوء · نسبة لكل حقل' }}</small>
-            </div>
-          </div>
-          <div class="lp-showcase-frame">
-            <img src="/static/img/showcase/insights.png" alt="{{ 'Mostakhles validation insights view' if lang == 'en' else 'عرض التحقّقات الذكية في مُستخلِص' }}" loading="lazy"/>
-          </div>
-        </article>
-
-        <article class="lp-showcase-card">
-          <div class="lp-showcase-tab">
-            <span class="lp-showcase-tab-num">3</span>
-            <div class="lp-showcase-tab-text">
-              <strong>{{ 'Export to anywhere' if lang == 'en' else 'تصدير إلى أي مكان' }}</strong>
-              <small>{{ 'Excel · DOCX · PDF · JSON · CSV · Markdown · Odoo' if lang == 'en' else 'Excel · DOCX · PDF · JSON · CSV · Markdown · أودو' }}</small>
-            </div>
-          </div>
-          <div class="lp-showcase-frame">
-            <img src="/static/img/showcase/exports.png" alt="{{ 'Mostakhles export format menu' if lang == 'en' else 'قائمة صيغ التصدير في مُستخلِص' }}" loading="lazy"/>
-          </div>
-        </article>
-
-        <article class="lp-showcase-card">
-          <div class="lp-showcase-tab">
-            <span class="lp-showcase-tab-num">4</span>
-            <div class="lp-showcase-tab-text">
-              <strong>{{ 'Polished report, in one click' if lang == 'en' else 'تقرير احترافي بضغطة واحدة' }}</strong>
-              <small>{{ 'Branded PDF · Identity / Demographics / Document Information sections' if lang == 'en' else 'PDF مُعنوَن · أقسام الهوية / السكان / بيانات المستند' }}</small>
-            </div>
-          </div>
-          <div class="lp-showcase-frame">
-            <img src="/static/img/showcase/report.png" alt="{{ 'Mostakhles generated PDF report' if lang == 'en' else 'تقرير PDF مُولَّد من مُستخلِص' }}" loading="lazy"/>
-          </div>
-        </article>
-
-      </div>
-    </section>
-
-    {# Old single-doc showcase preserved but HIDDEN until decision on its fate. #}
-    <section class="lp-section lp-showcase-section" hidden>
-      <header class="lp-section-head lp-center">
-        <p class="lp-kicker"><span class="lp-dot"></span>{{ 'The product' if lang == 'en' else 'المنتج' }}</p>
-        <h2 class="lp-h2">{{ 'Every extraction, ready for your stack' if lang == 'en' else 'كل استخراج، جاهز لمكدّسك التقني' }}</h2>
-        <p class="lp-section-sub">{{ 'Fields, confidence scores, validations, summaries — and one-click export to JSON, Excel, PDF, Word, or your Odoo / API.' if lang == 'en' else 'حقول، درجات ثقة، فحوصات، ملخّصات — وتصدير بنقرة إلى JSON أو Excel أو PDF أو Word أو Odoo / API.' }}</p>
-      </header>
-
-      <div class="lp-showcase-window">
-        {# Browser chrome #}
-        <div class="lp-showcase-chrome">
-          <span class="lp-showcase-dot" style="background:#ff5f57"></span>
-          <span class="lp-showcase-dot" style="background:#febc2e"></span>
-          <span class="lp-showcase-dot" style="background:#28c840"></span>
-          <span class="lp-showcase-url">mostakhles.ai/app/extract/inv-2026-0042</span>
-          <span class="lp-showcase-user">MG</span>
-        </div>
-
-        {# Body — N.3 simplified to 2 columns: document preview + extracted fields panel.
-           Sidebar dropped (it's a /app feature, not a homepage proof point). #}
-        <div class="lp-showcase-body lp-showcase-body-2col">
-
-          {# Center — scanned doc preview #}
-          <div class="lp-showcase-doc">
-            <div class="lp-showcase-doc-toolbar">
-              <span>📄 invoice-aluminium-co.pdf</span>
-              <span class="lp-showcase-doc-zoom">100%</span>
-            </div>
-            <div class="lp-showcase-doc-page">
-              <div class="lp-showcase-doc-h">
-                <b>شركة الألمنيوم المصرية</b>
-                <small>Egyptian Aluminum Co. · INV-2026-0042</small>
-              </div>
-              <div class="lp-showcase-doc-meta">
-                <div><span>التاريخ</span> 14 يونيو 2026</div>
-                <div><span>الرقم الضريبي</span> 219-487-303</div>
-              </div>
-              <table class="lp-showcase-doc-tbl">
-                <thead><tr><th>الصنف</th><th>كمية</th><th>سعر</th></tr></thead>
-                <tbody>
-                  <tr class="lp-showcase-highlight"><td>ألواح ألمنيوم 6mm</td><td>120</td><td>1,200</td></tr>
-                  <tr><td>قوالب القطع المخصصة</td><td>4</td><td>2,400</td></tr>
-                  <tr class="lp-showcase-highlight"><td>خدمات نقل وتركيب</td><td>1</td><td>3,500</td></tr>
-                </tbody>
-              </table>
-              <div class="lp-showcase-doc-total">
-                <span>الإجمالي مع الضريبة</span>
-                <b>EGP 26,600</b>
-              </div>
-            </div>
-          </div>
-
-          {# Right — extracted fields panel #}
-          <aside class="lp-showcase-fields">
-            <div class="lp-showcase-tabs">
-              <button class="lp-showcase-tab active">{{ 'Fields' if lang == 'en' else 'الحقول' }}</button>
-              <button class="lp-showcase-tab">JSON</button>
-              <button class="lp-showcase-tab">{{ 'Insights' if lang == 'en' else 'تحليل' }}</button>
-            </div>
-            <div class="lp-showcase-conf-bar">
-              <span>{{ 'Extracted' if lang == 'en' else 'مُستخرَج' }} <b>17 / 17</b></span>
-              <span class="lp-showcase-conf-pill ok">15 high</span>
-              <span class="lp-showcase-conf-pill med">2 review</span>
-            </div>
-            <div class="lp-showcase-field">
-              <span class="lp-showcase-field-k">supplier_ar</span>
-              <span class="lp-showcase-field-v">شركة الألمنيوم المصرية</span>
-              <span class="lp-showcase-conf-pill ok">98%</span>
-            </div>
-            <div class="lp-showcase-field">
-              <span class="lp-showcase-field-k">supplier_en</span>
-              <span class="lp-showcase-field-v">Egyptian Aluminum Co.</span>
-              <span class="lp-showcase-conf-pill ok">96%</span>
-            </div>
-            <div class="lp-showcase-field">
-              <span class="lp-showcase-field-k">tax_id</span>
-              <span class="lp-showcase-field-v">219-487-303 ✓</span>
-              <span class="lp-showcase-conf-pill ok">99%</span>
-            </div>
-            <div class="lp-showcase-field">
-              <span class="lp-showcase-field-k">invoice_no</span>
-              <span class="lp-showcase-field-v">INV-2026-0042</span>
-              <span class="lp-showcase-conf-pill ok">99%</span>
-            </div>
-            <div class="lp-showcase-field">
-              <span class="lp-showcase-field-k">issue_date</span>
-              <span class="lp-showcase-field-v">2026-06-14</span>
-              <span class="lp-showcase-conf-pill ok">100%</span>
-            </div>
-            <div class="lp-showcase-field">
-              <span class="lp-showcase-field-k">line_items</span>
-              <span class="lp-showcase-field-v">3 rows</span>
-              <span class="lp-showcase-conf-pill ok">97%</span>
-            </div>
-            <div class="lp-showcase-field">
-              <span class="lp-showcase-field-k">subtotal</span>
-              <span class="lp-showcase-field-v">EGP 23,300</span>
-              <span class="lp-showcase-conf-pill med">81%</span>
-            </div>
-            <div class="lp-showcase-field">
-              <span class="lp-showcase-field-k">total</span>
-              <span class="lp-showcase-field-v">EGP 26,600</span>
-              <span class="lp-showcase-conf-pill ok">99%</span>
-            </div>
-            <div class="lp-showcase-exports">
-              <span class="lp-showcase-exp-btn">↓ JSON</span>
-              <span class="lp-showcase-exp-btn">↓ Excel</span>
-              <span class="lp-showcase-exp-btn">↓ PDF</span>
-              <span class="lp-showcase-exp-btn lp-showcase-exp-primary">↗ Odoo</span>
-            </div>
-          </aside>
-        </div>
-      </div>
-
-      <p class="lp-showcase-foot">
-        {{ '28 document types covered today · Custom doctype training available on Business' if lang == 'en' else '28 نوع مستند مدعوم · تدريب نوع مخصّص متاح في خطّة Business' }}
-        · <a href="/tools" class="lp-link">{{ 'See all' if lang == 'en' else 'كل الأنواع' }} →</a>
-      </p>
-    </section>
 
     <div class="lp-stripe-divider" aria-hidden="true"></div>
 
@@ -1607,9 +1181,9 @@
           <h2 class="lp-h2">{{ 'Built for developers, not just buyers.' if lang == 'en' else 'مبني للمطوّرين، ليس فقط للمشترين.' }}</h2>
           <p class="lp-section-sub">
             {% if lang == 'en' %}
-            REST API, signed webhooks, idempotency keys, full OpenAPI spec, and SDKs in the languages your team already writes. Read the docs, copy a curl, ship today.
+            A REST API with signed webhooks, idempotency keys, and a full OpenAPI spec — call it from any language over plain HTTP. Read the docs, copy a curl, ship today.
             {% else %}
-            REST API، Webhooks موقّعة، مفاتيح idempotency، مواصفة OpenAPI كاملة، وSDKs باللغات التي يستخدمها فريقك. اقرأ الوثائق، انسخ curl، اشحن اليوم.
+            REST API مع Webhooks موقّعة، مفاتيح idempotency، ومواصفة OpenAPI كاملة — استدعِه بأي لغة عبر HTTP عادي. اقرأ الوثائق، انسخ curl، اشحن اليوم.
             {% endif %}
           </p>
 
@@ -1618,7 +1192,7 @@
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 8 3 3 5-6"/></svg>
               <div>
                 <strong>{{ 'OpenAPI 3.1 spec' if lang == 'en' else 'مواصفة OpenAPI 3.1' }}</strong>
-                <small>{{ 'Auto-generated client libraries' if lang == 'en' else 'مكتبات عميل مولّدة تلقائيًا' }}</small>
+                <small>{{ 'Generate a client in any language' if lang == 'en' else 'ولّد عميلاً بأي لغة' }}</small>
               </div>
             </div>
             <div class="lp-devsec-feat">
@@ -1638,8 +1212,8 @@
             <div class="lp-devsec-feat">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 8 3 3 5-6"/></svg>
               <div>
-                <strong>{{ 'Real-time status page' if lang == 'en' else 'صفحة حالة في الزمن الحقيقي' }}</strong>
-                <small>status.mostakhles.ai · 99.97%</small>
+                <strong>{{ 'Structured exports' if lang == 'en' else 'تصدير منظّم' }}</strong>
+                <small>JSON · XLSX · CSV · DOCX · XML · searchable PDF</small>
               </div>
             </div>
           </div>
@@ -1647,23 +1221,21 @@
           <div class="lp-devsec-cta">
             <a class="lp-btn lp-btn-primary" href="/docs">{{ 'API docs' if lang == 'en' else 'وثائق API' }} →</a>
             <a class="lp-btn lp-btn-ghost" href="/docs/changelog">{{ 'Changelog' if lang == 'en' else 'سجل التغييرات' }} →</a>
-            <a class="lp-btn lp-btn-ghost" href="https://status.mostakhles.ai" rel="noopener">{{ 'Status' if lang == 'en' else 'الحالة' }} ↗</a>
           </div>
         </div>
 
         <div class="lp-devsec-right">
           {# Pure-CSS tabbed code snippets — zero JS via radio inputs #}
           <div class="lp-devcode">
-            <input type="radio" name="dev-lang" id="dev-curl" checked hidden>
-            <input type="radio" name="dev-lang" id="dev-py" hidden>
-            <input type="radio" name="dev-lang" id="dev-node" hidden>
-            <input type="radio" name="dev-lang" id="dev-ruby" hidden>
+            {# Focusable sr-only radios drive the :checked tab state (keyboard: arrow keys) #}
+            <input type="radio" name="dev-lang" id="dev-curl" class="lp-sr-only" checked>
+            <input type="radio" name="dev-lang" id="dev-py" class="lp-sr-only">
+            <input type="radio" name="dev-lang" id="dev-node" class="lp-sr-only">
 
             <div class="lp-devcode-tabs">
               <label for="dev-curl" class="lp-devcode-tab">curl</label>
               <label for="dev-py" class="lp-devcode-tab">Python</label>
               <label for="dev-node" class="lp-devcode-tab">Node.js</label>
-              <label for="dev-ruby" class="lp-devcode-tab">Ruby</label>
               <span class="lp-devcode-copy">⌘ copy</span>
             </div>
 
@@ -1683,60 +1255,47 @@
   <span class="k">"validations"</span>: [ <span class="s">"egyptian_tin OK"</span>, ... ]
 }</code></pre>
 
-            <pre class="lp-devcode-panel lp-devcode-panel-py"><code><span class="kw">from</span> mostakhles <span class="kw">import</span> Client
+            <pre class="lp-devcode-panel lp-devcode-panel-py"><code><span class="kw">import</span> os, requests
 
-client = Client(api_key=os.environ[<span class="s">"MOSTAKHLES_KEY"</span>])
-
-result = client.extract(
-    file=<span class="s">"./prescription.pdf"</span>,
-    doctype=<span class="s">"auto"</span>,         <span class="c"># or: invoice, national_id, …</span>
-    tier=<span class="s">"auto"</span>,            <span class="c"># fast | hard | auto</span>
-    idempotency_key=<span class="s">"a47-rx-2026-001"</span>,
+resp = requests.post(
+    <span class="s">"https://api.mostakhles.ai/v1/extract"</span>,
+    headers={
+        <span class="s">"Authorization"</span>: <span class="kw">f</span><span class="s">"Bearer {os.environ['MOSTAKHLES_KEY']}"</span>,
+        <span class="s">"Idempotency-Key"</span>: <span class="s">"a47-rx-2026-001"</span>,
+    },
+    files={<span class="s">"file"</span>: <span class="kw">open</span>(<span class="s">"./prescription.pdf"</span>, <span class="s">"rb"</span>)},
+    data={<span class="s">"doctype"</span>: <span class="s">"auto"</span>, <span class="s">"tier"</span>: <span class="s">"auto"</span>},  <span class="c"># fast | hard | auto</span>
 )
+data = resp.json()
+<span class="kw">print</span>(data[<span class="s">"fields"</span>][<span class="s">"doctor"</span>])   <span class="c"># د. غالي سامي</span></code></pre>
 
-<span class="kw">print</span>(result.fields[<span class="s">"doctor"</span>])      <span class="c"># د. غالي سامي</span>
-<span class="kw">print</span>(result.confidence.summary)   <span class="c"># 15 high · 2 review</span>
-result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
+            <pre class="lp-devcode-panel lp-devcode-panel-node"><code><span class="kw">import</span> fs <span class="kw">from</span> <span class="s">"node:fs"</span>;
 
-            <pre class="lp-devcode-panel lp-devcode-panel-node"><code><span class="kw">import</span> { Mostakhles } <span class="kw">from</span> <span class="s">"@mostakhles/sdk"</span>;
+<span class="kw">const</span> fd = <span class="kw">new</span> FormData();
+fd.append(<span class="s">"file"</span>, <span class="kw">new</span> Blob([fs.readFileSync(<span class="s">"./prescription.pdf"</span>)]), <span class="s">"prescription.pdf"</span>);
+fd.append(<span class="s">"doctype"</span>, <span class="s">"auto"</span>);
+fd.append(<span class="s">"tier"</span>, <span class="s">"auto"</span>);
 
-<span class="kw">const</span> client = <span class="kw">new</span> Mostakhles({ apiKey: process.env.MOSTAKHLES_KEY });
-
-<span class="kw">const</span> result = <span class="kw">await</span> client.extract({
-  file: fs.createReadStream(<span class="s">"./prescription.pdf"</span>),
-  doctype: <span class="s">"auto"</span>,
-  tier: <span class="s">"auto"</span>,
-  idempotencyKey: <span class="s">"a47-rx-2026-001"</span>,
+<span class="kw">const</span> resp = <span class="kw">await</span> fetch(<span class="s">"https://api.mostakhles.ai/v1/extract"</span>, {
+  method: <span class="s">"POST"</span>,
+  headers: {
+    <span class="s">"Authorization"</span>: <span class="s">`Bearer ${process.env.MOSTAKHLES_KEY}`</span>,
+    <span class="s">"Idempotency-Key"</span>: <span class="s">"a47-rx-2026-001"</span>,
+  },
+  body: fd,
 });
-
-console.log(result.fields.doctor);       <span class="c">// د. غالي سامي</span>
-console.log(result.confidence.summary);  <span class="c">// 15 high · 2 review</span>
-<span class="kw">await</span> result.toExcel(<span class="s">"out.xlsx"</span>);</code></pre>
-
-            <pre class="lp-devcode-panel lp-devcode-panel-ruby"><code><span class="kw">require</span> <span class="s">"mostakhles"</span>
-
-client = Mostakhles::Client.new(api_key: ENV[<span class="s">"MOSTAKHLES_KEY"</span>])
-
-result = client.extract(
-  file: File.open(<span class="s">"./prescription.pdf"</span>),
-  doctype: <span class="s">"auto"</span>,
-  tier: <span class="s">"auto"</span>,
-  idempotency_key: <span class="s">"a47-rx-2026-001"</span>,
-)
-
-<span class="kw">puts</span> result.fields[<span class="s">"doctor"</span>]      <span class="c"># د. غالي سامي</span>
-<span class="kw">puts</span> result.confidence.summary    <span class="c"># 15 high · 2 review</span>
-result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
+<span class="kw">const</span> data = <span class="kw">await</span> resp.json();
+console.log(data.fields.doctor);   <span class="c">// د. غالي سامي</span></code></pre>
           </div>
 
           <div class="lp-devsec-sdks">
-            <span class="lp-devsec-sdks-label">{{ 'Official SDKs' if lang == 'en' else 'SDKs الرسمية' }}:</span>
-            <span class="lp-devsec-sdk">Python</span>
-            <span class="lp-devsec-sdk">Node.js</span>
-            <span class="lp-devsec-sdk">Ruby</span>
-            <span class="lp-devsec-sdk">PHP</span>
-            <span class="lp-devsec-sdk">Go</span>
-            <span class="lp-devsec-sdk lp-devsec-sdk-soon">.NET · Java <em>{{ 'soon' if lang == 'en' else 'قريبًا' }}</em></span>
+            <span class="lp-devsec-sdks-label">{{ 'Export formats' if lang == 'en' else 'صيغ التصدير' }}:</span>
+            <span class="lp-devsec-sdk">JSON</span>
+            <span class="lp-devsec-sdk">XLSX</span>
+            <span class="lp-devsec-sdk">CSV</span>
+            <span class="lp-devsec-sdk">DOCX</span>
+            <span class="lp-devsec-sdk">XML</span>
+            <span class="lp-devsec-sdk">{{ 'Searchable PDF' if lang == 'en' else 'PDF قابل للبحث' }}</span>
           </div>
         </div>
 
@@ -1975,7 +1534,7 @@ result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              {{ 'GDPR-ready · privacy-first' if lang == 'en' else 'متوافق GDPR · خصوصية أولًا' }}
+              {{ 'Privacy-first · not used for training' if lang == 'en' else 'الخصوصية أولًا · لا تُستخدم للتدريب' }}
             </li>
           </ul>
         </div>
@@ -1983,14 +1542,12 @@ result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
     </section>
 
   </div>  {# /lp-shell #}
+  </main>
 
   {# ════════════════ FOOTER ════════════════ #}
   {% include "_lpfooter.html" %}
 
-  <script nonce="{{ csp_nonce }}" src="https://unpkg.com/lucide@0.456.0/dist/umd/lucide.min.js"></script>
   <script nonce="{{ csp_nonce }}">
-    if (window.lucide) lucide.createIcons();
-
     // Theme toggle — flips [data-theme] on <html> and persists to localStorage
     (function () {
       var btn = document.getElementById('themeToggle');
@@ -2009,55 +1566,6 @@ result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
       if (window.scrollY > 8) hd.classList.add('scrolled'); else hd.classList.remove('scrolled');
     }, { passive: true });
 
-    // Hero rotator — animate the keyword in the h1
-    (function () {
-      var rws = document.querySelectorAll('.lp-rw');
-      if (!rws.length) return;
-      var i = 0;
-      rws[0].classList.add('on');
-      setInterval(function () {
-        rws[i].classList.remove('on');
-        i = (i + 1) % rws.length;
-        rws[i].classList.add('on');
-      }, 2400);
-    })();
-
-    // Hero demo — cycle through 5 doc slides + scan + result
-    (function () {
-      var slides = document.querySelectorAll('.lp-hd-slide');
-      var status = document.getElementById('lpStatus');
-      var result = document.getElementById('lpResult');
-      var resText = document.getElementById('lpResultText');
-      if (!slides.length) return;
-      var labels = [
-        { ar: 'استخراج روشتة…', en: 'Extracting prescription…',
-          jsonAr: '{\n  "doctor": "غالي سامي غالي",\n  "patient": "موسى مجيد",\n  "age": "2.5y",\n  "medications": [\n    { "name": "Newclav 457", "dose": "2.5ml / 12h" },\n    { "name": "Rhinopro syp", "dose": "2.5ml / twice" },\n    { "name": "Nasostop ped", "dose": "1 drop" }\n  ],\n  "summary": "Pediatric upper-respiratory Rx · 5-day course",\n  "validations": ["✓ doses age-appropriate", "✓ no interactions"]\n}',
-          jsonEn: '{\n  "doctor": "Ghaly Sami Ghaly",\n  "patient": "Moussa Magid",\n  "age": "2.5y",\n  "medications": [\n    { "name": "Newclav 457", "dose": "2.5ml / 12h" },\n    { "name": "Rhinopro syp", "dose": "2.5ml / twice" },\n    { "name": "Nasostop ped", "dose": "1 drop" }\n  ],\n  "summary": "Pediatric upper-respiratory Rx · 5-day course",\n  "validations": ["✓ doses age-appropriate", "✓ no interactions"]\n}' },
-        { ar: 'استخراج بطاقة قومية…', en: 'Extracting driver license…',
-          jsonAr: '{\n  "id_number": "29806011401237",\n  "name": "أحمد محمد حسن السيد",\n  "name_en": "Ahmed Mohamed Hassan",\n  "dob": "1998-06-01",\n  "address": "القاهرة — مدينة نصر",\n  "validations": ["✓ checksum valid", "✓ governorate code: Cairo"]\n}',
-          jsonEn: '{\n  "license_no": "D5482176",\n  "name": "RICHARD BENJAMIN REYES",\n  "dob": "1987-01-05",\n  "issue_date": "2023-05-06",\n  "expiry": "2031-01-05",\n  "address": "1234 Main St, San Diego CA",\n  "state": "California",\n  "validations": ["✓ format matches CA pattern", "✓ not expired"]\n}' },
-        { ar: 'استخراج فاتورة…', en: 'Extracting invoice…',
-          jsonAr: '{\n  "invoice_no": "INV-2026-0042",\n  "currency": "EGP",\n  "items": [\n    { "description": "خدمات استشارية", "qty": 10, "price": 1500 },\n    { "description": "تطوير برمجي", "qty": 5, "price": 2000 },\n    { "description": "تصميم واجهات", "qty": 2, "price": 800 }\n  ],\n  "derived": { "subtotal": 26600, "vat_14%": 3724, "total": 30324 },\n  "summary": "B2B services invoice · VAT included"\n}',
-          jsonEn: '{\n  "invoice_no": "INV-2026-0042",\n  "currency": "USD",\n  "items": [\n    { "description": "Consulting services", "qty": 10, "price": 1500 },\n    { "description": "Software development", "qty": 5, "price": 2000 },\n    { "description": "UI/UX design", "qty": 2, "price": 800 }\n  ],\n  "derived": { "subtotal": 26600, "tax_8.25%": 2195, "total": 28795 },\n  "summary": "B2B services invoice · tax included"\n}' },
-        { ar: 'قراءة خط اليد…', en: 'Reading handwriting…',
-          jsonAr: '{\n  "type": "meeting_minutes",\n  "date": "2026-02-05",\n  "attendees": ["أحمد", "فاطمة", "خالد"],\n  "decisions": [\n    "إطلاق المنتج في مارس",\n    "زيادة الميزانية 20%"\n  ],\n  "summary": "Product launch in March · 20% budget increase approved"\n}',
-          jsonEn: '{\n  "type": "meeting_minutes",\n  "date": "2026-02-05",\n  "attendees": ["Sarah", "Ahmed", "Layla", "Khaled"],\n  "decisions": [\n    "Launch product in March",\n    "Increase budget by 20%"\n  ],\n  "summary": "Product launch in March · 20% budget increase approved"\n}' },
-        { ar: 'تحليل عقد بيع…', en: 'Parsing sale contract…',
-          jsonAr: '{\n  "type": "sale_contract",\n  "amount": "2,500,000 EGP",\n  "clauses": [\n    { "n": 1, "topic": "object", "summary": "residential unit sale" },\n    { "n": 2, "topic": "price", "summary": "3 installments" },\n    { "n": 3, "topic": "transfer", "summary": "deadline specified" }\n  ],\n  "validations": ["✓ both parties named", "⚠ witness signatures missing"]\n}',
-          jsonEn: '{\n  "type": "sale_agreement",\n  "amount": "$2,500,000",\n  "clauses": [\n    { "n": 1, "topic": "object", "summary": "Residential unit sale" },\n    { "n": 2, "topic": "price", "summary": "3 installments" },\n    { "n": 3, "topic": "transfer", "summary": "Title transfer deadline specified" }\n  ],\n  "validations": ["✓ both parties named", "⚠ witness signatures missing"]\n}' },
-      ];
-      var lang = document.documentElement.getAttribute('lang') || 'ar';
-      var i = 0;
-      function step() {
-        slides.forEach(function (s, j) { s.classList.toggle('active', j === i); });
-        result.classList.add('open');
-        status.textContent = labels[i][lang === 'ar' ? 'ar' : 'en'];
-        resText.textContent = labels[i][lang === 'ar' ? 'jsonAr' : 'jsonEn'];
-        i = (i + 1) % slides.length;
-      }
-      step();
-      setInterval(step, 3800);
-    })();
   </script>
 
   {# ── Live demo wiring — drop file → /v1/extract → render JSON inline ── #}
@@ -2152,35 +1660,13 @@ result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
     })();
   </script>
 
-  {# ── Hero animations: counter count-up + JSON variant cycler ────── #}
+  {# ── Hero animation: JSON variant cycler ────── #}
   <script nonce="{{ csp_nonce }}">
     (function () {
       // Respect prefers-reduced-motion.
       const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      /* ─── A. Counter count-up: 0 → 2,847 over 1.5s, ease-out cubic ─── */
-      const counter = document.querySelector('.lp-shot-counter-num');
-      if (counter) {
-        const target = 2847;
-        if (reduce) {
-          counter.textContent = target.toLocaleString();
-        } else {
-          const dur = 1500;
-          let start = null;
-          counter.textContent = '0';
-          function step(now) {
-            if (start === null) start = now;
-            const t = Math.min(1, (now - start) / dur);
-            const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
-            counter.textContent = Math.round(target * eased).toLocaleString();
-            if (t < 1) requestAnimationFrame(step);
-          }
-          // Tiny delay so the count-up runs after the typewriter starts.
-          setTimeout(function () { requestAnimationFrame(step); }, 350);
-        }
-      }
-
-      /* ─── D. JSON variant cycler: swap every 5s + re-trigger typewriter ─── */
+      /* ─── JSON variant cycler: swap every 5s + re-trigger typewriter ─── */
       const variants = document.querySelectorAll('.lp-shot-result-variant');
       if (!reduce && variants.length > 1) {
         let i = 0;
@@ -2201,69 +1687,6 @@ result.to_excel(<span class="s">"out.xlsx"</span>)</code></pre>
           });
         }, 5000);
       }
-    })();
-  </script>
-
-  {# ── Wave 19C: problem-band stat counters animate on scroll-into-view ─── #}
-  <script nonce="{{ csp_nonce }}">
-    (function () {
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const stats = document.querySelectorAll('.lp-problem-node-stat[data-count]');
-      if (!stats.length) return;
-
-      function renderFinal(el) {
-        const target = parseInt(el.dataset.count, 10) || 0;
-        const prefix = el.dataset.prefix || '';
-        const suffix = el.dataset.suffix || '';
-        const isFraction = prefix === '1/';
-        // Card 3 shows "1/4" — display target is 4, not 25
-        const display = isFraction ? '1' : String(target);
-        const suffixHtml = isFraction
-          ? '<span class="lp-problem-node-stat-suffix">/4</span>'
-          : '<span class="lp-problem-node-stat-suffix">' + suffix + '</span>';
-        el.innerHTML = display + suffixHtml;
-        el.classList.add('is-visible');
-      }
-
-      function animateTo(el) {
-        const target = parseInt(el.dataset.count, 10) || 0;
-        const prefix = el.dataset.prefix || '';
-        const suffix = el.dataset.suffix || '';
-        const isFraction = prefix === '1/';
-        if (reduce) { renderFinal(el); return; }
-        const dur = 1100;
-        let start = null;
-        function step(now) {
-          if (start === null) start = now;
-          const t = Math.min(1, (now - start) / dur);
-          const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
-          const v = isFraction
-            ? (Math.round(target * eased) === target ? '1' : '0')
-            : String(Math.round(target * eased));
-          const suffixHtml = isFraction
-            ? '<span class="lp-problem-node-stat-suffix">/4</span>'
-            : '<span class="lp-problem-node-stat-suffix">' + suffix + '</span>';
-          el.innerHTML = v + suffixHtml;
-          if (t < 1) requestAnimationFrame(step);
-        }
-        el.classList.add('is-visible');
-        requestAnimationFrame(step);
-      }
-
-      if (!('IntersectionObserver' in window)) {
-        stats.forEach(renderFinal);
-        return;
-      }
-      const io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            animateTo(entry.target);
-            io.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.5, rootMargin: '0px 0px -40px 0px' });
-
-      stats.forEach(function (el) { io.observe(el); });
     })();
   </script>
 

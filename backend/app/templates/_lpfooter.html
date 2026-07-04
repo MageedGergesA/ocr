@@ -11,12 +11,10 @@
         </div>
         <p>{{ 'Arabic document AI. Built in MENA for MENA businesses.' if lang == 'en' else 'ذكاء اصطناعي عربي للمستندات. صُنع في المنطقة لشركات المنطقة.' }}</p>
 
-        {# Compliance badges — enterprise trust signal #}
-        <div class="lp-footer-badges">
-          <span class="lp-footer-badge"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0L1 3v5c0 4.4 3 7.5 7 8 4-.5 7-3.6 7-8V3L8 0z"/></svg>GDPR</span>
-          <span class="lp-footer-badge"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l-7 4v6l7 4 7-4V5L8 1zm0 2.3L13.5 6 8 8.7 2.5 6 8 3.3z"/></svg>SOC&nbsp;2&nbsp;ready</span>
-          <span class="lp-footer-badge"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm0 2a6 6 0 110 12A6 6 0 018 2zm-1 3v4h4V7H9V5H7z"/></svg>Egypt&nbsp;PDPL</span>
-        </div>
+        {# Honest privacy link — replaces the unearned GDPR/SOC 2/PDPL badge row #}
+        <p class="lp-footer-privacy">
+          <a href="/privacy">{{ 'How we handle your data' if lang == 'en' else 'كيف نتعامل مع بياناتك' }}</a>
+        </p>
 
         {# Social icons #}
         <div class="lp-footer-social">
@@ -42,7 +40,6 @@
         <h4>{{ 'Developers' if lang == 'en' else 'المطوّرون' }}</h4>
         <a href="/docs">{{ 'API docs' if lang == 'en' else 'وثائق API' }}</a>
         <a href="/docs/changelog">{{ 'Changelog' if lang == 'en' else 'سجل التغييرات' }}</a>
-        <a href="https://status.mostakhles.ai" rel="noopener">{{ 'Status page' if lang == 'en' else 'صفحة الحالة' }} ↗</a>
         <a href="/legal#security">{{ 'Security' if lang == 'en' else 'الأمان' }}</a>
       </nav>
       <nav>
@@ -60,16 +57,6 @@
         <a href="/legal#terms">{{ 'Terms' if lang == 'en' else 'الشروط' }}</a>
         <a href="/contact">{{ 'Contact' if lang == 'en' else 'تواصل' }}</a>
       </nav>
-    </div>
-
-    {# Status indicator row — sits above the copyright bar.
-       Green dot = all systems operational, link to public status page. #}
-    <div class="lp-footer-status">
-      <a href="https://status.mostakhles.ai" class="lp-footer-status-link" rel="noopener">
-        <span class="lp-footer-status-dot" aria-hidden="true"></span>
-        <span>{{ 'All systems operational' if lang == 'en' else 'كل الأنظمة تعمل' }}</span>
-        <span class="lp-footer-status-meta">99.97% · 90d</span>
-      </a>
     </div>
 
     <div class="lp-footer-bar">
