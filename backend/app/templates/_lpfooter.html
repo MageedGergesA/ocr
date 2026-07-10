@@ -72,3 +72,8 @@
     </div>
   </div>
 </footer>
+
+{# Lucide icons for public pages that use <i data-lucide="…"> (docs, tools, …).
+   index/pricing use inline SVGs, so createIcons() is a harmless no-op there. #}
+<script nonce="{{ csp_nonce }}" src="https://unpkg.com/lucide@0.456.0/dist/umd/lucide.min.js"></script>
+<script nonce="{{ csp_nonce }}">document.addEventListener('DOMContentLoaded', function () { if (window.lucide) lucide.createIcons(); });</script>

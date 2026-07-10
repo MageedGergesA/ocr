@@ -196,31 +196,6 @@
 
   </div>
 
-  {# Footer #}
-  <footer class="lp-footer">
-    <div class="lp-container">
-      <div class="lp-footer-grid">
-        <div class="lp-footer-brand">
-          <div class="lp-brand"><span class="lp-brand-mark">M</span><span class="lp-brand-text">{{ 'Mostakhles' if lang == 'en' else 'مُستخلِص' }}<small>.ai</small></span></div>
-          <p>{{ 'Arabic document AI. Built in MENA for MENA businesses.' if lang == 'en' else 'ذكاء اصطناعي عربي للمستندات. صُنع في المنطقة لشركات المنطقة.' }}</p>
-        </div>
-        <nav>
-          <h4>{{ 'Product' if lang == 'en' else 'المنتج' }}</h4>
-          <a href="/app">{{ 'Web app' if lang == 'en' else 'تطبيق الويب' }}</a>
-          <a href="/tools">{{ 'All tools' if lang == 'en' else 'كل الأدوات' }}</a>
-          <a href="/docs">{{ 'API docs' if lang == 'en' else 'وثائق API' }}</a>
-          <a href="/#pricing">{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</a>
-        </nav>
-        <nav>
-          <h4>{{ 'Company' if lang == 'en' else 'الشركة' }}</h4>
-          <a href="/about">{{ 'About' if lang == 'en' else 'عنّا' }}</a>
-          <a href="/contact">{{ 'Contact' if lang == 'en' else 'تواصل' }}</a>
-          <a href="/privacy">{{ 'Privacy' if lang == 'en' else 'الخصوصية' }}</a>
-          <a href="/terms">{{ 'Terms' if lang == 'en' else 'الشروط' }}</a>
-        </nav>
-      </div>
-      <div class="lp-footer-bar">© 2026 Mostakhles · {{ 'All rights reserved' if lang == 'en' else 'جميع الحقوق محفوظة' }}</div>
-    </div>
-  </footer>
+  {% include "_lpfooter.html" ignore missing %}
 </body>
 </html>

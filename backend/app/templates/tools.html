@@ -11,7 +11,8 @@
   {% endif %}
   <link rel="stylesheet" href="/static/css/style.css?v={{ asset_v() }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script nonce="{{ csp_nonce }}">
   (function () {
     var t;
@@ -28,14 +29,30 @@
 
   <section class="section">
     <div class="container">
-      <h1 style="text-align:center;font-size:clamp(26px,4vw,38px);font-weight:800">
+      <div class="tools-eyebrow">{{ 'Tools' if lang == 'en' else 'الأدوات' }}</div>
+      <h1 style="text-align:center;font-size:clamp(26px,4vw,38px);font-weight:800;margin-top:4px">
         {{ 'Mostakhles tools' if lang == 'en' else 'أدوات مُستخلِص' }}
       </h1>
       <p class="section-sub">
         {{ 'AI-powered Arabic OCR toolkit — pick the service you need.' if lang == 'en' else 'مجموعة أدوات OCR عربية مدعومة بالذكاء الاصطناعي — اختر الخدمة التي تحتاجها.' }}
       </p>
 
-      <div class="card tool-card" style="text-align:center;background:var(--tint);border-color:var(--line);margin-bottom:28px">
+      {# Live search + filter chips (client-side; see the script below) #}
+      <div class="tools-toolbar">
+        <div class="tools-search">
+          <i class="ts-ico" data-lucide="search"></i>
+          <input type="search" id="toolsSearch" autocomplete="off"
+            placeholder="{{ 'Search tools…' if lang == 'en' else 'ابحث في الأدوات…' }}"
+            aria-label="{{ 'Search tools' if lang == 'en' else 'ابحث في الأدوات' }}">
+        </div>
+        <div class="tools-chips" role="tablist" aria-label="{{ 'Filter' if lang == 'en' else 'تصفية' }}">
+          <button type="button" class="tools-chip is-active" data-filter="all">{{ 'All' if lang == 'en' else 'الكل' }}</button>
+          <button type="button" class="tools-chip" data-filter="free">{{ 'Free' if lang == 'en' else 'المجاني' }}</button>
+        </div>
+      </div>
+      <p class="tools-count"><span id="toolsCountN"></span> {{ 'tools' if lang == 'en' else 'أداة' }}</p>
+
+      <div class="card tool-card tool-item" style="text-align:center;background:var(--tint);border-color:var(--line);margin-bottom:28px">
         <a href="/chat" style="text-decoration:none;color:inherit">
           <div class="ico"><i data-lucide="message-square"></i></div>
           <h3>{{ 'Chat with documents' if lang == 'en' else 'المحادثة مع المستندات' }}</h3>
@@ -44,18 +61,64 @@
       </div>
 
       {% for cat, label in categories %}
-      <h2 style="font-size:22px;font-weight:800;margin:26px 0 14px">{{ label }}</h2>
-      <div class="cards" style="grid-template-columns:repeat(3,1fr)">
-        {% for slug, s in services.items() if s.category == cat %}
-        <a class="card tool-card" href="/tools/{{ slug }}">
-          <div class="ico"><i data-lucide="{{ s.icon }}"></i></div>
-          <h3>{{ s.title }}{% if s.free %}<span class="tool-free">{{ 'Free' if lang == 'en' else 'مجاني' }}</span>{% endif %}</h3>
-          <p>{{ s.desc }}</p>
-        </a>
-        {% endfor %}
-      </div>
+      <section class="tools-group">
+        <h2 style="font-size:22px;font-weight:800;margin:26px 0 14px">{{ label }}</h2>
+        <div class="cards" style="grid-template-columns:repeat(3,1fr)">
+          {% for slug, s in services.items() if s.category == cat %}
+          <a class="card tool-card tool-item" href="/tools/{{ slug }}">
+            <div class="ico"><i data-lucide="{{ s.icon }}"></i></div>
+            <h3>{{ s.title }}{% if s.free %}<span class="tool-free">{{ 'Free' if lang == 'en' else 'مجاني' }}</span>{% endif %}</h3>
+            <p>{{ s.desc }}</p>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
       {% endfor %}
+
+      <div class="tools-empty" id="toolsEmpty">
+        {{ 'No tools match your search.' if lang == 'en' else 'لا توجد أدوات تطابق بحثك.' }}
+      </div>
     </div>
   </section>
+
+  {% include "_lpfooter.html" ignore missing %}
+
+  <script nonce="{{ csp_nonce }}">
+  (function () {
+    var search = document.getElementById('toolsSearch');
+    var chips = [].slice.call(document.querySelectorAll('.tools-chip'));
+    var countN = document.getElementById('toolsCountN');
+    var empty = document.getElementById('toolsEmpty');
+    if (!search) return;
+    var items = [].slice.call(document.querySelectorAll('.tool-item'));
+    var groups = [].slice.call(document.querySelectorAll('.tools-group'));
+    var filter = 'all';
+    function apply() {
+      var q = (search.value || '').toLowerCase().trim();
+      var visible = 0;
+      items.forEach(function (el) {
+        var isFree = !!el.querySelector('.tool-free');
+        var show = (!q || el.textContent.toLowerCase().indexOf(q) !== -1) && (filter === 'all' || isFree);
+        el.classList.toggle('is-hidden', !show);
+        if (show) visible++;
+      });
+      groups.forEach(function (g) {
+        g.classList.toggle('is-hidden', !g.querySelector('.tool-item:not(.is-hidden)'));
+      });
+      empty.classList.toggle('show', visible === 0);
+      countN.textContent = visible;
+    }
+    search.addEventListener('input', apply);
+    chips.forEach(function (c) {
+      c.addEventListener('click', function () {
+        chips.forEach(function (x) { x.classList.remove('is-active'); });
+        c.classList.add('is-active');
+        filter = c.getAttribute('data-filter');
+        apply();
+      });
+    });
+    apply();
+  })();
+  </script>
 </body>
 </html>
