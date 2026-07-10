@@ -14,7 +14,7 @@
   })();
   </script>
   <title>{{ title }} — مُستخلِص</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v={{ asset_v() }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -23,7 +23,7 @@
   <section class="section">
     <div class="container narrow legal">
       <h1>{{ title }}</h1>
-      <p class="legal-date">{{ 'Last updated' if lang == 'en' else 'آخر تحديث' }}: {{ 'May 2026' if lang == 'en' else 'مايو 2026' }}</p>
+      <p class="legal-date">{{ 'Last updated' if lang == 'en' else 'آخر تحديث' }}: {{ updated if updated else ('May 2026' if lang == 'en' else 'مايو 2026') }}</p>
       {{ body | safe }}
     </div>
   </section>

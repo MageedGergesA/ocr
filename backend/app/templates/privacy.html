@@ -14,7 +14,7 @@
   })();
   </script>
   <title>{{ 'Privacy Policy — Mostakhles' if lang == 'en' else 'سياسة الخصوصية — مُستخلِص' }}</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v={{ asset_v() }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -52,28 +52,27 @@
           <h1 class="lp-h1">{{ 'Your documents stay yours' if lang == 'en' else 'مستنداتك تظلّ ملكك' }}</h1>
           <p class="lp-lead">
             {% if lang == 'en' %}
-            We want you to feel secure using Mostakhles. We never train on your documents, never sell your data, and host inside the MENA region by default. This page is what we promise, in plain language.
+            We want you to feel secure using Mostakhles. We never train any AI model on your documents, never sell your data, and don't keep your uploaded file after processing by default. This page is what we do, in plain language.
             {% else %}
-            نريدك أن تشعر بالأمان عند استخدام مُستخلِص. نحن لا ندرّب نماذجنا على مستنداتك، لا نبيع بياناتك، ونستضيف داخل منطقة الشرق الأوسط افتراضيًا. هذه الصفحة هي ما نعد به، بلغة بسيطة.
+            نريدك أن تشعر بالأمان عند استخدام مُستخلِص. نحن لا ندرّب أي نموذج ذكاء اصطناعي على مستنداتك، ولا نبيع بياناتك، ولا نحتفظ بالملف الذي ترفعه بعد المعالجة افتراضيًا. هذه الصفحة تشرح ما نقوم به فعليًا، بلغة بسيطة.
             {% endif %}
           </p>
-          <p class="lp-about-meta">{{ 'Last updated' if lang == 'en' else 'آخر تحديث' }}: 2026-06-13</p>
+          <p class="lp-about-meta">{{ 'Last updated' if lang == 'en' else 'آخر تحديث' }}: 2026-07-07</p>
 
-          {# Compliance badges — handwritingocr only does GDPR; we cover the MENA frameworks too #}
+          {# Honest posture chips — no certification/residency claims; grounded in what the code does #}
           <div class="lp-comp-badges">
-            <span class="lp-comp-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> KSA PDPL</span>
-            <span class="lp-comp-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> UAE PDPL</span>
-            <span class="lp-comp-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Egypt PDPL Law 151</span>
-            <span class="lp-comp-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> GDPR-aligned</span>
+            <span class="lp-comp-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> {{ 'Not stored by default' if lang == 'en' else 'لا يُخزَّن افتراضيًا' }}</span>
+            <span class="lp-comp-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> {{ 'Never trained on' if lang == 'en' else 'لا يُستخدَم للتدريب' }}</span>
+            <span class="lp-comp-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> {{ 'TLS 1.3 in transit' if lang == 'en' else 'تشفير النقل TLS 1.3' }}</span>
           </div>
         </div>
         <aside class="lp-about-image">
           <div class="lp-priv-pad">
             <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'Encrypted in transit (TLS 1.3)' if lang == 'en' else 'تشفير أثناء النقل (TLS 1.3)' }}</div>
-            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'Encrypted at rest (AES-256)' if lang == 'en' else 'تشفير في التخزين (AES-256)' }}</div>
-            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'No training on your data' if lang == 'en' else 'لا تدريب على بياناتك' }}</div>
-            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'Auto-delete after retention window' if lang == 'en' else 'حذف تلقائي بعد فترة الاحتفاظ' }}</div>
-            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'MENA data residency' if lang == 'en' else 'استضافة داخل المنطقة' }}</div>
+            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'Uploaded file not stored by default' if lang == 'en' else 'الملف المرفوع لا يُخزَّن افتراضيًا' }}</div>
+            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'Never used to train any AI model' if lang == 'en' else 'لا يُستخدَم لتدريب أي نموذج' }}</div>
+            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'Every field has a confidence score' if lang == 'en' else 'لكل حقل درجة ثقة' }}</div>
+            <div class="lp-priv-row"><span class="lp-priv-tick">✓</span>{{ 'AI sub-processor disclosed (Google Gemini)' if lang == 'en' else 'معالج فرعي معلَن (Google Gemini)' }}</div>
           </div>
         </aside>
       </div>
@@ -96,26 +95,70 @@
           </ul>
 
           <h2 id="data-collect">{{ 'Data we collect' if lang == 'en' else 'البيانات التي نجمعها' }}</h2>
-          <p>{{ 'When you use Mostakhles, we collect the following:' if lang == 'en' else 'عند استخدام مُستخلِص، نجمع ما يلي:' }}</p>
+          <p>{{ 'When you use Mostakhles, we handle the following:' if lang == 'en' else 'عند استخدام مُستخلِص، نتعامل مع ما يلي:' }}</p>
           <ul>
-            <li><b>{{ 'Account info' if lang == 'en' else 'بيانات الحساب' }}</b> — {{ 'name, email, billing address, hashed password.' if lang == 'en' else 'الاسم، البريد، عنوان الفوترة، كلمة مرور مُجزَّأة.' }}</li>
-            <li><b>{{ 'Documents you upload' if lang == 'en' else 'المستندات التي ترفعها' }}</b> — {{ 'stored encrypted; auto-deleted on your retention window (default 30 days, configurable per account).' if lang == 'en' else 'مخزّنة مشفّرة، تُحذف تلقائيًا حسب فترة الاحتفاظ (الافتراضي 30 يومًا، قابل للضبط لكل حساب).' }}</li>
-            <li><b>{{ 'Extracted output' if lang == 'en' else 'البيانات المُستخرَجة' }}</b> — {{ 'retained for the same window as the source document, so you can review and re-export.' if lang == 'en' else 'محفوظة لنفس فترة المستند الأصلي، لتتمكّن من المراجعة والتصدير مجدّدًا.' }}</li>
-            <li><b>{{ 'Usage analytics' if lang == 'en' else 'إحصاءات الاستخدام' }}</b> — {{ 'aggregated request counts, error rates, performance metrics. No document content.' if lang == 'en' else 'أعداد الطلبات الكلية، معدلات الأخطاء، مقاييس الأداء. لا يشمل محتوى المستندات.' }}</li>
+            <li><b>{{ 'Account data' if lang == 'en' else 'بيانات الحساب' }}</b> — {{ 'your email, a hashed password (never stored in readable form), your plan, and language preference.' if lang == 'en' else 'بريدك الإلكتروني، كلمة مرور مُجزَّأة (لا تُخزَّن أبدًا بصيغة قابلة للقراءة)، خطتك، وتفضيل اللغة.' }}</li>
+            <li><b>{{ 'Document content you submit' if lang == 'en' else 'محتوى المستندات التي ترسلها' }}</b> — {{ 'the files you upload or send to the API, and the structured data we extract from them (see the section below on how files are handled).' if lang == 'en' else 'الملفات التي ترفعها أو ترسلها عبر الـ API، والبيانات المنظَّمة التي نستخرجها منها (راجع القسم التالي حول كيفية التعامل مع الملفات).' }}</li>
+            <li><b>{{ 'Usage and technical data' if lang == 'en' else 'بيانات الاستخدام والبيانات التقنية' }}</b> — {{ 'aggregated request counts and monthly usage per API key, plus standard server logs and error diagnostics.' if lang == 'en' else 'أعداد الطلبات الكلية والاستخدام الشهري لكل مفتاح API، بالإضافة إلى سجلات الخادم القياسية وتشخيصات الأخطاء.' }}</li>
+            <li><b>{{ 'Payment data' if lang == 'en' else 'بيانات الدفع' }}</b> — {{ 'handled by Paymob and PayPal. We never see or store your full card number, CVV, or bank credentials; we keep only a billing record (plan, amount, provider, reference, status).' if lang == 'en' else 'تُدار عبر Paymob وPayPal. نحن لا نرى أو نخزّن رقم بطاقتك الكامل أو رمز CVV أو بيانات البنك؛ نحتفظ فقط بسجل فوترة (الخطة، المبلغ، المزوّد، المرجع، الحالة).' }}</li>
+            <li><b>{{ 'Messages you send us' if lang == 'en' else 'الرسائل التي ترسلها إلينا' }}</b> — {{ 'anything you send through the contact form or by email.' if lang == 'en' else 'أي شيء ترسله عبر نموذج التواصل أو البريد الإلكتروني.' }}</li>
           </ul>
 
-          <h2 id="residency">{{ 'Where your data lives' if lang == 'en' else 'أين تُخزَّن بياناتك' }}</h2>
-          <p>{{ 'Mostakhles operates from data centers inside the MENA region by default: Saudi Arabia (Riyadh) and UAE (Dubai). Egypt (Cairo) hosting is available on request for customers with Egypt-only data-residency requirements.' if lang == 'en' else 'يعمل مُستخلِص من مراكز بيانات داخل المنطقة افتراضيًا: السعودية (الرياض) والإمارات (دبي). استضافة مصر (القاهرة) متاحة عند الطلب للعملاء الذين يحتاجون إلى استضافة مصر فقط.' }}</p>
-          <p>{{ 'No customer data leaves the MENA region unless you explicitly request export. We do not use US/EU data centers for document storage.' if lang == 'en' else 'لا تخرج بيانات أي عميل من منطقة الشرق الأوسط إلا بطلب صريح منك للتصدير. نحن لا نستخدم مراكز بيانات أمريكية أو أوروبية لتخزين المستندات.' }}</p>
+          <h2 id="documents">{{ 'How your documents are handled' if lang == 'en' else 'كيف نتعامل مع مستنداتك' }}</h2>
+          <p>
+            {% if lang == 'en' %}
+            We do <b>not</b> store your uploaded source file after processing by default. It is held in memory only long enough to process it and return your result. We <b>do</b> save the <b>extracted result</b> (the structured fields we return) to your account history so you can review, re-export, and correct it — you can delete any history item, or your whole account, at any time.
+            {% else %}
+            نحن <b>لا</b> نخزّن الملف الأصلي الذي ترفعه بعد المعالجة افتراضيًا. يبقى في الذاكرة فقط للمدة اللازمة لمعالجته وإرجاع نتيجتك. لكننا <b>نحفظ</b> <b>النتيجة المُستخرَجة</b> (الحقول المنظَّمة التي نُرجعها) في سجلّ حسابك حتى تتمكّن من المراجعة وإعادة التصدير والتصحيح — ويمكنك حذف أي عنصر من السجلّ، أو حسابك بالكامل، في أي وقت.
+            {% endif %}
+          </p>
+          <p>
+            {% if lang == 'en' %}
+            Two deliberate exceptions where a file <b>is</b> stored, because you asked us to: <b>saved templates</b> (we keep the original file so we can fill future results into the same format, until you delete the template) and <b>corrections</b> (if you edit an extracted value, we keep your corrected version alongside the original).
+            {% else %}
+            هناك استثناءان مقصودان يُخزَّن فيهما الملف، بطلب منك: <b>القوالب المحفوظة</b> (نحتفظ بالملف الأصلي لنملأ النتائج المستقبلية بنفس الصيغة، حتى تحذف القالب) و<b>التصحيحات</b> (إذا عدّلت قيمة مُستخرَجة، نحتفظ بنسختك المصحَّحة إلى جانب الأصل).
+            {% endif %}
+          </p>
+
+          <h2 id="subprocessors">{{ 'AI processing and who we share with' if lang == 'en' else 'معالجة الذكاء الاصطناعي ومع من نشارك' }}</h2>
+          <p>
+            {% if lang == 'en' %}
+            To read your documents, we send the file content to a third-party large language model for inference. <b>Our AI sub-processor is Google (Gemini).</b> Your content is transmitted over an encrypted connection and processed to produce your result; under Google's paid API tier, your content is not used to train Google's models. We also rely on: <b>Paymob</b> and <b>PayPal</b> for payments, our hosting provider for infrastructure, our email provider for account emails, <b>Sentry</b> for error monitoring, and <b>Cloudflare Turnstile</b> for bot protection on forms. We never sell, rent, or trade your data, and we never use your documents for advertising.
+            {% else %}
+            لقراءة مستنداتك، نرسل محتوى الملف إلى نموذج لغوي كبير تابع لطرف ثالث لإجراء الاستدلال. <b>معالجنا الفرعي للذكاء الاصطناعي هو Google (Gemini).</b> يُنقَل محتواك عبر اتصال مشفَّر ويُعالَج لإنتاج نتيجتك؛ وبموجب فئة الـ API المدفوعة من Google، لا يُستخدَم محتواك لتدريب نماذج Google. كما نعتمد على: <b>Paymob</b> و<b>PayPal</b> للمدفوعات، ومزوّد الاستضافة للبنية التحتية، ومزوّد البريد لرسائل الحساب، و<b>Sentry</b> لمراقبة الأخطاء، و<b>Cloudflare Turnstile</b> للحماية من الروبوتات في النماذج. نحن لا نبيع بياناتك أو نؤجّرها أو نتاجر بها، ولا نستخدم مستنداتك للإعلانات أبدًا.
+            {% endif %}
+          </p>
 
           <h2 id="retention">{{ 'Retention and deletion' if lang == 'en' else 'الاحتفاظ والحذف' }}</h2>
-          <p>{{ 'You control the retention window from your account settings. Defaults:' if lang == 'en' else 'تتحكّم في فترة الاحتفاظ من إعدادات حسابك. القيم الافتراضية:' }}</p>
+          <p>{{ 'We describe retention by how the product actually behaves — we do not currently offer a configurable per-account retention window or a contractual auto-delete schedule.' if lang == 'en' else 'نصف الاحتفاظ وفقًا لسلوك المنتج الفعلي — لا نوفّر حاليًا فترة احتفاظ قابلة للضبط لكل حساب أو جدول حذف تلقائي تعاقدي.' }}</p>
           <ul>
-            <li>{{ 'Free / Lite: 30 days' if lang == 'en' else 'مجاني / Lite: 30 يومًا' }}</li>
-            <li>{{ 'Pro: 90 days' if lang == 'en' else 'Pro: 90 يومًا' }}</li>
-            <li>{{ 'Business: configurable up to 365 days' if lang == 'en' else 'Business: قابل للضبط حتى 365 يومًا' }}</li>
+            <li>{{ 'Uploaded source files: not retained after processing by default.' if lang == 'en' else 'الملفات الأصلية المرفوعة: لا يُحتفَظ بها بعد المعالجة افتراضيًا.' }}</li>
+            <li>{{ 'Extraction results in your history: kept until you delete them or your account.' if lang == 'en' else 'النتائج المُستخرَجة في سجلّك: تبقى حتى تحذفها أو تحذف حسابك.' }}</li>
+            <li>{{ 'Saved templates and corrections: kept until you delete them.' if lang == 'en' else 'القوالب المحفوظة والتصحيحات: تبقى حتى تحذفها.' }}</li>
+            <li>{{ 'Account, usage, and billing records: kept while your account is active and as long as needed to meet tax, accounting, and legal obligations.' if lang == 'en' else 'سجلات الحساب والاستخدام والفوترة: تبقى ما دام حسابك نشطًا وللمدة اللازمة للوفاء بالالتزامات الضريبية والمحاسبية والقانونية.' }}</li>
           </ul>
-          <p>{{ 'You can delete any document immediately from the dashboard. Account deletion removes all associated data within 7 days.' if lang == 'en' else 'يمكنك حذف أي مستند فورًا من لوحة التحكم. حذف الحساب يزيل جميع البيانات المرتبطة خلال 7 أيام.' }}</p>
+          <p>{{ 'You can delete individual history items any time from your dashboard. Deleting your account removes the personal data associated with it, except records we are legally required to keep (e.g. invoices for tax).' if lang == 'en' else 'يمكنك حذف عناصر السجلّ الفردية في أي وقت من لوحة التحكم. حذف حسابك يزيل البيانات الشخصية المرتبطة به، باستثناء السجلات التي يُلزمنا القانون بالاحتفاظ بها (مثل الفواتير للأغراض الضريبية).' }}</p>
+
+          <h2 id="connector">{{ 'The Odoo connector and corrections' if lang == 'en' else 'موصّل أودو والتصحيحات' }}</h2>
+          <p>
+            {% if lang == 'en' %}
+            Our free Odoo 19 connector includes an opt-out feature that shares your corrections back to us to improve future extraction. When you edit an extracted value, it may send the field name, the original value, and your corrected value — only for fields you actually changed. This is <b>on by default</b>; you can turn it off in Odoo under <b>Settings → Mostakhles → "Share corrections"</b>.
+            {% else %}
+            يتضمّن موصّل أودو 19 المجاني ميزة (يمكن إيقافها) تشارك تصحيحاتك معنا لتحسين الاستخراج مستقبلًا. عند تعديل قيمة مُستخرَجة، قد يرسل اسم الحقل والقيمة الأصلية وقيمتك المصحَّحة — فقط للحقول التي غيّرتها فعليًا. هذه الميزة <b>مُفعَّلة افتراضيًا</b>؛ ويمكنك إيقافها في أودو من <b>الإعدادات ← مُستخلِص ← «مشاركة التصحيحات»</b>.
+            {% endif %}
+          </p>
+
+          <h2 id="security">{{ 'Security — where we stand' if lang == 'en' else 'الأمان — أين نحن اليوم' }}</h2>
+          <p>
+            {% if lang == 'en' %}
+            What is true today: traffic between your browser or API client, our service, and our AI sub-processor uses TLS 1.3; source documents are not stored by default; API keys can be scoped and revoked; and passwords are stored only as salted hashes. We are an early-stage product and describe our posture honestly: we do <b>not</b> currently hold SOC 2, ISO 27001, or any formal security certification, and we do not claim data-residency guarantees, dedicated infrastructure, or a contractual uptime commitment.
+            {% else %}
+            ما هو صحيح اليوم: تُستخدَم TLS 1.3 في نقل البيانات بين متصفّحك أو عميل الـ API وخدمتنا ومعالجنا الفرعي للذكاء الاصطناعي؛ ولا تُخزَّن المستندات الأصلية افتراضيًا؛ ويمكن تحديد نطاق مفاتيح الـ API وإلغاؤها؛ وتُخزَّن كلمات المرور فقط كتجزئة مملّحة. نحن منتج في مرحلة مبكّرة ونصف وضعنا بصدق: لا نمتلك حاليًا شهادة SOC 2 أو ISO 27001 أو أي شهادة أمان رسمية، ولا ندّعي ضمانات لموقع تخزين البيانات أو بنية تحتية مخصّصة أو التزامًا تعاقديًا بمدة التشغيل.
+            {% endif %}
+          </p>
+
+          <h2 id="transfers">{{ 'International transfers' if lang == 'en' else 'النقل الدولي للبيانات' }}</h2>
+          <p>{{ 'Processing your documents involves transferring content to our AI sub-processor (Google), which may process data outside your country. Payment and infrastructure providers may also process data internationally. We handle personal data in line with the principles of Egypt PDPL (Law 151/2020), the KSA PDPL, applicable UAE rules, and — for EU users — the GDPR. We do not claim to be certified or formally compliant under any of these.' if lang == 'en' else 'تتضمّن معالجة مستنداتك نقل المحتوى إلى معالجنا الفرعي للذكاء الاصطناعي (Google)، الذي قد يعالج البيانات خارج بلدك. وقد يعالج مزوّدو الدفع والبنية التحتية البيانات دوليًا أيضًا. نتعامل مع البيانات الشخصية بما يتماشى مع مبادئ قانون حماية البيانات المصري (رقم 151 لسنة 2020)، وقانون حماية البيانات السعودي، والقواعد الإماراتية المعمول بها، و — لمستخدمي الاتحاد الأوروبي — اللائحة العامة لحماية البيانات (GDPR). ولا ندّعي أننا حاصلون على شهادة أو ممتثلون رسميًا لأيٍّ منها.' }}</p>
 
           <h2 id="rights">{{ 'Your rights' if lang == 'en' else 'حقوقك' }}</h2>
           <p>{{ 'You have the right to:' if lang == 'en' else 'لديك الحق في:' }}</p>
@@ -138,8 +181,12 @@
           <p class="lp-docs-toc-h">{{ 'On this page' if lang == 'en' else 'في هذه الصفحة' }}</p>
           <a href="#commitment">{{ 'Our commitment' if lang == 'en' else 'التزامنا' }}</a>
           <a href="#data-collect">{{ 'Data we collect' if lang == 'en' else 'البيانات التي نجمعها' }}</a>
-          <a href="#residency">{{ 'Where data lives' if lang == 'en' else 'أين تُخزَّن البيانات' }}</a>
+          <a href="#documents">{{ 'How documents are handled' if lang == 'en' else 'التعامل مع المستندات' }}</a>
+          <a href="#subprocessors">{{ 'AI &amp; sharing' if lang == 'en' else 'الذكاء والمشاركة' }}</a>
           <a href="#retention">{{ 'Retention' if lang == 'en' else 'الاحتفاظ' }}</a>
+          <a href="#connector">{{ 'Odoo connector' if lang == 'en' else 'موصّل أودو' }}</a>
+          <a href="#security">{{ 'Security' if lang == 'en' else 'الأمان' }}</a>
+          <a href="#transfers">{{ 'Transfers' if lang == 'en' else 'النقل الدولي' }}</a>
           <a href="#rights">{{ 'Your rights' if lang == 'en' else 'حقوقك' }}</a>
           <a href="#contact">{{ 'Contact' if lang == 'en' else 'التواصل' }}</a>
         </aside>

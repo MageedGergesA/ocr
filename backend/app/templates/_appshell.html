@@ -28,45 +28,54 @@
       <i data-lucide="chevron-down" class="shell-caret"></i>
     </button>
     <div class="shell-submenu" id="toolsSubmenu" hidden>
-      {# Workspace — multi-doc actions, not single-doc extractors #}
-      <div class="shell-sub-h">{{ 'Workspace' if lang == 'en' else 'مساحة العمل' }}</div>
-      <a class="shell-sublink" href="/chat"><i data-lucide="message-square"></i><span>{{ 'Chat with doc' if lang == 'en' else 'اسأل مستندك' }}</span></a>
-      <a class="shell-sublink" href="/compare"><i data-lucide="git-compare"></i><span>{{ 'Compare docs' if lang == 'en' else 'مقارنة مستندات' }}</span></a>
 
-      {# General OCR / text tools — open as standalone /tools/{slug} pages #}
-      <div class="shell-sub-h">{{ 'General OCR' if lang == 'en' else 'OCR عامة' }}</div>
-      <a class="shell-sublink" href="/tools/arabic-ocr"><i data-lucide="scan-text"></i><span>{{ 'Arabic OCR' if lang == 'en' else 'استخراج النص العربي' }}</span></a>
-      <a class="shell-sublink" href="/tools/handwriting"><i data-lucide="pen-line"></i><span>{{ 'Handwriting' if lang == 'en' else 'الخط اليدوي' }}</span></a>
-      <a class="shell-sublink" href="/tools/translate"><i data-lucide="languages"></i><span>{{ 'Translation' if lang == 'en' else 'الترجمة' }}</span></a>
-      <a class="shell-sublink" href="/tools/summarize"><i data-lucide="align-left"></i><span>{{ 'Summarize' if lang == 'en' else 'تلخيص' }}</span></a>
-      <a class="shell-sublink" href="/tools/table-excel"><i data-lucide="table"></i><span>{{ 'Tables → Excel' if lang == 'en' else 'جداول إلى Excel' }}</span></a>
-      <a class="shell-sublink" href="/tools/searchable-pdf"><i data-lucide="file-search"></i><span>{{ 'Searchable PDF' if lang == 'en' else 'PDF قابل للبحث' }}</span></a>
-      <a class="shell-sublink" href="/tools/entity-detection"><i data-lucide="scan-search"></i><span>{{ 'Entity detection' if lang == 'en' else 'كشف الكيانات' }}</span></a>
-      <a class="shell-sublink" href="/tools/auto-classify"><i data-lucide="tags"></i><span>{{ 'Auto-classify' if lang == 'en' else 'تصنيف تلقائي' }}</span></a>
-      <a class="shell-sublink" href="/tools/validate"><i data-lucide="badge-check"></i><span>{{ 'Validate data' if lang == 'en' else 'تحقّق من البيانات' }}</span></a>
+      {# Workspace — always open; just 2 items #}
+      <details class="shell-sub-group" open>
+        <summary class="shell-sub-h">{{ 'Workspace' if lang == 'en' else 'مساحة العمل' }}</summary>
+        <a class="shell-sublink" href="/chat"><i data-lucide="message-square"></i><span>{{ 'Chat with doc' if lang == 'en' else 'اسأل مستندك' }}</span></a>
+        <a class="shell-sublink" href="/compare"><i data-lucide="git-compare"></i><span>{{ 'Compare docs' if lang == 'en' else 'مقارنة مستندات' }}</span></a>
+      </details>
 
-      {# Document parsers — open in the new /app shell via type-card #}
-      <div class="shell-sub-h">{{ 'Document parsers' if lang == 'en' else 'قوارئ المستندات' }}</div>
-      <a class="shell-sublink" href="/app?tool=invoice"             data-tool="invoice"><i data-lucide="receipt-text"></i><span>{{ 'Invoice' if lang == 'en' else 'فاتورة' }}</span></a>
-      <a class="shell-sublink" href="/app?tool=egyptian-id"         data-tool="egyptian-id"><i data-lucide="id-card"></i><span>{{ 'National ID' if lang == 'en' else 'الرقم القومي' }}</span></a>
-      <a class="shell-sublink" href="/app?tool=passport"            data-tool="passport"><i data-lucide="book-user"></i><span>{{ 'Passport' if lang == 'en' else 'جواز سفر' }}</span></a>
-      <a class="shell-sublink" href="/app?tool=tax-card"            data-tool="tax-card"><i data-lucide="badge-percent"></i><span>{{ 'Tax card' if lang == 'en' else 'بطاقة ضريبية' }}</span></a>
-      <a class="shell-sublink" href="/app?tool=commercial-register" data-tool="commercial-register"><i data-lucide="building-2"></i><span>{{ 'Commercial reg.' if lang == 'en' else 'سجل تجاري' }}</span></a>
-      <a class="shell-sublink" href="/app?tool=business-card"       data-tool="business-card"><i data-lucide="contact-round"></i><span>{{ 'Business card' if lang == 'en' else 'بطاقة عمل' }}</span></a>
-      <a class="shell-sublink" href="/app?tool=utility-bill"        data-tool="utility-bill"><i data-lucide="lightbulb"></i><span>{{ 'Utility bill' if lang == 'en' else 'فاتورة مرافق' }}</span></a>
-      <a class="shell-sublink" href="/app?tool=bank-statement"      data-tool="bank-statement"><i data-lucide="landmark"></i><span>{{ 'Bank statement' if lang == 'en' else 'كشف حساب' }}</span></a>
-      <a class="shell-sublink" href="/app?tool=prescription"        data-tool="prescription"><i data-lucide="pill"></i><span>{{ 'Prescription' if lang == 'en' else 'روشتة' }}</span></a>
-      <a class="shell-sublink" href="/app?tool=shipping-label"      data-tool="shipping-label"><i data-lucide="package"></i><span>{{ 'Shipping label' if lang == 'en' else 'بوليصة شحن' }}</span></a>
+      {# General OCR — collapsed by default #}
+      <details class="shell-sub-group {{ 'open' if _active == 'tools' and request.url.path.startswith('/tools') else '' }}">
+        <summary class="shell-sub-h">{{ 'General OCR' if lang == 'en' else 'OCR عامة' }}</summary>
+        <a class="shell-sublink" href="/tools/arabic-ocr"><i data-lucide="scan-text"></i><span>{{ 'Arabic OCR' if lang == 'en' else 'استخراج النص العربي' }}</span></a>
+        <a class="shell-sublink" href="/tools/handwriting"><i data-lucide="pen-line"></i><span>{{ 'Handwriting' if lang == 'en' else 'الخط اليدوي' }}</span></a>
+        <a class="shell-sublink" href="/tools/translate"><i data-lucide="languages"></i><span>{{ 'Translation' if lang == 'en' else 'الترجمة' }}</span></a>
+        <a class="shell-sublink" href="/tools/summarize"><i data-lucide="align-left"></i><span>{{ 'Summarize' if lang == 'en' else 'تلخيص' }}</span></a>
+        <a class="shell-sublink" href="/tools/table-excel"><i data-lucide="table"></i><span>{{ 'Tables → Excel' if lang == 'en' else 'جداول إلى Excel' }}</span></a>
+        <a class="shell-sublink" href="/tools/searchable-pdf"><i data-lucide="file-search"></i><span>{{ 'Searchable PDF' if lang == 'en' else 'PDF قابل للبحث' }}</span></a>
+        <a class="shell-sublink" href="/tools/entity-detection"><i data-lucide="scan-search"></i><span>{{ 'Entity detection' if lang == 'en' else 'كشف الكيانات' }}</span></a>
+        <a class="shell-sublink" href="/tools/auto-classify"><i data-lucide="tags"></i><span>{{ 'Auto-classify' if lang == 'en' else 'تصنيف تلقائي' }}</span></a>
+        <a class="shell-sublink" href="/tools/validate"><i data-lucide="badge-check"></i><span>{{ 'Validate data' if lang == 'en' else 'تحقّق من البيانات' }}</span></a>
+      </details>
 
-      {# Real-estate pack #}
-      <div class="shell-sub-h">{{ 'Real estate' if lang == 'en' else 'العقارات' }}</div>
-      <a class="shell-sublink" href="/app?tool=sale-contract"     data-tool="sale-contract"><i data-lucide="home"></i><span>{{ 'Sale contract' if lang == 'en' else 'عقد بيع' }}</span></a>
-      <a class="shell-sublink" href="/app?tool=lease-contract"    data-tool="lease-contract"><i data-lucide="scroll-text"></i><span>{{ 'Lease contract' if lang == 'en' else 'عقد إيجار' }}</span></a>
-      <a class="shell-sublink" href="/tools/ownership-doc"><i data-lucide="scroll"></i><span>{{ 'Ownership doc' if lang == 'en' else 'وثيقة ملكية' }}</span></a>
-      <a class="shell-sublink" href="/tools/tenant-data"><i data-lucide="user"></i><span>{{ 'Tenant data' if lang == 'en' else 'بيانات المستأجر' }}</span></a>
-      <a class="shell-sublink" href="/tools/unit-data"><i data-lucide="building"></i><span>{{ 'Unit data' if lang == 'en' else 'بيانات الوحدة' }}</span></a>
-      <a class="shell-sublink" href="/tools/payment-schedule"><i data-lucide="calendar-clock"></i><span>{{ 'Payment schedule' if lang == 'en' else 'جدول السداد' }}</span></a>
-      <a class="shell-sublink" href="/tools/contract-clauses"><i data-lucide="scale"></i><span>{{ 'Clause analysis' if lang == 'en' else 'تحليل البنود' }}</span></a>
+      {# Document parsers — collapsed by default #}
+      <details class="shell-sub-group">
+        <summary class="shell-sub-h">{{ 'Document parsers' if lang == 'en' else 'قوارئ المستندات' }}</summary>
+        <a class="shell-sublink" href="/app?tool=invoice"             data-tool="invoice"><i data-lucide="receipt-text"></i><span>{{ 'Invoice' if lang == 'en' else 'فاتورة' }}</span></a>
+        <a class="shell-sublink" href="/app?tool=egyptian-id"         data-tool="egyptian-id"><i data-lucide="id-card"></i><span>{{ 'National ID' if lang == 'en' else 'الرقم القومي' }}</span></a>
+        <a class="shell-sublink" href="/app?tool=passport"            data-tool="passport"><i data-lucide="book-user"></i><span>{{ 'Passport' if lang == 'en' else 'جواز سفر' }}</span></a>
+        <a class="shell-sublink" href="/app?tool=tax-card"            data-tool="tax-card"><i data-lucide="badge-percent"></i><span>{{ 'Tax card' if lang == 'en' else 'بطاقة ضريبية' }}</span></a>
+        <a class="shell-sublink" href="/app?tool=commercial-register" data-tool="commercial-register"><i data-lucide="building-2"></i><span>{{ 'Commercial reg.' if lang == 'en' else 'سجل تجاري' }}</span></a>
+        <a class="shell-sublink" href="/app?tool=business-card"       data-tool="business-card"><i data-lucide="contact-round"></i><span>{{ 'Business card' if lang == 'en' else 'بطاقة عمل' }}</span></a>
+        <a class="shell-sublink" href="/app?tool=utility-bill"        data-tool="utility-bill"><i data-lucide="lightbulb"></i><span>{{ 'Utility bill' if lang == 'en' else 'فاتورة مرافق' }}</span></a>
+        <a class="shell-sublink" href="/app?tool=bank-statement"      data-tool="bank-statement"><i data-lucide="landmark"></i><span>{{ 'Bank statement' if lang == 'en' else 'كشف حساب' }}</span></a>
+        <a class="shell-sublink" href="/app?tool=prescription"        data-tool="prescription"><i data-lucide="pill"></i><span>{{ 'Prescription' if lang == 'en' else 'روشتة' }}</span></a>
+        <a class="shell-sublink" href="/app?tool=shipping-label"      data-tool="shipping-label"><i data-lucide="package"></i><span>{{ 'Shipping label' if lang == 'en' else 'بوليصة شحن' }}</span></a>
+      </details>
+
+      {# Real estate — collapsed by default #}
+      <details class="shell-sub-group">
+        <summary class="shell-sub-h">{{ 'Real estate' if lang == 'en' else 'العقارات' }}</summary>
+        <a class="shell-sublink" href="/app?tool=sale-contract"     data-tool="sale-contract"><i data-lucide="home"></i><span>{{ 'Sale contract' if lang == 'en' else 'عقد بيع' }}</span></a>
+        <a class="shell-sublink" href="/app?tool=lease-contract"    data-tool="lease-contract"><i data-lucide="scroll-text"></i><span>{{ 'Lease contract' if lang == 'en' else 'عقد إيجار' }}</span></a>
+        <a class="shell-sublink" href="/tools/ownership-doc"><i data-lucide="scroll"></i><span>{{ 'Ownership doc' if lang == 'en' else 'وثيقة ملكية' }}</span></a>
+        <a class="shell-sublink" href="/tools/tenant-data"><i data-lucide="user"></i><span>{{ 'Tenant data' if lang == 'en' else 'بيانات المستأجر' }}</span></a>
+        <a class="shell-sublink" href="/tools/unit-data"><i data-lucide="building"></i><span>{{ 'Unit data' if lang == 'en' else 'بيانات الوحدة' }}</span></a>
+        <a class="shell-sublink" href="/tools/payment-schedule"><i data-lucide="calendar-clock"></i><span>{{ 'Payment schedule' if lang == 'en' else 'جدول السداد' }}</span></a>
+        <a class="shell-sublink" href="/tools/contract-clauses"><i data-lucide="scale"></i><span>{{ 'Clause analysis' if lang == 'en' else 'تحليل البنود' }}</span></a>
+      </details>
 
       <a class="shell-sublink shell-sublink-all" href="/tools">
         <i data-lucide="grid-3x3"></i><span>{{ 'Tool gallery' if lang == 'en' else 'معرض الأدوات' }}</span><span class="shell-sub-count">28</span>
@@ -150,30 +159,42 @@
 
   <div class="shell-foot">
     {% if user %}
+    {# CTA row — shown for free/lite/starter plans (Claude.ai "Invite team members" equivalent) #}
+    {% if user.plan not in ['pro', 'business'] %}
+    <a class="shell-foot-cta" href="/#pricing">
+      <span>{{ 'Upgrade plan' if lang == 'en' else 'ترقية الخطة' }}</span>
+      <i data-lucide="arrow-right"></i>
+    </a>
+    {% endif %}
+    {# Profile row: avatar + email/plan + icon buttons (dark mode + collapse) #}
     <div class="shell-user">
       <span class="shell-avatar">{{ user.email[0]|upper }}</span>
       <div class="shell-user-meta">
         <div class="shell-user-mail" title="{{ user.email }}">{{ user.email }}</div>
         <div class="shell-user-plan">{{ user.plan|capitalize }}</div>
       </div>
+      <div class="shell-user-icons">
+        <button type="button" class="shell-icon-btn" id="appThemeToggle"
+                title="{{ 'Toggle theme' if lang == 'en' else 'تبديل المظهر' }}"
+                style="background:none;border:0;cursor:pointer;color:inherit">
+          <svg class="sun" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="moon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <button type="button" class="shell-icon-btn shell-collapse-btn" id="sidebarCollapseToggle"
+                title="{{ 'Collapse sidebar' if lang == 'en' else 'طيّ القائمة' }}"
+                style="background:none;border:0;cursor:pointer;color:inherit">
+          <i data-lucide="chevrons-left"></i>
+        </button>
+      </div>
     </div>
-    <button type="button" class="shell-foot-link shell-collapse-btn" id="sidebarCollapseToggle"
-            style="background:none;border:0;cursor:pointer;font-family:inherit;font-size:13px;width:100%;text-align:start"
-            aria-label="{{ 'Collapse sidebar' if lang == 'en' else 'طيّ القائمة' }}">
-      <i data-lucide="chevrons-left"></i>
-      <span>{{ 'Collapse' if lang == 'en' else 'طيّ القائمة' }}</span>
-    </button>
-    <button type="button" class="shell-foot-link" id="appThemeToggle" style="background:none;border:0;cursor:pointer;font-family:inherit;font-size:13px;width:100%;text-align:start">
-      <svg class="sun" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-      <svg class="moon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      <span class="t-light">{{ 'Dark mode' if lang == 'en' else 'الوضع الداكن' }}</span>
-      <span class="t-dark" style="display:none">{{ 'Light mode' if lang == 'en' else 'الوضع الفاتح' }}</span>
-    </button>
-    <a class="shell-foot-link" href="/logout"><i data-lucide="log-out"></i>{{ 'Log out' if lang == 'en' else 'خروج' }}</a>
-    {% set other_lang = 'en' if lang == 'ar' else 'ar' %}
-    <a class="shell-foot-link" href="/set-language?lang={{ other_lang }}&next={{ request.url.path }}">
-      <i data-lucide="languages"></i>{{ 'العربية' if lang == 'en' else 'English' }}
-    </a>
+    {# Micro-utilities: logout + language (tiny, below profile) #}
+    <div class="shell-foot-micro">
+      <a href="/logout"><i data-lucide="log-out"></i>{{ 'Log out' if lang == 'en' else 'خروج' }}</a>
+      {% set other_lang = 'en' if lang == 'ar' else 'ar' %}
+      <a href="/set-language?lang={{ other_lang }}&next={{ request.url.path }}">
+        <i data-lucide="languages"></i>{{ 'العربية' if lang == 'en' else 'English' }}
+      </a>
+    </div>
     {% else %}
     <a class="btn btn-primary full" href="/login">{{ 'Log in' if lang == 'en' else 'تسجيل الدخول' }}</a>
     {% endif %}

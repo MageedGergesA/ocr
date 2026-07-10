@@ -51,6 +51,18 @@
         <nav class="lp-nav-links">
           <a href="#why">{{ 'Why' if lang == 'en' else 'لماذا' }}</a>
           <a href="#capabilities">{{ 'Features' if lang == 'en' else 'المميزات' }}</a>
+          <div class="lp-nav-dd">
+            <a href="/tools" class="lp-nav-dd-trigger" aria-haspopup="true">{{ 'Solutions' if lang == 'en' else 'الحلول' }}<svg class="lp-nav-dd-caret" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></a>
+            <div class="lp-nav-dd-menu" role="menu">
+              <a href="/arabic-invoice-extraction" role="menuitem">{{ 'Invoices' if lang == 'en' else 'الفواتير' }}</a>
+              <a href="/arabic-prescription-ocr" role="menuitem">{{ 'Prescriptions' if lang == 'en' else 'الروشتات' }}</a>
+              <a href="/arabic-id-card-ocr" role="menuitem">{{ 'National IDs' if lang == 'en' else 'بطاقات الهوية' }}</a>
+              <a href="/arabic-handwriting-ocr" role="menuitem">{{ 'Handwriting' if lang == 'en' else 'خط اليد' }}</a>
+              <a href="/arabic-contract-extraction" role="menuitem">{{ 'Contracts' if lang == 'en' else 'العقود' }}</a>
+              <a href="/arabic-bank-statement-ocr" role="menuitem">{{ 'Bank statements' if lang == 'en' else 'كشوف الحسابات' }}</a>
+              <a href="/tools" class="lp-nav-dd-all" role="menuitem">{{ 'All tools →' if lang == 'en' else 'كل الأدوات ←' }}</a>
+            </div>
+          </div>
           <a href="/pricing">{{ 'Pricing' if lang == 'en' else 'الأسعار' }}</a>
           <a href="/docs">{{ 'API' if lang == 'en' else 'الـ API' }}</a>
           <a href="/about">{{ 'About' if lang == 'en' else 'عنّا' }}</a>
@@ -147,7 +159,7 @@
             {% if user %}
             <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app">{{ "Open the app." if lang == 'en' else 'افتح التطبيق.' }}</a>
             {% else %}
-            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">{{ "Get started. It's FREE!" if lang == 'en' else "ابدأ. مجاني!" }}</a>
+            <a class="lp-btn lp-btn-primary lp-btn-lg" href="/signup">{{ 'Get started free' if lang == 'en' else 'ابدأ مجانًا' }}</a>
             {% endif %}
             <div class="lp-cta-micro">
               <div>{{ 'Free forever.' if lang == 'en' else 'مجاني للأبد.' }}</div>
@@ -175,12 +187,6 @@
             <span class="lp-feature-pill">{{ 'Contract' if lang == 'en' else 'عقد' }}</span>
             <span class="lp-feature-pill">{{ 'Handwriting' if lang == 'en' else 'خط يد' }}</span>
             <span class="lp-feature-pill">{{ 'Tables' if lang == 'en' else 'جداول' }}</span>
-            <span class="lp-feature-pill">{{ 'Receipt' if lang == 'en' else 'إيصال' }}</span>
-            <span class="lp-feature-pill">{{ 'Statement' if lang == 'en' else 'كشف' }}</span>
-            <span class="lp-feature-pill">{{ 'Form' if lang == 'en' else 'نموذج' }}</span>
-            <span class="lp-feature-pill">{{ 'Stamp' if lang == 'en' else 'ختم' }}</span>
-            <span class="lp-feature-pill">{{ 'Signature' if lang == 'en' else 'توقيع' }}</span>
-            <span class="lp-feature-pill">{{ 'Logo' if lang == 'en' else 'شعار' }}</span>
           </div>
 
         </div>
@@ -189,120 +195,14 @@
         {# Front card = /app upload, back card = /dashboard peeking out      #}
         {# Both lang-aware via html[lang=...] selectors in CSS.              #}
         <div class="lp-hero-visual">
-          <div class="lp-shots">
-
-            {# Floating "input doc" mini-card — adds a 3rd plane to the composition.
-               Rotated -4deg, peeks out from the top-left of the main screenshot.
-               Pure CSS/SVG mock (no asset). Wave 13. #}
-            <div class="lp-shot-input" aria-hidden="true">
-              <div class="lp-shot-input-chrome">
-                <span class="lp-shot-input-stamp">Rx</span>
-                <span class="lp-shot-input-filename">prescription-09.pdf</span>
-              </div>
-              <div class="lp-shot-input-body">
-                <div class="lp-shot-input-line lp-shot-input-line-1"></div>
-                <div class="lp-shot-input-line lp-shot-input-line-2"></div>
-                <div class="lp-shot-input-line lp-shot-input-line-3"></div>
-                <div class="lp-shot-input-sig">
-                  <svg viewBox="0 0 80 30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                    <path d="M2 22 C 8 6, 18 30, 28 14 S 48 6, 60 18 S 76 12, 78 18"/>
-                  </svg>
-                </div>
-              </div>
-              <div class="lp-shot-input-footer">
-                <span class="lp-shot-input-status">
-                  <span class="lp-shot-input-status-dot"></span>
-                  {{ 'Reading…' if lang == 'en' else 'جاري القراءة…' }}
-                </span>
-                <span class="lp-shot-input-time">0.4s</span>
-              </div>
-              <div class="lp-shot-input-progress"><span></span></div>
-            </div>
-
-            {# Radial halo BEHIND the main shot — depth glow #}
-            <div class="lp-shot-halo" aria-hidden="true"></div>
-
-            {# Front card: /app upload, primary visual.
-               (Back dashboard card removed for declutter — see CLAUDE.md
-               Wave 1k.) #}
-            <div class="lp-shot-card lp-shot-front lp-shot-app"
-                 role="img"
-                 aria-label="{{ 'Mostakhles app — Arabic document upload + structured extraction' if lang == 'en' else 'تطبيق مستخلص — رفع المستندات العربية واستخراج البيانات المنظّمة' }}">
-              <div class="lp-shot-chrome">
-                <span class="lp-shot-dot lp-shot-dot-red"></span>
-                <span class="lp-shot-dot lp-shot-dot-yellow"></span>
-                <span class="lp-shot-dot lp-shot-dot-green"></span>
-                <span class="lp-shot-url">mostakhles.ai/app</span>
-              </div>
-              <div class="lp-shot-img"></div>
-            </div>
-
-            {# Floating result overlay — 3 cyclable variants (prescription,
-               invoice, national ID) showing extraction breadth. JS in the
-               footer cycles every 5s and re-triggers the typewriter reveal. #}
-            <div class="lp-shot-result" dir="ltr" aria-hidden="true">
-
-              {# Variant 1: Prescription — DEFAULT visible #}
-              <div class="lp-shot-result-variant" data-variant="rx" data-active>
-                <div class="lp-shot-result-head">
-                  <span class="lp-shot-result-check" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  </span>
-                  <span class="lp-shot-result-title">prescription.pdf</span>
-                  <span class="lp-shot-result-time">1.8s</span>
-                </div>
-                <div class="lp-shot-result-body">
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"patient"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">{{ '"Ahmed Khalil"' if lang == 'en' else '"أحمد خليل"' }}</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"drug"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"Amoxicillin"</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"dose_mg"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-num">500</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"frequency"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"3×/day"</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"duration_days"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-num">7</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"pharmacy"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">{{ '"El Ezaby"' if lang == 'en' else '"العزبي"' }}</span></div>
-                </div>
-              </div>
-
-              {# Variant 2: Invoice #}
-              <div class="lp-shot-result-variant" data-variant="invoice" hidden>
-                <div class="lp-shot-result-head">
-                  <span class="lp-shot-result-check" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  </span>
-                  <span class="lp-shot-result-title">invoice-1042.pdf</span>
-                  <span class="lp-shot-result-time">2.1s</span>
-                </div>
-                <div class="lp-shot-result-body">
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"vendor"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">{{ '"Aramex"' if lang == 'en' else '"أرامكس"' }}</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"invoice_no"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"INV-1042"</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"subtotal_egp"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-num">4800</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"vat_egp"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-num">672</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"total_egp"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-num">5472</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"due_date"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"2026-07-15"</span></div>
-                </div>
-              </div>
-
-              {# Variant 3: National ID #}
-              <div class="lp-shot-result-variant" data-variant="id" hidden>
-                <div class="lp-shot-result-head">
-                  <span class="lp-shot-result-check" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  </span>
-                  <span class="lp-shot-result-title">id-card.jpg</span>
-                  <span class="lp-shot-result-time">1.4s</span>
-                </div>
-                <div class="lp-shot-result-body">
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"name"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">{{ '"Mona Saleh"' if lang == 'en' else '"منى صالح"' }}</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"id_number"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"29512012345678"</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"birth_date"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"1995-12-01"</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"expiry"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"2032-08-22"</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"gender"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">"F"</span></div>
-                  <div class="lp-shot-result-row"><span class="lp-shot-result-key">"governorate"</span><span class="lp-shot-result-colon">:</span><span class="lp-shot-result-val">{{ '"Cairo"' if lang == 'en' else '"القاهرة"' }}</span></div>
-                </div>
-              </div>
-            </div>
-
-            {# Cost badge removed for declutter — JSON header already shows the 1.8s timing. #}
-
-          </div>
+          {# Single clean product shot (PIL-rendered): Arabic invoice → structured
+             fields with confidence checks. Replaces the cluttered 3-plane mock. #}
+          <figure class="lp-hero-shot">
+            <img src="/static/img/hero_app.png?v={{ asset_v() }}"
+                 alt="{{ 'The Mostakhles app extracting an Arabic tax invoice into structured fields — seller, tax ID, dates and totals — each with a confidence check.' if lang == 'en' else 'تطبيق مُستخلِص يستخرج فاتورة ضريبية عربية إلى حقول منظّمة — البائع والرقم الضريبي والتواريخ والإجماليات — مع فحص ثقة لكل حقل.' }}"
+                 width="1260" height="840" decoding="async"
+                 style="width:100%; height:auto; display:block;" />
+          </figure>
         </div>
 
       </div>
@@ -384,7 +284,13 @@
             <button type="button" class="lp-live-copy" id="lpLiveCopy" hidden>{{ 'Copy' if lang == 'en' else 'نسخ' }}</button>
           </div>
           <div class="lp-live-result-empty" id="lpLiveEmpty">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <pre class="lp-live-ghost" aria-hidden="true">{
+  "document_type": "invoice",
+  "vendor": "…",
+  "tax_id": "…",
+  "date": "…",
+  "total": "…"
+}</pre>
             <span>{{ 'Your extracted JSON will appear here.' if lang == 'en' else 'ستظهر بياناتك المستخرجة (JSON) هنا.' }}</span>
           </div>
           <div class="lp-live-result-loading" id="lpLiveLoading" hidden>
@@ -844,7 +750,7 @@
               <li>{{ 'Matches every drug to your in-stock SKU list.' if lang == 'en' else 'يربط كل دواء بقائمة الأصناف المتاحة عندك.' }}</li>
               <li>{{ 'Pushes the full sale straight into Odoo or Mostafa POS.' if lang == 'en' else 'يدفع الفاتورة كاملة إلى Odoo أو نقطة بيع Mostafa.' }}</li>
             </ul>
-            <a href="/tools/prescription-ocr" class="lp-roles-cta">{{ 'See the prescription tool' if lang == 'en' else 'افتح أداة الروشتات' }} <span aria-hidden="true">→</span></a>
+            <a href="/arabic-prescription-ocr" class="lp-roles-cta">{{ 'See the prescription tool' if lang == 'en' else 'افتح أداة الروشتات' }} <span aria-hidden="true">→</span></a>
           </div>
           <div class="lp-roles-panel-right">
             <div class="lp-roles-mock lp-roles-mock-pharma">
@@ -875,7 +781,7 @@
               <li>{{ 'Catches 14% VAT errors before they hit the ledger.' if lang == 'en' else 'يلتقط أخطاء ضريبة 14% قبل ترحيلها للأستاذ.' }}</li>
               <li>{{ 'Native Odoo push — no CSV gymnastics.' if lang == 'en' else 'يدفع مباشرة إلى Odoo — بدون اختراعات CSV.' }}</li>
             </ul>
-            <a href="/tools/invoice-extraction" class="lp-roles-cta">{{ 'See the invoice tool' if lang == 'en' else 'افتح أداة الفواتير' }} <span aria-hidden="true">→</span></a>
+            <a href="/arabic-invoice-extraction" class="lp-roles-cta">{{ 'See the invoice tool' if lang == 'en' else 'افتح أداة الفواتير' }} <span aria-hidden="true">→</span></a>
           </div>
           <div class="lp-roles-panel-right">
             <div class="lp-roles-mock lp-roles-mock-account">
@@ -907,7 +813,7 @@
               <li>{{ 'Pulls unit, area, payment plan from the reservation form.' if lang == 'en' else 'يستخرج الوحدة والمساحة وخطة السداد من نموذج الحجز.' }}</li>
               <li>{{ 'Flags missing CIVIL ID checksums before submission.' if lang == 'en' else 'ينبّه إلى أرقام الهوية الناقصة قبل التقديم.' }}</li>
             </ul>
-            <a href="/tools/national-id-extraction" class="lp-roles-cta">{{ 'See the ID tool' if lang == 'en' else 'افتح أداة الهوية' }} <span aria-hidden="true">→</span></a>
+            <a href="/arabic-id-card-ocr" class="lp-roles-cta">{{ 'See the ID tool' if lang == 'en' else 'افتح أداة الهوية' }} <span aria-hidden="true">→</span></a>
           </div>
           <div class="lp-roles-panel-right">
             <div class="lp-roles-mock lp-roles-mock-realestate">
@@ -941,7 +847,7 @@
               <li>{{ 'Auto-classifies HS codes against the Egyptian customs tariff.' if lang == 'en' else 'يصنّف رموز HS تلقائيًا حسب التعرفة الجمركية المصرية.' }}</li>
               <li>{{ 'Outputs Nafeza-ready ACID submission JSON.' if lang == 'en' else 'يُخرج JSON جاهز لإرسال ACID على نافذة.' }}</li>
             </ul>
-            <a href="/tools/customs-extraction" class="lp-roles-cta">{{ 'See the customs tool' if lang == 'en' else 'افتح أداة الجمارك' }} <span aria-hidden="true">→</span></a>
+            <a href="/tools" class="lp-roles-cta">{{ 'See the customs tool' if lang == 'en' else 'افتح أداة الجمارك' }} <span aria-hidden="true">→</span></a>
           </div>
           <div class="lp-roles-panel-right">
             <div class="lp-roles-mock lp-roles-mock-logistics">
@@ -973,7 +879,7 @@
               <li>{{ 'Employment contract → salary, period, allowances, deductions.' if lang == 'en' else 'عقد العمل → الراتب، المدة، البدلات، الخصومات.' }}</li>
               <li>{{ 'Auto-populates the Odoo HR module ready for payroll.' if lang == 'en' else 'يملأ وحدة HR في Odoo جاهزة للرواتب.' }}</li>
             </ul>
-            <a href="/tools/cv-extraction" class="lp-roles-cta">{{ 'See the CV tool' if lang == 'en' else 'افتح أداة السير الذاتية' }} <span aria-hidden="true">→</span></a>
+            <a href="/tools" class="lp-roles-cta">{{ 'See the CV tool' if lang == 'en' else 'افتح أداة السير الذاتية' }} <span aria-hidden="true">→</span></a>
           </div>
           <div class="lp-roles-panel-right">
             <div class="lp-roles-mock lp-roles-mock-hr">
@@ -1078,7 +984,7 @@
             <span class="lp-tm-c-avatar lp-tm-c-avatar-a" aria-hidden="true">℞</span>
             <div class="lp-tm-c-by">
               <strong>{{ 'Handwriting · dosage checks' if lang == 'en' else 'خط اليد · فحص الجرعات' }}</strong>
-              <a href="/tools/prescription-ocr">{{ 'Try the prescription tool →' if lang == 'en' else 'جرّب أداة الروشتات →' }}</a>
+              <a href="/arabic-prescription-ocr">{{ 'Try the prescription tool →' if lang == 'en' else 'جرّب أداة الروشتات →' }}</a>
             </div>
           </footer>
         </article>
@@ -1099,7 +1005,7 @@
             <span class="lp-tm-c-avatar lp-tm-c-avatar-b" aria-hidden="true">🧾</span>
             <div class="lp-tm-c-by">
               <strong>{{ 'ETA / ZATCA-ready fields' if lang == 'en' else 'حقول جاهزة لـ ETA / ZATCA' }}</strong>
-              <a href="/tools/invoice-extraction">{{ 'Try the invoice tool →' if lang == 'en' else 'جرّب أداة الفواتير →' }}</a>
+              <a href="/arabic-invoice-extraction">{{ 'Try the invoice tool →' if lang == 'en' else 'جرّب أداة الفواتير →' }}</a>
             </div>
           </footer>
         </article>
@@ -1159,7 +1065,7 @@
             <span class="lp-pteaser-name">{{ 'Business' if lang == 'en' else 'بزنس' }}</span>
             <b>$199</b>
             <small class="lp-pteaser-credits">{{ '28,000 credits / mo' if lang == 'en' else '28,000 نقطة / شهر' }}</small>
-            <em>{{ 'SLA · audit log · SSO' if lang == 'en' else 'SLA · سجل · SSO' }}</em>
+            <em>{{ 'Highest monthly volume' if lang == 'en' else 'أعلى حجم شهري' }}</em>
           </div>
         </div>
         <div class="lp-hero-cta">
@@ -1454,9 +1360,9 @@ console.log(data.fields.doctor);   <span class="c">// د. غالي سامي</spa
           <summary>{{ 'Do you offer SLAs?' if lang == 'en' else 'هل تقدّمون SLA؟' }}<span class="lp-faq-chevron"></span></summary>
           <div class="lp-faq-body">
             {% if lang == 'en' %}
-            Yes, Business and Enterprise plans include a <b>99.5% uptime SLA</b> with service credits, a <b>p95 latency commitment</b> of 30 seconds per single-page extraction, and priority queue access. Enterprise also gets a dedicated Slack channel and direct phone support.
+            Not yet. Mostakhles is an early-stage product provided on a reasonable-efforts basis — there's no formal uptime SLA today, and SSO and audit logs are on the roadmap. What is solid: your documents aren't stored by default or used to train models, every field comes back with a confidence score, and you can start free to prove it out before you commit. If a rollout needs an SLA, talk to us.
             {% else %}
-            نعم، خطّتا Business وEnterprise تتضمّنان <b>SLA بنسبة 99.5% للجاهزية</b> مع رصيد تعويضي، و<b>التزام زمن استجابة p95</b> بـ 30 ثانية للمستند الصفحة الواحدة، وأولوية في طابور المعالجة. Enterprise تحصل أيضًا على قناة Slack مخصّصة ودعم هاتفي مباشر.
+            ليس بعد. مُستخلِص منتج في مرحلة مبكّرة يُقدَّم على أساس بذل أفضل الجهود — لا يوجد حاليًا التزام رسمي بمدة التشغيل (SLA)، وميزتا SSO وسجلات التدقيق ضمن خطة التطوير. ما هو مؤكَّد اليوم: مستنداتك لا تُخزَّن افتراضيًا ولا تُستخدَم لتدريب النماذج، وكل حقل يعود بدرجة ثقة، ويمكنك البدء مجانًا للتأكّد قبل الالتزام. وإذا احتاج تشغيلك إلى SLA، تواصل معنا.
             {% endif %}
           </div>
         </details>
@@ -1515,7 +1421,7 @@ console.log(data.fields.doctor);   <span class="c">// د. غالي سامي</spa
           </p>
 
           <a class="lp-finalcta-btn" href="/signup">
-            {{ "Get started. It's FREE!" if lang == 'en' else "ابدأ. مجاني!" }}
+            {{ 'Get started free' if lang == 'en' else 'ابدأ مجانًا' }}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>
 
@@ -1660,35 +1566,8 @@ console.log(data.fields.doctor);   <span class="c">// د. غالي سامي</spa
     })();
   </script>
 
-  {# ── Hero animation: JSON variant cycler ────── #}
-  <script nonce="{{ csp_nonce }}">
-    (function () {
-      // Respect prefers-reduced-motion.
-      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      /* ─── JSON variant cycler: swap every 5s + re-trigger typewriter ─── */
-      const variants = document.querySelectorAll('.lp-shot-result-variant');
-      if (!reduce && variants.length > 1) {
-        let i = 0;
-        setInterval(function () {
-          variants[i].hidden = true;
-          variants[i].removeAttribute('data-active');
-          i = (i + 1) % variants.length;
-          variants[i].hidden = false;
-          variants[i].setAttribute('data-active', '');
-          // Re-trigger the typewriter row reveal by nuking and re-adding the
-          // CSS animation. Force reflow between steps so the browser sees
-          // the value change.
-          const rows = variants[i].querySelectorAll('.lp-shot-result-row');
-          rows.forEach(function (row) {
-            row.style.animation = 'none';
-            void row.offsetWidth;
-            row.style.animation = '';
-          });
-        }, 5000);
-      }
-    })();
-  </script>
+  {# Hero result-variant cycler removed — the 3-plane mock it drove was
+     replaced by a single static product shot (hero_app.png). #}
 
 </body>
 </html>

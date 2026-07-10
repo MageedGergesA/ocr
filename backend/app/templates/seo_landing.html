@@ -23,7 +23,7 @@
   <link rel="canonical" href="{{ request.url.scheme }}://{{ request.url.netloc }}/{{ page.slug }}">
   <link rel="alternate" hreflang="ar" href="{{ request.url.scheme }}://{{ request.url.netloc }}/{{ page.slug }}?lang=ar">
   <link rel="alternate" hreflang="en" href="{{ request.url.scheme }}://{{ request.url.netloc }}/{{ page.slug }}?lang=en">
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v={{ asset_v() }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 

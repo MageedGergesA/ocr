@@ -258,6 +258,23 @@ app_exceptions.register_handlers(app)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
+
+def _asset_version() -> str:
+    """Cache-buster for the main stylesheet. Returns the int mtime of style.css
+    so `<link ...?v={{ asset_v }}>` changes whenever the CSS is edited, forcing
+    browsers to re-fetch on a normal refresh (no hard-reload needed).
+    In local/dev this is read each request so edits show immediately; in prod
+    the file is stable so it's effectively a content hash."""
+    try:
+        return str(int(os.path.getmtime(BASE_DIR / "static" / "css" / "style.css")))
+    except OSError:
+        return "1"
+
+
+# Expose to every template as {{ asset_v }} (read live in dev so edits bust the
+# cache; cheap enough — one stat() per render).
+templates.env.globals["asset_v"] = _asset_version
+
 # Local Paymob mock — only mounted in ENV=local so /billing/checkout works
 # without real merchant credentials. Set PAYMOB_BASE_URL=http://localhost:8000/_mock/paymob
 # (or similar) and the Paymob client treats it as the real API.
@@ -437,6 +454,150 @@ _TERMS_HTML_EN = """
 <p>We may update these terms and will publish any changes on this page. Contact: support@mostakhles.ai</p>
 """
 
+# ── Cookie Policy — grounded in the cookies/storage the app actually sets ─────
+_COOKIES_HTML_AR = """
+<h2>ما هي ملفات تعريف الارتباط؟</h2>
+<p>ملفات تعريف الارتباط ملفات نصية صغيرة يخزّنها الموقع في متصفّحك. و«التخزين المحلي» ميزة مشابهة تحفظ إعدادات صغيرة على جهازك. نستخدم كليهما فقط كما هو موضّح هنا.</p>
+<h2>ما نستخدمه</h2>
+<p>نستخدم حاليًا فقط ملفات تعريف الارتباط والتخزين الضرورية والوظيفية. لا نستخدم ملفات إعلانية، ولا نشغّل أدوات تتبّع تسويقية أو تحليلات سلوكية من أطراف ثالثة.</p>
+<ul>
+<li><b>ملف الجلسة</b> (ضروري) — يبقيك مسجّلاً للدخول. حتى ~30 يومًا أو حتى تسجيل الخروج.</li>
+<li><b>رمز CSRF</b> (ضروري) — يحمي من تزوير الطلبات عبر المواقع. للجلسة.</li>
+<li><b>تفضيل اللغة</b> (وظيفي) — يتذكّر اختيارك بين العربية والإنجليزية. ~سنة.</li>
+<li><b>تفضيل السمة</b> (وظيفي، تخزين محلي) — يتذكّر الوضع الفاتح/الداكن. حتى تمسحه.</li>
+<li><b>Cloudflare Turnstile</b> (ضروري، أمان) — حماية من الروبوتات في النماذج. قصير الأمد.</li>
+</ul>
+<h2>طلبات الأطراف الثالثة</h2>
+<p>تحمّل بعض الصفحات موارد من أطراف ثالثة، مما قد يتيح لذلك الطرف تلقّي عنوان IP وبيانات الطلب الأساسية:</p>
+<ul>
+<li><b>Cloudflare Turnstile</b> — حماية النماذج من الروبوتات؛ يعالج عنوان IP وإشارات المتصفّح.</li>
+<li><b>خطوط Google</b> — تحمّل بعض الصفحات الخطوط من خدمة خطوط Google، فيطلب متصفّحك جلبها من Google.</li>
+<li><b>Sentry</b> — خدمة مراقبة الأخطاء لدينا؛ تلتقط التشخيصات التقنية عند حدوث خلل. وهي ليست أداة إعلان أو تتبّع.</li>
+</ul>
+<h2>ما لا نستخدمه</h2>
+<p>لا ملفات تعريف ارتباط إعلانية أو لإعادة الاستهداف. لا تتبّع سلوكي عبر المواقع. لا بيع لأي بيانات تُجمَع عبر ملفات تعريف الارتباط.</p>
+<h2>إدارة ملفات تعريف الارتباط</h2>
+<p>لأننا نستخدم حاليًا فقط ملفات ضرورية ووظيفية، لا يلزم شريط موافقة إلزامي — لكن يمكنك حظر أو حذف ملفات تعريف الارتباط من متصفّحك (قد يعطّل ذلك تسجيل الدخول والنماذج)، وتبديل اللغة أو السمة في أي وقت. وإذا أضفنا لاحقًا ملفات تحليلات أو تسويق، فسنضيف آلية موافقة ونحدّث هذه الصفحة قبل تشغيلها.</p>
+<h2>التواصل</h2>
+<p>أسئلة حول ملفات تعريف الارتباط: <a href="mailto:privacy@mostakhles.ai" class="lp-link">privacy@mostakhles.ai</a> أو <a href="/contact" class="lp-link">نموذج التواصل</a>.</p>
+"""
+
+_COOKIES_HTML_EN = """
+<h2>What are cookies?</h2>
+<p>Cookies are small text files a website stores in your browser. "Local storage" is a related feature that keeps small settings on your device. We use both only as described here.</p>
+<h2>What we use</h2>
+<p>We currently use only strictly necessary and functional cookies and storage. We do not use advertising cookies, and we do not run third-party marketing or behavioural-analytics trackers.</p>
+<ul>
+<li><b>Session cookie</b> (strictly necessary) — keeps you logged in. Up to ~30 days or until logout.</li>
+<li><b>CSRF token</b> (strictly necessary) — protects against cross-site request forgery. Session.</li>
+<li><b>Language preference</b> (functional) — remembers your Arabic/English choice. ~1 year.</li>
+<li><b>Theme preference</b> (functional, browser local storage) — remembers light/dark mode. Until you clear it.</li>
+<li><b>Cloudflare Turnstile</b> (strictly necessary, security) — bot and abuse protection on forms. Short-lived.</li>
+</ul>
+<h2>Third-party requests</h2>
+<p>Some pages load resources from third parties, which may let that third party receive your IP address and basic request data:</p>
+<ul>
+<li><b>Cloudflare Turnstile</b> — bot protection on forms; processes IP and browser signals.</li>
+<li><b>Google Fonts</b> — some pages load fonts from Google's font service, so your browser makes a request to Google to fetch fonts.</li>
+<li><b>Sentry</b> — our error-monitoring service; captures technical diagnostics if something breaks. It is not an advertising or tracking tool.</li>
+</ul>
+<h2>What we do not use</h2>
+<p>No advertising or retargeting cookies. No cross-site behavioural tracking. No selling of any data collected via cookies.</p>
+<h2>Managing cookies</h2>
+<p>Because we currently use only strictly-necessary and functional cookies and storage, no consent banner is strictly required — but you can still block or delete cookies in your browser (this may break login and forms), and switch language or theme back at any time. If we later add analytics or marketing cookies, we will add a consent mechanism and update this page before those cookies run.</p>
+<h2>Contact</h2>
+<p>Questions about cookies: <a href="mailto:privacy@mostakhles.ai" class="lp-link">privacy@mostakhles.ai</a> or the <a href="/contact" class="lp-link">contact form</a>.</p>
+"""
+
+# ── Data Processing Addendum (draft) — controller↔processor, code-grounded ────
+_DPA_DRAFT_BANNER = (
+    'border:1px solid #e6c073;background:rgba(240,198,116,.12);'
+    'border-radius:8px;padding:12px 16px;margin-bottom:20px'
+)
+_DPA_HTML_AR = f"""
+<div style="{_DPA_DRAFT_BANNER}"><b>مسودّة — الإصدار 1.0.</b> هذا الملحق مُقدَّم للمراجعة، ويُعتمَد ويُوقَّع عند الطلب بعد اكتمال تسجيل الشركة. للحصول على نسخة موقّعة، تواصل عبر <a href="mailto:privacy@mostakhles.ai" class="lp-link">privacy@mostakhles.ai</a>.</div>
+<h2>الأطراف والأدوار</h2>
+<p>يشكّل هذا الملحق جزءًا من الاتفاق بين العميل (بصفته «المتحكّم» في البيانات) ومُستخلِص (المُشغَّل بواسطة <strong>[بانتظار التأكيد: الكيان القانوني]</strong>، بصفته «المعالج»)، فيما يخصّ استخدام العميل لخدمة مُستخلِص. وعند تعارضه مع شروط الاستخدام في مسائل حماية البيانات، تكون الغلبة لهذا الملحق. العميل هو المتحكّم في البيانات الشخصية الواردة في المستندات التي يرسلها؛ ومُستخلِص هو المعالج الذي يعالجها فقط لتقديم الخدمة ووفق تعليمات العميل الموثّقة.</p>
+<h2>التزاماتنا كمعالج</h2>
+<ul>
+<li>معالجة البيانات فقط وفق تعليمات العميل الموثّقة، ما لم يقتضِ القانون خلاف ذلك.</li>
+<li>إلزام الموظفين المخوّلين بالسرّية.</li>
+<li>تطبيق تدابير أمنية تقنية وتنظيمية مناسبة (الملحق II).</li>
+<li>عدم استخدام البيانات لتدريب أي نموذج، وعدم بيعها أو مشاركتها إلا عبر المعالجين الفرعيين في الملحق III.</li>
+<li>المساعدة في طلبات أصحاب البيانات، والإخطار بالانتهاكات، وتقييمات الأثر.</li>
+<li>حذف البيانات أو إعادتها عند الإنهاء، إلا حيث يقتضي القانون الاحتفاظ بها.</li>
+</ul>
+<h2>المعالجون الفرعيون</h2>
+<p>يمنح العميل تفويضًا عامًا لمُستخلِص للاستعانة بالمعالجين الفرعيين في الملحق III، بحماية لا تقلّ عن هذا الملحق. ونُشعِر العميل قبل إضافة أو استبدال أي معالج فرعي يعالج بياناته الشخصية، مع مهلة معقولة للاعتراض.</p>
+<h2>النقل الدولي للبيانات</h2>
+<p>تنقل الخدمة محتوى المستندات إلى معالجنا الفرعي للذكاء الاصطناعي (Google Gemini)، وقد تشمل مزوّدي استضافة وبريد ودفع يعالجون البيانات خارج بلد العميل. نعتمد على ضمانات هؤلاء المزوّدين ونتعامل مع النقل بما يتماشى مع مبادئ قوانين حماية البيانات المعمول بها. والعميل، بصفته المتحكّم، مسؤول عن التأكّد من ملاءمة عمليات النقل لوضعه.</p>
+<h2>التصحيحات عبر موصّل أودو</h2>
+<p>يتضمّن موصّل أودو ميزة (يمكن إيقافها، ومُفعَّلة افتراضيًا) ترسل التصحيحات على مستوى الحقل (اسم الحقل، القيمة الأصلية، القيمة المصحَّحة، معرّف الاستخراج) إلى مُستخلِص لتحسين الاستخراج. وحيث قد تتضمّن التصحيحات بيانات شخصية، يقرّر العميل إبقاءها مفعّلة (أودو ← الإعدادات ← مُستخلِص ← «مشاركة التصحيحات»). وعند إيقافها، لا يُرسَل شيء.</p>
+<h2>طلبات أصحاب البيانات والانتهاكات</h2>
+<p>نقدّم مساعدة معقولة لطلبات أصحاب البيانات ونحيل أي طلب نتلقّاه مباشرةً إلى العميل. ونُخطِر العميل دون تأخير غير مبرَّر بعد علمنا بأي انتهاك يخصّ بيانات العميل. إخطارات الانتهاك إلى: <a href="mailto:privacy@mostakhles.ai" class="lp-link">privacy@mostakhles.ai</a>.</p>
+<h2>الحذف والإعادة والتدقيق</h2>
+<p>عند الإنهاء، نحذف بيانات العميل الشخصية أو نعيدها (باستثناء السجلات التي يُلزم القانون بحفظها). ولأن الملفات الأصلية لا تُخزَّن افتراضيًا، تتكوّن هذه البيانات أساسًا من النتائج المُستخرَجة والقوالب المحفوظة والتصحيحات المشتركة؛ وحذف الحساب يزيلها. وندعم عمليات التدقيق بإشعار مسبق معقول، بما لا يزيد عن مرة سنويًا ما لم تقتضِ جهة رقابية خلاف ذلك.</p>
+<h2>المسؤولية والقانون الحاكم</h2>
+<p>تخضع مسؤولية كل طرف بموجب هذا الملحق للحدود الواردة في شروط الاستخدام. ويخضع هذا الملحق للقانون المذكور في الشروط (<strong>[بانتظار التأكيد: القانون الحاكم]</strong>).</p>
+<h2>الملحق I — تفاصيل المعالجة</h2>
+<p><b>الموضوع:</b> خدمات استخراج بيانات المستندات بالذكاء الاصطناعي. <b>المدة:</b> مدة استخدام العميل للخدمة. <b>الطبيعة والغرض:</b> استقبال المستندات، واستخراج البيانات المنظَّمة عبر معالج فرعي للذكاء الاصطناعي، وإرجاع النتائج، وتخزين النتائج والقوالب والتصحيحات في حساب العميل. <b>البيانات الشخصية</b> (حسب مستندات العميل) قد تشمل الأسماء وأرقام الهوية أو جواز السفر والعناوين وبيانات التواصل وبيانات البنك/الآيبان وأرقام الضرائب والسجل التجاري ومعلومات صحية مثل الوصفات الطبية. <b>أصحاب البيانات</b> حسب تحديد العميل. وقد توجد بيانات من فئات خاصة؛ والعميل مسؤول عن ضمان أساس قانوني لمعالجتها.</p>
+<h2>الملحق II — التدابير الأمنية</h2>
+<p>المطبَّق اليوم (موصوف بصدق، وليس شهادة): تشفير TLS 1.3 أثناء النقل؛ عدم تخزين المستندات الأصلية بعد المعالجة افتراضيًا؛ كلمات مرور مُجزَّأة ومملّحة؛ مفاتيح API محدّدة النطاق وقابلة للإلغاء؛ وصول مقصور على ما يلزم لتشغيل الخدمة ودعمها؛ مراقبة الأخطاء وسجلات تُدوَّر دوريًا؛ حماية من الروبوتات في النماذج. غير المطبَّق: شهادة SOC 2 أو ISO 27001، أو ضمانات تعاقدية لموقع البيانات، أو بنية تحتية مخصّصة، أو التزام تعاقدي بمدة التشغيل.</p>
+<h2>الملحق III — المعالجون الفرعيون المعتمَدون</h2>
+<ul>
+<li><b>Google (Gemini API)</b> — استدلال الذكاء الاصطناعي على محتوى المستندات.</li>
+<li><b>Paymob</b> — معالجة المدفوعات (مصر / الجنيه).</li>
+<li><b>PayPal</b> — معالجة المدفوعات (دوليًا).</li>
+<li><b>مزوّد الاستضافة لدينا</b> — تشغيل الخدمة وتخزين بيانات الحساب.</li>
+<li><b>مزوّد البريد لدينا</b> — رسائل الحساب والفوترة.</li>
+<li><b>Sentry</b> — مراقبة الأخطاء والتشخيصات التقنية.</li>
+<li><b>Cloudflare (Turnstile)</b> — حماية النماذج من الروبوتات.</li>
+</ul>
+<p>يُخطَّط لإضافة PayTabs كمعالج فرعي إضافي للمدفوعات؛ وسيُحدَّث هذا الملحق قبل تفعيله.</p>
+"""
+
+_DPA_HTML_EN = f"""
+<div style="{_DPA_DRAFT_BANNER}"><b>Draft — version 1.0.</b> This Data Processing Addendum is provided for review. It is finalised and signed on request once company registration completes. To execute a signed copy, contact <a href="mailto:privacy@mostakhles.ai" class="lp-link">privacy@mostakhles.ai</a>.</div>
+<h2>Parties and roles</h2>
+<p>This DPA forms part of the agreement between the customer (the "Customer", acting as data controller) and Mostakhles (operated by <strong>[to be confirmed: legal entity]</strong>, acting as data processor), for the Customer's use of the Mostakhles service. Where it conflicts with the Terms of Service on data-protection matters, this DPA prevails. The Customer is the controller of personal data contained in the documents it submits; Mostakhles is the processor and processes that data only to provide the service and on the Customer's documented instructions.</p>
+<h2>Our obligations as processor</h2>
+<ul>
+<li>Process personal data only on the Customer's documented instructions, unless required by law.</li>
+<li>Bind authorised staff to confidentiality.</li>
+<li>Apply appropriate technical and organisational security measures (Annex II).</li>
+<li>Never use the data to train any AI model, and not sell or share it except via the sub-processors in Annex III.</li>
+<li>Assist with data-subject requests, breach notification, and impact assessments.</li>
+<li>Delete or return the data on termination, except where retention is required by law.</li>
+</ul>
+<h2>Sub-processors</h2>
+<p>The Customer gives general authorisation for Mostakhles to engage the sub-processors in Annex III, under protections no less strict than this DPA. We give notice before adding or replacing any sub-processor that processes Customer personal data, allowing a reasonable period to object.</p>
+<h2>International transfers</h2>
+<p>The service transmits document content to our AI sub-processor (Google Gemini) and may involve hosting, email, and payment providers that process data outside the Customer's country. We rely on those providers' safeguards and handle transfers in line with the principles of the applicable data-protection laws. The Customer, as controller, is responsible for confirming these transfers suit its own compliance posture.</p>
+<h2>Corrections via the Odoo connector</h2>
+<p>The Odoo connector includes an opt-out feature (on by default) that sends field-level corrections (field name, original value, corrected value, extraction id) back to Mostakhles to improve extraction. Where corrections may contain personal data, the Customer decides whether to leave it on (Odoo → Settings → Mostakhles → "Share corrections"). When disabled, nothing is sent.</p>
+<h2>Data-subject requests and breaches</h2>
+<p>We provide reasonable assistance for data-subject requests and forward any we receive directly to the Customer. We notify the Customer without undue delay after becoming aware of a personal data breach affecting Customer personal data. Breach notices to: <a href="mailto:privacy@mostakhles.ai" class="lp-link">privacy@mostakhles.ai</a>.</p>
+<h2>Deletion, return and audit</h2>
+<p>On termination, we delete or return Customer personal data (except records legally required to be kept). Because source files are not stored by default, this data is mainly extraction results, saved templates, and shared corrections; deleting the account removes these. We support audits on reasonable prior notice, no more than once a year unless a supervisory authority requires otherwise.</p>
+<h2>Liability and governing law</h2>
+<p>Each party's liability under this DPA is subject to the limitations in the Terms of Service. This DPA is governed by the law stated in the Terms (<strong>[to be confirmed: governing law]</strong>).</p>
+<h2>Annex I — Details of processing</h2>
+<p><b>Subject matter:</b> AI document-extraction services. <b>Duration:</b> the term of the Customer's use. <b>Nature and purpose:</b> receiving documents, extracting structured data via an AI sub-processor, returning results, and storing results, templates, and corrections in the Customer's account. <b>Personal data</b> (as determined by the Customer's documents) may include names, national ID or passport numbers, addresses, contact details, bank/IBAN details, tax and commercial-registration numbers, and health information such as prescriptions. <b>Data subjects</b> are as determined by the Customer — its customers, employees, patients, suppliers, and counterparties. Special-category data may be present; the Customer is responsible for ensuring a lawful basis.</p>
+<h2>Annex II — Security measures</h2>
+<p>In place today (described honestly, not a certification): TLS 1.3 in transit; source documents not stored after processing by default; salted-hash passwords; scoped, revocable API keys; access limited to what is needed to run and support the service; error monitoring and rotated logs; bot and abuse protection on forms. Not in place: SOC 2 or ISO 27001 certification, contractual data-residency guarantees, dedicated single-tenant infrastructure, or a formal uptime SLA.</p>
+<h2>Annex III — Approved sub-processors</h2>
+<ul>
+<li><b>Google (Gemini API)</b> — AI inference on document content.</li>
+<li><b>Paymob</b> — payment processing (Egypt / EGP).</li>
+<li><b>PayPal</b> — payment processing (international).</li>
+<li><b>Our hosting provider</b> — running the service and storing account data.</li>
+<li><b>Our email provider</b> — account and billing emails.</li>
+<li><b>Sentry</b> — error monitoring and technical diagnostics.</li>
+<li><b>Cloudflare (Turnstile)</b> — bot protection on forms.</li>
+</ul>
+<p>PayTabs is planned as an additional payment sub-processor; this annex will be updated before it goes live.</p>
+"""
+
 
 @app.get("/privacy", response_class=HTMLResponse)
 def privacy_page(request: Request):
@@ -450,6 +611,26 @@ def terms_page(request: Request):
     body = _TERMS_HTML_EN if lang == "en" else _TERMS_HTML_AR
     return templates.TemplateResponse(request, "legal.html",
                                       _ctx(request, title=title, body=body))
+
+
+@app.get("/cookies", response_class=HTMLResponse)
+def cookies_page(request: Request):
+    lang = i18n.resolve_lang(request, None)
+    title = "Cookie Policy" if lang == "en" else "سياسة ملفات تعريف الارتباط"
+    body = _COOKIES_HTML_EN if lang == "en" else _COOKIES_HTML_AR
+    updated = "July 2026" if lang == "en" else "يوليو 2026"
+    return templates.TemplateResponse(request, "legal.html",
+                                      _ctx(request, title=title, body=body, updated=updated))
+
+
+@app.get("/dpa", response_class=HTMLResponse)
+def dpa_page(request: Request):
+    lang = i18n.resolve_lang(request, None)
+    title = "Data Processing Addendum" if lang == "en" else "ملحق معالجة البيانات"
+    body = _DPA_HTML_EN if lang == "en" else _DPA_HTML_AR
+    updated = "Draft v1.0" if lang == "en" else "مسودّة 1.0"
+    return templates.TemplateResponse(request, "legal.html",
+                                      _ctx(request, title=title, body=body, updated=updated))
 
 
 @app.get("/about", response_class=HTMLResponse)
@@ -499,7 +680,7 @@ def seo_bank_statement(request: Request): return _seo_response("arabic-bank-stat
 def sitemap_xml(request: Request):
     """Sitemap of every indexable public URL — landing + SEO sub-landings."""
     base = f"{request.url.scheme}://{request.url.netloc}"
-    urls = ["/", "/about", "/contact", "/privacy", "/docs", "/tools"]
+    urls = ["/", "/pricing", "/about", "/contact", "/privacy", "/terms", "/cookies", "/dpa", "/docs", "/tools"]
     urls += [f"/{p.slug}" for p in _seo_pages.all_pages()]
     items = "".join(
         f"<url><loc>{base}{u}</loc>"
@@ -589,6 +770,53 @@ def contact_submit(
     return templates.TemplateResponse(request, "contact.html", _ctx(request, msg=msg))
 
 
+@app.post("/v1/contact")
+def contact_submit_json(request: Request, payload: dict = Body(...)):
+    """JSON contact endpoint for the React marketing SPA (served same-origin
+    behind nginx; /v1/* is proxied here). Mirrors the HTML /contact handler —
+    same validation and admin email fan-out — but returns JSON so the SPA can
+    show its own success state without a page reload. Public, no auth. Failures
+    to email degrade gracefully; the caller still sees success so a transient
+    SMTP outage doesn't break the funnel."""
+    req_lang = str(payload.get("lang") or "").strip().lower()
+    # Honor the SPA's active language when it sends one; otherwise fall back to
+    # the usual query/cookie/browser resolution.
+    lang = req_lang if req_lang in ("en", "ar") else i18n.resolve_lang(request, None)
+    en = lang == "en"
+
+    name = str(payload.get("name") or "").strip()[:200]
+    email = str(payload.get("email") or "").strip()[:200]
+    company = str(payload.get("company") or "").strip()[:200]
+    topic = str(payload.get("topic") or "web").strip()[:50]
+    message = str(payload.get("message") or "").strip()[:5000]
+    # Honeypot: real users never fill a hidden field; bots do.
+    if str(payload.get("website") or payload.get("hp") or "").strip():
+        return {"ok": True}
+    if not name or "@" not in email or len(message) < 3:
+        return {
+            "ok": False,
+            "error": "Please fill in all required fields." if en
+            else "يرجى تعبئة الحقول المطلوبة.",
+        }
+
+    admins = list(auth.ADMIN_EMAILS) or ["support@mostakhles.ai"]
+    body_text = (
+        f"Topic: {topic}\nName: {name}\nEmail: {email}\nCompany: {company}\n\n"
+        f"---\n{message}\n"
+    )
+    for admin in admins:
+        try:
+            emailer.send_email(
+                to=admin,
+                subject=f"[Mostakhles contact · {topic}] {name}",
+                body_text=body_text,
+            )
+        except Exception as e:  # noqa: BLE001
+            log.warning("contact form (json) email to %s failed: %s", admin, e)
+
+    return {"ok": True}
+
+
 @app.get("/docs", response_class=HTMLResponse)
 def api_docs(request: Request):
     return templates.TemplateResponse(request, "docs.html", _ctx(request))
@@ -631,17 +859,22 @@ def _current_user(session, request: Request):
 def _record_history(session, user, kind, document_type, data, charged,
                     duration_ms=None, layout=None, output_lang=None):
     """Best-effort log of a successful extraction for the dashboard.
-    `data` is stored as JSONB (Postgres) — pass a dict/list, not a JSON string."""
+    `data` is stored as JSONB (Postgres) — pass a dict/list, not a JSON string.
+    Returns the new History row id (or None on failure) so callers can hand the
+    `hid` back to the client — needed for the correction/feedback loop."""
     try:
-        session.add(models.History(
+        h = models.History(
             user_id=user.id, kind=kind, document_type=document_type,
             charged=charged, duration_ms=duration_ms,
             layout=layout, output_lang=output_lang,
             result_json=data,
-        ))
+        )
+        session.add(h)
         session.commit()
+        return h.id
     except Exception:  # noqa: BLE001
         session.rollback()
+        return None
 
 
 def _http_error_for(e: Exception, prefix: str) -> HTTPException:
@@ -1580,10 +1813,13 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
 
         _dur_ms = int((_time.time() - _t0) * 1000)
         auth.increment_usage(session, api_key, count=cost)
-        _record_history(session, api_key.user, slug, out.get("document_type"),
-                        out.get("data") or out.get("text") or out, cost, duration_ms=_dur_ms)
+        hid = _record_history(session, api_key.user, slug, out.get("document_type"),
+                              out.get("data") or out.get("text") or out, cost, duration_ms=_dur_ms)
         used, limit, _ = auth.get_usage(session, api_key)
         out["usage"] = {"used": used, "limit": limit, "remaining": max(0, limit - used), "charged": cost}
+        # `hid` lets a client (e.g. the Odoo connector) POST field corrections
+        # back to /v1/extract/correct/{hid} — the human-in-the-loop feedback loop.
+        out["hid"] = hid
         return out
     finally:
         session.close()
@@ -2029,19 +2265,21 @@ def set_webhook(request: Request, webhook_url: str = Form(""), csrf_token: str =
 
 # ---------- Corrections (inline edit from the web app) ----------
 @app.post("/v1/extract/correct/{hid}")
-def save_correction(hid: int, request: Request, payload: dict = Body(...)):
+def save_correction(hid: int, request: Request, payload: dict = Body(...),
+                    x_api_key: str = Header(None)):
     """Persist a user's inline correction to History.corrected_json.
-    Accepts {field, value}. Web-only (session-authed). Builds up a per-row dict of
-    user overrides that can be used for prompt-tuning + future history exports."""
+    Accepts {field, value}. Authenticated by session cookie (web inline-edit) OR
+    x-api-key (programmatic clients, e.g. the Odoo connector's correction loop).
+    Builds up a per-row dict of user overrides — the before/after signal is
+    recoverable by diffing corrected_json against result_json for prompt-tuning."""
     field = (payload.get("field") or "").strip()
     value = payload.get("value")
     if not field:
         raise HTTPException(400, "field is required")
     session = db.SessionLocal()
     try:
-        user = _current_user(session, request)
-        if not user:
-            raise HTTPException(401, "login required")
+        # _resolve_caller handles both api-key and (CSRF-checked) session auth.
+        user = _resolve_caller(session, x_api_key, request).user
         h = session.get(models.History, hid)
         if not h or h.user_id != user.id:
             raise HTTPException(404, "not found")
@@ -2341,9 +2579,9 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
 
         # Only meter successful extractions.
         auth.increment_usage(session, api_key, count=cost)
-        _record_history(session, api_key.user, mode, document_type, data, cost,
-                        duration_ms=_dur_ms, layout=layout,
-                        output_lang=output_lang if output_lang != "preserve" else None)
+        hid = _record_history(session, api_key.user, mode, document_type, data, cost,
+                              duration_ms=_dur_ms, layout=layout,
+                              output_lang=output_lang if output_lang != "preserve" else None)
         used, limit, _ = auth.get_usage(session, api_key)
         usage = {"used": used, "limit": limit, "remaining": max(0, limit - used), "charged": cost}
         from datetime import datetime as _dt
@@ -2361,6 +2599,9 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
             extracted_at_iso=_dt.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
         body["mode"] = mode  # back-compat: extraction strategy ("auto"/"schema"/"auto_multi")
+        # `hid` lets a client (e.g. the Odoo connector) POST field corrections
+        # back to /v1/extract/correct/{hid} — the human-in-the-loop feedback loop.
+        body["hid"] = hid
         return body
     finally:
         session.close()

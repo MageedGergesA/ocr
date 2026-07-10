@@ -14,7 +14,7 @@
   })();
   </script>
   <title>{{ t('extract.title') }} — مُستخلِص</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v={{ asset_v() }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -239,11 +239,22 @@
           </div>
         </div>
 
-        <!-- RIGHT: holder for in-wizard quota (kept for compat with credits/usage JS) -->
+        <!-- RIGHT: quota meter + results pane -->
         <div class="panel" id="quotaPanel">
-          <label class="step">{{ 'Quota' if lang == 'en' else 'الرصيد' }}</label>
-          <div id="quota" class="quota-line"></div>
-          <div class="results-empty">{{ 'Extracted fields will appear in the result page once you click Extract.' if lang == 'en' else 'ستظهر الحقول المستخرجة في صفحة النتيجة بعد الضغط على «استخراج».' }}</div>
+
+          <!-- ── Credit meter ── -->
+          <div class="qp-meter">
+            <span class="qp-label">{{ 'Credits this month' if lang == 'en' else 'رصيد الشهر' }}</span>
+            <div id="quota" class="qp-value quota-line"></div>
+            <div class="qp-bar-track"><div class="qp-bar-fill" id="quotaBarFill"></div></div>
+          </div>
+
+          <!-- Empty state — replaced by results after extraction -->
+          <div class="qp-empty-state">
+            <i data-lucide="file-output"></i>
+            <p>{{ 'Extracted fields will appear here after you click Extract.' if lang == 'en' else 'ستظهر الحقول المستخرجة هنا بعد الضغط على «استخراج».' }}</p>
+          </div>
+
         </div>
 
       </div>
@@ -1237,9 +1248,17 @@
     function updateQuota(u) {
       if (!u) return;
       curRemaining = u.remaining; curLimit = u.limit;
-      const charged = u.charged ? ` (استهلكت ${u.charged} نقطة)` : '';
+      const charged = u.charged ? ` (استهلكت ${u.charged})` : '';
       document.getElementById('quota').textContent =
-        `تبقّى لك ${u.remaining} من ${u.limit} نقطة هذا الشهر${charged}`;
+        `تبقّى لك ${u.remaining} من ${u.limit} نقطة${charged}`;
+      const barFill = document.getElementById('quotaBarFill');
+      if (barFill && u.limit > 0) {
+        const usedPct = ((u.limit - u.remaining) / u.limit) * 100;
+        barFill.style.width = Math.min(usedPct, 100) + '%';
+        const ratio = u.remaining / u.limit;
+        barFill.classList.toggle('low', ratio <= 0.20 && ratio > 0.05);
+        barFill.classList.toggle('critical', ratio <= 0.05);
+      }
       renderCredits();
     }
 
