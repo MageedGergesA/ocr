@@ -324,6 +324,11 @@ class IdempotencyKey(Base):
     response_json = Column(JsonCol)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    # The replay guarantee depends on (user_id, key) being unique — enforce it in
+    # the schema, not just app logic, so two concurrent requests with the same key
+    # can't both insert (the loser IntegrityErrors and replays the winner's row).
+    __table_args__ = (UniqueConstraint("user_id", "key", name="uq_idempotency_user_key"),)
+
 
 class CorrectionMemory(Base):
     """Aggregated reviewer corrections — the learning store. One row per

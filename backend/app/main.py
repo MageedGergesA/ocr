@@ -372,13 +372,13 @@ def chat_extract(request: Request, file: UploadFile = File(...),
     try:
         api_key = _resolve_caller(session, x_api_key, request)
         cost = pages * auth.credits_for(hard)
-        auth.enforce_limit(session, api_key, needed=cost)
+        auth.reserve_credits(session, api_key, needed=cost)  # atomic charge
         try:
             text = extractor.run_text(data_bytes, file.content_type,
                                       SERVICES["arabic-ocr"]["prompt"], hard)
         except Exception as e:  # noqa: BLE001
+            auth.refund_credits(session, api_key, cost)  # don't bill failures
             raise _http_error_for(e, "extraction failed")
-        auth.increment_usage(session, api_key, count=cost)
         used, limit, _ = auth.get_usage(session, api_key)
         return {"text": text, "usage": {"used": used, "limit": limit,
                 "remaining": max(0, limit - used), "charged": cost}}
@@ -396,12 +396,12 @@ def chat_answer(request: Request, payload: dict = Body(...), x_api_key: str = He
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
-        auth.enforce_limit(session, api_key, needed=1)
+        auth.reserve_credits(session, api_key, needed=1)  # atomic charge
         try:
             answer = extractor.chat(text, question, history)
         except Exception as e:  # noqa: BLE001
+            auth.refund_credits(session, api_key, 1)  # don't bill failures
             raise _http_error_for(e, "chat failed")
-        auth.increment_usage(session, api_key, count=1)
         used, limit, _ = auth.get_usage(session, api_key)
         return {"answer": answer, "usage": {"used": used, "limit": limit,
                 "remaining": max(0, limit - used), "charged": 1}}
@@ -2446,7 +2446,7 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
     try:
         api_key = _resolve_caller(session, x_api_key, request)
         cost = auth.credits_for(hard)
-        auth.enforce_limit(session, api_key, needed=cost)
+        auth.reserve_credits(session, api_key, needed=cost)  # atomic charge
         ct = file.content_type  # `hard` comes from the request, default True
         import time as _time
         _t0 = _time.time()
@@ -2488,18 +2488,18 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
             elif kind == "searchable_pdf":
                 text = extractor.run_text(data_bytes, ct, SERVICES["arabic-ocr"]["prompt"], hard)
                 pdf, media, fname = exports.image_to_searchable_pdf(data_bytes, text)
-                auth.increment_usage(session, api_key, count=cost)
                 return Response(content=pdf, media_type=media,
                                 headers={"Content-Disposition": f'attachment; filename="{fname}"'})
             else:
+                auth.refund_credits(session, api_key, cost)  # nothing produced
                 raise HTTPException(400, "unsupported service kind")
         except HTTPException:
             raise
         except Exception as e:  # noqa: BLE001
+            auth.refund_credits(session, api_key, cost)  # don't bill failures
             raise _http_error_for(e, "service failed")
 
         _dur_ms = int((_time.time() - _t0) * 1000)
-        auth.increment_usage(session, api_key, count=cost)
         hid = _record_history(session, api_key.user, slug, out.get("document_type"),
                               out.get("data") or out.get("text") or out, cost, duration_ms=_dur_ms)
         used, limit, _ = auth.get_usage(session, api_key)
@@ -3233,14 +3233,14 @@ def compare_docs(request: Request, file_a: UploadFile = File(...), file_b: Uploa
     try:
         api_key = _resolve_caller(session, x_api_key, request)
         cost = 2 * auth.credits_for(hard)
-        auth.enforce_limit(session, api_key, needed=cost)
+        auth.reserve_credits(session, api_key, needed=cost)  # atomic charge
         try:
             ta = extractor.run_text(a, file_a.content_type, SERVICES["arabic-ocr"]["prompt"], hard)
             tb = extractor.run_text(b, file_b.content_type, SERVICES["arabic-ocr"]["prompt"], hard)
             report = extractor.compare(ta, tb)
         except Exception as e:  # noqa: BLE001
+            auth.refund_credits(session, api_key, cost)  # don't bill failures
             raise _http_error_for(e, "compare failed")
-        auth.increment_usage(session, api_key, count=cost)
         used, limit, _ = auth.get_usage(session, api_key)
         return {"report": report, "usage": {"used": used, "limit": limit,
                 "remaining": max(0, limit - used), "charged": cost}}
@@ -3291,7 +3291,8 @@ def demo_extract_endpoint(request: Request, file: UploadFile = File(...)):
 
     session = db.SessionLocal()
     try:
-        demo_key = session.query(models.ApiKey).filter_by(key=auth.DEMO_API_KEY, active=True).first()
+        demo_key = session.query(models.ApiKey).filter_by(
+            key_hash=models.hash_api_key(auth.DEMO_API_KEY), active=True).first()
         if not demo_key:
             raise HTTPException(503, "demo not available — please sign up to try it")
 
@@ -3301,15 +3302,15 @@ def demo_extract_endpoint(request: Request, file: UploadFile = File(...)):
         if n_pages > 5:
             raise HTTPException(413, "demo PDF too long (max 5 pages). Sign up for full extractions.")
         cost = auth.credits_for(False) * n_pages  # False → fast tier
-        auth.enforce_limit(session, demo_key, needed=cost)
+        auth.reserve_credits(session, demo_key, needed=cost)  # atomic charge
 
         try:
             result = extractor.extract_auto(data_bytes, file.content_type, hard=False,
                                             output_lang="preserve")
         except Exception as e:  # noqa: BLE001
+            auth.refund_credits(session, demo_key, cost)  # don't bill failures
             raise _http_error_for(e, "extraction failed")
 
-        auth.increment_usage(session, demo_key, count=cost)
         auth.rate_limit_record(f"demo:burst:{client_ip}")
         auth.rate_limit_record(f"demo:month:{client_ip}")
 
@@ -3426,7 +3427,10 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
             if n_pages > hard_max:
                 raise HTTPException(413, f"this PDF has {n_pages} pages; the limit is {hard_max}. "
                                          "Split it into smaller files.")
-            auth.enforce_limit(session, api_key, needed=n_pages * auth.credits_for(hard))
+            # Reserve for ALL pages upfront (atomic). The background job settles by
+            # refunding pages that don't complete, so the user is billed only for
+            # completed pages while overspend is impossible.
+            auth.reserve_credits(session, api_key, needed=n_pages * auth.credits_for(hard))
             job_id = jobs.start_batch(image_bytes, hard, api_key.id, n_pages,
                                       owner_user_id=api_key.user_id)
             return {"mode": "batch", "job_id": job_id, "total_pages": n_pages, "status": "processing"}
@@ -3438,7 +3442,7 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
         if visual:
             hard = True
         cost = auth.credits_for(hard) * n_files + (3 if visual else 0)
-        auth.enforce_limit(session, api_key, needed=cost)
+        auth.reserve_credits(session, api_key, needed=cost)  # atomic charge
         import time as _time
         _t0 = _time.time()
         layout = None
@@ -3482,6 +3486,7 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
                     data["_layout_html"] = _layout_html
                 mode = "auto"
         except Exception as e:  # noqa: BLE001 — surface model/parse errors; don't bill failures
+            auth.refund_credits(session, api_key, cost)  # release the reservation
             _he = _http_error_for(e, "extraction failed")
             _log_ops(session, api_key.user_id, mode, "error",
                      latency_ms=int((_time.time() - _t0) * 1000),
@@ -3500,8 +3505,8 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
             _learned_changes = []
         _learned_n = len(_learned_changes)
 
-        # Only meter successful extractions.
-        auth.increment_usage(session, api_key, count=cost)
+        # Credits were reserved atomically before the model call (and refunded on
+        # failure), so a successful extraction is already charged — no increment here.
         hid = _record_history(session, api_key.user, mode, document_type, data, cost,
                               duration_ms=_dur_ms, layout=layout,
                               output_lang=output_lang if output_lang != "preserve" else None)

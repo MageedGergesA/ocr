@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 import requests
 from fastapi import HTTPException
+from sqlalchemy import text as _sql_text
 from sqlalchemy.orm import Session
 
 from app import models
@@ -129,7 +130,9 @@ def get_usage(db: Session, api_key: models.ApiKey):
 
 
 def enforce_limit(db: Session, api_key: models.ApiKey, needed: int = 1) -> None:
-    """Raise 429 if this request (which costs `needed` units) would exceed quota."""
+    """Advisory pre-check only. Raise 429 if this request would obviously exceed
+    quota. NOT the authoritative gate — `reserve_credits` is (it is atomic). Kept
+    for early, cheap rejection before expensive work."""
     used, limit, _ = get_usage(db, api_key)
     if used + needed > limit:
         raise HTTPException(
@@ -139,15 +142,97 @@ def enforce_limit(db: Session, api_key: models.ApiKey, needed: int = 1) -> None:
         )
 
 
-def increment_usage(db: Session, api_key: models.ApiKey, count: int = 1) -> None:
+def _lock_or_create_usage(db: Session, api_key: models.ApiKey, period: str) -> models.Usage:
+    """Return the Usage row for (key, period) under a row lock, creating it if
+    absent. `with_for_update` serializes concurrent charges on PostgreSQL; on
+    SQLite the database-level write lock serializes commits, giving the same
+    no-overspend / no-lost-update guarantee."""
     row = (
         db.query(models.Usage)
-        .filter_by(api_key_id=api_key.id, period=current_period())
+        .filter_by(api_key_id=api_key.id, period=period)
+        .with_for_update()
         .first()
     )
     if row is None:
-        row = models.Usage(api_key_id=api_key.id, period=current_period(), count=0)
+        row = models.Usage(api_key_id=api_key.id, period=period, count=0)
         db.add(row)
+        db.flush()
+    return row
+
+
+def reserve_credits(db: Session, api_key: models.ApiKey, needed: int = 1) -> None:
+    """Atomically RESERVE `needed` credits for the current month, or raise 429.
+
+    Reservation *is* the charge — it happens BEFORE the expensive model call so a
+    rejected request never wastes one. A failed extraction must call
+    `refund_credits` to release the reservation (preserving 'don't bill failures').
+
+    Atomicity: the check+increment is a SINGLE conditional UPDATE
+    (`SET count = count + n WHERE count + n <= limit`). A per-statement write lock
+    (row lock on PostgreSQL, database write lock on SQLite) makes it atomic on both
+    engines, so two concurrent requests can never both spend the same remaining
+    credits — no overspend past the plan limit, no lost update, no negative balance.
+    """
+    if needed <= 0:
+        return
+    period = current_period()
+    limit = PLAN_LIMITS.get(api_key.user.plan, 30)
+    # Ensure the (key, period) row exists. UNIQUE(api_key_id, period) makes a
+    # concurrent duplicate insert fail harmlessly (we roll back and proceed).
+    exists = (db.query(models.Usage)
+              .filter_by(api_key_id=api_key.id, period=period).first())
+    if exists is None:
+        try:
+            db.add(models.Usage(api_key_id=api_key.id, period=period, count=0))
+            db.commit()
+        except Exception:  # noqa: BLE001 — someone created it concurrently
+            db.rollback()
+    # Atomic conditional charge: only succeeds while staying within the limit.
+    res = db.execute(
+        _sql_text(
+            "UPDATE usage SET count = count + :n "
+            "WHERE api_key_id = :k AND period = :p AND count + :n <= :lim"
+        ),
+        {"n": needed, "k": api_key.id, "p": period, "lim": limit},
+    )
+    db.commit()
+    if res.rowcount == 0:
+        used = (db.query(models.Usage.count)
+                .filter_by(api_key_id=api_key.id, period=period).scalar()) or 0
+        raise HTTPException(
+            429,
+            f"monthly limit reached ({used}/{limit} for plan '{api_key.user.plan}'); "
+            f"this request needs {needed}. Upgrade your plan or wait until next month.",
+        )
+
+
+def refund_credits(db: Session, api_key: models.ApiKey, amount: int = 1) -> None:
+    """Release a previously-reserved amount after a failed/partial extraction.
+    A single atomic UPDATE that floors the counter at 0 (never negative).
+    Best-effort — never raises into the request path."""
+    if amount <= 0:
+        return
+    period = current_period()
+    try:
+        db.execute(
+            _sql_text(
+                "UPDATE usage SET count = CASE WHEN count - :a < 0 THEN 0 "
+                "ELSE count - :a END WHERE api_key_id = :k AND period = :p"
+            ),
+            {"a": amount, "k": api_key.id, "p": period},
+        )
+        db.commit()
+    except Exception:  # noqa: BLE001
+        db.rollback()
+
+
+def increment_usage(db: Session, api_key: models.ApiKey, count: int = 1) -> None:
+    """Row-locked, additive charge (no limit check). Retained for callers that
+    settle AFTER work (e.g. legacy paths); `reserve_credits` is preferred. The
+    lock prevents the lost-update bug under concurrency."""
+    if count == 0:
+        return
+    row = _lock_or_create_usage(db, api_key, current_period())
     row.count += count
     db.commit()
 

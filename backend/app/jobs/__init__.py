@@ -124,20 +124,24 @@ def _deliver_webhook(
 def _persist_and_notify(
     job_id: str, results: list, success: int, hard: bool,
     api_key_id: int, terminal_status: str, error_msg: str | None,
+    total_pages: int,
 ) -> None:
     """Single persistence path used by BOTH the success and abort branches.
 
-    Whatever pages succeeded BEFORE we hit a budget/quota wall must still be
-    charged to the user, recorded in history, and delivered via webhook —
-    otherwise we silently lose work the customer paid Google credits for.
+    All `total_pages` credits were RESERVED atomically upfront when the batch was
+    accepted. Here we settle: refund the pages that did NOT succeed so the user is
+    billed only for completed pages (preserves 'don't bill failures') while
+    overspend was already impossible at reserve time.
     """
     db = SessionLocal()
     try:
         api_key = db.get(models.ApiKey, api_key_id)
         if not api_key:
             return
-        if success:
-            auth.increment_usage(db, api_key, count=success * auth.credits_for(hard))
+        unit = auth.credits_for(hard)
+        refund = max(0, total_pages - success) * unit
+        if refund:
+            auth.refund_credits(db, api_key, refund)
         user = api_key.user
         # History row reflects ACTUAL completed pages, not the original total.
         db.add(models.History(
@@ -158,7 +162,8 @@ def _persist_and_notify(
         db.close()
 
 
-def _run(job_id: str, pdf_bytes: bytes, hard: bool, api_key_id: int) -> None:
+def _run(job_id: str, pdf_bytes: bytes, hard: bool, api_key_id: int,
+         total_pages: int) -> None:
     results: list = []
     success = 0
     try:
@@ -171,7 +176,7 @@ def _run(job_id: str, pdf_bytes: bytes, hard: bool, api_key_id: int) -> None:
             _update(job_id, done_pages=i, pages=list(results))
         _persist_and_notify(
             job_id, results, success, hard, api_key_id,
-            terminal_status="completed", error_msg=None,
+            terminal_status="completed", error_msg=None, total_pages=total_pages,
         )
         _update(job_id, status="completed")
     except llm.GeminiBudgetExhausted as e:
@@ -179,18 +184,21 @@ def _run(job_id: str, pdf_bytes: bytes, hard: bool, api_key_id: int) -> None:
         # charged for completed pages, not the failed ones.
         msg = f"daily budget exhausted: {e}"
         _persist_and_notify(job_id, results, success, hard, api_key_id,
-                            terminal_status="partial_failed", error_msg=msg)
+                            terminal_status="partial_failed", error_msg=msg,
+                            total_pages=total_pages)
         _update(job_id, status="failed", error=msg, partial_success=success)
     except llm.GeminiDailyQuotaExhausted as e:
         msg = f"daily Gemini quota exhausted: {e}"
         _persist_and_notify(job_id, results, success, hard, api_key_id,
-                            terminal_status="partial_failed", error_msg=msg)
+                            terminal_status="partial_failed", error_msg=msg,
+                            total_pages=total_pages)
         _update(job_id, status="failed", error=msg, partial_success=success)
     except Exception as e:  # noqa: BLE001
         # Last-ditch: try to persist anything we did manage to extract.
         try:
             _persist_and_notify(job_id, results, success, hard, api_key_id,
-                                terminal_status="partial_failed", error_msg=str(e))
+                                terminal_status="partial_failed", error_msg=str(e),
+                                total_pages=total_pages)
         except Exception:  # noqa: BLE001
             pass
         _update(job_id, status="failed", error=str(e), partial_success=success)
@@ -208,6 +216,7 @@ def start_batch(pdf_bytes: bytes, hard: bool, api_key_id: int, total_pages: int,
                          "done_pages": 0, "pages": [], "error": None,
                          "owner_user_id": owner_user_id}
     threading.Thread(
-        target=_run, args=(job_id, pdf_bytes, hard, api_key_id), daemon=True,
+        target=_run, args=(job_id, pdf_bytes, hard, api_key_id, total_pages),
+        daemon=True,
     ).start()
     return job_id

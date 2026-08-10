@@ -117,6 +117,9 @@ def api_key_factory():
 
     s = db.SessionLocal()
     if created:
+        # Delete Usage first (FK -> api_keys) so a reused SQLite rowid can't let a
+        # later test inherit this key's monthly counter.
+        s.query(models.Usage).filter(models.Usage.api_key_id.in_(created)).delete(synchronize_session=False)
         s.query(models.ApiKey).filter(models.ApiKey.id.in_(created)).delete(synchronize_session=False)
         s.commit()
     s.close()
