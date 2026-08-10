@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     MAX_DAILY_GEMINI_USD: float = 50.0
     EST_COST_PER_CREDIT_USD: float = 0.0019
 
+    # Structured (JSON-Schema) model outputs. OFF by default — the legacy
+    # prompt+parse path stays the production default until the benchmark shows
+    # structured output improves reliability without regressing accuracy.
+    STRUCTURED_OUTPUT_ENABLED: bool = False
+
     # ---- Plan limits + pricing ----
     STRONG_UNITS: int = 8
     DEMO_MONTHLY_LIMIT: int = 2000
