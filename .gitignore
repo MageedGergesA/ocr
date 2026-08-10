@@ -9,3 +9,4 @@ test_docs/*
 
 # local eval/experiments — may contain real document data, never commit
 experiments/
+backend/benchmarks/results/

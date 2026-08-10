@@ -1,0 +1,97 @@
+{
+  "dataset_version": "mena_v0.1",
+  "provenance": "SYNTHETIC — authored by hand for the harness. No real customer documents, no real personal identities. Not statistically meaningful; a seed for the format only.",
+  "cases": [
+    {
+      "id": "eg_tax_invoice_synth_01",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "synthetic-json",
+      "pages": 1,
+      "difficulty": ["Arabic", "clean_scan", "currency"],
+      "pii": "none",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {"invoice_date": "date", "total": "amount", "currency": "currency", "supplier_tax_id": "id"},
+      "truth": {
+        "supplier_name": "شركة النور للتجارة",
+        "supplier_tax_id": "100200300",
+        "invoice_date": "2026-03-05",
+        "currency": "EGP",
+        "total": "1,450.00"
+      },
+      "input_ref": "cases/eg_tax_invoice_synth_01/input.txt",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_vat_invoice_synth_01",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "synthetic-json",
+      "pages": 1,
+      "difficulty": ["bilingual", "clean_scan", "currency", "line_items"],
+      "pii": "none",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {"invoice_date": "date", "total": "amount", "currency": "currency", "vat_number": "id"},
+      "truth": {
+        "supplier_name": "Al Waha Trading Co / شركة الواحة",
+        "vat_number": "310000000000003",
+        "invoice_date": "2026-02-14",
+        "currency": "SAR",
+        "total": "2,300.75"
+      },
+      "input_ref": "cases/sa_vat_invoice_synth_01/input.txt",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_tax_invoice_synth_01",
+      "country": "AE",
+      "language": "bilingual",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "synthetic-json",
+      "pages": 1,
+      "difficulty": ["bilingual", "phone_photo", "currency"],
+      "pii": "none",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {"invoice_date": "date", "total": "amount", "currency": "currency", "trn": "id"},
+      "truth": {
+        "supplier_name": "Gulf Star LLC",
+        "trn": "100123456700003",
+        "invoice_date": "2026-01-09",
+        "currency": "AED",
+        "total": "980.00"
+      },
+      "input_ref": "cases/ae_tax_invoice_synth_01/input.txt",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_receipt_synth_01",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "synthetic-json",
+      "pages": 1,
+      "difficulty": ["Arabic", "phone_photo", "Arabic_indic_digits"],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {"date": "date", "total": "amount", "currency": "currency"},
+      "truth": {
+        "merchant": "صيدلية الشفاء",
+        "date": "2026-04-01",
+        "currency": "EGP",
+        "total": "89.50"
+      },
+      "input_ref": "cases/eg_receipt_synth_01/input.txt",
+      "license": "internal-synthetic"
+    }
+  ]
+}

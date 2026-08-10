@@ -1,0 +1,33 @@
+{
+  "_comment": "SAMPLE replay predictions (hand-authored) to demonstrate the harness offline. NOT model output. Mix of correct/normalizable/wrong to exercise the metrics.",
+  "eg_tax_invoice_synth_01": {
+    "document_type": "tax_invoice",
+    "supplier_name": {"value": "شركة النور للتجارة", "confidence": 0.96},
+    "supplier_tax_id": {"value": "100 200 300", "confidence": 0.9},
+    "invoice_date": {"value": "05/03/2026", "confidence": 0.88},
+    "currency": {"value": "ج.م", "confidence": 0.7},
+    "total": {"value": "١٤٥٠٫٠٠", "confidence": 0.82}
+  },
+  "sa_vat_invoice_synth_01": {
+    "document_type": "vat_invoice",
+    "supplier_name": {"value": "Al Waha Trading Co / شركة الواحة", "confidence": 0.93},
+    "vat_number": {"value": "310000000000003", "confidence": 0.95},
+    "invoice_date": {"value": "2026-02-14", "confidence": 0.9},
+    "currency": {"value": "SAR", "confidence": 0.99},
+    "total": {"value": "2300.75", "confidence": 0.6}
+  },
+  "ae_tax_invoice_synth_01": {
+    "document_type": "receipt",
+    "supplier_name": {"value": "Gulf Star LLC", "confidence": 0.8},
+    "trn": {"value": "100123456700003", "confidence": 0.85},
+    "invoice_date": {"value": "2026-09-01", "confidence": 0.55},
+    "currency": {"value": "AED", "confidence": 0.9},
+    "total": {"value": "890.00", "confidence": 0.5}
+  },
+  "eg_receipt_synth_01": {
+    "document_type": "receipt",
+    "merchant": {"value": "صيدلية الشفاء", "confidence": 0.9},
+    "date": {"value": "٢٠٢٦-٠٤-٠١", "confidence": 0.8},
+    "currency": {"value": "EGP", "confidence": 0.7}
+  }
+}
