@@ -1932,12 +1932,26 @@ def _count_pdf_pages(data: bytes):
 
 
 @app.get("/v1/jobs/{job_id}")
-def job_status(job_id: str):
-    """Poll a batch job's progress and (partial) results."""
+def job_status(request: Request, job_id: str, x_api_key: str = Header(None)):
+    """Poll a batch job's progress and (partial) results.
+
+    Authorization: the caller (API key or CSRF-checked session) must OWN the job.
+    A non-owner — or an unauthenticated request that clears the caller gate but
+    targets someone else's job — gets the same 404 as a missing job, so job
+    existence is not observable across tenants. The `owner_user_id` field is
+    internal and stripped from the response to keep the poll shape unchanged.
+    """
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        caller_uid = api_key.user_id
+    finally:
+        session.close()
     job = jobs.get_job(job_id)
-    if not job:
+    if not job or job.get("owner_user_id") != caller_uid:
         raise HTTPException(404, "job not found")
-    return {"job_id": job_id, **job}
+    return {"job_id": job_id,
+            **{k: v for k, v in job.items() if k != "owner_user_id"}}
 
 
 @app.post("/v1/estimate")
@@ -3352,7 +3366,8 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
                 raise HTTPException(413, f"this PDF has {n_pages} pages; the limit is {hard_max}. "
                                          "Split it into smaller files.")
             auth.enforce_limit(session, api_key, needed=n_pages * auth.credits_for(hard))
-            job_id = jobs.start_batch(image_bytes, hard, api_key.id, n_pages)
+            job_id = jobs.start_batch(image_bytes, hard, api_key.id, n_pages,
+                                      owner_user_id=api_key.user_id)
             return {"mode": "batch", "job_id": job_id, "total_pages": n_pages, "status": "processing"}
 
         # Single image OR multi-image batch → one synchronous call (Gemini handles

@@ -73,3 +73,42 @@ def user_factory():
         s.query(models.User).filter(models.User.id.in_(created)).delete(synchronize_session=False)
         s.commit()
     s.close()
+
+
+@pytest.fixture
+def api_key_factory():
+    """Create an active API key for a user and return the RAW key string a client
+    would send in `x-api-key`. Also marks the user email-verified (an API key
+    implies a real account, and `_resolve_caller` gates on verification).
+
+    Single seam: when key storage changes to hashed (P0.2), only the creation +
+    raw-value capture here changes — tests keep asking for "the raw key".
+    """
+    from app import db, models
+
+    created: list[int] = []
+
+    def make(user_id: int) -> str:
+        s = db.SessionLocal()
+        try:
+            u = s.get(models.User, user_id)
+            if u is not None and not u.email_verified:
+                u.email_verified = True
+            k = models.ApiKey(user_id=user_id)
+            s.add(k)
+            s.commit()
+            s.refresh(k)
+            created.append(k.id)
+            # P0.1: stored value == raw. P0.2 will hash storage and capture the
+            # raw at generation time; only this line changes then.
+            return k.key
+        finally:
+            s.close()
+
+    yield make
+
+    s = db.SessionLocal()
+    if created:
+        s.query(models.ApiKey).filter(models.ApiKey.id.in_(created)).delete(synchronize_session=False)
+        s.commit()
+    s.close()
