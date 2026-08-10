@@ -102,7 +102,7 @@ if os.getenv("SENTRY_DSN"):
 else:
     log.info("Sentry not configured (SENTRY_DSN unset) — errors only logged locally")
 
-from app import auth, db, emailer, exceptions as app_exceptions, exports, i18n, jobs, models  # noqa: E402
+from app import auth, db, emailer, exceptions as app_exceptions, exports, i18n, jobs, models, uploads  # noqa: E402
 from app.services import envelope, extractor, llm, template_filler, template_parser  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.services_catalog import CATEGORIES, SERVICES, localized  # noqa: E402
@@ -365,22 +365,20 @@ def chat_extract(request: Request, file: UploadFile = File(...),
         raise HTTPException(500, "GEMINI_API_KEY not configured on server")
     if routing not in ("explicit", "auto", "fast", "hard"):
         raise HTTPException(400, "routing must be one of: explicit, auto, fast, hard")
-    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
-    if file.content_type not in allowed:
-        raise HTTPException(415, "unsupported file type")
     data_bytes = file.file.read()
     if len(data_bytes) > 20 * 1024 * 1024:
         raise HTTPException(413, "file too large (max 20 MB)")
+    ct = uploads.validate_upload(data_bytes, file.content_type)  # magic-byte + bomb guard
     if routing != "explicit":
-        hard = extractor._resolve_hard(routing, hard, data_bytes, file.content_type)
-    pages = (_count_pdf_pages(data_bytes) if file.content_type == "application/pdf" else 1) or 1
+        hard = extractor._resolve_hard(routing, hard, data_bytes, ct)
+    pages = (_count_pdf_pages(data_bytes) if ct == "application/pdf" else 1) or 1
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
         cost = pages * auth.credits_for(hard)
         auth.reserve_credits(session, api_key, needed=cost)  # atomic charge
         try:
-            text = extractor.run_text(data_bytes, file.content_type,
+            text = extractor.run_text(data_bytes, ct,
                                       SERVICES["arabic-ocr"]["prompt"], hard)
         except Exception as e:  # noqa: BLE001
             auth.refund_credits(session, api_key, cost)  # don't bill failures
@@ -2475,26 +2473,24 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
         raise HTTPException(429, "too many requests from this IP, slow down")
     auth.rate_limit_record(f"tool:{client_ip}")
 
-    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
-    if file.content_type not in allowed:
-        raise HTTPException(415, "unsupported file type. Use PNG, JPG, WEBP, GIF, or PDF.")
     data_bytes = file.file.read()
     if len(data_bytes) > 20 * 1024 * 1024:
         raise HTTPException(413, "file too large (max 20 MB)")
+    ct = uploads.validate_upload(data_bytes, file.content_type)  # magic-byte + bomb guard
 
     kind = svc["kind"]
-    if kind == "searchable_pdf" and file.content_type == "application/pdf":
+    if kind == "searchable_pdf" and ct == "application/pdf":
         raise HTTPException(400, "هذه الخدمة تعمل على الصور الممسوحة، وليس على ملفات PDF")
 
     if routing != "explicit":
-        hard = extractor._resolve_hard(routing, hard, data_bytes, file.content_type,
+        hard = extractor._resolve_hard(routing, hard, data_bytes, ct,
                                        doctype_hint=slug)
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
         cost = auth.credits_for(hard)
         auth.reserve_credits(session, api_key, needed=cost)  # atomic charge
-        ct = file.content_type  # `hard` comes from the request, default True
+        # `hard` comes from the request, default True
         import time as _time
         _t0 = _time.time()
         try:
@@ -3305,20 +3301,19 @@ def compare_docs(request: Request, file_a: UploadFile = File(...), file_b: Uploa
                  hard: bool = Form(True), x_api_key: str = Header(None)):
     if not llm.is_configured():
         raise HTTPException(500, "GEMINI_API_KEY not configured on server")
-    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
-    if file_a.content_type not in allowed or file_b.content_type not in allowed:
-        raise HTTPException(415, "unsupported file type")
     a, b = file_a.file.read(), file_b.file.read()
     if len(a) > 20 * 1024 * 1024 or len(b) > 20 * 1024 * 1024:
         raise HTTPException(413, "file too large (max 20 MB)")
+    ct_a = uploads.validate_upload(a, file_a.content_type)  # magic-byte + bomb guard
+    ct_b = uploads.validate_upload(b, file_b.content_type)
     session = db.SessionLocal()
     try:
         api_key = _resolve_caller(session, x_api_key, request)
         cost = 2 * auth.credits_for(hard)
         auth.reserve_credits(session, api_key, needed=cost)  # atomic charge
         try:
-            ta = extractor.run_text(a, file_a.content_type, SERVICES["arabic-ocr"]["prompt"], hard)
-            tb = extractor.run_text(b, file_b.content_type, SERVICES["arabic-ocr"]["prompt"], hard)
+            ta = extractor.run_text(a, ct_a, SERVICES["arabic-ocr"]["prompt"], hard)
+            tb = extractor.run_text(b, ct_b, SERVICES["arabic-ocr"]["prompt"], hard)
             report = extractor.compare(ta, tb)
         except Exception as e:  # noqa: BLE001
             auth.refund_credits(session, api_key, cost)  # don't bill failures
@@ -3363,13 +3358,11 @@ def demo_extract_endpoint(request: Request, file: UploadFile = File(...)):
             "Sign up — you get 30 free credits on your own account.",
         )
 
-    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
-    if file.content_type not in allowed:
-        raise HTTPException(415, "unsupported file type — use PNG, JPG, WEBP, GIF, or PDF.")
     data_bytes = file.file.read()
     # Demo path: tighter file-size ceiling than the paid API (5 MB vs 20 MB).
     if len(data_bytes) > 5 * 1024 * 1024:
         raise HTTPException(413, "demo file too large (max 5 MB). Sign up to upload larger files.")
+    ct = uploads.validate_upload(data_bytes, file.content_type)  # magic-byte + bomb guard
 
     session = db.SessionLocal()
     try:
@@ -3379,7 +3372,7 @@ def demo_extract_endpoint(request: Request, file: UploadFile = File(...)):
             raise HTTPException(503, "demo not available — please sign up to try it")
 
         # Force fast tier (cost = 1 credit / page) — caps Gemini spend per demo.
-        n_pages = _count_pdf_pages(data_bytes) if file.content_type == "application/pdf" else 1
+        n_pages = _count_pdf_pages(data_bytes) if ct == "application/pdf" else 1
         n_pages = n_pages or 1
         if n_pages > 5:
             raise HTTPException(413, "demo PDF too long (max 5 pages). Sign up for full extractions.")
@@ -3387,7 +3380,7 @@ def demo_extract_endpoint(request: Request, file: UploadFile = File(...)):
         auth.reserve_credits(session, demo_key, needed=cost)  # atomic charge
 
         try:
-            result = extractor.extract_auto(data_bytes, file.content_type, hard=False,
+            result = extractor.extract_auto(data_bytes, ct, hard=False,
                                             output_lang="preserve")
         except Exception as e:  # noqa: BLE001
             auth.refund_credits(session, demo_key, cost)  # don't bill failures
@@ -3462,19 +3455,16 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
     if len(upload_list) > 10:
         raise HTTPException(413, "too many files in one batch (max 10)")
 
-    allowed = {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf"}
-    for u in upload_list:
-        if u.content_type not in allowed:
-            raise HTTPException(415, f"unsupported file type: {u.content_type}. "
-                                     "Use PNG, JPG, WEBP, GIF, or PDF.")
-
-    # Read all files into memory + enforce 20MB per file.
+    # Read all files into memory + enforce 20MB per file, then validate each by
+    # magic bytes (not the declared type) with decompression-bomb protection. The
+    # REAL sniffed content type is what we store and process with.
     multi_files: list[tuple[bytes, str]] = []
     for u in upload_list:
         b = u.file.read()
         if len(b) > 20 * 1024 * 1024:
             raise HTTPException(413, f"file '{u.filename}' too large (max 20 MB)")
-        multi_files.append((b, u.content_type))
+        real_ct = uploads.validate_upload(b, u.content_type)
+        multi_files.append((b, real_ct))
     # Primary file for the single-image path (also used for PDF page count).
     image_bytes, image_ct = multi_files[0]
     n_files = len(multi_files)
