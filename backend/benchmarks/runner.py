@@ -74,15 +74,29 @@ def run(dataset: manifest.Dataset, *, run_id: str, model_id: str,
         model_config: Optional[dict] = None, prompt_version: str = "",
         schema_version: str = "", preprocess_version: str = "pp-1",
         git_sha: str = "", max_docs: Optional[int] = None,
-        dry_run: bool = False) -> Any:
+        dry_run: bool = False, repeats: int = 1,
+        estimate_model_ids: Optional[list] = None) -> Any:
     """Run the benchmark. Provide `predictions` for REPLAY or `live_provider` for
     LIVE. Returns a RunResult (or, for dry_run, a plan dict)."""
     cases = dataset.cases[: max_docs] if max_docs else dataset.cases
     mode = "replay" if predictions is not None else ("live" if live_provider else "none")
     if dry_run:
-        return {"dry_run": True, "mode": mode, "n_cases": len(cases),
+        from benchmarks import estimate
+        total_pages = sum(int(getattr(c, "pages", 1) or 1) for c in cases)
+        model_ids = estimate_model_ids or [model_id]
+        plan = {"dry_run": True, "mode": mode, "profile_repeats": repeats,
+                "n_cases": len(cases), "total_pages": total_pages,
                 "dataset_version": dataset.version, "model_id": model_id,
+                "candidate_models": model_ids,
                 "case_ids": [c.id for c in cases]}
+        # Cost is only meaningful for a LIVE run; a replay dry-run spends nothing.
+        if mode == "live":
+            plan["estimate"] = estimate.estimate_plan(
+                n_cases=len(cases), total_pages=total_pages, repeats=repeats,
+                model_ids=model_ids)
+        else:
+            plan["estimate"] = {"note": "replay mode — $0 provider spend"}
+        return plan
     if mode == "none":
         raise ValueError("provide predictions (replay) or live_provider (live)")
 

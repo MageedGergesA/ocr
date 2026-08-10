@@ -33,20 +33,57 @@ def _cmd_stats(args):
     print(json.dumps(manifest.dataset_stats(ds), ensure_ascii=False, indent=2))
 
 
+def _cmd_verify(args):
+    """Section 2: report which candidate models the configured account can use, and
+    (Section 3) whether each model's static generation-param list is runtime-verified.
+    Never substitutes a model; offline it honestly reports 'not verified'."""
+    from app.ai import registry
+    ids = args.models.split(",") if args.models else list(registry.REGISTRY.keys())
+    avail = registry.verify_availability(ids)
+    any_true = any(avail.values())
+    out = {
+        "client_configured": any_true or _llm_configured(),
+        "availability": avail,
+        "generation_params": {mid: registry.verify_generation_params(mid) for mid in ids},
+    }
+    if not out["client_configured"]:
+        out["note"] = ("No provider client configured (no GEMINI_API_KEY). "
+                       "Availability is reported False for every model — NOT a claim "
+                       "the models are unavailable, only that we could not verify. "
+                       "Set GEMINI_API_KEY and re-run to get real availability.")
+    print(json.dumps(out, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _llm_configured() -> bool:
+    try:
+        from app.services import llm
+        return bool(llm.is_configured())
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _cmd_run(args):
     ds = manifest.load_dataset(args.dataset)
-    prof_max, _repeats = runner.PROFILES.get(args.profile, (args.max_docs or 3, 1))
+    prof_max, prof_repeats = runner.PROFILES.get(args.profile, (args.max_docs or 3, 1))
     max_docs = args.max_docs or prof_max
+    repeats = args.repeats if args.repeats is not None else prof_repeats
 
     predictions = None
     live_provider = None
     if args.live:
-        if not args.allow_cost:
+        # A dry-run is a COST PREVIEW and must be free: it neither requires
+        # --allow-cost nor builds a real provider (which would need a client).
+        if args.dry_run:
+            live_provider = lambda _c: {}  # sentinel; never invoked in dry_run
+        elif not args.allow_cost:
             print("REFUSING live run without --allow-cost (real provider spend). "
-                  "Add --allow-cost to proceed.", file=sys.stderr)
+                  "Run --dry-run first to preview cost, then add --allow-cost.",
+                  file=sys.stderr)
             return 2
-        from benchmarks.live import build_live_provider
-        live_provider = build_live_provider(ds.root, hard=(args.tier != "fast"))
+        else:
+            from benchmarks.live import build_live_provider
+            live_provider = build_live_provider(ds.root, hard=(args.tier != "fast"))
     else:
         if not args.predictions:
             print("replay mode needs --predictions PATH (or use --live --allow-cost)",
@@ -56,9 +93,16 @@ def _cmd_run(args):
             predictions = json.load(fh)
 
     if args.dry_run:
+        # For a live-matrix estimate, price the whole candidate set unless the caller
+        # pinned a single --model. This shows the full bill BEFORE any spend.
+        est_ids = None
+        if args.live and args.model in ("unknown", "", None):
+            from app.ai import registry
+            est_ids = [s.model_id for s in registry.candidates()]
         plan = runner.run(ds, run_id="dryrun", model_id=args.model,
                           predictions=predictions, live_provider=live_provider,
-                          max_docs=max_docs, dry_run=True)
+                          max_docs=max_docs, dry_run=True, repeats=repeats,
+                          estimate_model_ids=est_ids)
         print(json.dumps(plan, ensure_ascii=False, indent=2))
         return 0
 
@@ -111,6 +155,8 @@ def main(argv=None):
     r.add_argument("--model", default="unknown")
     r.add_argument("--profile", default="smoke", choices=list(runner.PROFILES))
     r.add_argument("--max-docs", type=int, default=None)
+    r.add_argument("--repeats", type=int, default=None,
+                   help="override the profile's repeat count (variance testing)")
     r.add_argument("--tier", default="strong", choices=["fast", "strong"])
     r.add_argument("--prompt-version", default="")
     r.add_argument("--schema-version", default="")
@@ -134,6 +180,11 @@ def main(argv=None):
     st = sub.add_parser("stats")
     st.add_argument("--dataset", required=True)
     st.set_defaults(func=_cmd_stats)
+
+    vf = sub.add_parser("verify")
+    vf.add_argument("--models", default="",
+                    help="comma-separated model IDs (default: whole registry)")
+    vf.set_defaults(func=_cmd_verify)
 
     args = p.parse_args(argv)
     return args.func(args) or 0
