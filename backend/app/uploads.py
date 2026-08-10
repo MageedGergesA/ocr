@@ -15,6 +15,7 @@ Two defenses the extraction endpoints share:
 """
 import io
 import os
+import zipfile
 
 from fastapi import HTTPException
 from PIL import Image
@@ -76,3 +77,74 @@ def validate_upload(data: bytes, declared_ct: str | None,
                 f"the limit is {MAX_IMAGE_PIXELS:,} pixels",
             )
     return real
+
+
+# --- Template uploads (xlsx / docx / pdf / html) --------------------------
+# Office documents are ZIP archives, so they carry the zip-bomb / archive-abuse
+# risks that a plain image doesn't. These bounds are checked from the archive's
+# CENTRAL DIRECTORY (metadata) — nothing is decompressed — so a bomb that DECLARES
+# a huge uncompressed size is rejected without ever expanding it.
+_ZIP_MAGIC = b"PK\x03\x04"
+_OLE_MAGIC = b"\xd0\xcf\x11\xe0"      # legacy .doc/.xls (OLE compound) — not zip-bomb-prone
+_OFFICE_MIMES = frozenset({
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+})
+_HTML_MIMES = frozenset({"text/html", "application/xhtml+xml"})
+
+MAX_TEMPLATE_ENTRIES = int(os.getenv("MAX_TEMPLATE_ENTRIES", "2000"))
+MAX_TEMPLATE_UNCOMPRESSED = int(os.getenv("MAX_TEMPLATE_UNCOMPRESSED",
+                                          str(200 * 1024 * 1024)))   # 200 MB
+MAX_TEMPLATE_RATIO = int(os.getenv("MAX_TEMPLATE_RATIO", "200"))     # bomb ratio
+
+
+def _check_office_archive(data: bytes) -> None:
+    try:
+        zf = zipfile.ZipFile(io.BytesIO(data))
+        infos = zf.infolist()
+    except Exception:  # noqa: BLE001 — not a valid zip / corrupt central directory
+        raise HTTPException(400, "the Office document is malformed or unreadable")
+    if len(infos) > MAX_TEMPLATE_ENTRIES:
+        raise HTTPException(413, "template archive has too many entries "
+                                 f"(> {MAX_TEMPLATE_ENTRIES}); refusing to process")
+    total = sum(max(0, i.file_size) for i in infos)
+    if total > MAX_TEMPLATE_UNCOMPRESSED:
+        raise HTTPException(413, "template archive expands too large "
+                                 f"(> {MAX_TEMPLATE_UNCOMPRESSED:,} bytes)")
+    comp = sum(max(0, i.compress_size) for i in infos) or 1
+    if total / comp > MAX_TEMPLATE_RATIO:
+        raise HTTPException(413, "template archive compression ratio is suspicious "
+                                 "(possible zip bomb); refusing to process")
+
+
+def validate_template_upload(data: bytes, declared_ct: str | None) -> None:
+    """Validate a template upload against its declared type using file signatures
+    plus (for Office/ZIP files) archive-metadata bomb protection. Raises 415 on a
+    signature mismatch / unsupported type, 400 on a malformed archive, 413 on an
+    archive that is too large / too many entries / a suspicious ratio. Narrow: it
+    does NOT change how template_parser reads the file."""
+    ct = (declared_ct or "").lower()
+    if ct == "application/pdf":
+        if data[:5] != b"%PDF-":
+            raise HTTPException(415, "file signature does not match a PDF")
+        return
+    if ct in _OFFICE_MIMES:
+        if data[:4] == _ZIP_MAGIC:
+            _check_office_archive(data)
+            return
+        if data[:4] == _OLE_MAGIC:
+            return                      # legacy binary Office — no zip-bomb vector
+        raise HTTPException(415, "file signature does not match an Office document")
+    if ct in _HTML_MIMES:
+        # Must be text, not a disguised binary (zip/pdf/image).
+        if (data[:4] in (_ZIP_MAGIC, _OLE_MAGIC) or data[:5] == b"%PDF-"
+                or sniff_mime(data) is not None):
+            raise HTTPException(415, "HTML template must be a text/HTML file")
+        try:
+            data[:8192].decode("utf-8")
+        except UnicodeDecodeError:
+            raise HTTPException(415, "HTML template must be UTF-8 text")
+        return
+    raise HTTPException(415, "unsupported template type. Use .xlsx, .docx, .pdf, or .html")

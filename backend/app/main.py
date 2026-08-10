@@ -2742,6 +2742,9 @@ def upload_template(
     raw = file.file.read()
     if len(raw) > 10 * 1024 * 1024:
         raise HTTPException(413, "template too large (max 10 MB)")
+    # Signature + archive-bomb guard (Office files are ZIPs). Narrow; doesn't
+    # change how the template is parsed below.
+    uploads.validate_template_upload(raw, file.content_type)
     info = template_parser.introspect(raw, file.filename, file.content_type)
     if not info.get("kind"):
         raise HTTPException(400, info.get("warning") or "unsupported template")
