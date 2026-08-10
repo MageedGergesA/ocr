@@ -4262,6 +4262,16 @@ def billing_paypal_return(request: Request,
             return RedirectResponse("/pricing?paypal=unknown_user_or_plan",
                                     status_code=303)
 
+        # Defense-in-depth: the plan we grant comes from custom_id; verify it
+        # matches the ACTUAL PayPal plan_id the subscription is on, so a mismatched
+        # custom_id can't grant a plan the customer never subscribed to.
+        expected_plan_id = plans.paypal_plan_id(plan_slug)
+        if plan_id_external and expected_plan_id and plan_id_external != expected_plan_id:
+            log.warning("paypal return REJECTED — plan mismatch: user=%s custom_plan=%s "
+                        "expected_plan_id=%s actual_plan_id=%s sub=%s",
+                        user_id, plan_slug, expected_plan_id, plan_id_external, subscription_id)
+            return RedirectResponse("/pricing?paypal=plan_mismatch", status_code=303)
+
         now = datetime.utcnow()
         # Close any active sub on this user — single-active-sub invariant.
         (session.query(models.Subscription)
@@ -4417,7 +4427,17 @@ async def paypal_webhook(request: Request):
                     user_id, plan_slug = decoded
                     user = session.query(models.User).filter_by(id=user_id).first()
                     plan_cfg = plans.get_plan(plan_slug)
-                    if user and plan_cfg and paypal_sub_id:
+                    # Defense-in-depth: grant only if the custom_id plan matches the
+                    # actual PayPal plan_id on the subscription resource.
+                    _wh_plan_id = resource.get("plan_id") or ""
+                    _exp_plan_id = plans.paypal_plan_id(plan_slug)
+                    _plan_ok = not (_wh_plan_id and _exp_plan_id) or _wh_plan_id == _exp_plan_id
+                    if not _plan_ok:
+                        log.warning("paypal webhook ACTIVATED REJECTED — plan mismatch: "
+                                    "user=%s custom_plan=%s expected_plan_id=%s "
+                                    "actual_plan_id=%s sub=%s", user_id, plan_slug,
+                                    _exp_plan_id, _wh_plan_id, paypal_sub_id)
+                    if user and plan_cfg and paypal_sub_id and _plan_ok:
                         # Close any other active sub before inserting the new one.
                         (session.query(models.Subscription)
                                 .filter_by(user_id=user.id, status="active")
