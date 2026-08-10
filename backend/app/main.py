@@ -920,6 +920,47 @@ def _log_doc_event(user_id, history_id, stage, detail=None):
         session.close()
 
 
+# Persisted Approval.status values that BLOCK a document from leaving the review
+# lifecycle, most-severe first (used for the message).
+_WORKFLOW_BLOCKING_STATUSES = ("blocked", "rejected", "pending")
+
+
+def _enforce_workflow_gate(user_id, history_id) -> None:
+    """Central Workflow-Engine policy gate for document EGRESS (export / reproduce /
+    ERP delivery). A document that is blocked, rejected, or still held for approval
+    (pending) must NOT leave the review lifecycle. Approved documents — and documents
+    with no applicable approval rule — proceed normally. Raises 409 with a
+    predictable message otherwise. Centralised here so every egress path enforces
+    the same policy rather than each re-implementing it."""
+    if not history_id or not user_id:
+        return
+    try:
+        hid = int(history_id)
+    except (TypeError, ValueError):
+        return
+    session = db.SessionLocal()
+    try:
+        statuses = {
+            s for (s,) in session.query(models.Approval.status)
+            .filter_by(history_id=hid, user_id=user_id).all()
+        }
+    finally:
+        session.close()
+    if not statuses:
+        return  # no applicable rule → normal behavior
+    for status in _WORKFLOW_BLOCKING_STATUSES:
+        if status in statuses:
+            msg = {
+                "blocked": "This document is blocked by a workflow rule and cannot "
+                           "be exported or sent to the ERP.",
+                "rejected": "This document was rejected in review and cannot be "
+                            "exported or sent to the ERP.",
+                "pending": "This document is held for approval and cannot be "
+                           "exported or sent to the ERP until it is approved.",
+            }[status]
+            raise HTTPException(409, msg)
+
+
 def _orig_value(data, field):
     """Best-effort: what the model originally produced for `field` (for the
     before/after learning signal). Recurses the result shape."""
@@ -2519,6 +2560,7 @@ def export_table(request: Request, payload: dict = Body(...), x_api_key: str = H
         _uid = _resolve_caller(session, x_api_key, request).user.id
     finally:
         session.close()
+    _enforce_workflow_gate(_uid, payload.get("history_id"))  # block held/rejected docs
     fmt, columns, rows = payload.get("format", "xlsx"), payload.get("columns", []), payload.get("rows", [])
     if fmt == "xlsx":
         data, media, fname = exports.table_to_xlsx(columns, rows)
@@ -2535,9 +2577,10 @@ def export_table(request: Request, payload: dict = Body(...), x_api_key: str = H
 def export_text(request: Request, payload: dict = Body(...), x_api_key: str = Header(None)):
     session = db.SessionLocal()
     try:
-        _resolve_caller(session, x_api_key, request)
+        _uid = _resolve_caller(session, x_api_key, request).user.id
     finally:
         session.close()
+    _enforce_workflow_gate(_uid, payload.get("history_id"))  # block held/rejected docs
     fmt, text = payload.get("format", "docx"), payload.get("text", "")
     if fmt == "docx":
         data, media, fname = exports.text_to_docx(text)
@@ -2563,6 +2606,7 @@ def reproduce_endpoint(request: Request, payload: dict = Body(...),
         _uid = _resolve_caller(session, x_api_key, request).user.id
     finally:
         session.close()
+    _enforce_workflow_gate(_uid, payload.get("history_id"))  # block held/rejected docs
     from app.services import repro as _repro
     doctype = (payload.get("document_type") or "").strip()
     data = payload.get("data") or {}
@@ -2604,6 +2648,7 @@ def export_data(request: Request, payload: dict = Body(...), x_api_key: str = He
         _uid = _resolve_caller(session, x_api_key, request).user.id  # auth gate
     finally:
         session.close()
+    _enforce_workflow_gate(_uid, payload.get("history_id"))  # block held/rejected docs
     fmt = payload.get("format", "csv")
     rows = payload.get("rows", [])
     result = payload.get("result")
@@ -3214,6 +3259,7 @@ def erp_confirm(request: Request, payload: dict = Body(...), x_api_key: str = He
         _uid = user.id
     finally:
         session.close()
+    _enforce_workflow_gate(_uid, hid)  # a held/rejected doc must not be marked imported
     _log_doc_event(_uid, hid, "imported", detail)
     return {"ok": True, "history_id": int(hid), "stage": "imported"}
 
