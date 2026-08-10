@@ -1041,10 +1041,21 @@ def _doc_scope(data):
 def _apply_learned_corrections(session, user_id, document_type, data):
     """Apply this account's learned corrections to a fresh extraction, gated by
     vendor scope + low-confidence + non-volatile + recency. Mutates ``data`` in
-    place and returns the number of corrections actually applied (honest count for
-    the 'learned corrections applied' badge)."""
+    place and returns a list of the changes made — each
+    ``{field, model_value, model_confidence, learned_value}`` — so the caller can
+    persist provenance. ``len(result)`` is the honest 'learned corrections applied'
+    count.
+
+    Provenance contract (P0.3): a learned correction NEVER silently erases the
+    model's read. On each applied field we keep the model's original value and
+    confidence on the node (``model_value`` / ``model_confidence``), mark it
+    ``learned`` with its ``learned_source``, and — crucially — we do NOT fabricate
+    a high (0.9) confidence; the model's own confidence is preserved. The original
+    extraction therefore stays fully reconstructable from the stored result, and
+    the returned change list is recorded as auditable version rows.
+    """
     if not isinstance(data, (dict, list)):
-        return 0
+        return []
     C = models.CorrectionMemory
     try:
         from datetime import timedelta as _td
@@ -1055,16 +1066,16 @@ def _apply_learned_corrections(session, user_id, document_type, data):
         q = q.filter((C.updated_at >= cutoff) | (C.count >= LEARN_MIN_COUNT_KEEP))
         rows = q.order_by(C.count.desc(), C.updated_at.desc()).limit(50).all()
     except Exception:  # noqa: BLE001
-        return 0
+        return []
     if not rows:
-        return 0
+        return []
 
     scope = _doc_scope(data)
     nodes = {}
     for key, node, parent in _iter_field_nodes(data):
         nodes.setdefault(_lc_norm(key), (key, node, parent))
 
-    applied = 0
+    changes: list[dict] = []
     for r in rows:
         cv = (r.corrected_value or "").strip()
         if not cv or _is_volatile_field(r.field_key):
@@ -1082,20 +1093,48 @@ def _apply_learned_corrections(session, user_id, document_type, data):
                 conf01 = conf / 100.0 if conf > 1 else conf
                 if conf01 >= LEARN_LOW_CONF:
                     continue  # model was confident — trust the document
-                node["confidence"] = 90 if conf > 1 else 0.9
-            else:
-                node["confidence"] = 0.9
+            # Nothing to override if the model already produced this value.
             if _lc_norm(str(cur)) == _lc_norm(cv):
                 continue
+            # Apply the learned value while PRESERVING the model's read + confidence.
+            # (No blind 0.9 — confidence stays whatever the model reported.)
+            node["model_value"] = cur
+            node["model_confidence"] = conf
             node["value"] = cv
             node["learned"] = True
-            applied += 1
+            node["learned_source"] = "correction_memory"
+            changes.append({"field": key, "model_value": cur,
+                            "model_confidence": conf, "learned_value": cv})
         else:
-            if _lc_norm(str(parent.get(key))) == _lc_norm(cv):
+            cur = parent.get(key)
+            if _lc_norm(str(cur)) == _lc_norm(cv):
                 continue
             parent[key] = cv
-            applied += 1
-    return applied
+            changes.append({"field": key, "model_value": cur,
+                            "model_confidence": None, "learned_value": cv})
+    return changes
+
+
+def _record_learned_versions(session, hid, user_id, changes):
+    """Append one auditable ExtractionVersion (source='learned') per learned
+    override, capturing the model's original value (old_value) and the value
+    CorrectionMemory applied (new_value) with a timestamp. Best-effort — the
+    learning loop must never break the extraction path."""
+    if not (hid and changes):
+        return
+    try:
+        from sqlalchemy import func as _lfunc
+        base_v = (session.query(_lfunc.max(models.ExtractionVersion.version))
+                  .filter_by(history_id=hid).scalar()) or 1
+        for i, ch in enumerate(changes, start=1):
+            session.add(models.ExtractionVersion(
+                history_id=hid, user_id=user_id, version=base_v + i,
+                source="learned", field=ch["field"],
+                old_value=(str(ch["model_value"]) if ch["model_value"] is not None else None),
+                new_value=(str(ch["learned_value"]) if ch["learned_value"] is not None else None)))
+        session.commit()
+    except Exception:  # noqa: BLE001
+        session.rollback()
 
 
 def _record_history(session, user, kind, document_type, data, charged,
@@ -3455,16 +3494,22 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
         # non-volatile fields with values this account has reliably corrected
         # before. Applied to `data` before it's stored/returned.
         try:
-            _learned_n = _apply_learned_corrections(
+            _learned_changes = _apply_learned_corrections(
                 session, api_key.user_id, document_type, data)
         except Exception:  # noqa: BLE001 — learning must never break extraction
-            _learned_n = 0
+            _learned_changes = []
+        _learned_n = len(_learned_changes)
 
         # Only meter successful extractions.
         auth.increment_usage(session, api_key, count=cost)
         hid = _record_history(session, api_key.user, mode, document_type, data, cost,
                               duration_ms=_dur_ms, layout=layout,
                               output_lang=output_lang if output_lang != "preserve" else None)
+        # Provenance for the learning loop: record each learned override as an
+        # auditable version (source='learned') so we can reconstruct BOTH what the
+        # model produced and what CorrectionMemory changed it to. Never breaks
+        # extraction.
+        _record_learned_versions(session, hid, api_key.user_id, _learned_changes)
         used, limit, _ = auth.get_usage(session, api_key)
         usage = {"used": used, "limit": limit, "remaining": max(0, limit - used), "charged": cost}
         from datetime import datetime as _dt

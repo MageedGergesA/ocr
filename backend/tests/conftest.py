@@ -32,6 +32,15 @@ from fastapi.testclient import TestClient  # noqa: E402
 PAYMOB_HMAC = os.environ["PAYMOB_HMAC"]
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _ensure_schema():
+    """Create the throwaway-DB schema once for every test — including tests that
+    exercise services/helpers directly and never spin up the TestClient."""
+    from app.db import init_db
+    init_db()
+    yield
+
+
 @pytest.fixture(scope="session")
 def client():
     """A TestClient with the app's lifespan (startup → init_db) active."""
