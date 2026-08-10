@@ -230,7 +230,9 @@ class Subscription(Base):
     __tablename__ = "subscriptions"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    # Nullable so a deleted account can be DETACHED (user_id -> NULL) while the row
+    # is retained for accounting/tax history (see /account/delete). Set on create.
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     provider = Column(String, nullable=False)        # 'paypal' | 'paymob'
     external_id = Column(String, nullable=False)     # provider's subscription/agreement ID
     plan = Column(String, nullable=False)            # lite/starter/pro/business

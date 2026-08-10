@@ -35,8 +35,17 @@ PAYMOB_HMAC = os.environ["PAYMOB_HMAC"]
 @pytest.fixture(scope="session", autouse=True)
 def _ensure_schema():
     """Create the throwaway-DB schema once for every test — including tests that
-    exercise services/helpers directly and never spin up the TestClient."""
-    from app.db import init_db
+    exercise services/helpers directly and never spin up the TestClient. Also turns
+    ON SQLite foreign-key enforcement so tests catch FK violations the way
+    PostgreSQL would (e.g. account deletion must not orphan or dangle rows)."""
+    from sqlalchemy import event
+    from app.db import engine, init_db
+    if engine.dialect.name == "sqlite":
+        @event.listens_for(engine, "connect")
+        def _enable_sqlite_fk(dbapi_conn, _rec):  # noqa: ANN001
+            cur = dbapi_conn.cursor()
+            cur.execute("PRAGMA foreign_keys=ON")
+            cur.close()
     init_db()
     yield
 

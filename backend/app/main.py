@@ -2912,24 +2912,54 @@ def account_delete(request: Request, current_password: str = Form(...),
                 _ctx(request, msg=None,
                      err=("Type DELETE (uppercase) in the confirmation box to proceed." if EN
                           else "للتأكيد اكتب الكلمة DELETE (بالأحرف الإنجليزية الكبيرة) في خانة التأكيد.")))
-        # Cascade-clean the user's data. WebhookDelivery + Subscription +
-        # PaymentEvent get the explicit sweep here so a customer's "delete my
-        # account" leaves nothing behind (matches the privacy policy claim).
+        # Delete every user-owned table explicitly, children before parents, so the
+        # result is identical on PostgreSQL (FK-enforced) and SQLite and never leaves
+        # a dangling reference. This is ONE transaction: it either fully completes on
+        # commit or, on any error, rolls back entirely (never a partial deletion).
+        #
+        # Financial/accounting records (Subscription, PaymentEvent) are NOT destroyed
+        # — tax/accounting retention requires them. They are ANONYMIZED instead:
+        # user_id -> NULL (detached) and PaymentEvent.raw_payload (which may carry
+        # billing PII) is redacted. Everything else is hard-deleted.
         user_id = user.id
-        # Usage refs api_keys.id, so delete Usage BEFORE api_keys.
-        session.query(models.Usage).filter(
-            models.Usage.api_key_id.in_(
-                session.query(models.ApiKey.id).filter_by(user_id=user_id))).delete(synchronize_session=False)
-        session.query(models.ApiKey).filter_by(user_id=user_id).delete()
-        session.query(models.Session).filter_by(user_id=user_id).delete()
-        session.query(models.Template).filter_by(user_id=user_id).delete()
-        session.query(models.History).filter_by(user_id=user_id).delete()
-        # New tables added in Wave 5 — must also be swept for GDPR/PDPL.
-        session.query(models.WebhookDelivery).filter_by(user_id=user_id).delete()
-        session.query(models.PaymentEvent).filter_by(user_id=user_id).delete()
-        session.query(models.Subscription).filter_by(user_id=user_id).delete()
-        session.delete(user)
-        session.commit()
+        try:
+            D = lambda q: q.delete(synchronize_session=False)  # noqa: E731
+            # Usage refs api_keys.id → delete before api_keys.
+            D(session.query(models.Usage).filter(
+                models.Usage.api_key_id.in_(
+                    session.query(models.ApiKey.id).filter_by(user_id=user_id))))
+            # Workflow/audit graph: AuditLog → Approval → WorkflowRule; and the
+            # History children (ExtractionVersion, DocumentEvent, Approval) before History.
+            D(session.query(models.AuditLog).filter_by(user_id=user_id))
+            D(session.query(models.ExtractionVersion).filter_by(user_id=user_id))
+            D(session.query(models.DocumentEvent).filter_by(user_id=user_id))
+            D(session.query(models.Approval).filter_by(user_id=user_id))
+            D(session.query(models.WorkflowRule).filter_by(user_id=user_id))
+            D(session.query(models.CorrectionMemory).filter_by(user_id=user_id))
+            D(session.query(models.OpsEvent).filter_by(user_id=user_id))
+            D(session.query(models.IdempotencyKey).filter_by(user_id=user_id))
+            D(session.query(models.WebhookDelivery).filter_by(user_id=user_id))
+            D(session.query(models.History).filter_by(user_id=user_id))
+            D(session.query(models.Template).filter_by(user_id=user_id))
+            D(session.query(models.ApiKey).filter_by(user_id=user_id))
+            D(session.query(models.Session).filter_by(user_id=user_id))
+            # Retain-but-anonymize financial records (detach + redact PII).
+            session.query(models.PaymentEvent).filter_by(user_id=user_id).update(
+                {models.PaymentEvent.user_id: None,
+                 models.PaymentEvent.raw_payload: '{"redacted":"account deleted"}'},
+                synchronize_session=False)
+            session.query(models.Subscription).filter_by(user_id=user_id).update(
+                {models.Subscription.user_id: None}, synchronize_session=False)
+            session.delete(user)
+            session.commit()
+        except Exception:  # noqa: BLE001 — all-or-nothing; never a partial delete
+            session.rollback()
+            return templates.TemplateResponse(request, "account.html",
+                _ctx(request, msg=None,
+                     err=("We couldn't delete your account due to a server error. "
+                          "Nothing was changed — please try again or contact support." if EN
+                          else "تعذّر حذف حسابك بسبب خطأ في الخادم. لم يتغيّر شيء — "
+                               "حاول مجددًا أو تواصل مع الدعم.")), status_code=500)
         resp = RedirectResponse("/", status_code=303)
         resp.delete_cookie("sid")
         return resp
