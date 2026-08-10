@@ -2071,7 +2071,10 @@ def estimate(request: Request, file: UploadFile = File(...), x_api_key: str = He
     finally:
         session.close()
     data = file.file.read()
-    pages = (_count_pdf_pages(data) if file.content_type == "application/pdf" else 1) or 1
+    if len(data) > 20 * 1024 * 1024:
+        raise HTTPException(413, "file too large (max 20 MB)")
+    ct = uploads.validate_upload(data, file.content_type)  # magic-byte + bomb guard
+    pages = (_count_pdf_pages(data) if ct == "application/pdf" else 1) or 1
     return {
         "pages": pages,
         "cost_strong": pages * auth.credits_for(True),
