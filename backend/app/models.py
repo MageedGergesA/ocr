@@ -312,6 +312,14 @@ class OpsEvent(Base):
     tier = Column(String, nullable=True)         # 'hard' | 'fast'
     error_type = Column(String, nullable=True)   # exception class name, if any
     latency_ms = Column(Integer, nullable=True)
+    # Provenance / slicing dimensions (Phase 1). Nullable so legacy rows — which
+    # never recorded them — stay valid. Let an operator answer "success rate for
+    # Saudi/Egyptian invoices after yesterday's release" instead of just an average.
+    document_type = Column(String, nullable=True, index=True)
+    model_id = Column(String, nullable=True)
+    prompt_version = Column(String, nullable=True)
+    schema_version = Column(String, nullable=True)
+    release = Column(String, nullable=True, index=True)   # app version / git sha
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 

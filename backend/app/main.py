@@ -104,6 +104,7 @@ else:
 
 from app import auth, db, emailer, exceptions as app_exceptions, exports, i18n, jobs, models, uploads  # noqa: E402
 from app.services import envelope, extractor, llm, template_filler, template_parser  # noqa: E402
+from app.ai import versioning as _ai_versioning  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.services_catalog import CATEGORIES, SERVICES, localized  # noqa: E402
 
@@ -890,14 +891,31 @@ def _summarize_result(data):
     return field_count, avg_conf
 
 
+# Release identifier stamped on every ops event so success rates can be sliced
+# per deploy ("did quality regress after yesterday's release?").
+APP_RELEASE = os.getenv("APP_RELEASE", "0.1.0")
+
+
+def _model_id_for(hard: bool) -> str:
+    """The concrete model id for a tier, from the central registry (same env-driven
+    IDs llm.py uses) — recorded for provenance."""
+    from app.ai import registry
+    return registry.production_strong_model_id() if hard else registry.production_fast_model_id()
+
+
 def _log_ops(session, user_id, kind, status, latency_ms=None, tier=None,
-             http_status=None, error_type=None):
+             http_status=None, error_type=None, document_type=None, model_id=None,
+             prompt_version=None, schema_version=None, release=None):
     """Best-effort observability event (one row per extraction attempt, ok OR
-    error). Never break the request path on a logging failure."""
+    error). Records provenance/slicing dimensions when known. Never break the
+    request path on a logging failure."""
     try:
         session.add(models.OpsEvent(
             user_id=user_id, kind=kind, status=status, latency_ms=latency_ms,
-            tier=tier, http_status=http_status, error_type=error_type))
+            tier=tier, http_status=http_status, error_type=error_type,
+            document_type=document_type, model_id=model_id,
+            prompt_version=prompt_version, schema_version=schema_version,
+            release=release or APP_RELEASE))
         session.commit()
     except Exception:  # noqa: BLE001
         session.rollback()
@@ -3569,7 +3587,8 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
             _log_ops(session, api_key.user_id, mode, "error",
                      latency_ms=int((_time.time() - _t0) * 1000),
                      tier=("hard" if hard else "fast"),
-                     http_status=_he.status_code, error_type=type(e).__name__)
+                     http_status=_he.status_code, error_type=type(e).__name__,
+                     model_id=_model_id_for(hard))
             raise _he
         _dur_ms = int((_time.time() - _t0) * 1000)
 
@@ -3631,7 +3650,9 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
             body["policy"] = {"holds": [], "blocked": False, "held": False}
         # Observability: one 'ok' row per successful extraction.
         _log_ops(session, api_key.user_id, mode, "ok", latency_ms=_dur_ms,
-                 tier=("hard" if hard else "fast"))
+                 tier=("hard" if hard else "fast"),
+                 document_type=document_type, model_id=_model_id_for(hard),
+                 schema_version=(_ai_versioning.schema_version(schema) if schema else None))
         # Idempotency: remember this response so a retried key replays it.
         if idempotency_key:
             try:
