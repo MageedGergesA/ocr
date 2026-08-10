@@ -229,13 +229,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 # files run. 'strict-dynamic' lets nonce-carrying scripts load
                 # further scripts (we use this for lucide / theme bootstrap).
                 f"default-src 'self'; "
-                f"script-src 'self' 'nonce-{nonce}' 'strict-dynamic' https://unpkg.com; "
+                # lucide + fonts are now self-hosted, so no external script/style/font
+                # origins are needed — CSP is same-origin only (was unpkg / Google Fonts).
+                f"script-src 'self' 'nonce-{nonce}' 'strict-dynamic'; "
                 # style-src: inline style="..." is everywhere in our templates, so
                 # we keep 'unsafe-inline' for now. Tightening would require a major
                 # rewrite of inline styles into classes.
-                f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                f"style-src 'self' 'unsafe-inline'; "
                 f"img-src 'self' data: blob: https:; "
-                f"font-src 'self' data: https://fonts.gstatic.com; "
+                f"font-src 'self' data:; "
                 f"connect-src 'self'; "
                 f"frame-ancestors 'none'; "
                 f"base-uri 'self'; "
@@ -856,6 +858,246 @@ def _current_user(session, request: Request):
     return auth.user_from_session(session, request.cookies.get("sid"))
 
 
+def _summarize_result(data):
+    """Derive (field_count, avg_confidence 0-100) from an extraction result so the
+    metrics dashboard can aggregate without re-scanning result_json on every read.
+    Robust to the varied shapes we return (fields / expert / prescription)."""
+    confs, leaves = [], 0
+
+    def walk(o):
+        nonlocal leaves
+        if isinstance(o, dict):
+            c = o.get("confidence")
+            if isinstance(c, (int, float)):
+                confs.append(c * 100 if c <= 1 else c)
+            for k, v in o.items():
+                if k == "confidence":
+                    continue
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+        elif isinstance(o, (str, int, float)) and str(o).strip():
+            leaves += 1
+
+    walk(data)
+    field_count = len(confs) if confs else leaves
+    avg_conf = int(round(sum(confs) / len(confs))) if confs else None
+    return field_count, avg_conf
+
+
+def _log_ops(session, user_id, kind, status, latency_ms=None, tier=None,
+             http_status=None, error_type=None):
+    """Best-effort observability event (one row per extraction attempt, ok OR
+    error). Never break the request path on a logging failure."""
+    try:
+        session.add(models.OpsEvent(
+            user_id=user_id, kind=kind, status=status, latency_ms=latency_ms,
+            tier=tier, http_status=http_status, error_type=error_type))
+        session.commit()
+    except Exception:  # noqa: BLE001
+        session.rollback()
+
+
+def _log_doc_event(user_id, history_id, stage, detail=None):
+    """Best-effort delivery-side lifecycle stamp (exported / erp), keyed to a
+    History row. Opens its own short session so it can be called after the request
+    session is closed; verifies the history belongs to the caller before writing.
+    Never breaks the request path (export must still succeed if logging fails)."""
+    if not history_id or not user_id:
+        return
+    session = db.SessionLocal()
+    try:
+        h = session.get(models.History, int(history_id))
+        if not h or h.user_id != user_id:
+            return
+        session.add(models.DocumentEvent(
+            history_id=int(history_id), user_id=user_id, stage=stage, detail=detail))
+        session.commit()
+    except Exception:  # noqa: BLE001
+        session.rollback()
+    finally:
+        session.close()
+
+
+def _orig_value(data, field):
+    """Best-effort: what the model originally produced for `field` (for the
+    before/after learning signal). Recurses the result shape."""
+    target = str(field).strip().lower()
+    hit = [None]
+
+    def walk(o):
+        if hit[0] is not None:
+            return
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if str(k).strip().lower() == target:
+                    hit[0] = v.get("value") if isinstance(v, dict) and "value" in v else (
+                        v if not isinstance(v, (dict, list)) else None)
+                    if hit[0] is not None:
+                        return
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+
+    walk(data)
+    return hit[0]
+
+
+# ── Learning loop v1.1 — corrections are applied POST-extraction, gated ──────
+# v1 injected learned values into the prompt and told the model to always apply
+# them — which could override a document's TRUE value. v1.1 extracts clean, then
+# applies a learned value ONLY when every guard passes: the field isn't volatile
+# (never amounts/dates/numbers), the correction came from the SAME vendor (or is
+# global), the model was NOT confident in what it read, and the correction is
+# recent (or well-reinforced). Safer by construction: guards can only REDUCE
+# applications, never cause a wrong override.
+LEARN_LOW_CONF = 0.75       # only fill a field the model was unsure about
+LEARN_DECAY_DAYS = 180      # ignore stale corrections …
+LEARN_MIN_COUNT_KEEP = 3    # … unless a reviewer reinforced them ≥3 times
+
+# Field kinds that vary per document — never safe to reuse a learned literal for.
+_VOLATILE_TOKENS = (
+    "amount", "total", "subtotal", "balance", "due", "price", "cost", "qty",
+    "quantity", "date", "time", "number", "invoice_no", "invoice_number",
+    "bill_no", "ref", "reference", "serial", "iban", "account_no",
+    "account_number", "tax", "vat_amount", "discount", "net", "gross", "paid",
+    "unit_price", "line_total",
+)
+# Stable identity fields that merely CONTAIN a volatile token — keep learnable.
+_STABLE_IDENTITY = (
+    "vat_id", "tax_id", "vat_number", "tax_number", "tax_registration",
+    "vat_registration", "registration_number", "commercial_register",
+)
+
+
+def _lc_norm(s):
+    """Loose normalization for comparing keys/values (lower, collapse spaces)."""
+    import re as _re
+    return _re.sub(r"\s+", " ", str(s or "").strip().lower())
+
+
+# Fields that identify the document's source (used to scope learned corrections).
+_SCOPE_FIELDS = ("seller", "vendor", "supplier", "merchant", "issuer", "company",
+                 "company_name", "partner", "partner_name", "name")
+# Legal-form suffixes stripped when comparing vendor identities, so the same
+# vendor matches across formatting ("ACME Trading" == "ACME Trading Co.").
+_LEGAL_SUFFIX = ("co", "ltd", "llc", "inc", "company", "corp", "corporation",
+                 "group", "est", "plc", "gmbh", "sa", "srl", "wll")
+
+
+def _scope_norm(s):
+    """Normalize a vendor/party name into a stable scope key (drop punctuation and
+    common legal-form suffixes) so one supplier's documents share a scope."""
+    import re as _re
+    s = _re.sub(r"[^\w\s]", " ", _lc_norm(s))
+    toks = [t for t in s.split() if t and t not in _LEGAL_SUFFIX]
+    return " ".join(toks)
+
+
+def _is_volatile_field(key):
+    k = _lc_norm(key)
+    if any(t in k for t in _STABLE_IDENTITY):
+        return False
+    return any(t in k for t in _VOLATILE_TOKENS)
+
+
+def _iter_field_nodes(obj):
+    """Walk an extraction result and yield (key, wrapped_node, flat_parent) for
+    each field — covering flat ``{k: {value,confidence}}`` / ``{k: scalar}`` and
+    nested ``header``/``totals``/``line_items`` shapes. For a wrapped field the
+    node dict is returned (value at node['value']); for a scalar field the parent
+    dict is returned so the caller can set parent[key]."""
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if k in ("_layout_html", "value", "confidence", "learned"):
+                continue
+            if isinstance(v, dict):
+                if "value" in v:
+                    yield (k, v, None)
+                else:
+                    yield from _iter_field_nodes(v)
+            elif isinstance(v, list):
+                for item in v:
+                    yield from _iter_field_nodes(item)
+            elif isinstance(v, (str, int, float)):
+                yield (k, None, obj)
+    elif isinstance(obj, list):
+        for item in obj:
+            yield from _iter_field_nodes(item)
+
+
+def _doc_scope(data):
+    """Best-effort vendor/party identity for scoping learned corrections."""
+    for key, node, parent in _iter_field_nodes(data):
+        if _lc_norm(key) in _SCOPE_FIELDS:
+            val = node.get("value") if node is not None else parent.get(key)
+            if val and str(val).strip():
+                return _scope_norm(str(val))
+    return ""
+
+
+def _apply_learned_corrections(session, user_id, document_type, data):
+    """Apply this account's learned corrections to a fresh extraction, gated by
+    vendor scope + low-confidence + non-volatile + recency. Mutates ``data`` in
+    place and returns the number of corrections actually applied (honest count for
+    the 'learned corrections applied' badge)."""
+    if not isinstance(data, (dict, list)):
+        return 0
+    C = models.CorrectionMemory
+    try:
+        from datetime import timedelta as _td
+        cutoff = datetime.utcnow() - _td(days=LEARN_DECAY_DAYS)
+        q = session.query(C).filter(C.user_id == user_id)
+        if document_type:
+            q = q.filter((C.document_type == document_type) | (C.document_type.is_(None)))
+        q = q.filter((C.updated_at >= cutoff) | (C.count >= LEARN_MIN_COUNT_KEEP))
+        rows = q.order_by(C.count.desc(), C.updated_at.desc()).limit(50).all()
+    except Exception:  # noqa: BLE001
+        return 0
+    if not rows:
+        return 0
+
+    scope = _doc_scope(data)
+    nodes = {}
+    for key, node, parent in _iter_field_nodes(data):
+        nodes.setdefault(_lc_norm(key), (key, node, parent))
+
+    applied = 0
+    for r in rows:
+        cv = (r.corrected_value or "").strip()
+        if not cv or _is_volatile_field(r.field_key):
+            continue
+        # Vendor scope: a source-specific correction only applies to that source.
+        if r.scope_key and scope and r.scope_key != scope:
+            continue
+        hit = nodes.get(_lc_norm(r.field_key))
+        if not hit:
+            continue
+        key, node, parent = hit
+        if node is not None:
+            conf, cur = node.get("confidence"), node.get("value")
+            if isinstance(conf, (int, float)):
+                conf01 = conf / 100.0 if conf > 1 else conf
+                if conf01 >= LEARN_LOW_CONF:
+                    continue  # model was confident — trust the document
+                node["confidence"] = 90 if conf > 1 else 0.9
+            else:
+                node["confidence"] = 0.9
+            if _lc_norm(str(cur)) == _lc_norm(cv):
+                continue
+            node["value"] = cv
+            node["learned"] = True
+            applied += 1
+        else:
+            if _lc_norm(str(parent.get(key))) == _lc_norm(cv):
+                continue
+            parent[key] = cv
+            applied += 1
+    return applied
+
+
 def _record_history(session, user, kind, document_type, data, charged,
                     duration_ms=None, layout=None, output_lang=None):
     """Best-effort log of a successful extraction for the dashboard.
@@ -863,14 +1105,29 @@ def _record_history(session, user, kind, document_type, data, charged,
     Returns the new History row id (or None on failure) so callers can hand the
     `hid` back to the client — needed for the correction/feedback loop."""
     try:
+        field_count, avg_confidence = _summarize_result(data)
         h = models.History(
             user_id=user.id, kind=kind, document_type=document_type,
             charged=charged, duration_ms=duration_ms,
             layout=layout, output_lang=output_lang,
             result_json=data,
+            field_count=field_count, avg_confidence=avg_confidence,
         )
         session.add(h)
         session.commit()
+        # Workflow Engine: route the document to approval if any rule matches.
+        try:
+            from app.services import workflow as _workflow
+            _workflow.evaluate(session, user, h)
+        except Exception:  # noqa: BLE001 — never break the extraction path
+            session.rollback()
+        # Version 1 — the initial extraction (append-only version log).
+        try:
+            session.add(models.ExtractionVersion(
+                history_id=h.id, user_id=user.id, version=1, source="extracted"))
+            session.commit()
+        except Exception:  # noqa: BLE001
+            session.rollback()
         return h.id
     except Exception:  # noqa: BLE001
         session.rollback()
@@ -1716,6 +1973,361 @@ def usage(request: Request, x_api_key: str = Header(None)):
         session.close()
 
 
+@app.get("/v1/metrics")
+def metrics(request: Request, x_api_key: str = Header(None)):
+    """Real customer-outcome KPIs for the current month — all measured from the
+    History/Approval tables, no assumptions except the labelled time-saved estimate."""
+    from sqlalchemy import func
+    session = db.SessionLocal()
+    try:
+        caller = _resolve_caller(session, x_api_key, request)
+        uid = caller.user_id
+        H, A = models.History, models.Approval
+        month0 = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        base = session.query(H).filter(H.user_id == uid, H.created_at >= month0)
+
+        docs = base.count()
+        fields = session.query(func.coalesce(func.sum(H.field_count), 0)).filter(
+            H.user_id == uid, H.created_at >= month0).scalar() or 0
+        credits = session.query(func.coalesce(func.sum(H.charged), 0)).filter(
+            H.user_id == uid, H.created_at >= month0).scalar() or 0
+        avg_ms = session.query(func.avg(H.duration_ms)).filter(
+            H.user_id == uid, H.created_at >= month0, H.duration_ms.isnot(None)).scalar()
+        avg_conf = session.query(func.avg(H.avg_confidence)).filter(
+            H.user_id == uid, H.created_at >= month0, H.avg_confidence.isnot(None)).scalar()
+        avg_ms = float(avg_ms) if avg_ms is not None else None       # Postgres avg() → Decimal
+        avg_conf = float(avg_conf) if avg_conf is not None else None
+
+        corrected = base.filter(H.corrected_json.isnot(None)).count()
+        routed = session.query(A).filter(A.user_id == uid, A.created_at >= month0).count()
+        reviews_needed = min(docs, corrected + routed)           # proxy: corrected OR routed to approval
+        stp = round((docs - reviews_needed) / docs, 4) if docs else None
+
+        MANUAL_MIN = 4                                            # assumed manual-entry minutes / doc
+        actual_min = ((avg_ms or 0) / 60000.0) * docs
+        est_saved = max(0, round(docs * MANUAL_MIN - actual_min))
+
+        return {
+            "period": "month",
+            "documents_processed": docs,
+            "fields_extracted": int(fields),
+            "avg_confidence": round(float(avg_conf), 1) if avg_conf is not None else None,
+            "avg_seconds": round(float(avg_ms) / 1000, 1) if avg_ms is not None else None,
+            "credits_spent": int(credits),
+            "reviews_needed": reviews_needed,
+            "straight_through_rate": stp,
+            "estimated_minutes_saved": est_saved,
+            "estimate_basis": f"time saved assumes ~{MANUAL_MIN} min manual entry per document",
+        }
+    finally:
+        session.close()
+
+
+@app.get("/v1/observability")
+def observability(request: Request, x_api_key: str = Header(None)):
+    """Real reliability metrics from the ops-event log — request volume, error
+    rate, and latency percentiles over 24h and 30d. All measured, no estimates."""
+    from datetime import timedelta
+    session = db.SessionLocal()
+    try:
+        caller = _resolve_caller(session, x_api_key, request)
+        uid = caller.user_id
+        O = models.OpsEvent
+        now = datetime.utcnow()
+
+        def window(since):
+            q = session.query(O).filter(O.user_id == uid, O.created_at >= since)
+            total = q.count()
+            errors = q.filter(O.status == "error").count()
+            lat = sorted(r[0] for r in session.query(O.latency_ms).filter(
+                O.user_id == uid, O.created_at >= since, O.status == "ok",
+                O.latency_ms.isnot(None)).all())
+
+            def pct(p):
+                if not lat:
+                    return None
+                i = max(0, min(len(lat) - 1, int(round(p / 100.0 * len(lat)) - 1)))
+                return lat[i]
+
+            return {
+                "requests": total,
+                "errors": errors,
+                "error_rate": round(errors / total, 4) if total else None,
+                "success_rate": round((total - errors) / total, 4) if total else None,
+                "p50_ms": pct(50),
+                "p95_ms": pct(95),
+            }
+
+        return {"last_24h": window(now - timedelta(hours=24)),
+                "last_30d": window(now - timedelta(days=30))}
+    finally:
+        session.close()
+
+
+@app.get("/v1/status")
+def public_status(request: Request):
+    """PUBLIC system status — aggregate reliability across ALL traffic. No auth,
+    no per-user data. Every figure is measured from the ops-event log; nothing
+    here is hand-set. Powers the public /status trust page."""
+    from datetime import timedelta
+    from sqlalchemy import func
+    session = db.SessionLocal()
+    try:
+        O, H = models.OpsEvent, models.History
+        now = datetime.utcnow()
+
+        def win(since):
+            q = session.query(O).filter(O.created_at >= since)
+            total = q.count()
+            errors = q.filter(O.status == "error").count()
+            lat = sorted(r[0] for r in session.query(O.latency_ms).filter(
+                O.created_at >= since, O.status == "ok", O.latency_ms.isnot(None)).all())
+
+            def pct(p):
+                if not lat:
+                    return None
+                i = max(0, min(len(lat) - 1, int(round(p / 100.0 * len(lat)) - 1)))
+                return lat[i]
+
+            return {"requests": total, "errors": errors,
+                    "success_rate": round((total - errors) / total, 4) if total else None,
+                    "p50_ms": pct(50), "p95_ms": pct(95)}
+
+        last1h = win(now - timedelta(hours=1))
+        er = (last1h["errors"] / last1h["requests"]) if last1h["requests"] else 0.0
+        state = "operational" if er < 0.05 else "degraded"
+        fields_30d = session.query(func.coalesce(func.sum(H.field_count), 0)).filter(
+            H.created_at >= now - timedelta(days=30)).scalar() or 0
+
+        return {
+            "status": state,
+            "last_24h": win(now - timedelta(hours=24)),
+            "last_30d": win(now - timedelta(days=30)),
+            "fields_processed_30d": int(fields_30d),
+            "generated_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        }
+    finally:
+        session.close()
+
+
+@app.get("/v1/documents")
+def documents(request: Request, x_api_key: str = Header(None), limit: int = 12):
+    """The caller's recent extractions, newest first — powers the SPA's Recent list."""
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        rows = (session.query(models.History)
+                .filter_by(user_id=api_key.user_id)
+                .order_by(models.History.id.desc())
+                .limit(min(max(limit, 1), 50)).all())
+        return {"documents": [{
+            "id": h.id,
+            "document_type": h.document_type or "document",
+            "kind": h.kind,
+            "created_at": h.created_at.isoformat() if h.created_at else None,
+        } for h in rows]}
+    finally:
+        session.close()
+
+
+# ---------- Workflow Engine v1: rules → approvals → audit ----------
+
+_ALLOWED_OPS = {"gt", "lt", "gte", "lte", "eq", "contains"}
+
+
+def _approval_dict(a) -> dict:
+    return {
+        "id": a.id,
+        "history_id": a.history_id,
+        "rule_id": a.rule_id,
+        "rule_name": a.rule_name,
+        "document_type": a.document_type or "document",
+        "amount": float(a.amount) if a.amount is not None else None,
+        "status": a.status,
+        "note": a.note,
+        "created_at": a.created_at.isoformat() if a.created_at else None,
+        "decided_at": a.decided_at.isoformat() if a.decided_at else None,
+    }
+
+
+@app.get("/v1/workflow/rules")
+def list_workflow_rules(request: Request, x_api_key: str = Header(None)):
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        rules = (session.query(models.WorkflowRule)
+                 .filter_by(user_id=api_key.user_id)
+                 .order_by(models.WorkflowRule.id.desc()).all())
+        return {"rules": [{
+            "id": r.id, "name": r.name, "field": r.field, "op": r.op,
+            "value": r.value, "action": r.action, "active": r.active,
+        } for r in rules]}
+    finally:
+        session.close()
+
+
+@app.post("/v1/workflow/rules")
+def create_workflow_rule(request: Request, payload: dict = Body(...), x_api_key: str = Header(None)):
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        name = (payload.get("name") or "").strip()
+        field = (payload.get("field") or "").strip()
+        op = (payload.get("op") or "").strip().lower()
+        value = str(payload.get("value") if payload.get("value") is not None else "").strip()
+        if not name or not field or op not in _ALLOWED_OPS or value == "":
+            raise HTTPException(400, f"name, field, value, and op ∈ {sorted(_ALLOWED_OPS)} are required")
+        rule = models.WorkflowRule(
+            user_id=api_key.user_id, name=name, field=field, op=op,
+            value=value, action="require_approval", active=True)
+        session.add(rule)
+        session.commit()
+        return {"id": rule.id, "name": rule.name, "field": rule.field,
+                "op": rule.op, "value": rule.value, "active": rule.active}
+    finally:
+        session.close()
+
+
+@app.delete("/v1/workflow/rules/{rid}")
+def delete_workflow_rule(rid: int, request: Request, x_api_key: str = Header(None)):
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        rule = session.query(models.WorkflowRule).filter_by(id=rid, user_id=api_key.user_id).first()
+        if not rule:
+            raise HTTPException(404, "rule not found")
+        session.delete(rule)
+        session.commit()
+        return {"ok": True}
+    finally:
+        session.close()
+
+
+@app.get("/v1/approvals")
+def list_approvals(request: Request, x_api_key: str = Header(None), status: str = "pending", limit: int = 50):
+    """The review queue. `status` ∈ pending|approved|rejected|all."""
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        q = session.query(models.Approval).filter_by(user_id=api_key.user_id)
+        if status and status != "all":
+            q = q.filter(models.Approval.status == status)
+        rows = q.order_by(models.Approval.id.desc()).limit(min(max(limit, 1), 100)).all()
+        pending_n = (session.query(models.Approval)
+                     .filter_by(user_id=api_key.user_id, status="pending").count())
+        blocked_n = (session.query(models.Approval)
+                     .filter_by(user_id=api_key.user_id, status="blocked").count())
+        return {"approvals": [_approval_dict(a) for a in rows],
+                "pending_count": pending_n, "blocked_count": blocked_n}
+    finally:
+        session.close()
+
+
+def _decide_approval(request, x_api_key, aid: int, new_status: str, payload: dict | None):
+    from datetime import datetime
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        ap = session.query(models.Approval).filter_by(id=aid, user_id=api_key.user_id).first()
+        if not ap:
+            raise HTTPException(404, "approval not found")
+        # 'pending' (require_approval) and 'blocked' (block policy) are both open
+        # states a reviewer can decide; already-decided ones can't be re-decided.
+        if ap.status not in ("pending", "blocked"):
+            raise HTTPException(409, f"already {ap.status}")
+        note = (payload or {}).get("note") if isinstance(payload, dict) else None
+        ap.status = new_status
+        ap.decided_by = api_key.user_id
+        ap.decided_at = datetime.utcnow()
+        ap.note = note
+        session.add(models.AuditLog(
+            user_id=api_key.user_id, approval_id=ap.id, event=new_status,
+            detail=f"{new_status.capitalize()} by user{(' — ' + note) if note else ''}."))
+        if new_status == "approved":
+            session.add(models.AuditLog(
+                user_id=api_key.user_id, approval_id=ap.id, event="erp_export",
+                detail="Marked ready for Odoo/ERP posting (fields-as-columns export)."))
+        session.commit()
+        return {"ok": True, "approval": _approval_dict(ap)}
+    finally:
+        session.close()
+
+
+@app.post("/v1/approvals/{aid}/approve")
+def approve_approval(aid: int, request: Request, payload: dict = Body(None), x_api_key: str = Header(None)):
+    return _decide_approval(request, x_api_key, aid, "approved", payload)
+
+
+@app.post("/v1/approvals/{aid}/reject")
+def reject_approval(aid: int, request: Request, payload: dict = Body(None), x_api_key: str = Header(None)):
+    return _decide_approval(request, x_api_key, aid, "rejected", payload)
+
+
+@app.get("/v1/audit")
+def list_audit(request: Request, x_api_key: str = Header(None), limit: int = 30):
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        rows = (session.query(models.AuditLog).filter_by(user_id=api_key.user_id)
+                .order_by(models.AuditLog.id.desc()).limit(min(max(limit, 1), 100)).all())
+        return {"audit": [{
+            "id": r.id, "approval_id": r.approval_id, "event": r.event,
+            "detail": r.detail,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        } for r in rows]}
+    finally:
+        session.close()
+
+
+@app.get("/v1/workflow/stats")
+def workflow_stats(request: Request, x_api_key: str = Header(None)):
+    """Process-monitoring metrics for the operations dashboard — all real counts."""
+    from datetime import datetime
+    session = db.SessionLocal()
+    try:
+        api_key = _resolve_caller(session, x_api_key, request)
+        uid = api_key.user_id
+        H, A = models.History, models.Approval
+        docs_total = session.query(H).filter_by(user_id=uid).count()
+        today0 = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        docs_today = session.query(H).filter(H.user_id == uid, H.created_at >= today0).count()
+        def acount(st): return session.query(A).filter_by(user_id=uid, status=st).count()
+        pending, approved, rejected = acount("pending"), acount("approved"), acount("rejected")
+        decided = approved + rejected
+        return {
+            "documents_total": docs_total,
+            "documents_today": docs_today,
+            "pending": pending,
+            "approved": approved,
+            "rejected": rejected,
+            # docs that never tripped a rule → straight-through, no human needed
+            "auto_cleared": max(docs_total - (pending + approved + rejected), 0),
+            "approval_rate": round(approved / decided * 100, 1) if decided else None,
+        }
+    finally:
+        session.close()
+
+
+@app.get("/v1/session")
+def session_info(request: Request):
+    """Bootstrap for the SPA app: whether the visitor is logged in, minimal user
+    fields, and the CSRF token needed for cookie-authed /v1/* calls. No secrets
+    are exposed. This endpoint itself needs no CSRF (it's how the SPA gets it)."""
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return {"authenticated": False}
+        csrf = auth.session_csrf_token(session, request.cookies.get("sid")) or ""
+        return {
+            "authenticated": True,
+            "user": {"email": user.email, "plan": user.plan},
+            "csrf_token": csrf,
+        }
+    finally:
+        session.close()
+
+
 @app.post("/v1/tool/{slug}")
 def run_tool(slug: str, request: Request, file: UploadFile = File(...),
              hard: bool = Form(True), routing: str = Form("explicit"),
@@ -1829,7 +2441,7 @@ def run_tool(slug: str, request: Request, file: UploadFile = File(...),
 def export_table(request: Request, payload: dict = Body(...), x_api_key: str = Header(None)):
     session = db.SessionLocal()
     try:
-        _resolve_caller(session, x_api_key, request)
+        _uid = _resolve_caller(session, x_api_key, request).user.id
     finally:
         session.close()
     fmt, columns, rows = payload.get("format", "xlsx"), payload.get("columns", []), payload.get("rows", [])
@@ -1839,6 +2451,7 @@ def export_table(request: Request, payload: dict = Body(...), x_api_key: str = H
         data, media, fname = exports.table_to_csv(columns, rows)
     else:
         raise HTTPException(400, "format must be xlsx or csv")
+    _log_doc_event(_uid, payload.get("history_id"), "exported", f"table:{fmt}")
     return Response(content=data, media_type=media,
                     headers={"Content-Disposition": f'attachment; filename="{fname}"'})
 
@@ -1872,7 +2485,7 @@ def reproduce_endpoint(request: Request, payload: dict = Body(...),
     """
     session = db.SessionLocal()
     try:
-        _resolve_caller(session, x_api_key, request)
+        _uid = _resolve_caller(session, x_api_key, request).user.id
     finally:
         session.close()
     from app.services import repro as _repro
@@ -1896,6 +2509,7 @@ def reproduce_endpoint(request: Request, payload: dict = Body(...),
             raise HTTPException(400, "format must be one of: html, pdf, docx")
     except ValueError as ve:
         raise HTTPException(400, str(ve))
+    _log_doc_event(_uid, payload.get("history_id"), "exported", f"repro:{fmt}")
     return Response(content=body, media_type=mt,
                     headers={"Content-Disposition": f'attachment; filename="{fn}"'})
 
@@ -1912,24 +2526,32 @@ def export_data(request: Request, payload: dict = Body(...), x_api_key: str = He
     """
     session = db.SessionLocal()
     try:
-        _resolve_caller(session, x_api_key, request)  # auth gate
+        _uid = _resolve_caller(session, x_api_key, request).user.id  # auth gate
     finally:
         session.close()
     fmt = payload.get("format", "csv")
     rows = payload.get("rows", [])
     result = payload.get("result")
+    # Odoo-importable (fields-as-columns) exports advance the ERP stage; every
+    # other format is a plain "exported" delivery event.
+    _stage = "erp" if str(fmt).startswith("xlsx_columns") else "exported"
+    # Export language is independent of the session/output locale: the caller
+    # picks it per-export ("en" → English LTR headers, else Arabic RTL).
+    lang = "en" if str(payload.get("lang", "ar")).lower().startswith("en") else "ar"
     if fmt not in exports.EXPORTERS:
         raise HTTPException(400, f"unsupported format '{fmt}'. Use: {', '.join(exports.EXPORTERS)}")
 
     # Layout-aware path: only xlsx for now; other formats stay flat.
     if isinstance(result, dict) and fmt == "xlsx":
         data, media_type, filename = exports.to_xlsx_layout_aware(result)
+        _log_doc_event(_uid, payload.get("history_id"), _stage, fmt)
         return Response(content=data, media_type=media_type,
                         headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
     if not rows:
         raise HTTPException(400, "no rows to export (pass `rows` or a rich `result` for xlsx)")
-    data, media_type, filename = exports.EXPORTERS[fmt](rows)
+    data, media_type, filename = exports.EXPORTERS[fmt](rows, lang=lang)
+    _log_doc_event(_uid, payload.get("history_id"), _stage, fmt)
     return Response(content=data, media_type=media_type,
                     headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
@@ -2284,15 +2906,213 @@ def save_correction(hid: int, request: Request, payload: dict = Body(...),
         if not h or h.user_id != user.id:
             raise HTTPException(404, "not found")
         corrections = dict(h.corrected_json or {})
+        _old_val = corrections.get(field) if field in corrections else _orig_value(h.result_json, field)
         corrections[field] = value
         h.corrected_json = corrections
         session.commit()
+
+        # Version log: append a version for this correction (field / from / to).
+        try:
+            from sqlalchemy import func as _func
+            maxv = session.query(_func.max(models.ExtractionVersion.version)).filter_by(history_id=hid).scalar() or 1
+            session.add(models.ExtractionVersion(
+                history_id=hid, user_id=user.id, version=maxv + 1, source="corrected", field=field,
+                old_value=str(_old_val) if _old_val is not None else None,
+                new_value=str(value) if value is not None else None))
+            session.commit()
+        except Exception:  # noqa: BLE001
+            session.rollback()
+
+        # Learning: remember this fix so future extractions can apply it — but
+        # ONLY for stable fields (never volatile amounts/dates/numbers, which vary
+        # per document), and SCOPED to this document's vendor so a fix learned for
+        # one supplier won't bleed onto another. Volatile edits still live in
+        # corrected_json + the version log above for audit; they're just not
+        # turned into a reusable literal. [[project_mostakhles_prove_the_platform]]
+        if not _is_volatile_field(field):
+            try:
+                orig = _orig_value(h.result_json, field)
+                scope = _doc_scope(h.result_json) or None
+                C = models.CorrectionMemory
+                existing = session.query(C).filter_by(
+                    user_id=user.id, document_type=h.document_type,
+                    field_key=field, scope_key=scope).first()
+                if existing:
+                    if orig is not None:
+                        existing.original_value = str(orig)
+                    if value is not None:
+                        existing.corrected_value = str(value)
+                    existing.count = (existing.count or 1) + 1
+                    existing.updated_at = datetime.utcnow()
+                else:
+                    session.add(C(user_id=user.id, document_type=h.document_type,
+                                  field_key=field, scope_key=scope,
+                                  original_value=str(orig) if orig is not None else None,
+                                  corrected_value=str(value) if value is not None else None,
+                                  count=1))
+                session.commit()
+            except Exception:  # noqa: BLE001 — learning is best-effort, never break the save
+                session.rollback()
+
         return {"ok": True, "corrected_count": len(corrections)}
     finally:
         session.close()
 
 
 # ---------- History ----------
+@app.get("/v1/history/{hid}/versions")
+def history_versions(hid: int, request: Request, x_api_key: str = Header(None)):
+    """The append-only version timeline for one extraction — v1 (extracted) plus a
+    version per correction (field / from / to). Auditable and reproducible-by-replay."""
+    session = db.SessionLocal()
+    try:
+        user = _resolve_caller(session, x_api_key, request).user
+        h = session.get(models.History, hid)
+        if not h or h.user_id != user.id:
+            raise HTTPException(404, "not found")
+        V = models.ExtractionVersion
+        rows = session.query(V).filter_by(history_id=hid).order_by(V.version.asc()).all()
+        return {
+            "history_id": hid,
+            "current_version": rows[-1].version if rows else 1,
+            "versions": [{
+                "version": r.version, "source": r.source, "field": r.field,
+                "old_value": r.old_value, "new_value": r.new_value,
+                "at": r.created_at.strftime("%Y-%m-%dT%H:%M:%SZ") if r.created_at else None,
+            } for r in rows],
+        }
+    finally:
+        session.close()
+
+
+@app.get("/v1/history/{hid}/timeline")
+def history_timeline(hid: int, request: Request, x_api_key: str = Header(None)):
+    """The per-document lifecycle timeline — Uploaded → Extracted → Validated →
+    Reviewed → Approved → Exported → Sent to ERP, each with a real timestamp.
+    Delivery stages (exported/erp) come from DocumentEvent; the earlier stages are
+    DERIVED from History / ExtractionVersion / Approval, so the audit view is
+    always consistent with the source-of-truth tables and can't drift."""
+    from sqlalchemy import func as _func
+    from datetime import timedelta as _td
+
+    def _iso(dt):
+        return dt.strftime("%Y-%m-%dT%H:%M:%SZ") if dt else None
+
+    session = db.SessionLocal()
+    try:
+        user = _resolve_caller(session, x_api_key, request).user
+        h = session.get(models.History, hid)
+        if not h or h.user_id != user.id:
+            raise HTTPException(404, "not found")
+
+        created = h.created_at
+        # Uploaded ≈ extraction start = completion − processing wall-clock.
+        uploaded_at = created
+        if created and h.duration_ms:
+            try:
+                uploaded_at = created - _td(milliseconds=int(h.duration_ms))
+            except Exception:  # noqa: BLE001
+                uploaded_at = created
+
+        # Reviewed — first human correction (from the append-only version log).
+        V = models.ExtractionVersion
+        rev = (session.query(_func.min(V.created_at), _func.count(V.id))
+               .filter(V.history_id == hid, V.source == "corrected").first())
+        reviewed_at, reviewed_n = (rev or (None, 0))
+
+        # Approved / rejected / in-review — from the review queue.
+        A = models.Approval
+        routed_at = session.query(_func.min(A.created_at)).filter(A.history_id == hid).scalar()
+        approved_row = (session.query(A).filter(A.history_id == hid, A.status == "approved")
+                        .order_by(A.decided_at.asc()).first())
+        rejected_row = (session.query(A).filter(A.history_id == hid, A.status == "rejected")
+                        .order_by(A.decided_at.asc()).first())
+        if approved_row:
+            appr_state, appr_at = "approved", approved_row.decided_at
+        elif rejected_row:
+            appr_state, appr_at = "rejected", rejected_row.decided_at
+        elif routed_at is not None:
+            appr_state, appr_at = "pending", routed_at
+        else:
+            appr_state, appr_at = None, None
+
+        # Delivery stages — from DocumentEvent.
+        D = models.DocumentEvent
+
+        def _dev(stage):
+            r = (session.query(_func.min(D.created_at), _func.count(D.id))
+                 .filter(D.history_id == hid, D.stage == stage).first())
+            return (r or (None, 0))
+        exported_at, exported_n = _dev("exported")
+        erp_at, erp_n = _dev("erp")
+        imported_at, imported_n = _dev("imported")
+        imported_detail = None
+        if imported_at:
+            imported_detail = (session.query(D.detail)
+                               .filter(D.history_id == hid, D.stage == "imported")
+                               .order_by(D.created_at.asc()).limit(1).scalar()) or "confirmed in ERP"
+
+        conf = h.avg_confidence
+        stages = [
+            {"key": "uploaded", "label": "Uploaded", "reached": bool(created),
+             "at": _iso(uploaded_at), "detail": None},
+            {"key": "extracted", "label": "Extracted", "reached": bool(created),
+             "at": _iso(created), "detail": (f"{h.field_count} fields" if h.field_count else None)},
+            {"key": "validated", "label": "Validated", "reached": conf is not None,
+             "at": (_iso(created) if conf is not None else None),
+             "detail": (f"{conf}% avg confidence" if conf is not None else None)},
+            {"key": "reviewed", "label": "Reviewed", "reached": reviewed_at is not None,
+             "at": _iso(reviewed_at),
+             "detail": (f"{reviewed_n} correction{'s' if reviewed_n != 1 else ''}" if reviewed_at else None)},
+            {"key": "approved", "label": ("Rejected" if appr_state == "rejected" else "Approved"),
+             "reached": appr_state in ("approved", "rejected"), "at": _iso(appr_at),
+             "state": appr_state, "detail": ("in review" if appr_state == "pending" else appr_state)},
+            {"key": "exported", "label": "Exported", "reached": exported_at is not None,
+             "at": _iso(exported_at),
+             "detail": (f"{exported_n} export{'s' if exported_n != 1 else ''}" if exported_at else None)},
+            {"key": "erp", "label": "Sent to ERP", "reached": erp_at is not None,
+             "at": _iso(erp_at), "detail": ("Odoo-ready export" if erp_at else None)},
+            {"key": "imported", "label": "Imported to ERP", "reached": imported_at is not None,
+             "at": _iso(imported_at), "detail": imported_detail},
+        ]
+        return {"history_id": hid, "document_type": h.document_type,
+                "pending_review": appr_state == "pending", "stages": stages}
+    finally:
+        session.close()
+
+
+@app.post("/v1/erp/confirm")
+def erp_confirm(request: Request, payload: dict = Body(...), x_api_key: str = Header(None)):
+    """Confirm that an extraction's data was imported into the caller's ERP — the
+    inbound callback the Mostakhles Odoo connector fires after it writes the mapped
+    fields onto an Odoo record. Stamps the 'imported' lifecycle stage so the
+    document timeline shows a real 'Imported to ERP' event (closing the loop that
+    'Sent to ERP' — the Odoo-ready export — only opened).
+
+    Body: {history_id, model?, record_id?, record_ref?}. Auth: x-api-key (the
+    connector) or a CSRF-checked session. Best-effort; never the connector's
+    problem if this fails — the Odoo write is already committed on their side."""
+    hid = payload.get("history_id") or payload.get("hid")
+    if not hid:
+        raise HTTPException(400, "history_id is required")
+    session = db.SessionLocal()
+    try:
+        user = _resolve_caller(session, x_api_key, request).user
+        h = session.get(models.History, int(hid))
+        if not h or h.user_id != user.id:
+            raise HTTPException(404, "not found")
+        model = str(payload.get("model") or "").strip()
+        ref = str(payload.get("record_ref") or payload.get("ref") or "").strip()
+        rid = payload.get("record_id")
+        loc = f"{model}#{rid}" if (model and rid) else (model or None)
+        detail = " · ".join([b for b in (ref, loc) if b])[:250] or None
+        _uid = user.id
+    finally:
+        session.close()
+    _log_doc_event(_uid, hid, "imported", detail)
+    return {"ok": True, "history_id": int(hid), "stage": "imported"}
+
+
 @app.get("/v1/history/{hid}")
 def history_item(hid: int, request: Request):
     session = db.SessionLocal()
@@ -2456,6 +3276,7 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
     visual: bool = Form(False),
     output_lang: str = Form("preserve"),   # 'preserve' | 'ar' | 'en'
     x_api_key: str = Header(None),
+    idempotency_key: str = Header(None, alias="Idempotency-Key"),
 ):
     if not llm.is_configured():
         raise HTTPException(500, "GEMINI_API_KEY not configured on server")
@@ -2514,6 +3335,15 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
     try:
         api_key = _resolve_caller(session, x_api_key, request)
 
+        # Idempotency: a repeated request with the same Idempotency-Key replays
+        # the stored response — no re-run, no double charge.
+        if idempotency_key:
+            prior = (session.query(models.IdempotencyKey)
+                     .filter_by(user_id=api_key.user_id, key=idempotency_key)
+                     .order_by(models.IdempotencyKey.id.desc()).first())
+            if prior and prior.response_json:
+                return prior.response_json
+
         # Large PDF → background batch job (one call per page; never truncates).
         # Only the single-file path goes through batching today; multi-image
         # uploads are always under the size threshold (1-10 images).
@@ -2536,6 +3366,8 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
         import time as _time
         _t0 = _time.time()
         layout = None
+        mode = "auto"   # pre-init so ops-logging on an early failure has a label
+        _learned_n = 0  # set after extraction — learned corrections are applied post-hoc
         try:
             if schema:
                 # Schema mode: single image only for now (rare to combine images
@@ -2574,8 +3406,22 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
                     data["_layout_html"] = _layout_html
                 mode = "auto"
         except Exception as e:  # noqa: BLE001 — surface model/parse errors; don't bill failures
-            raise _http_error_for(e, "extraction failed")
+            _he = _http_error_for(e, "extraction failed")
+            _log_ops(session, api_key.user_id, mode, "error",
+                     latency_ms=int((_time.time() - _t0) * 1000),
+                     tier=("hard" if hard else "fast"),
+                     http_status=_he.status_code, error_type=type(e).__name__)
+            raise _he
         _dur_ms = int((_time.time() - _t0) * 1000)
+
+        # Learning loop (post-hoc, gated): fill low-confidence, same-vendor,
+        # non-volatile fields with values this account has reliably corrected
+        # before. Applied to `data` before it's stored/returned.
+        try:
+            _learned_n = _apply_learned_corrections(
+                session, api_key.user_id, document_type, data)
+        except Exception:  # noqa: BLE001 — learning must never break extraction
+            _learned_n = 0
 
         # Only meter successful extractions.
         auth.increment_usage(session, api_key, count=cost)
@@ -2602,6 +3448,33 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
         # `hid` lets a client (e.g. the Odoo connector) POST field corrections
         # back to /v1/extract/correct/{hid} — the human-in-the-loop feedback loop.
         body["hid"] = hid
+        body["learned_applied"] = _learned_n   # # of learned corrections actually applied (gated)
+        # Confidence/workflow policies: evaluate() (inside _record_history) may have
+        # held or blocked this document. Surface the verdict so a client — the Odoo
+        # connector especially — can enforce "block before import".
+        try:
+            from sqlalchemy import func as _pfunc  # noqa: F401  (kept local, consistent w/ file)
+            _aps = (session.query(models.Approval)
+                    .filter_by(history_id=hid).all()) if hid else []
+            _holds = [{"rule": a.rule_name, "status": a.status,
+                       "action": "block" if a.status == "blocked" else "require_approval",
+                       "id": a.id} for a in _aps]
+            body["policy"] = {"holds": _holds,
+                              "blocked": any(a.status == "blocked" for a in _aps),
+                              "held": any(a.status == "pending" for a in _aps)}
+        except Exception:  # noqa: BLE001 — policy surfacing is best-effort
+            body["policy"] = {"holds": [], "blocked": False, "held": False}
+        # Observability: one 'ok' row per successful extraction.
+        _log_ops(session, api_key.user_id, mode, "ok", latency_ms=_dur_ms,
+                 tier=("hard" if hard else "fast"))
+        # Idempotency: remember this response so a retried key replays it.
+        if idempotency_key:
+            try:
+                session.add(models.IdempotencyKey(
+                    user_id=api_key.user_id, key=idempotency_key, response_json=body))
+                session.commit()
+            except Exception:  # noqa: BLE001
+                session.rollback()
         return body
     finally:
         session.close()
@@ -2624,7 +3497,43 @@ def extract_endpoint(  # sync def => FastAPI runs it in a threadpool, so the slo
 from datetime import datetime, timedelta  # noqa: E402
 
 from app.services import paymob as _paymob, plans  # noqa: E402
+from app.services import paytabs as _paytabs  # noqa: E402
 from app.services.plans import PAID_PLANS, get_plan  # noqa: E402
+
+
+def _apply_subscription(session, user, plan_slug: str, provider: str,
+                        external_id: str, amount_usd: float | None) -> int:
+    """Provider-agnostic grant: cancel any active subscription, open a fresh
+    30-day one, and flip user.plan. Returns the new subscription id. (Paymob and
+    PayPal predate this and inline the same logic; new providers use this.)"""
+    now = datetime.utcnow()
+    (session.query(models.Subscription)
+        .filter_by(user_id=user.id, status="active")
+        .update({"status": "cancelled", "cancelled_at": now, "updated_at": now},
+                synchronize_session=False))
+    sub = models.Subscription(
+        user_id=user.id, provider=provider, external_id=external_id,
+        plan=plan_slug, status="active",
+        current_period_end=now + timedelta(days=30), amount_usd=amount_usd)
+    session.add(sub)
+    session.flush()
+    user.plan = plan_slug
+    return sub.id
+
+
+def _usd_to_paytabs(usd: float) -> tuple[float, str]:
+    """USD plan price → PayTabs settlement currency (SAR enables mada, AED for
+    UAE). SAR/AED are USD-pegged. Returns (amount, currency)."""
+    cur = (settings.PAYTABS_CURRENCY or "SAR").upper()
+    rate = {"SAR": settings.SAR_PER_USD, "AED": settings.AED_PER_USD}.get(cur, 1.0)
+    return round(usd * rate, 2), cur
+
+
+def _paytabs_provider() -> str:
+    """Region-tagged provider slug so KSA (mada) and UAE records stay distinct
+    if both regions are ever run — paytabs_sa / paytabs_ae / paytabs."""
+    return {"SAR": "paytabs_sa", "AED": "paytabs_ae"}.get(
+        (settings.PAYTABS_CURRENCY or "").upper(), "paytabs")
 
 
 def _mint_merchant_order_id(user_id: int, plan_slug: str) -> str:
@@ -2643,6 +3552,35 @@ def _parse_merchant_order_id(mid: str) -> tuple[int, str] | None:
         return int(parts[2]), parts[3]
     except (ValueError, IndexError):
         return None
+
+
+# Currencies we're willing to charge through Paymob, in the merchant's preferred
+# order (first = default selection on the picker). Filtered to the ones we know
+# how to price. Anything else in the config string is ignored.
+_PAYMOB_KNOWN_CURRENCIES = ("USD", "EGP")
+
+
+def _paymob_currencies() -> list[str]:
+    """Parsed, validated, de-duplicated list from settings.PAYMOB_CURRENCIES."""
+    seen: list[str] = []
+    for raw in (settings.PAYMOB_CURRENCIES or "").split(","):
+        cur = raw.strip().upper()
+        if cur in _PAYMOB_KNOWN_CURRENCIES and cur not in seen:
+            seen.append(cur)
+    return seen or ["USD"]
+
+
+def _paymob_amount(plan_cfg, currency: str) -> float:
+    """Charge amount for `plan_cfg` in `currency`, in that currency's major unit.
+    USD is the native plan price; EGP is derived at the configured rate."""
+    if currency.upper() == "EGP":
+        return round(plan_cfg.usd * settings.EGP_PER_USD, 2)
+    return round(plan_cfg.usd, 2)
+
+
+def _paymob_currency_available(currency: str) -> bool:
+    """True if a Paymob integration (MID) is configured for `currency`."""
+    return bool(_paymob.integration_id_for(currency))
 
 
 @app.get("/billing/checkout", response_class=HTMLResponse)
@@ -2668,13 +3606,30 @@ def billing_checkout_picker(request: Request, plan: str = Query(...)):
         paypal_available = bool(plans.paypal_plan_id(plan)
                                 and settings.PAYPAL_CLIENT_ID
                                 and settings.PAYPAL_SECRET)
-        paymob_available = bool(settings.PAYMOB_API_KEY)
+        # Per-currency Paymob options: each currency the merchant offers AND has
+        # an integration (MID) configured for. The template renders one radio per
+        # option so the customer picks USD or EGP.
+        paymob_options = [
+            {"currency": cur,
+             "amount": _paymob_amount(plan_cfg, cur),
+             "available": _paymob_currency_available(cur)}
+            for cur in _paymob_currencies()
+        ]
+        paymob_available = bool(settings.PAYMOB_API_KEY) and any(
+            o["available"] for o in paymob_options)
+        # Back-compat for any template still reading a single EGP figure.
         amount_egp = round(plan_cfg.usd * settings.EGP_PER_USD, 2)
+        paytabs_available = bool(settings.PAYTABS_PROFILE_ID and settings.PAYTABS_SERVER_KEY)
+        paytabs_amount, paytabs_currency = _usd_to_paytabs(plan_cfg.usd)
         ctx = _ctx(request,
                    plan=plan_cfg,
                    amount_egp=amount_egp,
+                   paymob_options=paymob_options,
                    paypal_available=paypal_available,
-                   paymob_available=paymob_available)
+                   paymob_available=paymob_available,
+                   paytabs_available=paytabs_available,
+                   paytabs_amount=paytabs_amount,
+                   paytabs_currency=paytabs_currency)
         return templates.TemplateResponse(request, "checkout.html", ctx)
     finally:
         session.close()
@@ -2682,19 +3637,25 @@ def billing_checkout_picker(request: Request, plan: str = Query(...)):
 
 @app.post("/billing/paymob/checkout")
 def billing_paymob_checkout(request: Request, plan: str = Form(...),
-                            csrf_token: str = Form("")):
-    """Mint a Paymob iframe for the requested plan. Auth'd users only.
-    Posted to from the Paymob tile on /billing/checkout."""
+                            currency: str = Form(""), csrf_token: str = Form("")):
+    """Mint a Paymob iframe for the requested plan, charging in the chosen
+    currency (USD or EGP). Auth'd users only. Posted to from the Paymob tile on
+    /billing/checkout."""
     _require_csrf(request, csrf_token)
     plan_cfg = get_plan(plan)
     if not plan_cfg:
         raise HTTPException(status_code=400, detail=f"unknown plan: {plan}")
+    # Validate the requested currency against what we offer; default to the first.
+    offered = _paymob_currencies()
+    currency = (currency or "").strip().upper()
+    if currency not in offered:
+        currency = offered[0]
     session = db.SessionLocal()
     try:
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login?next=/pricing", status_code=303)
-        amount_egp = round(plan_cfg.usd * settings.EGP_PER_USD, 2)
+        amount = _paymob_amount(plan_cfg, currency)
         mid = _mint_merchant_order_id(user.id, plan_cfg.slug)
         billing = {
             "first_name": (user.email.split("@")[0] or "Customer")[:50],
@@ -2705,9 +3666,10 @@ def billing_paymob_checkout(request: Request, plan: str = Form(...),
             "building": "NA", "floor": "NA", "apartment": "NA",
         }
         try:
-            iframe, _order_id = _paymob.begin_checkout(amount_egp, mid, billing)
+            iframe, _order_id = _paymob.begin_checkout(amount, mid, billing,
+                                                       currency=currency)
         except _paymob.PaymobError as exc:
-            log.error("paymob checkout failed: %s", exc)
+            log.error("paymob checkout failed (currency=%s): %s", currency, exc)
             # Friendly redirect rather than raw 502 JSON dump.
             return RedirectResponse(
                 f"/billing/checkout?plan={plan}&error=paymob_unavailable",
@@ -2767,17 +3729,32 @@ async def paymob_callback(request: Request, hmac_sig: str = Query("", alias="hma
             return {"received": True, "duplicate": True}
 
         amount_cents = int(obj.get("amount_cents") or 0)
-        amount_usd = round(amount_cents / 100 / settings.EGP_PER_USD, 2) if amount_cents else None
+        # We may charge in USD or EGP. Normalise to USD for reporting using the
+        # currency Paymob echoes back (it's part of the signed HMAC payload, so
+        # it's trustworthy). A USD charge is 1:1; EGP is divided by the rate.
+        charge_currency = (obj.get("currency") or "EGP").upper()
+        if not amount_cents:
+            amount_usd = None
+        elif charge_currency == "USD":
+            amount_usd = round(amount_cents / 100, 2)
+        else:
+            amount_usd = round(amount_cents / 100 / settings.EGP_PER_USD, 2)
 
         user = None
         plan_slug = None
         subscription_id = None
 
-        if decoded and success:
+        # Resolve the user from the merchant_order_id whether the payment
+        # succeeded or failed, so a FAILED PaymentEvent is still attributable to
+        # the user (support, fraud review, dunning). The plan grant below stays
+        # strictly gated on `success`.
+        if decoded:
             user_id, plan_slug = decoded
             user = session.query(models.User).filter_by(id=user_id).first()
+
+        if user and success:
             plan_cfg = plans.get_plan(plan_slug)
-            if user and plan_cfg:
+            if plan_cfg:
                 # Close any active subscription on this user before opening a new one.
                 # Two active subs would let the dashboard / quota logic disagree on
                 # which plan is current.
@@ -2802,8 +3779,12 @@ async def paymob_callback(request: Request, hmac_sig: str = Query("", alias="hma
                 log.info("paymob upgrade: user=%s plan=%s sub=%s amount_usd=%s",
                          user.id, plan_slug, sub.id, amount_usd)
             else:
-                log.warning("paymob upgrade skipped: user=%s plan=%s (user_exists=%s, plan_known=%s)",
-                            user_id, plan_slug, bool(user), bool(plan_cfg))
+                log.warning("paymob upgrade skipped: user=%s plan=%s not a known plan",
+                            user.id, plan_slug)
+        elif success and not user:
+            # Paid, but we couldn't map the payment to a user (deleted user or
+            # unrecognised merchant_order_id). Event is still recorded below.
+            log.warning("paymob success but unresolved user: mid=%s decoded=%s", mid, decoded)
 
         event_type = "paymob.transaction.success" if success else "paymob.transaction.failed"
         evt = models.PaymentEvent(
@@ -2822,6 +3803,147 @@ async def paymob_callback(request: Request, hmac_sig: str = Query("", alias="hma
     except Exception:
         session.rollback()
         log.exception("paymob callback failed: txn=%s", txn_id)
+        raise
+    finally:
+        session.close()
+
+
+# ============================================================================
+#   PayTabs billing (Gulf: KSA mada + UAE / GCC cards)
+# ============================================================================
+#
+# Same shape as Paymob: mint mst_v1_… cart_id → hosted PayPage redirect →
+# server-to-server IPN. The IPN does NOT trust its posted body; it queries
+# PayTabs (with our Server Key) for the authoritative status before granting.
+
+@app.post("/billing/paytabs/checkout")
+def billing_paytabs_checkout(request: Request, plan: str = Form(...),
+                             csrf_token: str = Form("")):
+    """Create a PayTabs hosted PayPage for `plan` (mada / GCC cards). Auth'd
+    users only. Posted to from the PayTabs tile on /billing/checkout."""
+    _require_csrf(request, csrf_token)
+    plan_cfg = get_plan(plan)
+    if not plan_cfg:
+        raise HTTPException(status_code=400, detail=f"unknown plan: {plan}")
+    session = db.SessionLocal()
+    try:
+        user = _current_user(session, request)
+        if not user:
+            return RedirectResponse("/login?next=/pricing", status_code=303)
+        amount, currency = _usd_to_paytabs(plan_cfg.usd)
+        mid = _mint_merchant_order_id(user.id, plan_cfg.slug)
+        base = str(request.base_url).rstrip("/")
+        customer = {
+            "name": (user.email.split("@")[0] or "Customer")[:60],
+            "email": user.email,
+            "phone": "0500000000",  # PayTabs requires a non-empty phone
+            "street1": "NA", "city": "NA",
+            "country": {"SAR": "SA", "AED": "AE"}.get(currency, "SA"),
+        }
+        try:
+            redirect, _ref = _paytabs.begin_checkout(
+                amount, currency, mid,
+                f"Mostakhles {plan_cfg.name} plan",
+                customer,
+                callback_url=f"{base}/billing/paytabs/callback",
+                return_url=f"{base}/billing/paytabs/return")
+        except _paytabs.PayTabsError as exc:
+            log.error("paytabs checkout failed: %s", exc)
+            return RedirectResponse(
+                f"/billing/checkout?plan={plan}&error=paytabs_unavailable",
+                status_code=303)
+        return RedirectResponse(redirect, status_code=303)
+    finally:
+        session.close()
+
+
+@app.api_route("/billing/paytabs/return", methods=["GET", "POST"])
+async def paytabs_return(request: Request):
+    """Browser lands here after the PayPage. The plan grant happens on the
+    server-to-server IPN below — this page just confirms to the user."""
+    return RedirectResponse("/billing/success", status_code=303)
+
+
+@app.post("/billing/paytabs/callback")
+async def paytabs_callback(request: Request):
+    """PayTabs → Mostakhles IPN. Does NOT trust the posted body: takes tran_ref,
+    queries PayTabs (authenticated with our Server Key) for the real status,
+    then idempotently records the PaymentEvent + Subscription and flips
+    user.plan. Returns 200 so PayTabs stops retrying."""
+    ctype = request.headers.get("content-type", "")
+    raw = await request.body()
+    if "application/json" in ctype:
+        try:
+            payload = json.loads(raw or b"{}")
+        except json.JSONDecodeError:
+            payload = {}
+    else:
+        payload = dict(await request.form())
+
+    tran_ref = str(payload.get("tran_ref") or payload.get("tranRef") or "")
+    sig = str(payload.get("signature") or "")
+    if sig and not _paytabs.verify_signature(payload, sig):
+        log.warning("paytabs IPN signature mismatch (tran_ref=%s) — relying on query", tran_ref)
+    if not tran_ref:
+        return {"received": True, "ignored": "missing tran_ref"}
+
+    try:
+        q = _paytabs.query_transaction(tran_ref)
+    except _paytabs.PayTabsError as exc:
+        log.error("paytabs query failed for tran_ref=%s: %s", tran_ref, exc)
+        return {"received": True, "error": "query_failed"}
+
+    success = _paytabs.is_approved(q)
+    mid = str(q.get("cart_id") or payload.get("cart_id") or "")
+    decoded = _parse_merchant_order_id(mid)
+    provider = _paytabs_provider()
+    log.info("paytabs IPN: tran_ref=%s approved=%s cart_id=%s decoded=%s",
+             tran_ref, success, mid, decoded)
+
+    session = db.SessionLocal()
+    try:
+        existing = (session.query(models.PaymentEvent)
+                    .filter_by(provider=provider, external_id=tran_ref).first())
+        if existing:
+            return {"received": True, "duplicate": True}
+
+        try:
+            cart_amount = float(q.get("cart_amount") or 0)
+        except (TypeError, ValueError):
+            cart_amount = 0.0
+        cur = str(q.get("cart_currency") or settings.PAYTABS_CURRENCY or "SAR").upper()
+        rate = {"SAR": settings.SAR_PER_USD, "AED": settings.AED_PER_USD}.get(cur, 1.0)
+        amount_usd = round(cart_amount / rate, 2) if (cart_amount and rate) else None
+
+        user = None
+        plan_slug = None
+        subscription_id = None
+        if decoded and success:
+            user_id, plan_slug = decoded
+            user = session.query(models.User).filter_by(id=user_id).first()
+            plan_cfg = plans.get_plan(plan_slug)
+            if user and plan_cfg:
+                subscription_id = _apply_subscription(
+                    session, user, plan_slug, provider, tran_ref, amount_usd)
+                log.info("paytabs upgrade: user=%s plan=%s sub=%s amount_usd=%s",
+                         user.id, plan_slug, subscription_id, amount_usd)
+            else:
+                log.warning("paytabs upgrade skipped: user=%s plan=%s (user=%s, plan=%s)",
+                            user_id, plan_slug, bool(user), bool(plan_cfg))
+
+        evt = models.PaymentEvent(
+            provider=provider, external_id=tran_ref,
+            event_type=("paytabs.payment.success" if success else "paytabs.payment.failed"),
+            subscription_id=subscription_id, user_id=user.id if user else None,
+            amount_usd=amount_usd,
+            raw_payload=((raw.decode("utf-8", errors="replace")) or json.dumps(q))[:65535],
+            processed_at=datetime.utcnow())
+        session.add(evt)
+        session.commit()
+        return {"received": True, "tran_ref": tran_ref, "upgraded": bool(subscription_id)}
+    except Exception:
+        session.rollback()
+        log.exception("paytabs callback failed: tran_ref=%s", tran_ref)
         raise
     finally:
         session.close()

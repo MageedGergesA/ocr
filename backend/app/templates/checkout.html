@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ 'Checkout' if lang == 'en' else 'إتمام الاشتراك' }} — Mostakhles</title>
   <link rel="stylesheet" href="/static/css/style.css?v={{ asset_v() }}">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700;800&family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script nonce="{{ csp_nonce }}">
   (function () {
     var t;
@@ -109,19 +106,36 @@
             </div>
             <div class="checkout-tile-body">
               <p>
-                {% if lang == 'en' %}
-                Pay in <strong>EGP {{ '{:,.0f}'.format(amount_egp) }}</strong> with Egyptian / regional payment methods.
-                {% else %}
-                ادفع <strong>{{ '{:,.0f}'.format(amount_egp) }} ج.م</strong> بطرق الدفع المصرية والإقليمية.
-                {% endif %}
+                {{ 'Pay with Egyptian / regional payment methods. Choose your currency:' if lang == 'en' else 'ادفع بطرق الدفع المصرية والإقليمية. اختر العملة:' }}
               </p>
+              {# ── currency choice (USD / EGP) — one radio per configured MID ── #}
+              <div class="checkout-currency" role="radiogroup"
+                   aria-label="{{ 'Currency' if lang == 'en' else 'العملة' }}">
+                {% for o in paymob_options %}
+                <label class="checkout-currency-opt {% if not o.available %}is-disabled{% endif %}">
+                  <input type="radio" name="currency" value="{{ o.currency }}"
+                         {% if loop.first %}checked{% endif %}
+                         {% if not o.available %}disabled{% endif %}>
+                  <span class="checkout-currency-label">
+                    {% if o.currency == 'USD' %}
+                      <strong>${{ '%.2f'|format(o.amount) }}</strong> USD
+                    {% else %}
+                      <strong>{{ '{:,.0f}'.format(o.amount) }}</strong> {{ 'EGP' if lang == 'en' else 'ج.م' }}
+                    {% endif %}
+                    {% if not o.available %}
+                    <em class="checkout-currency-note">{{ '(not configured)' if lang == 'en' else '(غير مُهيّأ)' }}</em>
+                    {% endif %}
+                  </span>
+                </label>
+                {% endfor %}
+              </div>
               <ul class="checkout-tile-methods">
                 <li>Visa</li><li>Mastercard</li><li>Meeza</li>
                 <li>Vodafone Cash</li><li>valU {{ 'instalments' if lang == 'en' else 'تقسيط' }}</li>
               </ul>
             </div>
             <button type="submit" class="checkout-tile-cta" {% if not paymob_available %}disabled{% endif %}>
-              {{ 'Pay with Paymob — EGP {:,.0f}'.format(amount_egp) if lang == 'en' else 'ادفع عبر Paymob — {:,.0f} ج.م'.format(amount_egp) }} →
+              {{ 'Continue with Paymob' if lang == 'en' else 'المتابعة عبر Paymob' }} →
             </button>
           </form>
 
@@ -152,6 +166,35 @@
             </div>
             <button type="submit" class="checkout-tile-cta checkout-tile-cta-ghost" {% if not paypal_available %}disabled{% endif %}>
               {{ 'Pay with PayPal — ${}.00 USD'.format(plan.usd) if lang == 'en' else 'ادفع عبر PayPal — {}$'.format(plan.usd) }} →
+            </button>
+          </form>
+
+          {# ──── PayTabs (Gulf: mada / GCC cards) ──── #}
+          <form method="post" action="/billing/paytabs/checkout" class="checkout-tile {% if not paytabs_available %}is-disabled{% endif %}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="plan" value="{{ plan.slug }}">
+            <div class="checkout-tile-head">
+              <span class="checkout-tile-logo checkout-logo-paytabs">PayTabs</span>
+              {% if paytabs_available %}
+              <span class="checkout-tile-recommended">{{ 'Best for Gulf · mada' if lang == 'en' else 'الأنسب للخليج · مدى' }}</span>
+              {% else %}
+              <span class="checkout-tile-unavailable">{{ 'Coming soon' if lang == 'en' else 'قريبًا' }}</span>
+              {% endif %}
+            </div>
+            <div class="checkout-tile-body">
+              <p>
+                {% if lang == 'en' %}
+                Pay <strong>{{ '{:,.2f}'.format(paytabs_amount) }} {{ paytabs_currency }}</strong> with mada, Gulf cards, or Apple Pay.
+                {% else %}
+                ادفع <strong>{{ '{:,.2f}'.format(paytabs_amount) }} {{ paytabs_currency }}</strong> عبر مدى أو بطاقات الخليج أو Apple Pay.
+                {% endif %}
+              </p>
+              <ul class="checkout-tile-methods">
+                <li>mada</li><li>Visa</li><li>Mastercard</li><li>Apple Pay</li>
+              </ul>
+            </div>
+            <button type="submit" class="checkout-tile-cta checkout-tile-cta-ghost" {% if not paytabs_available %}disabled{% endif %}>
+              {{ 'Pay with PayTabs — {:,.2f} {}'.format(paytabs_amount, paytabs_currency) if lang == 'en' else 'ادفع عبر PayTabs — {:,.2f} {}'.format(paytabs_amount, paytabs_currency) }} →
             </button>
           </form>
 

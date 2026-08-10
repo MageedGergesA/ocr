@@ -15,8 +15,7 @@
   </script>
   <title>{{ t('extract.title') }} — مُستخلِص</title>
   <link rel="stylesheet" href="/static/css/style.css?v={{ asset_v() }}">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Cairo is now self-hosted via @font-face in style.css (no Google Fonts CDN). -->
 </head>
 <body class="has-shell">
 
@@ -31,6 +30,7 @@
           <span class="sep">/</span>
           <span id="crumbCurrent">{{ 'New extraction' if lang == 'en' else 'استخراج جديد' }}</span>
         </div>
+        <h1 class="sr-only">{{ 'Extract data from a document' if lang == 'en' else 'استخراج البيانات من مستند' }}</h1>
       </div>
 
       <!-- Top action bar (shown after result) -->
@@ -69,7 +69,7 @@
             <div class="step-head">
               <span class="step-num">1</span>
               <i data-lucide="upload-cloud" class="step-icon"></i>
-              <span class="step-title">{{ 'ارفع المستند' if lang=='ar' else 'Upload your document' }}</span>
+              <span class="step-title" role="heading" aria-level="2">{{ 'ارفع المستند' if lang=='ar' else 'Upload your document' }}</span>
             </div>
             <div id="dropzone" class="dropzone dropzone-clean">
               <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" multiple hidden>
@@ -106,7 +106,7 @@
             <div class="step-head">
               <span class="step-num">2</span>
               <i data-lucide="layout-grid" class="step-icon"></i>
-              <span class="step-title">{{ 'ماذا تريد استخراجه؟' if lang=='ar' else 'What to extract?' }}</span>
+              <span class="step-title" role="heading" aria-level="2">{{ 'ماذا تريد استخراجه؟' if lang=='ar' else 'What to extract?' }}</span>
             </div>
             <div class="segmented" role="tablist">
               <button class="seg-btn active" data-mode="auto" role="tab" aria-selected="true">
@@ -162,7 +162,7 @@
             <div class="step-head">
               <span class="step-num">3</span>
               <i data-lucide="languages" class="step-icon"></i>
-              <span class="step-title">{{ 'لغة النتيجة' if lang=='ar' else 'Output language' }}</span>
+              <span class="step-title" role="heading" aria-level="2">{{ 'لغة النتيجة' if lang=='ar' else 'Output language' }}</span>
             </div>
             <div class="opt-row">
               <button type="button" class="opt-pill active" data-lang="preserve">
@@ -187,7 +187,7 @@
             <div class="step-head">
               <span class="step-num">4</span>
               <i data-lucide="gauge" class="step-icon"></i>
-              <span class="step-title">{{ 'دقّة الاستخراج' if lang=='ar' else 'Accuracy' }}</span>
+              <span class="step-title" role="heading" aria-level="2">{{ 'دقّة الاستخراج' if lang=='ar' else 'Accuracy' }}</span>
             </div>
             <div class="opt-row">
               <button type="button" class="opt-pill active" data-routing="auto" data-hard="true">
@@ -635,8 +635,8 @@
           body: JSON.stringify({ name, schema }) });
         if (!r.ok) throw new Error((await r.json()).detail || r.status);
         await loadTemplates();
-        alert('تم حفظ القالب ✅');
-      } catch (e) { alert('تعذّر الحفظ: ' + e.message); }
+        alert(I18N.lang === 'ar' ? 'تم حفظ القالب ✅' : 'Template saved ✅');
+      } catch (e) { alert((I18N.lang === 'ar' ? 'تعذّر الحفظ: ' : 'Could not save: ') + e.message); }
     });
 
     function parseFields() {
@@ -746,13 +746,20 @@
       const rows = Object.entries(fieldsDict).map(([k, info]) => {
         const val = _v(info), conf = _c(info);
         const dot = conf != null ? `<span class="cdot ${confClass(conf)}" title="${confTitle(conf)} (${Math.round(conf*100)}%)"></span>` : '';
+        // Scalar values stay inline-editable; nested objects/arrays (e.g. a
+        // structured `bill_to`) are formatted recursively instead of rendering
+        // as the raw "[object Object]" that String(obj) would produce.
+        const isScalar = val == null || typeof val !== 'object';
+        const valHtml = isScalar
+          ? `<span class="ed-val" data-field="${esc(k)}">${esc(val ?? '—')}</span>`
+          : fmtVal(val);
         return `<div class="sec-row">
                   <div class="sec-label">${dot}${esc(k)}</div>
-                  <div class="sec-val"><span class="ed-val" data-field="${esc(k)}">${esc(val ?? '—')}</span></div>
+                  <div class="sec-val">${valHtml}</div>
                 </div>`;
       }).join('');
       return `<div class="sec-card">
-                <div class="sec-title">${esc(title)}</div>
+                <div class="sec-title" role="heading" aria-level="2">${esc(title)}</div>
                 <div class="sec-grid">${rows}</div>
               </div>`;
     }
@@ -1083,7 +1090,7 @@
         const fname = filenameFromHeader(res.headers.get('Content-Disposition'), fallback);
         triggerDownload(blob, fname);
       } catch (err) {
-        alert('تعذّر التصدير: ' + err.message);
+        alert((I18N.lang === 'ar' ? 'تعذّر التصدير: ' : 'Export failed: ') + err.message);
       }
     }
     function triggerDownload(blob, name) {
@@ -1205,7 +1212,7 @@
     function enableAsk(context) {
       chatContext = context; chatHistory = [];
       const box = document.getElementById('askBox');
-      box.innerHTML = '<div class="results-empty">اسأل أي سؤال عن هذا المستند.</div>';
+      box.innerHTML = '<div class="results-empty">' + (I18N.lang === 'ar' ? 'اسأل أي سؤال عن هذا المستند.' : 'Ask anything about this document.') + '</div>';
       document.getElementById('askWrap').hidden = false;
     }
     function askBubble(role, text) {
@@ -1233,13 +1240,14 @@
     });
 
     function renderPages(pages) {
+      const pageLbl = I18N.lang === 'ar' ? 'صفحة' : 'Page';
       return (pages || []).map(p => {
         if (p.error) {
-          return `<div class="page-block"><div class="doctype">صفحة ${p.page}</div>
+          return `<div class="page-block"><div class="doctype">${pageLbl} ${p.page}</div>
                   <div class="results-error">⚠️ ${p.error}</div></div>`;
         }
         return `<div class="page-block">
-                  <div class="doctype">صفحة ${p.page}${p.document_type ? ' · ' + p.document_type : ''}</div>
+                  <div class="doctype">${pageLbl} ${p.page}${p.document_type ? ' · ' + p.document_type : ''}</div>
                   ${rowsHtml(p.data)}
                 </div>`;
       }).join('');
@@ -1248,9 +1256,11 @@
     function updateQuota(u) {
       if (!u) return;
       curRemaining = u.remaining; curLimit = u.limit;
-      const charged = u.charged ? ` (استهلكت ${u.charged})` : '';
-      document.getElementById('quota').textContent =
-        `تبقّى لك ${u.remaining} من ${u.limit} نقطة${charged}`;
+      const isAr = I18N.lang === 'ar';
+      const charged = u.charged ? (isAr ? ` (استهلكت ${u.charged})` : ` (used ${u.charged})`) : '';
+      document.getElementById('quota').textContent = isAr
+        ? `تبقّى لك ${u.remaining} من ${u.limit} نقطة${charged}`
+        : `${u.remaining} of ${u.limit} credits left${charged}`;
       const barFill = document.getElementById('quotaBarFill');
       if (barFill && u.limit > 0) {
         const usedPct = ((u.limit - u.remaining) / u.limit) * 100;
@@ -1264,7 +1274,7 @@
 
     function resetButton() {
       extractBtn.disabled = false;
-      extractBtn.textContent = 'استخرج البيانات';
+      extractBtn.textContent = I18N.lang === 'ar' ? 'استخرج البيانات' : 'Extract data';
     }
 
     // Poll a background batch job until it finishes, showing live progress.
@@ -1275,21 +1285,22 @@
           j = await (await fetch('/v1/jobs/' + jobId)).json();
         } catch (e) { setTimeout(tick, 2500); return; }
 
+        const isAr = I18N.lang === 'ar';
         if (j.status === 'processing') {
           results.innerHTML =
-            `<div class="quota-line">⏳ تتم معالجة الصفحات… ${j.done_pages} من ${j.total_pages}</div>`
+            `<div class="quota-line">⏳ ${isAr ? 'تتم معالجة الصفحات…' : 'Processing pages…'} ${j.done_pages} ${isAr ? 'من' : 'of'} ${j.total_pages}</div>`
             + renderPages(j.pages);
           setTimeout(tick, 2500);
         } else if (j.status === 'completed') {
-          results.innerHTML = renderPages(j.pages) || '<div class="results-empty">لا نتائج</div>';
+          results.innerHTML = renderPages(j.pages) || `<div class="results-empty">${isAr ? 'لا نتائج' : 'No results'}</div>`;
           setExport({ pages: j.pages }, flattenPages(j.pages));
-          enableAsk(flattenPages(j.pages).map(r => `[ص${r.page}] ${r.field}: ${r.value ?? ''}`).join('\n'));
+          enableAsk(flattenPages(j.pages).map(r => `[${isAr ? 'ص' : 'p'}${r.page}] ${r.field}: ${r.value ?? ''}`).join('\n'));
           populateCognitivePane({});
           enterResultView('batch', 'pages');
           fetch('/v1/usage').then(r => r.json()).then(updateQuota).catch(() => {});
           resetButton();
         } else {
-          results.innerHTML = `<div class="results-error">⚠️ ${j.error || 'فشلت المعالجة'}</div>`;
+          results.innerHTML = `<div class="results-error">⚠️ ${j.error || (isAr ? 'فشلت المعالجة' : 'Processing failed')}</div>`;
           resetButton();
         }
       };

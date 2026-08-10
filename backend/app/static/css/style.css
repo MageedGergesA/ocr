@@ -1,3 +1,41 @@
+/* ─── Self-hosted Cairo (was Google Fonts CDN) ─────────────────────────────
+   Vendored woff2, Arabic + Latin subsets per weight, unicode-range so the
+   browser only fetches the subset it needs. Removes the runtime dependency on
+   fonts.googleapis.com (privacy/GDPR + blocked-network resilience). */
+@font-face { font-family:'Cairo'; font-style:normal; font-weight:400; font-display:swap;
+  src:url('/static/fonts/cairo/cairo-arabic-400.woff2') format('woff2');
+  unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0898-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FEFF; }
+@font-face { font-family:'Cairo'; font-style:normal; font-weight:400; font-display:swap;
+  src:url('/static/fonts/cairo/cairo-latin-400.woff2') format('woff2'); }
+@font-face { font-family:'Cairo'; font-style:normal; font-weight:600; font-display:swap;
+  src:url('/static/fonts/cairo/cairo-arabic-600.woff2') format('woff2');
+  unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0898-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FEFF; }
+@font-face { font-family:'Cairo'; font-style:normal; font-weight:600; font-display:swap;
+  src:url('/static/fonts/cairo/cairo-latin-600.woff2') format('woff2'); }
+@font-face { font-family:'Cairo'; font-style:normal; font-weight:700; font-display:swap;
+  src:url('/static/fonts/cairo/cairo-arabic-700.woff2') format('woff2');
+  unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0898-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FEFF; }
+@font-face { font-family:'Cairo'; font-style:normal; font-weight:700; font-display:swap;
+  src:url('/static/fonts/cairo/cairo-latin-700.woff2') format('woff2'); }
+@font-face { font-family:'Cairo'; font-style:normal; font-weight:800; font-display:swap;
+  src:url('/static/fonts/cairo/cairo-arabic-800.woff2') format('woff2');
+  unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0898-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+204F,U+2E41,U+FB50-FDFF,U+FE70-FEFF; }
+@font-face { font-family:'Cairo'; font-style:normal; font-weight:800; font-display:swap;
+  src:url('/static/fonts/cairo/cairo-latin-800.woff2') format('woff2'); }
+
+/* Self-hosted Inter (Latin UI font on the marketing/auth pages, was Google Fonts).
+   Weight 450 requests map to the nearest available (400/500). */
+@font-face { font-family:'Inter'; font-style:normal; font-weight:400; font-display:swap;
+  src:url('/static/fonts/inter/inter-400.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:500; font-display:swap;
+  src:url('/static/fonts/inter/inter-500.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:600; font-display:swap;
+  src:url('/static/fonts/inter/inter-600.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:700; font-display:swap;
+  src:url('/static/fonts/inter/inter-700.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:800; font-display:swap;
+  src:url('/static/fonts/inter/inter-800.woff2') format('woff2'); }
+
 :root {
   /* ─── ClickUp palette (Wave 22) ────────────────────────────────────────
      White surfaces · cool slate neutrals · ClickUp Azure Radiance blue as the
@@ -1591,7 +1629,11 @@ body.has-shell { background: var(--canvas); }
 .shell-link i { width: 17px; height: 17px; flex: none; color: var(--muted); }
 .shell-link:hover i { color: var(--ink); }
 .shell-sep { padding: 14px 12px 6px; font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  text-transform: uppercase; letter-spacing: .5px; color: #8b93a1; } /* a11y: 3.88→~6:1 on dark sidebar */
+
+/* Screen-reader-only helper (visually hidden, still announced) */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* Toggle links (Tools / Credits / Plan) — chevron rotates when open */
 .shell-link-toggle { width: 100%; background: none; border: none; font-family: inherit;
@@ -6776,6 +6818,37 @@ section.lp-trust-row[id="security"] { padding-block: 80px !important; }
 }
 [data-theme="dark"] .checkout-tile-body p { color: #cbd5e1; }
 [data-theme="dark"] .checkout-tile-body strong { color: #f8fafc; }
+
+/* Currency chooser (USD / EGP) on the Paymob tile */
+.checkout-currency {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 0 0 16px;
+}
+.checkout-currency-opt {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 13px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 13.5px; color: #334155;
+  transition: border-color .12s ease, background .12s ease;
+}
+.checkout-currency-opt:hover:not(.is-disabled) { border-color: #94a3b8; }
+.checkout-currency-opt:has(input:checked) {
+  border-color: #6366f1;
+  background: rgba(99,102,241,.06);
+}
+.checkout-currency-opt.is-disabled { opacity: .5; cursor: not-allowed; }
+.checkout-currency-opt input { accent-color: #6366f1; margin: 0; }
+.checkout-currency-label strong { color: #0f172a; font-weight: 700; }
+.checkout-currency-note { color: #94a3b8; font-style: normal; font-size: 11.5px; }
+[data-theme="dark"] .checkout-currency-opt {
+  border-color: rgba(255,255,255,.12); color: #cbd5e1;
+}
+[data-theme="dark"] .checkout-currency-opt:has(input:checked) {
+  border-color: #818cf8; background: rgba(129,140,248,.12);
+}
+[data-theme="dark"] .checkout-currency-label strong { color: #f1f5f9; }
 
 .checkout-tile-methods {
   list-style: none; padding: 0; margin: 0 0 18px;
@@ -16352,7 +16425,7 @@ details.shell-sub-group:not(.lp-faq-item) {
 
 /* ── True section labels (Account): faint, small — Claude's "Products" style ── */
 .shell-aside .shell-sep {
-  color: #82817a; font-size: 12px; font-weight: 400;
+  color: #9aa1ac; font-size: 12px; font-weight: 400; /* a11y: 3.88→~4.9:1 on dark sidebar */
   text-transform: none; letter-spacing: 0; padding: 14px 10px 5px;
 }
 

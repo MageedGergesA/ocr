@@ -13,24 +13,36 @@ def _conf_str(conf) -> str:
     return f"{round(conf * 100)}%" if isinstance(conf, (int, float)) else ""
 
 
-def to_csv(rows, title="extraction"):
+# The four fixed column headers, per export language. `lang="en"` gives an
+# English, left-to-right sheet; anything else keeps the Arabic RTL defaults.
+def _labels(lang):
+    if lang == "en":
+        return ("Page", "Field", "Value", "Confidence")
+    return ("صفحة", "الحقل", "القيمة", "الثقة")
+
+
+def _report_title(lang):
+    return "Extraction Result" if lang == "en" else "نتيجة الاستخراج"
+
+
+def to_csv(rows, title="extraction", lang="ar"):
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(["page", "field", "value", "confidence"])
+    w.writerow(list(_labels(lang)))
     for r in rows:
         w.writerow([r.get("page"), r.get("field"), r.get("value"), _conf_str(r.get("confidence"))])
     data = ("﻿" + buf.getvalue()).encode("utf-8")  # BOM so Excel reads Arabic
     return data, "text/csv; charset=utf-8", f"{title}.csv"
 
 
-def to_xlsx(rows, title="extraction"):
+def to_xlsx(rows, title="extraction", lang="ar"):
     from openpyxl import Workbook
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Extraction"
-    ws.sheet_view.rightToLeft = True
-    ws.append(["صفحة", "الحقل", "القيمة", "الثقة"])
+    ws.sheet_view.rightToLeft = (lang != "en")
+    ws.append(list(_labels(lang)))
     for r in rows:
         val = "" if r.get("value") is None else str(r.get("value"))
         ws.append([r.get("page"), r.get("field"), val, _conf_str(r.get("confidence"))])
@@ -41,15 +53,16 @@ def to_xlsx(rows, title="extraction"):
             f"{title}.xlsx")
 
 
-def to_docx(rows, title="extraction"):
+def to_docx(rows, title="extraction", lang="ar"):
     from docx import Document
 
     doc = Document()
-    doc.add_heading("نتيجة الاستخراج", level=1)
+    doc.add_heading(_report_title(lang), level=1)
     table = doc.add_table(rows=1, cols=4)
     table.style = "Table Grid"
     hdr = table.rows[0].cells
-    hdr[0].text, hdr[1].text, hdr[2].text, hdr[3].text = "صفحة", "الحقل", "القيمة", "الثقة"
+    labels = _labels(lang)
+    hdr[0].text, hdr[1].text, hdr[2].text, hdr[3].text = labels
     for r in rows:
         c = table.add_row().cells
         c[0].text = str(r.get("page", ""))
@@ -82,7 +95,7 @@ def _ar(text):
             .replace(">", "&gt;"))
 
 
-def to_pdf(rows, title="extraction"):
+def to_pdf(rows, title="extraction", lang="ar"):
     global _FONT_READY
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
@@ -95,34 +108,56 @@ def to_pdf(rows, title="extraction"):
         pdfmetrics.registerFont(TTFont("Naskh", ARABIC_FONT))
         _FONT_READY = True
 
-    head = ParagraphStyle("h", fontName="Naskh", fontSize=15, alignment=2)
-    cell = ParagraphStyle("c", fontName="Naskh", fontSize=10, alignment=2, wordWrap="RTL", leading=14)
+    en = lang == "en"
+    align = 0 if en else 2  # 0=left (LTR), 2=right (RTL)
+    labels = _labels(lang)
+    head = ParagraphStyle("h", fontName="Naskh", fontSize=15, alignment=align)
+    cell = ParagraphStyle("c", fontName="Naskh", fontSize=10, alignment=align,
+                          wordWrap=None if en else "RTL", leading=14)
 
     def P(text):
+        # English: plain text (no BiDi reshaping/reorder). Arabic: shape + reorder.
+        raw = "" if text is None else str(text)
+        if en:
+            raw = raw.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            return Paragraph(raw, cell)
         return Paragraph(_ar(text), cell)
 
-    # Columns reversed for RTL reading: confidence | value | field | page
-    table_data = [[P("الثقة"), P("القيمة"), P("الحقل"), P("صفحة")]]
-    for r in rows:
-        table_data.append([
-            P(_conf_str(r.get("confidence"))), P(r.get("value")),
-            P(r.get("field")), P(r.get("page")),
-        ])
+    if en:
+        # LTR order: Page | Field | Value | Confidence
+        table_data = [[P(labels[0]), P(labels[1]), P(labels[2]), P(labels[3])]]
+        for r in rows:
+            table_data.append([
+                P(r.get("page")), P(r.get("field")),
+                P(r.get("value")), P(_conf_str(r.get("confidence"))),
+            ])
+        col_widths = [45, 140, 215, 55]
+    else:
+        # RTL order (reversed): Confidence | Value | Field | Page
+        table_data = [[P(labels[3]), P(labels[2]), P(labels[1]), P(labels[0])]]
+        for r in rows:
+            table_data.append([
+                P(_conf_str(r.get("confidence"))), P(r.get("value")),
+                P(r.get("field")), P(r.get("page")),
+            ])
+        col_widths = [55, 215, 140, 45]
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, title=title)
-    table = Table(table_data, colWidths=[55, 215, 140, 45])
+    table = Table(table_data, colWidths=col_widths)
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2563eb")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f6f8fb")]),
     ]))
-    doc.build([Paragraph(_ar("نتيجة الاستخراج — مُستخلِص"), head), Spacer(1, 12), table])
+    heading = "Extraction Result — Mostakhles" if en else _ar("نتيجة الاستخراج — مُستخلِص")
+    doc.build([Paragraph(heading, head), Spacer(1, 12), table])
     return buf.getvalue(), "application/pdf", f"{title}.pdf"
 
 
-def to_xml(rows, title="extraction"):
+def to_xml(rows, title="extraction", lang="ar"):
     from xml.sax.saxutils import escape
     out = ['<?xml version="1.0" encoding="UTF-8"?>', "<extraction>"]
     for r in rows:
@@ -162,8 +197,10 @@ def _flatten_for_columns(rows):
     return [{str(r.get("field")): r.get("value") for r in rows}]
 
 
-def to_csv_columns(rows, title="extraction"):
-    """CSV with field names as column headers, values as a single data row."""
+def to_csv_columns(rows, title="extraction", lang="ar"):
+    """CSV with field names as column headers, values as a single data row.
+    `lang` is accepted for a uniform exporter signature but unused here — the
+    headers are the source field names, not fixed localizable labels."""
     docs = _flatten_for_columns(rows)
     all_fields: list[str] = []
     for d in docs:
@@ -179,8 +216,9 @@ def to_csv_columns(rows, title="extraction"):
     return data, "text/csv; charset=utf-8", f"{title}.csv"
 
 
-def to_xlsx_columns(rows, title="extraction"):
-    """Excel with field names as column headers, values as data rows."""
+def to_xlsx_columns(rows, title="extraction", lang="ar"):
+    """Excel with field names as column headers, values as data rows.
+    `lang` accepted for a uniform signature; headers are source field names."""
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill
     docs = _flatten_for_columns(rows)
@@ -192,7 +230,7 @@ def to_xlsx_columns(rows, title="extraction"):
     wb = Workbook()
     ws = wb.active
     ws.title = "Extraction"
-    ws.sheet_view.rightToLeft = True
+    ws.sheet_view.rightToLeft = (lang != "en")
     # Header row
     hdr_font = Font(bold=True)
     hdr_fill = PatternFill("solid", fgColor="D1FAE5")

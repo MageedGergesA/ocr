@@ -110,14 +110,40 @@ class Settings(BaseSettings):
     PAYMOB_IFRAME_ID: str = ""
     # Paymob's integration_id maps a merchant config (card / wallet / Fawry).
     # Different from the API key — it's set per payment method in the merchant portal.
+    # Paymob integration IDs are ALSO per-currency: a USD-enabled MID and an
+    # EGP MID are distinct rows in the dashboard. PAYMOB_INTEGRATION_ID is the
+    # legacy / fallback; set the per-currency ones to route each currency to its
+    # own MID. If a per-currency ID is empty we fall back to PAYMOB_INTEGRATION_ID.
     PAYMOB_INTEGRATION_ID: str = ""
+    PAYMOB_INTEGRATION_ID_USD: str = ""
+    PAYMOB_INTEGRATION_ID_EGP: str = ""
+    # Currencies offered at checkout (comma-separated, first = default). We charge
+    # the customer natively in the chosen currency; USD removes our FX guess (the
+    # EGP↔USD conversion then happens once, at Paymob's settlement).
+    PAYMOB_CURRENCIES: str = "USD,EGP"
     # Override the base URL to point the client at the local mock for tests / dev.
     # Leave empty to hit the real Paymob API.
     PAYMOB_BASE_URL: str = "https://accept.paymob.com"
-    # USD prices on the pricing page → EGP at checkout. Paymob settles in EGP.
-    # Bumped manually when the rate drifts; configurable so we don't ship a code
-    # change for an FX move.
+    # Used to (a) price the EGP option from the USD plan and (b) normalise an EGP
+    # charge back to USD for reporting on the callback. Egyptian accounts settle
+    # in EGP regardless of charge currency. Bumped manually when the rate drifts.
     EGP_PER_USD: float = 50.0
+
+    # ---- PayTabs (Gulf: KSA mada + UAE cards) --------------------------------
+    PAYTABS_PROFILE_ID: str = ""
+    PAYTABS_SERVER_KEY: str = ""
+    # Region-specific endpoint (PayTabs is NOT one global host). Pick the one for
+    # the merchant account's country: KSA (mada) secure.paytabs.sa · UAE
+    # secure.paytabs.com · Egypt secure-egypt.paytabs.com · Global
+    # secure-global.paytabs.com. Point at a local mock for tests.
+    PAYTABS_BASE_URL: str = "https://secure.paytabs.sa"
+    # Settlement currency: SAR enables mada (Saudi); AED for UAE. Must match the
+    # merchant account's country or PayTabs rejects the request.
+    PAYTABS_CURRENCY: str = "SAR"
+    # USD price → settlement currency. SAR & AED are USD-pegged (fairly stable);
+    # override only if PayTabs settles at a different rate.
+    SAR_PER_USD: float = 3.75
+    AED_PER_USD: float = 3.6725
 
     @property
     def admin_email_set(self) -> frozenset[str]:

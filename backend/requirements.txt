@@ -16,3 +16,11 @@ pydantic-settings>=2.0
 python-docx>=1.0
 pdfplumber>=0.10
 beautifulsoup4>=4.12
+openpyxl>=3.1
+reportlab==4.5.1
+arabic-reshaper>=3.0
+python-bidi>=0.6
+weasyprint>=69.0
+
+# --- dev / test ---
+pytest>=8.0

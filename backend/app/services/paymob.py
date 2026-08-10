@@ -86,13 +86,30 @@ def create_order(auth: str, amount_cents: int, merchant_order_id: str,
     return int(order_id)
 
 
+def integration_id_for(currency: str) -> str:
+    """Resolve the Paymob integration (MID) to use for `currency`.
+
+    Paymob integration IDs are per-currency: a USD charge must go through a
+    USD-enabled MID and an EGP charge through an EGP MID. We prefer the
+    currency-specific setting and fall back to the legacy PAYMOB_INTEGRATION_ID
+    so single-currency accounts keep working without new config."""
+    cur = (currency or "").upper()
+    specific = {
+        "USD": settings.PAYMOB_INTEGRATION_ID_USD,
+        "EGP": settings.PAYMOB_INTEGRATION_ID_EGP,
+    }.get(cur, "")
+    return specific or settings.PAYMOB_INTEGRATION_ID
+
+
 def payment_key(auth: str, order_id: int, amount_cents: int,
                 billing: dict[str, str], integration_id: str | None = None,
                 currency: str = "EGP", expiration: int = 3600) -> str:
     """Mint the per-checkout token consumed by the iframe."""
-    iid = integration_id or settings.PAYMOB_INTEGRATION_ID
+    iid = integration_id or integration_id_for(currency)
     if not iid:
-        raise PaymobError("payment_key: PAYMOB_INTEGRATION_ID not configured")
+        raise PaymobError(
+            f"payment_key: no Paymob integration configured for {currency} "
+            f"(set PAYMOB_INTEGRATION_ID_{currency.upper()} or PAYMOB_INTEGRATION_ID)")
     data = _post("/api/acceptance/payment_keys", {
         "auth_token": auth,
         "amount_cents": str(amount_cents),
@@ -154,13 +171,15 @@ def verify_hmac(obj: dict, received_hmac: str,
 # High-level convenience: one call from /billing/checkout.
 # ---------------------------------------------------------------------------
 
-def begin_checkout(amount_egp: float, merchant_order_id: str,
-                   billing: dict[str, str]) -> tuple[str, int]:
+def begin_checkout(amount: float, merchant_order_id: str,
+                   billing: dict[str, str], currency: str = "EGP") -> tuple[str, int]:
     """End-to-end: mint auth, create order, mint payment key. Returns
-    (iframe_url, paymob_order_id). Caller writes a Subscription row keyed by
-    merchant_order_id BEFORE redirecting the user."""
-    amount_cents = int(round(amount_egp * 100))
+    (iframe_url, paymob_order_id). `amount` is in the MAJOR unit of `currency`
+    (e.g. dollars for USD, pounds for EGP). Caller writes a Subscription row
+    keyed by merchant_order_id BEFORE redirecting the user."""
+    currency = (currency or "EGP").upper()
+    amount_cents = int(round(amount * 100))
     tok = auth_token()
-    order_id = create_order(tok, amount_cents, merchant_order_id)
-    pk = payment_key(tok, order_id, amount_cents, billing)
+    order_id = create_order(tok, amount_cents, merchant_order_id, currency=currency)
+    pk = payment_key(tok, order_id, amount_cents, billing, currency=currency)
     return iframe_url(pk), order_id

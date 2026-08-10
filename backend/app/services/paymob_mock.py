@@ -73,7 +73,8 @@ def mock_iframe(iframe_id: str, payment_token: str = ""):
     if not order_id:
         return HTMLResponse("<h1>Mock Paymob: invalid payment token</h1>", status_code=400)
     order = _ORDERS[order_id]
-    amount_egp = order["amount_cents"] / 100
+    amount = order["amount_cents"] / 100
+    cur = order.get("currency", "EGP")
     mref = order.get("merchant_order_id", "")
     return f"""<!doctype html>
 <html><head><meta charset="utf-8"><title>Mock Paymob checkout</title>
@@ -92,12 +93,12 @@ button{{flex:1;padding:14px;border:none;border-radius:10px;font:600 15px inherit
 <div class="card">
   <h1>Mock Paymob Checkout</h1>
   <p class="muted">Local development only — no real money is moved.</p>
-  <div class="amount">{amount_egp:,.2f} EGP</div>
+  <div class="amount">{amount:,.2f} {cur}</div>
   <div class="row"><span class="muted">Order ID</span><b>{order_id}</b></div>
   <div class="row"><span class="muted">Merchant ref</span><b>{mref}</b></div>
   <div class="row"><span class="muted">Iframe ID</span><b>{iframe_id}</b></div>
   <div class="btns">
-    <button class="pay" onclick="callback(true)">Pay {amount_egp:,.0f} EGP</button>
+    <button class="pay" onclick="callback(true)">Pay {amount:,.0f} {cur}</button>
     <button class="decline" onclick="callback(false)">Decline</button>
   </div>
   <div class="warn">This page only exists when ENV=local. Set PAYMOB_BASE_URL to swap to real Paymob.</div>

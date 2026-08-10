@@ -302,6 +302,41 @@ def _classify_group(key: str) -> str:
     return "Other Details"
 
 
+# Arabic labels for the fixed section titles + cover-metadata labels the generic
+# report emits. Classification stays in English (stable keys); only the rendered
+# `title`/label is localized, so nothing else in the walker needs to change.
+_SECTION_AR = {
+    "Identity": "الهوية",
+    "Demographics": "البيانات الشخصية",
+    "Document Information": "بيانات المستند",
+    "Address & Contact": "العنوان والتواصل",
+    "Financial": "البيانات المالية",
+    "Machine-Readable Codes": "رموز قابلة للقراءة آليًا",
+    "Other Details": "تفاصيل أخرى",
+    "Machine-Readable Zone": "المنطقة القابلة للقراءة آليًا",
+    "Validation Checks": "فحوصات التحقق",
+    "Result": "النتيجة",
+    # cover-metadata labels
+    "Document Type": "نوع المستند",
+    "Document Number": "رقم المستند",
+    "Issue Date": "تاريخ الإصدار",
+    "Expiry / Due Date": "تاريخ الانتهاء / الاستحقاق",
+    "Issuing Office / Holder": "جهة الإصدار / الحامل",
+    # multi-document report labels
+    "Number of Documents": "عدد المستندات",
+    "Document Types": "أنواع المستندات",
+    "Extracted At": "تاريخ الاستخراج",
+}
+
+
+def _localize_section(title: str, lang: str) -> str:
+    """Translate a fixed English section/label title to Arabic when lang=='ar'.
+    Unknown titles (e.g. field-derived nested-table names) pass through as-is."""
+    if lang == "ar":
+        return _SECTION_AR.get(title, title)
+    return title
+
+
 def _is_arabic(s: str) -> bool:
     return any("؀" <= ch <= "ۿ" for ch in str(s))
 
@@ -380,7 +415,7 @@ def _detect_mrz(data: dict) -> list[str] | None:
     return lines or None
 
 
-def _flatten_multi(docs: list, envelope: dict, fallback_doctype: str) -> dict:
+def _flatten_multi(docs: list, envelope: dict, fallback_doctype: str, lang: str = "en") -> dict:
     """Render a multi-document extraction (3 passports, ID front+back, contract
     pages, etc.). Each document gets its own grouped section block."""
     # Decide a sensible doctype label: "3 Passports" if all same, "3 Documents"
@@ -397,26 +432,30 @@ def _flatten_multi(docs: list, envelope: dict, fallback_doctype: str) -> dict:
 
     # Cover metadata: summary across all docs
     cover_meta: list[tuple[str, str]] = [
-        ("Number of Documents", str(n)),
-        ("Document Types", ", ".join(sorted(set(t.title() for t in types)))),
+        (_localize_section("Number of Documents", lang), str(n)),
+        (_localize_section("Document Types", lang), ", ".join(sorted(set(t.title() for t in types)))),
     ]
     if envelope.get("extracted_at"):
-        cover_meta.append(("Extracted At", str(envelope["extracted_at"])))
+        cover_meta.append((_localize_section("Extracted At", lang), str(envelope["extracted_at"])))
 
     summary = envelope.get("summary") if isinstance(envelope.get("summary"), str) else None
     if not summary:
-        summary = (f"Extraction of {n} documents — see each section below for the per-document "
-                    f"fields, machine-readable codes, and validation checks.")
+        summary = (f"استخراج {n} مستندات — راجع كل قسم أدناه للحقول والرموز وفحوصات التحقق لكل مستند."
+                   if lang == "ar" else
+                   f"Extraction of {n} documents — see each section below for the per-document "
+                   f"fields, machine-readable codes, and validation checks.")
 
     sections: list[dict] = []
     for i, doc in enumerate(docs, start=1):
         # Recursively use the single-doc walker for each document, then promote
         # its sections into a single "Document N" header here.
-        per_doc = _flatten_generic(doc, str(doc.get("document_type") or fallback_doctype))
+        per_doc = _flatten_generic(doc, str(doc.get("document_type") or fallback_doctype), lang)
         # Build a header bar for this document
         sub_label = per_doc.get("doctype_label") or "Document"
+        doc_hdr = (f"المستند {i} من {n} — {sub_label}" if lang == "ar"
+                   else f"Document {i} of {n} — {sub_label}")
         sections.append({
-            "title": f"Document {i} of {n} — {sub_label}",
+            "title": doc_hdr,
             "kind": "doc_header",
             "summary": per_doc.get("summary") or "",
             "cover_meta": per_doc.get("cover_meta") or [],
@@ -438,7 +477,7 @@ def _flatten_multi(docs: list, envelope: dict, fallback_doctype: str) -> dict:
     }
 
 
-def _flatten_generic(data: dict, doctype: str) -> dict:
+def _flatten_generic(data: dict, doctype: str, lang: str = "en") -> dict:
     """Walk an arbitrary extracted-result tree and emit a `sections` list the
     generic template can render — corporate-report style.
 
@@ -458,13 +497,13 @@ def _flatten_generic(data: dict, doctype: str) -> dict:
     if not isinstance(data, dict):
         return {
             "doctype_label": doctype.replace("_", " ").title(),
-            "sections": [{"title": "Result", "kind": "text", "body": str(data)}],
+            "sections": [{"title": _localize_section("Result", lang), "kind": "text", "body": str(data)}],
         }
 
     # ── Multi-document case (3 passports, contract+addendum, ID front+back, …)
     docs = data.get("documents")
     if isinstance(docs, list) and docs and all(isinstance(d, dict) for d in docs):
-        return _flatten_multi(docs, data, doctype)
+        return _flatten_multi(docs, data, doctype, lang)
 
     doctype_label = data.get("document_type") or doctype
     doctype_label = str(doctype_label).replace("_", " ").replace("-", " ").title()
@@ -489,7 +528,7 @@ def _flatten_generic(data: dict, doctype: str) -> dict:
                 if v:
                     if label == "Document Type":
                         v = str(v).replace("_", " ").title()
-                    cover_meta.append((label, v))
+                    cover_meta.append((_localize_section(label, lang), v))
                     break
 
     # ---- Walk all top-level fields into groups ----
@@ -551,11 +590,11 @@ def _flatten_generic(data: dict, doctype: str) -> dict:
         items = groups.pop(gname, None)
         if items:
             items = _pair_bilingual(items)
-            sections.append({"title": gname, "kind": "fields", "items": items})
+            sections.append({"title": _localize_section(gname, lang), "kind": "fields", "items": items})
     # Any new groups we didn't anticipate
     for gname, items in groups.items():
         items = _pair_bilingual(items)
-        sections.append({"title": gname, "kind": "fields", "items": items})
+        sections.append({"title": _localize_section(gname, lang), "kind": "fields", "items": items})
 
     # Tables and lists detected during the walk
     sections.extend(nested_tables)
@@ -574,7 +613,7 @@ def _flatten_generic(data: dict, doctype: str) -> dict:
 
     # MRZ block in monospace
     if mrz_lines:
-        sections.append({"title": "Machine-Readable Zone",
+        sections.append({"title": _localize_section("Machine-Readable Zone", lang),
                           "kind": "mono", "lines": mrz_lines, "tone": "tone-teal"})
 
     # Validations from the envelope → colored callouts
@@ -589,7 +628,7 @@ def _flatten_generic(data: dict, doctype: str) -> dict:
                     "body": f"{mark}  {v.get('check', '')} — {v.get('detail', '')}",
                 })
         if callouts:
-            sections.append({"title": "Validation Checks",
+            sections.append({"title": _localize_section("Validation Checks", lang),
                               "kind": "callouts", "items": callouts,
                               "tone": "tone-amber"})
 
@@ -634,7 +673,7 @@ def render(document_type: str, data: dict, *, lang: str = "ar",
                                extracted_at=extracted_at, **flat)
             return html, dt
     # Fallback — every doctype gets a polished output via the generic walker.
-    flat = _flatten_generic(data, raw_dt)
+    flat = _flatten_generic(data, raw_dt, lang)
     tmpl = _jinja.get_template("generic.html")
     html = tmpl.render(data=data, lang=lang, dir=direction,
                        extracted_at=extracted_at, **flat)
@@ -682,7 +721,7 @@ def _render_pdf_text_fallback(document_type: str, data: dict, lang: str,
     if flat is not None and not _is_empty_flatten(flat):
         text_lines = _plaintext_from_flat(dt, flat, lang=lang)
     else:
-        gen = _flatten_generic(data, raw_dt)
+        gen = _flatten_generic(data, raw_dt, lang)
         text_lines = [gen.get("doctype_label", "Document"), ""]
         if gen.get("summary"):
             text_lines += [gen["summary"], ""]
@@ -718,7 +757,7 @@ def render_docx(document_type: str, data: dict, lang: str = "ar",
         _docx_generic(doc, flat, lang)
     else:
         # No flattener OR specialized one returned empty — walk the tree.
-        gen = _flatten_generic(data, raw_dt)
+        gen = _flatten_generic(data, raw_dt, lang)
         _docx_from_sections(doc, gen, lang)
         dt = "document"
     buf = _io.BytesIO()

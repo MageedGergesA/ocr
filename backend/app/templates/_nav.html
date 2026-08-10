@@ -110,7 +110,7 @@
 </header>
 
 <!-- Lucide icons loaded once, site-wide (this nav is on every page) -->
-<script nonce="{{ csp_nonce }}" src="https://unpkg.com/lucide@0.456.0/dist/umd/lucide.min.js"></script>
+<script nonce="{{ csp_nonce }}" src="/static/js/lucide.min.js?v={{ asset_v() }}"></script>
 <script nonce="{{ csp_nonce }}">document.addEventListener('DOMContentLoaded', function () { if (window.lucide) lucide.createIcons(); });</script>
 
 <!-- Apply current language direction to <html> on every page without editing each

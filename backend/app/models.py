@@ -115,6 +115,8 @@ class History(Base):
     duration_ms = Column(Integer, nullable=True)  # extraction wall-clock; null for historical
     result_json = Column(JsonCol)             # JSONB on Postgres — queryable
     corrected_json = Column(JsonCol, nullable=True)  # user corrections from inline edits
+    field_count = Column(Integer, nullable=True)     # # fields extracted (for metrics)
+    avg_confidence = Column(Integer, nullable=True)  # 0-100 mean confidence (for metrics)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Composite index for the dashboard's per-user/per-day aggregations.
@@ -122,6 +124,65 @@ class History(Base):
         Index("ix_history_user_created", "user_id", "created_at"),
         Index("ix_history_created", "created_at"),
     )
+
+
+# ---- Workflow Engine v1 (rules → approvals → audit) ----
+
+class WorkflowRule(Base):
+    """A per-user business rule evaluated after every extraction. v1 supports a
+    single condition (field/operator/value) that, when it matches, routes the
+    document to a human approval queue before it can be posted to the ERP.
+    """
+    __tablename__ = "workflow_rules"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    name = Column(String, nullable=False)
+    # Condition — v1 is a single clause: <field> <op> <value>.
+    field = Column(String, nullable=False)          # 'total' | 'confidence' | 'document_type' | any extracted key
+    op = Column(String, nullable=False)             # 'gt' | 'lt' | 'gte' | 'lte' | 'eq' | 'contains'
+    value = Column(String, nullable=False)          # compared numerically when both sides parse as numbers
+    action = Column(String, default="require_approval", nullable=False)  # v1: always require_approval
+    active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (Index("ix_workflow_rules_user", "user_id", "active"),)
+
+
+class Approval(Base):
+    """A document held for human review because a WorkflowRule matched. Moves
+    pending → approved | rejected. On approval it is marked ready for ERP posting.
+    """
+    __tablename__ = "approvals"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    history_id = Column(Integer, ForeignKey("history.id"), nullable=False)
+    rule_id = Column(Integer, ForeignKey("workflow_rules.id"), nullable=True)
+    rule_name = Column(String, nullable=True)       # snapshot so deleting a rule keeps the audit readable
+    document_type = Column(String, nullable=True)
+    amount = Column(Numeric, nullable=True)         # extracted total, if any — for the queue display/sort
+    status = Column(String, default="pending", nullable=False)  # 'pending' | 'approved' | 'rejected'
+    decided_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    decided_at = Column(DateTime, nullable=True)
+    note = Column(Text, nullable=True)              # reviewer note on reject/approve
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (Index("ix_approvals_user_status", "user_id", "status"),)
+
+
+class AuditLog(Base):
+    """Append-only trail of workflow events for enterprise traceability."""
+    __tablename__ = "audit_log"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    approval_id = Column(Integer, ForeignKey("approvals.id"), nullable=True)
+    event = Column(String, nullable=False)          # 'rule_matched' | 'approved' | 'rejected' | 'erp_export'
+    detail = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (Index("ix_audit_user_created", "user_id", "created_at"),)
 
 
 # ---- Billing audit trail (Paymob + PayPal) ----
@@ -198,3 +259,87 @@ class WebhookDelivery(Base):
     next_attempt_at = Column(DateTime, nullable=True)
     delivered_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class OpsEvent(Base):
+    """One row per extraction attempt — success OR failure. The observability
+    spine: powers real error-rate, latency percentiles, and request-volume
+    metrics (GET /v1/observability). Never bill or block on writing this."""
+    __tablename__ = "ops_events"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    kind = Column(String, nullable=True)         # 'auto' | 'schema' | 'auto_multi' | service slug
+    status = Column(String, nullable=False)      # 'ok' | 'error'
+    http_status = Column(Integer, nullable=True) # for errors (429/502/503/…)
+    tier = Column(String, nullable=True)         # 'hard' | 'fast'
+    error_type = Column(String, nullable=True)   # exception class name, if any
+    latency_ms = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class IdempotencyKey(Base):
+    """A client-supplied Idempotency-Key mapped to the stored response, so a
+    retried request replays the same result without re-running or re-charging."""
+    __tablename__ = "idempotency_keys"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    key = Column(String, nullable=False, index=True)
+    response_json = Column(JsonCol)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class CorrectionMemory(Base):
+    """Aggregated reviewer corrections — the learning store. One row per
+    (user, document_type, field): the value the user keeps correcting a field TO.
+    Re-injected as prompt hints on future extractions so the model stops
+    repeating the same mistake. correction → learning → higher confidence."""
+    __tablename__ = "correction_memory"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    document_type = Column(String, nullable=True, index=True)
+    field_key = Column(String, nullable=False)
+    # Vendor / party identity of the document the correction came from, normalized.
+    # A learned correction is only re-applied to documents from the SAME source
+    # (or globally when this is empty) — stops one vendor's fix bleeding onto another.
+    scope_key = Column(String, nullable=True, index=True)
+    original_value = Column(Text, nullable=True)     # what the model produced last time
+    corrected_value = Column(Text, nullable=True)    # what the reviewer changed it to
+    count = Column(Integer, nullable=False, default=1)  # times this fix was applied
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ExtractionVersion(Base):
+    """Append-only version log for a document's extracted data. v1 = the initial
+    extraction; each reviewer correction appends a version capturing field/from/to.
+    Makes every extraction versioned, auditable, and reproducible by replay."""
+    __tablename__ = "extraction_versions"
+
+    id = Column(Integer, primary_key=True)
+    history_id = Column(Integer, ForeignKey("history.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    version = Column(Integer, nullable=False)
+    source = Column(String, nullable=False)   # 'extracted' | 'corrected'
+    field = Column(String, nullable=True)      # which field changed (None for the initial extraction)
+    old_value = Column(Text, nullable=True)
+    new_value = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class DocumentEvent(Base):
+    """Delivery-side lifecycle events for a document — the stages that aren't
+    already timestamped in a source-of-truth table. `exported` (a plain download)
+    and `erp` (an Odoo-ready xlsx_columns export) are stamped here; the earlier
+    stages (uploaded / extracted / validated / reviewed / approved) are DERIVED at
+    read time from History, ExtractionVersion, and Approval so there is no drift.
+    Powers GET /v1/history/{hid}/timeline — the per-document audit timeline."""
+    __tablename__ = "document_events"
+
+    id = Column(Integer, primary_key=True)
+    history_id = Column(Integer, ForeignKey("history.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    stage = Column(String, nullable=False)    # 'exported' | 'erp'
+    detail = Column(String, nullable=True)    # e.g. the export format
+    created_at = Column(DateTime, default=datetime.utcnow)

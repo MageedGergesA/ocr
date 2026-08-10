@@ -468,7 +468,7 @@ as `\\n` so it stays a valid JSON string value).
 
 def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True,
                  output_lang: str = "preserve", mode: str = "explicit",
-                 with_layout: bool = False) -> dict:
+                 with_layout: bool = False, hints: str = "") -> dict:
     """Detect the document type, infer a layout shape, and extract fields.
 
     output_lang: 'preserve' (default — same as doc), 'ar', or 'en'.
@@ -557,6 +557,7 @@ def extract_auto(image_bytes: bytes, media_type: str, hard: bool = True,
         "Return ONLY valid JSON, no other text, no markdown fences."
         + CALIBRATION
         + (_VISUAL_LAYOUT_INSTRUCTION if with_layout else "")
+        + (("\n\n" + hints) if hints else "")   # learned corrections (feedback loop)
     )
     hard = _resolve_hard(mode, hard, image_bytes, media_type)
     result = _run(image_bytes, media_type, prompt, hard)
