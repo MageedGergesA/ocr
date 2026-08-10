@@ -3913,7 +3913,25 @@ async def paymob_callback(request: Request, hmac_sig: str = Query("", alias="hma
 
         if user and success:
             plan_cfg = plans.get_plan(plan_slug)
-            if plan_cfg:
+            # DEFENSE-IN-DEPTH: the (user, plan) mapping comes from merchant_order_id,
+            # which is NOT part of Paymob's signed HMAC field set — only the amount
+            # and currency are. So a validly-signed callback whose merchant_order_id
+            # was swapped could otherwise grant a higher plan than was paid for. Tie
+            # the grant to the SIGNED amount: reject if the paid amount doesn't match
+            # the decoded plan's price in the charged currency (small tolerance for
+            # rounding). A plan-swap differs by a large multiple, far beyond tolerance.
+            amount_ok = True
+            if plan_cfg and amount_cents:
+                expected_cents = round(_paymob_amount(plan_cfg, charge_currency) * 100)
+                tolerance = max(1, round(expected_cents * 0.005))
+                if abs(amount_cents - expected_cents) > tolerance:
+                    amount_ok = False
+                    log.warning(
+                        "paymob GRANT REJECTED — amount mismatch: user=%s plan=%s "
+                        "paid_cents=%s expected_cents=%s currency=%s txn=%s",
+                        user.id, plan_slug, amount_cents, expected_cents,
+                        charge_currency, txn_id)
+            if plan_cfg and amount_ok:
                 # Close any active subscription on this user before opening a new one.
                 # Two active subs would let the dashboard / quota logic disagree on
                 # which plan is current.
@@ -3937,9 +3955,10 @@ async def paymob_callback(request: Request, hmac_sig: str = Query("", alias="hma
                 user.plan = plan_slug
                 log.info("paymob upgrade: user=%s plan=%s sub=%s amount_usd=%s",
                          user.id, plan_slug, sub.id, amount_usd)
-            else:
+            elif not plan_cfg:
                 log.warning("paymob upgrade skipped: user=%s plan=%s not a known plan",
                             user.id, plan_slug)
+            # (amount mismatch already logged above; event is still recorded, no grant)
         elif success and not user:
             # Paid, but we couldn't map the payment to a user (deleted user or
             # unrecognised merchant_order_id). Event is still recorded below.
