@@ -56,6 +56,23 @@ _CANDIDATE_IDS = (
     "gemini-3.6-flash",
 )
 
+# Full tuning knobs we would send on a legacy-generation model.
+_FULL_PARAMS = ("temperature", "top_p", "seed", "max_output_tokens")
+# Reduced set for newer-generation models that DEPRECATE sampling knobs
+# (temperature / top_p / top_k). Per current Gemini docs, gemini-3.5-flash-lite and
+# gemini-3.6-flash reject or ignore those. This static list is a SAFE-SIDE default:
+# `verify_generation_params()` reconfirms it against runtime model metadata before
+# any production switch (Section 3 — "do not trust manually maintained metadata").
+_REDUCED_PARAMS = ("seed", "max_output_tokens")
+_PARAMS_DEPRECATED_MODELS = frozenset({
+    "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
+})
+
+
+def _supported_params_for(model_id: str) -> tuple:
+    return _REDUCED_PARAMS if model_id in _PARAMS_DEPRECATED_MODELS else _FULL_PARAMS
+
 
 def _default_spec(model_id: str, tier: str, production: bool) -> ModelSpec:
     # Conservative defaults; refine per-model as capabilities are verified.
@@ -67,6 +84,7 @@ def _default_spec(model_id: str, tier: str, production: bool) -> ModelSpec:
         supports_structured_output=True,
         supports_thinking=not flash_lite,
         default_thinking=None,
+        supported_params=_supported_params_for(model_id),
         benchmark_eligible=True,
         production_eligible=production,
         notes="capabilities unverified; confirm via verify_availability + a smoke run",
@@ -141,8 +159,60 @@ def verify_availability(model_ids: Optional[list[str]] = None) -> dict[str, bool
 def effective_generation_config(model_id: str, requested: dict) -> dict:
     """Filter a requested generation config down to the params the model supports,
     so we never send deprecated/unsupported params. Returns the filtered dict; the
-    caller records the EFFECTIVE config for provenance."""
+    caller records the EFFECTIVE config for provenance.
+
+    Unknown models fall back to the deprecation list directly (not just an empty
+    filter) so a not-yet-registered new model still gets its sampling knobs dropped.
+    """
     spec = get(model_id)
-    if not spec:
-        return dict(requested)
-    return {k: v for k, v in requested.items() if k in spec.supported_params}
+    allowed = spec.supported_params if spec else _supported_params_for(model_id)
+    return {k: v for k, v in requested.items() if k in allowed}
+
+
+def verify_generation_params(model_id: str) -> dict:
+    """Reconfirm which generation params a model ACTUALLY accepts by querying the
+    provider's runtime model metadata, rather than trusting the static table
+    (Section 3). Returns:
+        {"model_id", "static": [...], "runtime": [...]|None, "agrees": bool|None,
+         "checked": bool, "note": str}
+    - runtime is None / checked False when no client is configured (offline env):
+      the static list stands, but we FLAG that it is unverified.
+    - Never raises; a metadata failure is reported, not swallowed into a false OK.
+    """
+    static = list(_supported_params_for(model_id))
+    out = {"model_id": model_id, "static": static, "runtime": None,
+           "agrees": None, "checked": False, "note": ""}
+    try:
+        from app.services import llm
+        if not llm.is_configured():
+            out["note"] = "no client configured — static list UNVERIFIED"
+            return out
+        client = llm._client_()  # noqa: SLF001
+        meta = client.models.get(model=model_id)
+    except Exception as e:  # noqa: BLE001
+        out["note"] = f"runtime metadata unavailable: {type(e).__name__}"
+        return out
+    # The SDK exposes supported params inconsistently across versions; probe the
+    # common attribute names and only assert agreement when we actually read them.
+    runtime = None
+    for attr in ("supported_generation_methods", "supported_parameters",
+                 "supported_generation_config"):
+        val = getattr(meta, attr, None)
+        if val:
+            runtime = [str(x) for x in val]
+            break
+    out["checked"] = True
+    if runtime is None:
+        out["note"] = "model metadata exposed no param list; static list stands"
+        return out
+    out["runtime"] = runtime
+    # Agreement: none of our static-allowed sampling knobs should be absent from
+    # runtime, and we should not be sending anything runtime rejects.
+    knobs = {"temperature", "top_p", "top_k"}
+    static_knobs = knobs & set(static)
+    runtime_knobs = knobs & set(runtime)
+    out["agrees"] = static_knobs <= runtime_knobs
+    if not out["agrees"]:
+        out["note"] = ("MISMATCH: static allows sampling knobs the runtime does not "
+                       "advertise — update _PARAMS_DEPRECATED_MODELS before switching")
+    return out

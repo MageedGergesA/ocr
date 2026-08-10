@@ -188,12 +188,15 @@ def generate_from_documents(files: list, prompt: str, hard: bool):
     # Scale output tokens with image count so a 4-image extract doesn't truncate.
     base = 16000 if hard else 8192
     max_tokens = min(base * max(1, n // 2), 32000)
-    config = types.GenerateContentConfig(
-        max_output_tokens=max_tokens,
-        temperature=0.0,
-        top_p=1.0,
-        seed=42,
-    )
+    # Only send generation params the target model accepts. For the CURRENT
+    # production models this is a no-op (they keep temperature/top_p/seed); for
+    # newer models that deprecate sampling knobs the registry strips them so the
+    # request stays valid. See app/ai/registry.effective_generation_config.
+    from app.ai import registry as _registry
+    _eff = _registry.effective_generation_config(
+        model, {"max_output_tokens": max_tokens, "temperature": 0.0,
+                "top_p": 1.0, "seed": 42})
+    config = types.GenerateContentConfig(**_eff)
     try:
         resp = _generate(_credits=credits, model=model, contents=parts + [prompt], config=config)
     except Exception as exc:
@@ -235,12 +238,10 @@ def generate_text(system, user, hard=True, max_tokens=1024, history=None):
                 role="model" if role == "assistant" else "user",
                 parts=[types.Part.from_text(text=str(turn["content"]))]))
     contents.append(types.Content(role="user", parts=[types.Part.from_text(text=user)]))
-    config = types.GenerateContentConfig(
-        max_output_tokens=max_tokens,
-        system_instruction=system,
-        temperature=0.0,
-        top_p=1.0,
-        seed=42,
-    )
+    from app.ai import registry as _registry
+    _eff = _registry.effective_generation_config(
+        model, {"max_output_tokens": max_tokens, "temperature": 0.0,
+                "top_p": 1.0, "seed": 42})
+    config = types.GenerateContentConfig(system_instruction=system, **_eff)
     resp = _generate(_credits=credits, model=model, contents=contents, config=config)
     return resp.text or ""
