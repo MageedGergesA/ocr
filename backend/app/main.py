@@ -1283,7 +1283,8 @@ def signup(request: Request, email: str = Form(...), password: str = Form(...),
         session.add(user)
         session.commit()
         session.refresh(user)
-        session.add(models.ApiKey(user_id=user.id))  # give them a first key
+        first_key, first_raw = models.new_api_key(user.id)  # give them a first key
+        session.add(first_key)
         session.commit()
 
         # Send verification email (console fallback if SMTP not configured locally)
@@ -1292,8 +1293,11 @@ def signup(request: Request, email: str = Form(...), password: str = Form(...),
             emailer.send_verification_email(user.email, verify_url)
         except Exception:  # noqa: BLE001 — don't block signup on email failure; user can resend
             pass
+        # Keys are stored hashed and never shown again — reveal the first key ONCE
+        # here so the user can copy it. (It works for API calls immediately; the
+        # email-verification gate only blocks extraction until they confirm.)
         return templates.TemplateResponse(request, "verify_sent.html",
-            _ctx(request, email=user.email))
+            _ctx(request, email=user.email, new_api_key=first_raw))
     finally:
         session.close()
 
@@ -1503,7 +1507,13 @@ def dashboard(request: Request, q: str = "", paid: str = ""):
         keys = []
         for k in user.api_keys:
             used, _, _ = auth.get_usage(session, k)
-            keys.append({"id": k.id, "key": k.key, "active": k.active, "used": used})
+            # Only the non-secret prefix is ever rendered — the full key is shown
+            # once at creation and is not recoverable (stored hashed).
+            keys.append({"id": k.id, "prefix": k.key_prefix, "active": k.active, "used": used})
+
+        # One-time reveal: a freshly-created key is passed via a short-lived,
+        # httponly cookie set by POST /dashboard/keys; show it once, then clear it.
+        new_api_key = request.cookies.get("mk_new_key")
 
         tpls = (session.query(models.Template).filter_by(user_id=user.id)
                 .order_by(models.Template.id.desc()).all())
@@ -1576,8 +1586,9 @@ def dashboard(request: Request, q: str = "", paid: str = ""):
                         "charged": h.charged, "created_at": str(h.created_at)[:16]}
                         for h in filtered[:20]]
 
-        return templates.TemplateResponse(request, "dashboard.html", _ctx(request,
+        resp = templates.TemplateResponse(request, "dashboard.html", _ctx(request,
             plan=user.plan, limit=limit, keys=keys,
+            new_api_key=new_api_key,  # one-time reveal of a just-created key
             templates=templates_list, history=history_list,
             webhook_url=user.webhook_url or "",
             paid_flash=paid,  # "1" right after a Paymob success → render green banner
@@ -1596,6 +1607,10 @@ def dashboard(request: Request, q: str = "", paid: str = ""):
             mode_fast=mode_fast, mode_hard=mode_hard, mode_other=mode_other,
             q=q,
         ))
+        # Clear the one-time reveal cookie so the key is shown only on this load.
+        if new_api_key:
+            resp.delete_cookie("mk_new_key")
+        return resp
     finally:
         session.close()
 
@@ -1898,9 +1913,16 @@ def create_key(request: Request, csrf_token: str = Form("")):
         user = _current_user(session, request)
         if not user:
             return RedirectResponse("/login", status_code=303)
-        session.add(models.ApiKey(user_id=user.id))
+        key_obj, raw = models.new_api_key(user.id)
+        session.add(key_obj)
         session.commit()
-        return RedirectResponse("/dashboard", status_code=303)
+        # Keys are stored hashed, so the raw value can never be recovered. Hand it
+        # to the /dashboard render exactly once via a short-lived, httponly cookie
+        # (not a URL param — secrets must not land in query strings/history).
+        resp = RedirectResponse("/dashboard", status_code=303)
+        resp.set_cookie("mk_new_key", raw, max_age=120, httponly=True,
+                        samesite="lax", secure=settings.COOKIE_SECURE, path="/dashboard")
+        return resp
     finally:
         session.close()
 

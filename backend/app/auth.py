@@ -103,7 +103,14 @@ def current_period() -> str:
 
 
 def resolve_key(db: Session, raw_key: str) -> models.ApiKey:
-    api_key = db.query(models.ApiKey).filter_by(key=raw_key, active=True).first()
+    # Keys are stored hashed; look up by the deterministic hash of the presented
+    # raw key. Indexed unique column → O(1) lookup, and a DB leak yields no
+    # usable credentials. Never log or echo `raw_key`.
+    api_key = (
+        db.query(models.ApiKey)
+        .filter_by(key_hash=models.hash_api_key(raw_key), active=True)
+        .first()
+    )
     if not api_key:
         raise HTTPException(401, "invalid or inactive API key")
     return api_key
@@ -341,7 +348,8 @@ def ensure_demo_user() -> None:
         return
     db = SessionLocal()
     try:
-        if db.query(models.ApiKey).filter_by(key=DEMO_API_KEY).first():
+        if db.query(models.ApiKey).filter_by(
+                key_hash=models.hash_api_key(DEMO_API_KEY)).first():
             return
         user = db.query(models.User).filter_by(email="demo@mostakhles.local").first()
         if not user:
@@ -349,7 +357,11 @@ def ensure_demo_user() -> None:
             db.add(user)
             db.commit()
             db.refresh(user)
-        db.add(models.ApiKey(key=DEMO_API_KEY, user_id=user.id))
+        # The demo key's raw value IS the fixed DEMO_API_KEY (server-side, public
+        # by design), so we store its hash + prefix like any other key.
+        db.add(models.ApiKey(key_hash=models.hash_api_key(DEMO_API_KEY),
+                             key_prefix=models.api_key_prefix(DEMO_API_KEY),
+                             user_id=user.id))
         db.commit()
     finally:
         db.close()

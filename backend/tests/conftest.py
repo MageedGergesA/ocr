@@ -94,14 +94,13 @@ def api_key_factory():
             u = s.get(models.User, user_id)
             if u is not None and not u.email_verified:
                 u.email_verified = True
-            k = models.ApiKey(user_id=user_id)
+            # Keys are stored hashed; new_api_key() returns the raw exactly once.
+            k, raw = models.new_api_key(user_id)
             s.add(k)
             s.commit()
             s.refresh(k)
             created.append(k.id)
-            # P0.1: stored value == raw. P0.2 will hash storage and capture the
-            # raw at generation time; only this line changes then.
-            return k.key
+            return raw
         finally:
             s.close()
 

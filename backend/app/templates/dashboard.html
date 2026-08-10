@@ -219,6 +219,17 @@
             <button class="btn btn-primary" type="submit">+ {{ 'New key' if lang == 'en' else 'مفتاح جديد' }}</button>
           </form>
         </div>
+        {% if new_api_key %}
+        <div class="acc-banner" style="border:1px solid var(--ok,#16a34a);background:rgba(22,163,74,.08);border-radius:10px;padding:12px 14px;margin-bottom:12px">
+          <strong>{{ 'Copy your new API key now — it will not be shown again.' if lang == 'en' else 'انسخ مفتاحك الجديد الآن — لن يظهر مرة أخرى.' }}</strong>
+          <div class="kkey" style="margin-top:8px">
+            <code>{{ new_api_key }}</code>
+            <button class="copy-btn" onclick="navigator.clipboard.writeText('{{ new_api_key }}');this.textContent='✓'">
+              {{ 'Copy' if lang == 'en' else 'نسخ' }}
+            </button>
+          </div>
+        </div>
+        {% endif %}
         <div class="keys">
           <div class="krow khead">
             <div>{{ 'Key' if lang == 'en' else 'المفتاح' }}</div>
@@ -228,10 +239,8 @@
           </div>
           {% for k in keys %}
           <div class="krow">
-            <div class="kkey"><code>{{ k.key }}</code>
-              <button class="copy-btn" onclick="navigator.clipboard.writeText('{{ k.key }}');this.textContent='✓'">
-                {{ 'Copy' if lang == 'en' else 'نسخ' }}
-              </button>
+            <div class="kkey"><code>{{ k.prefix }}••••••••</code>
+              <span class="muted" style="font-size:.8em">{{ '(shown once at creation)' if lang == 'en' else '(يظهر مرة واحدة عند الإنشاء)' }}</span>
             </div>
             <div>{{ k.used }} / {{ limit }}</div>
             <div>{% if k.active %}<span class="chip chip-ok">{{ 'Active' if lang == 'en' else 'فعّال' }}</span>{% else %}<span class="chip chip-warn">{{ 'Revoked' if lang == 'en' else 'ملغى' }}</span>{% endif %}</div>

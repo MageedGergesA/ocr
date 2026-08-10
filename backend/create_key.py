@@ -28,13 +28,12 @@ def main():
         db.commit()
         db.refresh(user)
 
-        key = models.ApiKey(user_id=user.id)
+        key, raw = models.new_api_key(user.id)
         db.add(key)
         db.commit()
-        db.refresh(key)
 
         print(f"user : {user.email}  (plan: {user.plan})")
-        print(f"key  : {key.key}")
+        print(f"key  : {raw}   (stored hashed — copy it now, it is not recoverable)")
     finally:
         db.close()
 

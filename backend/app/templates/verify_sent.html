@@ -45,6 +45,18 @@
                    style="padding:10px 14px;border:1px solid var(--line);border-radius:8px;min-width:240px">
             <button class="btn btn-ghost" type="submit">{{ 'Resend' if lang == 'en' else 'إعادة إرسال' }}</button>
           </form>
+          {% if new_api_key %}
+          <div style="border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:22px;text-align:start">
+            <strong>{{ 'Your API key (copy it now — shown only once):' if lang == 'en' else 'مفتاح الـ API الخاص بك (انسخه الآن — يظهر مرة واحدة فقط):' }}</strong>
+            <div class="kkey" style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <code style="word-break:break-all">{{ new_api_key }}</code>
+              <button class="btn btn-ghost" type="button"
+                      onclick="navigator.clipboard.writeText('{{ new_api_key }}');this.textContent='✓'">
+                {{ 'Copy' if lang == 'en' else 'نسخ' }}
+              </button>
+            </div>
+          </div>
+          {% endif %}
           <p style="margin-top:22px"><a href="/login" class="auth-alt">{{ 'Back to log in' if lang == 'en' else 'عد إلى تسجيل الدخول' }}</a></p>
         {% endif %}
       </div>

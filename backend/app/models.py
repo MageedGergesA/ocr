@@ -1,4 +1,5 @@
 """Data models: users, API keys, monthly usage counters, billing audit trail."""
+import hashlib
 import secrets
 from datetime import datetime
 
@@ -18,6 +19,33 @@ JsonCol = JSON().with_variant(JSONB(), "postgresql")
 
 def generate_key() -> str:
     return "mk_" + secrets.token_urlsafe(32)
+
+
+def hash_api_key(raw_key: str) -> str:
+    """Deterministic one-way hash used for BOTH storage and lookup.
+
+    Raw keys carry ~256 bits of entropy ('mk_' + 32-byte urlsafe token), so a
+    plain SHA-256 is not brute-forceable and needs no per-key salt; determinism
+    keeps resolution an O(1) indexed lookup on `key_hash`. A DB dump therefore
+    exposes only hashes, never usable credentials.
+    """
+    return hashlib.sha256((raw_key or "").encode()).hexdigest()
+
+
+def api_key_prefix(raw_key: str) -> str:
+    """Short, NON-secret display fragment shown in the UI, e.g. 'mk_AbCdEf12'."""
+    return (raw_key or "")[:12]
+
+
+def new_api_key(user_id: int):
+    """Create an ApiKey that stores ONLY the hash + display prefix, and return
+    ``(api_key_obj, raw_key)``. The raw key is never persisted — the caller must
+    present it to the user exactly once at creation time.
+    """
+    raw = generate_key()
+    obj = ApiKey(user_id=user_id, key_hash=hash_api_key(raw),
+                 key_prefix=api_key_prefix(raw))
+    return obj, raw
 
 
 def generate_webhook_secret() -> str:
@@ -65,7 +93,14 @@ class ApiKey(Base):
     __tablename__ = "api_keys"
 
     id = Column(Integer, primary_key=True)
-    key = Column(String, unique=True, index=True, nullable=False, default=generate_key)
+    # Keys are stored HASHED (sha256 of the raw key). The plaintext is shown to
+    # the user once at creation and never persisted. `key_prefix` is a non-secret
+    # display fragment (e.g. 'mk_AbCdEf12') so the UI can identify a key.
+    # Schema note: scopes / expires_at / rotation are intentionally NOT added yet
+    # (Phase 0 is security-only); they are plain additive columns when needed,
+    # so no rewrite of this model is required to introduce them later.
+    key_hash = Column(String, unique=True, index=True, nullable=False)
+    key_prefix = Column(String, nullable=False, default="")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
