@@ -121,7 +121,13 @@ async def lifespan(_app):
         db.init_db()
         log.info("startup: init_db() ran (env=%s)", _env)
     else:
-        log.info("startup: skipping init_db() in prod — Alembic owns the schema")
+        # Fail fast on a half-configured or schema-stale prod release rather than
+        # booting and erroring at query time. Neither call mutates anything; the
+        # schema guard NEVER auto-migrates (operator must run `alembic upgrade head`).
+        settings.assert_production_ready()
+        db.assert_schema_current()
+        log.info("startup: prod checks passed (config + schema at head); "
+                 "Alembic owns the schema")
     auth.ensure_demo_user()
     log.info("startup complete: env=%s, demo_user=ready", _env)
     yield

@@ -23,6 +23,49 @@ def init_db() -> None:
     _ensure_columns()
 
 
+# --- Alembic schema-revision guard (P0.7) ---------------------------------
+import os as _os  # noqa: E402
+
+_BACKEND_DIR = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+
+
+def _alembic_config():
+    from alembic.config import Config
+    cfg = Config(_os.path.join(_BACKEND_DIR, "alembic.ini"))
+    # Resolve script_location to an absolute path so this works regardless of CWD.
+    cfg.set_main_option("script_location", _os.path.join(_BACKEND_DIR, "alembic"))
+    return cfg
+
+
+def alembic_head_revisions() -> set:
+    """The code's Alembic head revision(s). A healthy migration tree has exactly
+    one head; more than one means a branch was introduced and must be merged."""
+    from alembic.script import ScriptDirectory
+    return set(ScriptDirectory.from_config(_alembic_config()).get_heads())
+
+
+def assert_schema_current(engine_=None) -> None:
+    """Fail fast if the database's Alembic revision is not the code's head.
+
+    READ-ONLY: this NEVER migrates automatically — it only verifies and raises a
+    RuntimeError telling the operator to run `alembic upgrade head`. Call this at
+    startup ONLY against a migration-managed (production) database; a fresh dev/test
+    SQLite DB built by create_all() has no alembic_version row and would (correctly)
+    look out-of-date here, which is why lifespan gates the call on ENV=prod.
+    """
+    from alembic.migration import MigrationContext
+    eng = engine_ or engine
+    heads = alembic_head_revisions()
+    with eng.connect() as conn:
+        current = MigrationContext.configure(conn).get_current_revision()
+    if current not in heads:
+        raise RuntimeError(
+            f"Database schema revision {current!r} is not the code head {sorted(heads)}. "
+            "Run `alembic upgrade head` before starting the app "
+            "(startup does NOT auto-migrate, and never runs destructive migrations)."
+        )
+
+
 def _ensure_columns() -> None:
     """Idempotently add newer nullable columns that create_all() won't ALTER onto
     an existing table (dev only — prod schema changes go through Alembic).
