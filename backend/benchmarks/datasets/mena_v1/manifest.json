@@ -1,0 +1,3874 @@
+{
+  "dataset_version": "mena_v1.0",
+  "provenance": "SYNTHETIC — procedurally generated for model/architecture selection. No real customer documents or identities. Ground truth exact by construction; IDs valid/invalid against app/services/validators.py. Balanced but modest n — NOT a universal accuracy proof.",
+  "cases": [
+    {
+      "id": "eg_tax_invoice_ar_00",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة النور للتجارة",
+        "supplier_tax_id": "08831810",
+        "invoice_date": "2026-05-21",
+        "currency": "EGP",
+        "subtotal": "1,254.31",
+        "tax": "188.15",
+        "total": "1,442.46"
+      },
+      "input_ref": "_media/eg_tax_invoice_ar_00.png",
+      "license": "internal-synthetic",
+      "id_validity": "invalid_format"
+    },
+    {
+      "id": "eg_tax_invoice_ar_01",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "مصنع الشرق للصناعات",
+        "supplier_tax_id": "958180641",
+        "invoice_date": "2026-09-21",
+        "currency": "EGP",
+        "subtotal": "2,249.30",
+        "tax": "337.40",
+        "total": "2,586.70"
+      },
+      "input_ref": "_media/eg_tax_invoice_ar_01.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_ar_02",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "rotated",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الفجر التجارية",
+        "supplier_tax_id": "167581559",
+        "invoice_date": "2026-08-14",
+        "currency": "EGP",
+        "subtotal": "7,179.20",
+        "tax": "1,076.88",
+        "total": "8,256.08"
+      },
+      "input_ref": "_media/eg_tax_invoice_ar_02.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_ar_03",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الأصيل",
+        "supplier_tax_id": "831779879",
+        "invoice_date": "2026-02-26",
+        "currency": "EGP",
+        "subtotal": "4,865.60",
+        "tax": "729.84",
+        "total": "5,595.44"
+      },
+      "input_ref": "_media/eg_tax_invoice_ar_03.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_ar_04",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "blur",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة الواحة الخضراء",
+        "supplier_tax_id": "095167440",
+        "invoice_date": "2026-09-02",
+        "currency": "EGP",
+        "subtotal": "5,227.24",
+        "tax": "784.09",
+        "total": "6,011.33"
+      },
+      "input_ref": "_media/eg_tax_invoice_ar_04.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_ar_05",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "noise",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الأصيل",
+        "supplier_tax_id": "912090273",
+        "invoice_date": "2026-12-24",
+        "currency": "EGP",
+        "subtotal": "2,680.03",
+        "tax": "402.00",
+        "total": "3,082.03"
+      },
+      "input_ref": "_media/eg_tax_invoice_ar_05.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_ar_06",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "مجموعة السلام الغذائية",
+        "supplier_tax_id": "270375572",
+        "invoice_date": "2026-04-06",
+        "currency": "EGP",
+        "subtotal": "7,184.84",
+        "tax": "1,077.73",
+        "total": "8,262.57"
+      },
+      "input_ref": "_media/eg_tax_invoice_ar_06.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_ar_07",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "jpeg",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة النور للتجارة",
+        "supplier_tax_id": "318068180",
+        "invoice_date": "2026-06-25",
+        "currency": "EGP",
+        "subtotal": "8,182.62",
+        "tax": "1,227.39",
+        "total": "9,410.01"
+      },
+      "input_ref": "_media/eg_tax_invoice_ar_07.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_ar_08",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "rotated",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة الرواد للتوريدات",
+        "supplier_tax_id": "457018373",
+        "invoice_date": "2026-10-15",
+        "currency": "EGP",
+        "subtotal": "8,809.32",
+        "tax": "1,321.40",
+        "total": "10,130.72"
+      },
+      "input_ref": "_media/eg_tax_invoice_ar_08.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_ar_09",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "noise",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "مجموعة السلام الغذائية",
+        "supplier_tax_id": "353912698",
+        "invoice_date": "2026-02-26",
+        "currency": "EGP",
+        "subtotal": "6,680.01",
+        "tax": "1,002.00",
+        "total": "7,682.01"
+      },
+      "input_ref": "_media/eg_tax_invoice_ar_09.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_bilingual_00",
+      "country": "EG",
+      "language": "bilingual",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الأصيل",
+        "supplier_tax_id": "736365105",
+        "invoice_date": "2026-08-06",
+        "currency": "EGP",
+        "subtotal": "7,207.17",
+        "tax": "1,081.08",
+        "total": "8,288.25"
+      },
+      "input_ref": "_media/eg_tax_invoice_bilingual_00.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_bilingual_01",
+      "country": "EG",
+      "language": "bilingual",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "jpeg",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة البركة للمقاولات",
+        "supplier_tax_id": "607797712",
+        "invoice_date": "2026-04-13",
+        "currency": "EGP",
+        "subtotal": "1,489.61",
+        "tax": "223.44",
+        "total": "1,713.05"
+      },
+      "input_ref": "_media/eg_tax_invoice_bilingual_01.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_bilingual_02",
+      "country": "EG",
+      "language": "bilingual",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة النور للتجارة",
+        "supplier_tax_id": "086674934",
+        "invoice_date": "2026-06-06",
+        "currency": "EGP",
+        "subtotal": "9,667.14",
+        "tax": "1,450.07",
+        "total": "11,117.21"
+      },
+      "input_ref": "_media/eg_tax_invoice_bilingual_02.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_tax_invoice_bilingual_03",
+      "country": "EG",
+      "language": "bilingual",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "supplier_tax_id": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة البركة للمقاولات",
+        "supplier_tax_id": "49116313",
+        "invoice_date": "2026-02-19",
+        "currency": "EGP",
+        "subtotal": "9,478.22",
+        "tax": "1,421.73",
+        "total": "10,899.95"
+      },
+      "input_ref": "_media/eg_tax_invoice_bilingual_03.png",
+      "license": "internal-synthetic",
+      "id_validity": "invalid_format"
+    },
+    {
+      "id": "eg_receipt_ar_00",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "rotated",
+        "arabic_indic_digits",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "شركة النور للتجارة",
+        "date": "2026-12-13",
+        "currency": "EGP",
+        "total": "6,716.74"
+      },
+      "input_ref": "_media/eg_receipt_ar_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_receipt_ar_01",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "شركة الرواد للتوريدات",
+        "date": "2026-01-01",
+        "currency": "EGP",
+        "total": "7,128.68"
+      },
+      "input_ref": "_media/eg_receipt_ar_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_receipt_ar_02",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "blur",
+        "arabic_indic_digits",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "شركة الرواد للتوريدات",
+        "date": "2026-08-25",
+        "currency": "EGP",
+        "total": "11,209.57"
+      },
+      "input_ref": "_media/eg_receipt_ar_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_receipt_ar_03",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "noise",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "شركة الواحة الخضراء",
+        "date": "2026-10-07",
+        "currency": "EGP",
+        "total": "1,777.20"
+      },
+      "input_ref": "_media/eg_receipt_ar_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_receipt_ar_04",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "arabic_indic_digits",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "مصنع الشرق للصناعات",
+        "date": "2026-06-06",
+        "currency": "EGP",
+        "total": "2,548.86"
+      },
+      "input_ref": "_media/eg_receipt_ar_04.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_receipt_ar_05",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "jpeg",
+        "arabic_indic_digits",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "شركة البركة للمقاولات",
+        "date": "2026-03-18",
+        "currency": "EGP",
+        "total": "11,050.92"
+      },
+      "input_ref": "_media/eg_receipt_ar_05.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_purchase_order_ar_00",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "rotated",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "مصنع الشرق للصناعات",
+        "po_number": "PO-2765",
+        "date": "2026-04-08",
+        "currency": "EGP",
+        "total": "8,188.51"
+      },
+      "input_ref": "_media/eg_purchase_order_ar_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_purchase_order_ar_01",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "noise",
+        "arabic_indic_digits",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "مجموعة السلام الغذائية",
+        "po_number": "PO-3637",
+        "date": "2026-07-07",
+        "currency": "EGP",
+        "total": "11,186.41"
+      },
+      "input_ref": "_media/eg_purchase_order_ar_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_purchase_order_ar_02",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "شركة البركة للمقاولات",
+        "po_number": "PO-7988",
+        "date": "2026-04-04",
+        "currency": "EGP",
+        "total": "7,291.62"
+      },
+      "input_ref": "_media/eg_purchase_order_ar_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_purchase_order_ar_03",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "jpeg",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الأصيل",
+        "po_number": "PO-9651",
+        "date": "2026-04-05",
+        "currency": "EGP",
+        "total": "4,957.49"
+      },
+      "input_ref": "_media/eg_purchase_order_ar_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_purchase_order_ar_04",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "شركة الرواد للتوريدات",
+        "po_number": "PO-7420",
+        "date": "2026-01-02",
+        "currency": "EGP",
+        "total": "7,986.66"
+      },
+      "input_ref": "_media/eg_purchase_order_ar_04.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_bank_statement_ar_00",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "arabic_indic_digits"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "مؤسسة الأصيل",
+        "iban": "EG556079331910640970185571258",
+        "statement_date": "2026-11-02",
+        "currency": "EGP",
+        "closing_balance": "3,644.80"
+      },
+      "input_ref": "_media/eg_bank_statement_ar_00.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_bank_statement_ar_01",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "rotated",
+        "arabic_indic_digits"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "شركة النور للتجارة",
+        "iban": "EG522372826734312829864150236",
+        "statement_date": "2026-11-01",
+        "currency": "EGP",
+        "closing_balance": "1,347.02"
+      },
+      "input_ref": "_media/eg_bank_statement_ar_01.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_bank_statement_ar_02",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 2,
+      "difficulty": [
+        "low_contrast",
+        "arabic_indic_digits",
+        "multi_page"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "شركة الرواد للتوريدات",
+        "iban": "EG598273994208248163858379262",
+        "statement_date": "2026-12-15",
+        "currency": "EGP",
+        "closing_balance": "2,428.28"
+      },
+      "input_ref": "_media/eg_bank_statement_ar_02.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_bank_statement_ar_03",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 2,
+      "difficulty": [
+        "blur",
+        "multi_page"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "شركة الرواد للتوريدات",
+        "iban": "EG252143955583175355688206967",
+        "statement_date": "2026-11-07",
+        "currency": "EGP",
+        "closing_balance": "8,941.92"
+      },
+      "input_ref": "_media/eg_bank_statement_ar_03.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_national_id_ar_00",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "national_id",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "noise",
+        "synthetic_identity"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "national_id",
+      "field_types": {
+        "national_id": "id",
+        "date_of_birth": "date"
+      },
+      "truth": {
+        "full_name": "نورة سعيد المطيري",
+        "national_id": "31319202449283",
+        "date_of_birth": "2026-02-03"
+      },
+      "input_ref": "_media/eg_national_id_ar_00.png",
+      "license": "internal-synthetic",
+      "id_validity": "invalid_format"
+    },
+    {
+      "id": "eg_national_id_ar_01",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "national_id",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "arabic_indic_digits",
+        "synthetic_identity"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "national_id",
+      "field_types": {
+        "national_id": "id",
+        "date_of_birth": "date"
+      },
+      "truth": {
+        "full_name": "فاطمة حسن إبراهيم",
+        "national_id": "30106232156832",
+        "date_of_birth": "2026-09-18"
+      },
+      "input_ref": "_media/eg_national_id_ar_01.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_national_id_ar_02",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "national_id",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "jpeg",
+        "arabic_indic_digits",
+        "synthetic_identity"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "national_id",
+      "field_types": {
+        "national_id": "id",
+        "date_of_birth": "date"
+      },
+      "truth": {
+        "full_name": "مريم علي القحطاني",
+        "national_id": "27719261451398",
+        "date_of_birth": "2026-10-23"
+      },
+      "input_ref": "_media/eg_national_id_ar_02.png",
+      "license": "internal-synthetic",
+      "id_validity": "invalid_format"
+    },
+    {
+      "id": "eg_national_id_ar_03",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "national_id",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "rotated",
+        "synthetic_identity"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "national_id",
+      "field_types": {
+        "national_id": "id",
+        "date_of_birth": "date"
+      },
+      "truth": {
+        "full_name": "مريم علي القحطاني",
+        "national_id": "30605280385535",
+        "date_of_birth": "2026-03-01"
+      },
+      "input_ref": "_media/eg_national_id_ar_03.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_national_id_ar_04",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "national_id",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "noise",
+        "synthetic_identity"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "national_id",
+      "field_types": {
+        "national_id": "id",
+        "date_of_birth": "date"
+      },
+      "truth": {
+        "full_name": "نورة سعيد المطيري",
+        "national_id": "28912282139797",
+        "date_of_birth": "2026-12-12"
+      },
+      "input_ref": "_media/eg_national_id_ar_04.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_national_id_ar_05",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "national_id",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "synthetic_identity"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "national_id",
+      "field_types": {
+        "national_id": "id",
+        "date_of_birth": "date"
+      },
+      "truth": {
+        "full_name": "مريم علي القحطاني",
+        "national_id": "27601252432372",
+        "date_of_birth": "2026-04-04"
+      },
+      "input_ref": "_media/eg_national_id_ar_05.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "eg_prescription_ar_00",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "prescription",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "jpeg",
+        "handwriting"
+      ],
+      "pii": "none",
+      "expected_doc_type": "prescription",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "patient_name": "نورة سعيد المطيري",
+        "date": "2026-10-03",
+        "medications": "أموكسيسيلين ٥٠٠, باراسيتامول, أوميبرازول"
+      },
+      "input_ref": "_media/eg_prescription_ar_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_prescription_ar_01",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "prescription",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "arabic_indic_digits",
+        "handwriting"
+      ],
+      "pii": "none",
+      "expected_doc_type": "prescription",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "patient_name": "فاطمة حسن إبراهيم",
+        "date": "2026-02-18",
+        "medications": "أموكسيسيلين ٥٠٠, باراسيتامول, أوميبرازول"
+      },
+      "input_ref": "_media/eg_prescription_ar_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_prescription_ar_02",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "prescription",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "arabic_indic_digits",
+        "handwriting"
+      ],
+      "pii": "none",
+      "expected_doc_type": "prescription",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "patient_name": "مريم علي القحطاني",
+        "date": "2026-01-24",
+        "medications": "أموكسيسيلين ٥٠٠, باراسيتامول, أوميبرازول"
+      },
+      "input_ref": "_media/eg_prescription_ar_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_prescription_ar_03",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "prescription",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "rotated",
+        "arabic_indic_digits",
+        "handwriting"
+      ],
+      "pii": "none",
+      "expected_doc_type": "prescription",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "patient_name": "محمد أحمد علي",
+        "date": "2026-12-04",
+        "medications": "سيفترياكسون, ديكلوفيناك, فيتامين د"
+      },
+      "input_ref": "_media/eg_prescription_ar_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_prescription_ar_04",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "prescription",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "handwriting"
+      ],
+      "pii": "none",
+      "expected_doc_type": "prescription",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "patient_name": "فاطمة حسن إبراهيم",
+        "date": "2026-09-05",
+        "medications": "أموكسيسيلين ٥٠٠, باراسيتامول, أوميبرازول"
+      },
+      "input_ref": "_media/eg_prescription_ar_04.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_prescription_ar_05",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "prescription",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "blur",
+        "handwriting"
+      ],
+      "pii": "none",
+      "expected_doc_type": "prescription",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "patient_name": "فاطمة حسن إبراهيم",
+        "date": "2026-02-16",
+        "medications": "ميتفورمين ٨٥٠, أتورفاستاتين, أسبرين ٨١"
+      },
+      "input_ref": "_media/eg_prescription_ar_05.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_business_form_ar_00",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "noise"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "مجموعة السلام الغذائية",
+        "reference": "REF-40365",
+        "date": "2026-04-25"
+      },
+      "input_ref": "_media/eg_business_form_ar_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_business_form_ar_01",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة النور للتجارة",
+        "reference": "REF-94922",
+        "date": "2026-07-15"
+      },
+      "input_ref": "_media/eg_business_form_ar_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_business_form_ar_02",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "jpeg"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة النور للتجارة",
+        "reference": "REF-16181",
+        "date": "2026-04-11"
+      },
+      "input_ref": "_media/eg_business_form_ar_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_business_form_ar_03",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "rotated",
+        "arabic_indic_digits"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة النور للتجارة",
+        "reference": "REF-37709",
+        "date": "2026-12-26"
+      },
+      "input_ref": "_media/eg_business_form_ar_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_vat_invoice_ar_00",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "noise",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الأصيل",
+        "vat_number": "377952945740703",
+        "invoice_date": "2026-12-05",
+        "currency": "SAR",
+        "subtotal": "1,780.50",
+        "tax": "267.07",
+        "total": "2,047.57"
+      },
+      "input_ref": "_media/sa_vat_invoice_ar_00.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_vat_invoice_ar_01",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة النور للتجارة",
+        "vat_number": "393925406000003",
+        "invoice_date": "2026-04-05",
+        "currency": "SAR",
+        "subtotal": "2,847.10",
+        "tax": "427.06",
+        "total": "3,274.16"
+      },
+      "input_ref": "_media/sa_vat_invoice_ar_01.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_vat_invoice_ar_02",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "jpeg",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "مجموعة السلام الغذائية",
+        "vat_number": "348905183848903",
+        "invoice_date": "2026-11-03",
+        "currency": "SAR",
+        "subtotal": "6,675.08",
+        "tax": "1,001.26",
+        "total": "7,676.34"
+      },
+      "input_ref": "_media/sa_vat_invoice_ar_02.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_vat_invoice_ar_03",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة النور للتجارة",
+        "vat_number": "369681100175303",
+        "invoice_date": "2026-08-19",
+        "currency": "SAR",
+        "subtotal": "5,802.27",
+        "tax": "870.34",
+        "total": "6,672.61"
+      },
+      "input_ref": "_media/sa_vat_invoice_ar_03.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_vat_invoice_ar_04",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "مجموعة السلام الغذائية",
+        "vat_number": "350514315468403",
+        "invoice_date": "2026-08-16",
+        "currency": "SAR",
+        "subtotal": "7,981.92",
+        "tax": "1,197.29",
+        "total": "9,179.21"
+      },
+      "input_ref": "_media/sa_vat_invoice_ar_04.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_vat_invoice_ar_05",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "rotated",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة البركة للمقاولات",
+        "vat_number": "351996026832703",
+        "invoice_date": "2026-09-12",
+        "currency": "SAR",
+        "subtotal": "9,628.39",
+        "tax": "1,444.26",
+        "total": "11,072.65"
+      },
+      "input_ref": "_media/sa_vat_invoice_ar_05.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_vat_invoice_ar_06",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الفجر التجارية",
+        "vat_number": "402682644949303",
+        "invoice_date": "2026-04-15",
+        "currency": "SAR",
+        "subtotal": "4,318.85",
+        "tax": "647.83",
+        "total": "4,966.68"
+      },
+      "input_ref": "_media/sa_vat_invoice_ar_06.png",
+      "license": "internal-synthetic",
+      "id_validity": "invalid_format"
+    },
+    {
+      "id": "sa_vat_invoice_ar_07",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "blur",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الأصيل",
+        "vat_number": "369029395147803",
+        "invoice_date": "2026-12-08",
+        "currency": "SAR",
+        "subtotal": "1,566.81",
+        "tax": "235.02",
+        "total": "1,801.83"
+      },
+      "input_ref": "_media/sa_vat_invoice_ar_07.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_vat_invoice_bilingual_00",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "noise",
+        "bilingual",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة البركة للمقاولات",
+        "vat_number": "475594809133103",
+        "invoice_date": "2026-09-04",
+        "currency": "SAR",
+        "subtotal": "7,265.08",
+        "tax": "1,089.76",
+        "total": "8,354.84"
+      },
+      "input_ref": "_media/sa_vat_invoice_bilingual_00.png",
+      "license": "internal-synthetic",
+      "id_validity": "invalid_format"
+    },
+    {
+      "id": "sa_vat_invoice_bilingual_01",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الأصيل",
+        "vat_number": "381112148808803",
+        "invoice_date": "2026-10-01",
+        "currency": "SAR",
+        "subtotal": "441.24",
+        "tax": "66.19",
+        "total": "507.43"
+      },
+      "input_ref": "_media/sa_vat_invoice_bilingual_01.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_vat_invoice_bilingual_02",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "jpeg",
+        "bilingual",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "مجموعة السلام الغذائية",
+        "vat_number": "397370385387403",
+        "invoice_date": "2026-05-16",
+        "currency": "SAR",
+        "subtotal": "4,789.05",
+        "tax": "718.36",
+        "total": "5,507.41"
+      },
+      "input_ref": "_media/sa_vat_invoice_bilingual_02.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_vat_invoice_bilingual_03",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "rotated",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الفجر التجارية",
+        "vat_number": "386614248685803",
+        "invoice_date": "2026-11-27",
+        "currency": "SAR",
+        "subtotal": "8,809.70",
+        "tax": "1,321.46",
+        "total": "10,131.16"
+      },
+      "input_ref": "_media/sa_vat_invoice_bilingual_03.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_vat_invoice_bilingual_04",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "vat_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "noise",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "vat_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "vat_number": "id"
+      },
+      "truth": {
+        "supplier_name": "مصنع الشرق للصناعات",
+        "vat_number": "306666943333303",
+        "invoice_date": "2026-06-25",
+        "currency": "SAR",
+        "subtotal": "7,240.38",
+        "tax": "1,086.06",
+        "total": "8,326.44"
+      },
+      "input_ref": "_media/sa_vat_invoice_bilingual_04.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_receipt_ar_00",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "مجموعة السلام الغذائية",
+        "date": "2026-12-27",
+        "currency": "SAR",
+        "total": "2,458.07"
+      },
+      "input_ref": "_media/sa_receipt_ar_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_receipt_ar_01",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "jpeg",
+        "arabic_indic_digits",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "مؤسسة الأصيل",
+        "date": "2026-10-22",
+        "currency": "SAR",
+        "total": "6,666.06"
+      },
+      "input_ref": "_media/sa_receipt_ar_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_receipt_ar_02",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "arabic_indic_digits",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "شركة الواحة الخضراء",
+        "date": "2026-09-23",
+        "currency": "SAR",
+        "total": "2,689.82"
+      },
+      "input_ref": "_media/sa_receipt_ar_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_receipt_ar_03",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "arabic_indic_digits",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "مؤسسة الأصيل",
+        "date": "2026-07-09",
+        "currency": "SAR",
+        "total": "4,886.26"
+      },
+      "input_ref": "_media/sa_receipt_ar_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_receipt_ar_04",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "rotated",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "شركة الواحة الخضراء",
+        "date": "2026-10-22",
+        "currency": "SAR",
+        "total": "1,534.42"
+      },
+      "input_ref": "_media/sa_receipt_ar_04.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_purchase_order_bilingual_00",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "شركة النور للتجارة",
+        "po_number": "PO-6351",
+        "date": "2026-09-19",
+        "currency": "SAR",
+        "total": "3,818.07"
+      },
+      "input_ref": "_media/sa_purchase_order_bilingual_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_purchase_order_bilingual_01",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "blur",
+        "bilingual",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "شركة الواحة الخضراء",
+        "po_number": "PO-1281",
+        "date": "2026-06-03",
+        "currency": "SAR",
+        "total": "6,702.03"
+      },
+      "input_ref": "_media/sa_purchase_order_bilingual_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_purchase_order_bilingual_02",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "noise",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الأصيل",
+        "po_number": "PO-3847",
+        "date": "2026-07-19",
+        "currency": "SAR",
+        "total": "8,862.67"
+      },
+      "input_ref": "_media/sa_purchase_order_bilingual_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_purchase_order_bilingual_03",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "شركة النور للتجارة",
+        "po_number": "PO-1945",
+        "date": "2026-01-17",
+        "currency": "SAR",
+        "total": "9,444.04"
+      },
+      "input_ref": "_media/sa_purchase_order_bilingual_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_purchase_order_bilingual_04",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "jpeg",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "شركة الرواد للتوريدات",
+        "po_number": "PO-7554",
+        "date": "2026-02-02",
+        "currency": "SAR",
+        "total": "3,389.54"
+      },
+      "input_ref": "_media/sa_purchase_order_bilingual_04.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_bank_statement_ar_00",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 2,
+      "difficulty": [
+        "phone_photo",
+        "rotated",
+        "arabic_indic_digits",
+        "multi_page"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "شركة الرواد للتوريدات",
+        "iban": "SA4729373230328512497459",
+        "statement_date": "2026-12-19",
+        "currency": "SAR",
+        "closing_balance": "9,134.38"
+      },
+      "input_ref": "_media/sa_bank_statement_ar_00.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_bank_statement_ar_01",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 2,
+      "difficulty": [
+        "low_contrast",
+        "noise",
+        "arabic_indic_digits",
+        "multi_page"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "شركة البركة للمقاولات",
+        "iban": "SA1795982993078587832491",
+        "statement_date": "2026-02-23",
+        "currency": "SAR",
+        "closing_balance": "7,107.18"
+      },
+      "input_ref": "_media/sa_bank_statement_ar_01.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_bank_statement_ar_02",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "مصنع الشرق للصناعات",
+        "iban": "SA9261623084554342356389",
+        "statement_date": "2026-05-17",
+        "currency": "SAR",
+        "closing_balance": "4,117.98"
+      },
+      "input_ref": "_media/sa_bank_statement_ar_02.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_bank_statement_ar_03",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 2,
+      "difficulty": [
+        "shadow",
+        "jpeg",
+        "multi_page"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "شركة الرواد للتوريدات",
+        "iban": "SA6041005489628297490813",
+        "statement_date": "2026-10-10",
+        "currency": "SAR",
+        "closing_balance": "6,193.59"
+      },
+      "input_ref": "_media/sa_bank_statement_ar_03.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "sa_business_form_ar_00",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "arabic_indic_digits"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "مؤسسة الفجر التجارية",
+        "reference": "REF-99577",
+        "date": "2026-01-18"
+      },
+      "input_ref": "_media/sa_business_form_ar_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_business_form_ar_01",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "مؤسسة الأصيل",
+        "reference": "REF-66032",
+        "date": "2026-03-21"
+      },
+      "input_ref": "_media/sa_business_form_ar_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_business_form_ar_02",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "rotated",
+        "arabic_indic_digits"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة البركة للمقاولات",
+        "reference": "REF-40827",
+        "date": "2026-06-11"
+      },
+      "input_ref": "_media/sa_business_form_ar_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_business_form_ar_03",
+      "country": "SA",
+      "language": "ar",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "arabic_indic_digits"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "مؤسسة الأصيل",
+        "reference": "REF-50677",
+        "date": "2026-12-17"
+      },
+      "input_ref": "_media/sa_business_form_ar_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_tax_invoice_en_00",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "blur",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "Sahara Logistics",
+        "trn": "100987790112015",
+        "invoice_date": "2026-05-06",
+        "currency": "AED",
+        "subtotal": "9,326.31",
+        "tax": "1,398.95",
+        "total": "10,725.26"
+      },
+      "input_ref": "_media/ae_tax_invoice_en_00.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_tax_invoice_en_01",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "noise",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "Al Waha Trading Co",
+        "trn": "200804187804916",
+        "invoice_date": "2026-09-04",
+        "currency": "AED",
+        "subtotal": "482.85",
+        "tax": "72.43",
+        "total": "555.28"
+      },
+      "input_ref": "_media/ae_tax_invoice_en_01.png",
+      "license": "internal-synthetic",
+      "id_validity": "invalid_format"
+    },
+    {
+      "id": "ae_tax_invoice_en_02",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "Orient Supplies FZE",
+        "trn": "100752074662448",
+        "invoice_date": "2026-11-25",
+        "currency": "AED",
+        "subtotal": "991.43",
+        "tax": "148.71",
+        "total": "1,140.14"
+      },
+      "input_ref": "_media/ae_tax_invoice_en_02.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_tax_invoice_en_03",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "jpeg",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "Desert Rose Contracting",
+        "trn": "100381104285550",
+        "invoice_date": "2026-02-15",
+        "currency": "AED",
+        "subtotal": "122.93",
+        "tax": "18.44",
+        "total": "141.37"
+      },
+      "input_ref": "_media/ae_tax_invoice_en_03.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_tax_invoice_en_04",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "rotated",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "Pearl Retail Group",
+        "trn": "100668063617795",
+        "invoice_date": "2026-04-25",
+        "currency": "AED",
+        "subtotal": "8,066.93",
+        "tax": "1,210.04",
+        "total": "9,276.97"
+      },
+      "input_ref": "_media/ae_tax_invoice_en_04.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_tax_invoice_en_05",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "noise",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "Orient Supplies FZE",
+        "trn": "100601224746479",
+        "invoice_date": "2026-09-27",
+        "currency": "AED",
+        "subtotal": "8,503.59",
+        "tax": "1,275.54",
+        "total": "9,779.13"
+      },
+      "input_ref": "_media/ae_tax_invoice_en_05.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_tax_invoice_en_06",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "Al Waha Trading Co",
+        "trn": "100097518341161",
+        "invoice_date": "2026-04-09",
+        "currency": "AED",
+        "subtotal": "3,293.64",
+        "tax": "494.05",
+        "total": "3,787.69"
+      },
+      "input_ref": "_media/ae_tax_invoice_en_06.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_tax_invoice_bilingual_00",
+      "country": "AE",
+      "language": "bilingual",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "jpeg",
+        "bilingual",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الأصيل",
+        "trn": "100604277699799",
+        "invoice_date": "2026-02-09",
+        "currency": "AED",
+        "subtotal": "2,644.10",
+        "tax": "396.61",
+        "total": "3,040.71"
+      },
+      "input_ref": "_media/ae_tax_invoice_bilingual_00.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_tax_invoice_bilingual_01",
+      "country": "AE",
+      "language": "bilingual",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "bilingual",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الأصيل",
+        "trn": "100350921185669",
+        "invoice_date": "2026-09-23",
+        "currency": "AED",
+        "subtotal": "5,620.20",
+        "tax": "843.03",
+        "total": "6,463.23"
+      },
+      "input_ref": "_media/ae_tax_invoice_bilingual_01.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_tax_invoice_bilingual_02",
+      "country": "AE",
+      "language": "bilingual",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "bilingual",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "مجموعة السلام الغذائية",
+        "trn": "100850771022007",
+        "invoice_date": "2026-03-16",
+        "currency": "AED",
+        "subtotal": "4,934.82",
+        "tax": "740.22",
+        "total": "5,675.04"
+      },
+      "input_ref": "_media/ae_tax_invoice_bilingual_02.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_tax_invoice_bilingual_03",
+      "country": "AE",
+      "language": "bilingual",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "rotated",
+        "bilingual",
+        "arabic_indic_digits",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "شركة البركة للمقاولات",
+        "trn": "100109303678105",
+        "invoice_date": "2026-08-18",
+        "currency": "AED",
+        "subtotal": "3,898.84",
+        "tax": "584.83",
+        "total": "4,483.67"
+      },
+      "input_ref": "_media/ae_tax_invoice_bilingual_03.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_tax_invoice_bilingual_04",
+      "country": "AE",
+      "language": "bilingual",
+      "doc_type": "tax_invoice",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "bilingual",
+        "line_items",
+        "currency"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "tax_invoice",
+      "field_types": {
+        "invoice_date": "date",
+        "subtotal": "amount",
+        "tax": "amount",
+        "total": "amount",
+        "currency": "currency",
+        "trn": "id"
+      },
+      "truth": {
+        "supplier_name": "مؤسسة الأصيل",
+        "trn": "200724949691399",
+        "invoice_date": "2026-03-25",
+        "currency": "AED",
+        "subtotal": "7,904.32",
+        "tax": "1,185.65",
+        "total": "9,089.97"
+      },
+      "input_ref": "_media/ae_tax_invoice_bilingual_04.png",
+      "license": "internal-synthetic",
+      "id_validity": "invalid_format"
+    },
+    {
+      "id": "ae_receipt_en_00",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "blur",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "Sahara Logistics",
+        "date": "2026-02-12",
+        "currency": "AED",
+        "total": "10,201.89"
+      },
+      "input_ref": "_media/ae_receipt_en_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_receipt_en_01",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "noise",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "Desert Rose Contracting",
+        "date": "2026-06-01",
+        "currency": "AED",
+        "total": "7,719.17"
+      },
+      "input_ref": "_media/ae_receipt_en_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_receipt_en_02",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "Cedar Tech Solutions",
+        "date": "2026-08-03",
+        "currency": "AED",
+        "total": "5,431.90"
+      },
+      "input_ref": "_media/ae_receipt_en_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_receipt_en_03",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "jpeg",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "Desert Rose Contracting",
+        "date": "2026-08-25",
+        "currency": "AED",
+        "total": "4,246.03"
+      },
+      "input_ref": "_media/ae_receipt_en_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_receipt_en_04",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "receipt",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "rotated",
+        "currency"
+      ],
+      "pii": "none",
+      "expected_doc_type": "receipt",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "merchant": "Orient Supplies FZE",
+        "date": "2026-06-02",
+        "currency": "AED",
+        "total": "1,361.84"
+      },
+      "input_ref": "_media/ae_receipt_en_04.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_purchase_order_en_00",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "noise",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "Gulf Star Trading LLC",
+        "po_number": "PO-5329",
+        "date": "2026-12-09",
+        "currency": "AED",
+        "total": "10,659.38"
+      },
+      "input_ref": "_media/ae_purchase_order_en_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_purchase_order_en_01",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "Sahara Logistics",
+        "po_number": "PO-1406",
+        "date": "2026-10-03",
+        "currency": "AED",
+        "total": "11,130.54"
+      },
+      "input_ref": "_media/ae_purchase_order_en_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_purchase_order_en_02",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "jpeg",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "Al Waha Trading Co",
+        "po_number": "PO-5204",
+        "date": "2026-10-05",
+        "currency": "AED",
+        "total": "9,010.13"
+      },
+      "input_ref": "_media/ae_purchase_order_en_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_purchase_order_en_03",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "Nile Foods Ltd",
+        "po_number": "PO-9860",
+        "date": "2026-05-25",
+        "currency": "AED",
+        "total": "1,062.30"
+      },
+      "input_ref": "_media/ae_purchase_order_en_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_purchase_order_en_04",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "purchase_order",
+      "layout": "invoice",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "line_items"
+      ],
+      "pii": "none",
+      "expected_doc_type": "purchase_order",
+      "field_types": {
+        "date": "date",
+        "total": "amount",
+        "currency": "currency"
+      },
+      "truth": {
+        "supplier_name": "Pearl Retail Group",
+        "po_number": "PO-2754",
+        "date": "2026-09-01",
+        "currency": "AED",
+        "total": "550.65"
+      },
+      "input_ref": "_media/ae_purchase_order_en_04.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_bank_statement_en_00",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 2,
+      "difficulty": [
+        "rotated",
+        "multi_page"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "Sahara Logistics",
+        "iban": "AE448935304348784874082",
+        "statement_date": "2026-05-23",
+        "currency": "AED",
+        "closing_balance": "10,236.35"
+      },
+      "input_ref": "_media/ae_bank_statement_en_00.png",
+      "license": "internal-synthetic",
+      "id_validity": "invalid_format"
+    },
+    {
+      "id": "ae_bank_statement_en_01",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 2,
+      "difficulty": [
+        "low_contrast",
+        "multi_page"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "Gulf Star Trading LLC",
+        "iban": "AE046938480313093783883",
+        "statement_date": "2026-02-27",
+        "currency": "AED",
+        "closing_balance": "9,777.76"
+      },
+      "input_ref": "_media/ae_bank_statement_en_01.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_bank_statement_en_02",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 2,
+      "difficulty": [
+        "blur",
+        "multi_page"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "Cedar Tech Solutions",
+        "iban": "AE260776077821533953576",
+        "statement_date": "2026-11-10",
+        "currency": "AED",
+        "closing_balance": "4,284.08"
+      },
+      "input_ref": "_media/ae_bank_statement_en_02.png",
+      "license": "internal-synthetic",
+      "id_validity": "invalid_format"
+    },
+    {
+      "id": "ae_bank_statement_en_03",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "bank_statement",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 2,
+      "difficulty": [
+        "noise",
+        "multi_page"
+      ],
+      "pii": "synthetic_identity",
+      "expected_doc_type": "bank_statement",
+      "field_types": {
+        "statement_date": "date",
+        "closing_balance": "amount",
+        "currency": "currency",
+        "iban": "id"
+      },
+      "truth": {
+        "account_holder": "Gulf Star Trading LLC",
+        "iban": "AE044113320649051750317",
+        "statement_date": "2026-11-06",
+        "currency": "AED",
+        "closing_balance": "7,818.75"
+      },
+      "input_ref": "_media/ae_bank_statement_en_03.png",
+      "license": "internal-synthetic",
+      "id_validity": "valid_format"
+    },
+    {
+      "id": "ae_business_form_bilingual_00",
+      "country": "AE",
+      "language": "bilingual",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "bilingual",
+        "arabic_indic_digits"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة النور للتجارة",
+        "reference": "REF-88710",
+        "date": "2026-05-26"
+      },
+      "input_ref": "_media/ae_business_form_bilingual_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_business_form_bilingual_01",
+      "country": "AE",
+      "language": "bilingual",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "jpeg",
+        "bilingual",
+        "arabic_indic_digits"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "مصنع الشرق للصناعات",
+        "reference": "REF-47721",
+        "date": "2026-09-15"
+      },
+      "input_ref": "_media/ae_business_form_bilingual_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_business_form_bilingual_02",
+      "country": "AE",
+      "language": "bilingual",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "rotated",
+        "bilingual"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "مؤسسة الفجر التجارية",
+        "reference": "REF-88255",
+        "date": "2026-03-24"
+      },
+      "input_ref": "_media/ae_business_form_bilingual_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_business_form_bilingual_03",
+      "country": "AE",
+      "language": "bilingual",
+      "doc_type": "business_form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "noise",
+        "bilingual",
+        "arabic_indic_digits"
+      ],
+      "pii": "none",
+      "expected_doc_type": "business_form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة الواحة الخضراء",
+        "reference": "REF-17408",
+        "date": "2026-01-13"
+      },
+      "input_ref": "_media/ae_business_form_bilingual_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_table_ar_00",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "table",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan"
+      ],
+      "pii": "none",
+      "expected_doc_type": "table",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "مصنع الشرق للصناعات",
+        "reference": "REF-84517",
+        "date": "2026-07-19"
+      },
+      "input_ref": "_media/eg_table_ar_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_table_ar_01",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "table",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "jpeg",
+        "arabic_indic_digits"
+      ],
+      "pii": "none",
+      "expected_doc_type": "table",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "مجموعة السلام الغذائية",
+        "reference": "REF-89817",
+        "date": "2026-03-23"
+      },
+      "input_ref": "_media/eg_table_ar_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_table_ar_02",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "table",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan",
+        "arabic_indic_digits"
+      ],
+      "pii": "none",
+      "expected_doc_type": "table",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة البركة للمقاولات",
+        "reference": "REF-18413",
+        "date": "2026-02-15"
+      },
+      "input_ref": "_media/eg_table_ar_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_table_ar_03",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "table",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo"
+      ],
+      "pii": "none",
+      "expected_doc_type": "table",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة الرواد للتوريدات",
+        "reference": "REF-11700",
+        "date": "2026-08-04"
+      },
+      "input_ref": "_media/eg_table_ar_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_table_ar_04",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "table",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "rotated"
+      ],
+      "pii": "none",
+      "expected_doc_type": "table",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة الرواد للتوريدات",
+        "reference": "REF-79891",
+        "date": "2026-09-16"
+      },
+      "input_ref": "_media/eg_table_ar_04.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "eg_table_ar_05",
+      "country": "EG",
+      "language": "ar",
+      "doc_type": "table",
+      "layout": "table",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast"
+      ],
+      "pii": "none",
+      "expected_doc_type": "table",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "مجموعة السلام الغذائية",
+        "reference": "REF-45465",
+        "date": "2026-07-26"
+      },
+      "input_ref": "_media/eg_table_ar_05.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_contract_bilingual_00",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "contract",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "blur",
+        "bilingual"
+      ],
+      "pii": "none",
+      "expected_doc_type": "contract",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة النور للتجارة",
+        "reference": "REF-97179",
+        "date": "2026-06-26"
+      },
+      "input_ref": "_media/sa_contract_bilingual_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_contract_bilingual_01",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "contract",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "noise",
+        "bilingual"
+      ],
+      "pii": "none",
+      "expected_doc_type": "contract",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "مصنع الشرق للصناعات",
+        "reference": "REF-90014",
+        "date": "2026-09-14"
+      },
+      "input_ref": "_media/sa_contract_bilingual_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_contract_bilingual_02",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "contract",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "bilingual",
+        "arabic_indic_digits"
+      ],
+      "pii": "none",
+      "expected_doc_type": "contract",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة النور للتجارة",
+        "reference": "REF-46182",
+        "date": "2026-02-09"
+      },
+      "input_ref": "_media/sa_contract_bilingual_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_contract_bilingual_03",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "contract",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "jpeg",
+        "bilingual"
+      ],
+      "pii": "none",
+      "expected_doc_type": "contract",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة النور للتجارة",
+        "reference": "REF-81452",
+        "date": "2026-06-02"
+      },
+      "input_ref": "_media/sa_contract_bilingual_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "sa_contract_bilingual_04",
+      "country": "SA",
+      "language": "bilingual",
+      "doc_type": "contract",
+      "layout": "narrative",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo",
+        "rotated",
+        "bilingual"
+      ],
+      "pii": "none",
+      "expected_doc_type": "contract",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "شركة النور للتجارة",
+        "reference": "REF-43426",
+        "date": "2026-07-17"
+      },
+      "input_ref": "_media/sa_contract_bilingual_04.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_form_en_00",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "low_contrast",
+        "noise"
+      ],
+      "pii": "none",
+      "expected_doc_type": "form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "Gulf Star Trading LLC",
+        "reference": "REF-70739",
+        "date": "2026-08-17"
+      },
+      "input_ref": "_media/ae_form_en_00.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_form_en_01",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan"
+      ],
+      "pii": "none",
+      "expected_doc_type": "form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "Sahara Logistics",
+        "reference": "REF-95031",
+        "date": "2026-04-16"
+      },
+      "input_ref": "_media/ae_form_en_01.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_form_en_02",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "shadow",
+        "jpeg"
+      ],
+      "pii": "none",
+      "expected_doc_type": "form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "Desert Rose Contracting",
+        "reference": "REF-28659",
+        "date": "2026-04-08"
+      },
+      "input_ref": "_media/ae_form_en_02.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_form_en_03",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "clean_scan"
+      ],
+      "pii": "none",
+      "expected_doc_type": "form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "Al Waha Trading Co",
+        "reference": "REF-77542",
+        "date": "2026-03-21"
+      },
+      "input_ref": "_media/ae_form_en_03.png",
+      "license": "internal-synthetic"
+    },
+    {
+      "id": "ae_form_en_04",
+      "country": "AE",
+      "language": "en",
+      "doc_type": "form",
+      "layout": "form",
+      "source": "synthetic",
+      "media": "image",
+      "pages": 1,
+      "difficulty": [
+        "phone_photo"
+      ],
+      "pii": "none",
+      "expected_doc_type": "form",
+      "field_types": {
+        "date": "date"
+      },
+      "truth": {
+        "entity_name": "Desert Rose Contracting",
+        "reference": "REF-54592",
+        "date": "2026-09-07"
+      },
+      "input_ref": "_media/ae_form_en_04.png",
+      "license": "internal-synthetic"
+    }
+  ]
+}

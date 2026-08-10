@@ -1,0 +1,4 @@
+# Rendered document images are REGENERABLE (python -m benchmarks.datasets.mena_v1.generate
+# --render) and byte-deterministic, so we do not commit the blobs. The manifest +
+# generator are the source of truth.
+_media/

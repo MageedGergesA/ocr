@@ -26,6 +26,7 @@ class Case:
     input_ref: str = ""          # relative path to the input document (live mode)
     license: str = ""
     notes: str = ""
+    id_validity: str = ""        # "valid_format" | "invalid_format" | "" — for §22
 
 
 @dataclass
@@ -67,11 +68,22 @@ def dataset_stats(ds: Dataset) -> dict:
     for c in ds.cases:
         for t in (c.difficulty or ["untagged"]):
             diff[t] = diff.get(t, 0) + 1
+    pages: dict[str, int] = {}
+    for c in ds.cases:
+        key = "multi_page" if (c.pages or 1) > 1 else "single_page"
+        pages[key] = pages.get(key, 0) + 1
+    id_validity: dict[str, int] = {}
+    for c in ds.cases:
+        if getattr(c, "id_validity", ""):
+            id_validity[c.id_validity] = id_validity.get(c.id_validity, 0) + 1
     return {
         "version": ds.version,
         "total": len(ds.cases),
         "by_country": _count("country"),
         "by_doc_type": _count("doc_type"),
         "by_language": _count("language"),
+        "by_source": _count("source"),
+        "by_pages": pages,
         "by_difficulty": diff,
+        "id_fixtures_by_validity": id_validity,
     }
